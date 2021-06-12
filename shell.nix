@@ -5,6 +5,10 @@ let
  solhint 'contracts/**/*.sol'
  '';
 
+ local-node = pkgs.writeShellScriptBin "local-node" ''
+ hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/''${ALCHEMY_API_KEY} --fork-block-number 12619915
+ '';
+
  security-check = pkgs.writeShellScriptBin "security-check" ''
  rm -rf venv
  rm -rf artifacts
@@ -27,11 +31,13 @@ pkgs.stdenv.mkDerivation {
   pkgs.nodejs-14_x
   pkgs.python3
   security-check
+  local-node
   ci-test
   ci-lint
  ];
 
  shellHook = ''
+  source .env
   export PATH=$( npm bin ):$PATH
   # keep it fresh
   npm install
