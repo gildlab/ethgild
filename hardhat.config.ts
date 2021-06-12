@@ -1,6 +1,7 @@
 import type { HardhatUserConfig }  from "hardhat/types";
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
+import 'hardhat-contract-sizer';
 
 const config: HardhatUserConfig = {
   networks: {
