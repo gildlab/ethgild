@@ -7,7 +7,7 @@ export const deployOunce = async () => {
     const ounceFactory = await ethers.getContractFactory(
         'Ounce'
     )
-    const ounce = await ounceFactory.deploy() as Ounce
+    const ounce = await ounceFactory.deploy()
     await ounce.deployed()
 
     return ounce
@@ -20,7 +20,7 @@ export const vault = async (ounce:Ounce, signer:any, amountEth:any) => {
     })
     tx.wait()
 }
-
+console.log(ethers)
 export const expectedPrice = ethers.BigNumber.from('129872166')
 
 export const assertError = async (f:Function, s:string, e:string) => {

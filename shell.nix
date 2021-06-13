@@ -9,16 +9,20 @@ let
  hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/''${ALCHEMY_API_KEY} --fork-block-number 12619915
  '';
 
+ local-test = pkgs.writeShellScriptBin "local-test" ''
+ hardhat test --network localhost
+ '';
+
  security-check = pkgs.writeShellScriptBin "security-check" ''
- rm -rf venv
  rm -rf artifacts
  rm -rf cache
  rm -rf node_modules
  npm install
- python3 -m venv venv
- source ./venv/bin/activate
+ export tmpdir=$(mktemp -d)
+ python3 -m venv ''${tmpdir}/venv
+ source ''${tmpdir}/venv/bin/activate
  pip install slither-analyzer
- slither .
+ slither . --npx-disable
  '';
 
  ci-test = pkgs.writeShellScriptBin "ci-test" ''
@@ -32,6 +36,7 @@ pkgs.stdenv.mkDerivation {
   pkgs.python3
   security-check
   local-node
+  local-test
   ci-test
   ci-lint
  ];

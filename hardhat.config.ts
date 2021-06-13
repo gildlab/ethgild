@@ -1,9 +1,10 @@
-import type { HardhatUserConfig }  from "hardhat/types";
 import "@nomiclabs/hardhat-waffle";
-import "hardhat-typechain";
+import "@typechain/hardhat";
+import "@nomiclabs/hardhat-ethers"
 import 'hardhat-contract-sizer';
+import "hardhat-gas-reporter"
 
-const config: HardhatUserConfig = {
+export const config = {
   networks: {
     hardhat: {
       blockGasLimit: 100000000,
@@ -12,8 +13,16 @@ const config: HardhatUserConfig = {
   },
   solidity: {
     compilers: [
-      { version: "0.8.5", settings: {} },
+      { version: "0.8.5", settings: {
+        optimizer: {
+          enabled: true
+        }
+      } },
     ],
   },
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 10,
+  }
 };
-export default config;
+export default config

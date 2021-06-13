@@ -3,3 +3,4 @@ artifacts
 cache
 typechain
 .env
+venv
