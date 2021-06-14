@@ -3,6 +3,9 @@ import { ethers } from 'hardhat'
 import type { Ounce } from '../typechain/Ounce'
 const { assert } = chai
 
+export const eighteenZeros = '000000000000000000'
+export const xauOne = '100000000'
+
 export const deployOunce = async () => {
     const ounceFactory = await ethers.getContractFactory(
         'Ounce'
@@ -20,7 +23,6 @@ export const vault = async (ounce:Ounce, signer:any, amountEth:any) => {
     })
     tx.wait()
 }
-console.log(ethers)
 export const expectedPrice = ethers.BigNumber.from('129872166')
 
 export const assertError = async (f:Function, s:string, e:string) => {

@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
-import { deployOunce, expectedPrice, assertError, vault } from './util'
+import { deployOunce, expectedPrice, assertError, vault, eighteenZeros, xauOne } from './util'
 import type { Ounce } from '../typechain/Ounce'
 
 chai.use(solidity)
@@ -19,13 +19,13 @@ describe("vault", async function() {
         const aliceOunce = ounce.connect(alice)
         const bobOunce = ounce.connect(bob)
 
-        const amountAliceEth = 100
+        const amountAliceEth = ethers.BigNumber.from('100' + eighteenZeros)
         await vault(ounce, alice, amountAliceEth)
 
         const price = await ounce.price()
         assert(price.eq(expectedPrice), `bad price ${price} ${expectedPrice}`)
 
-        const expectedAliceBalance = expectedPrice.mul(amountAliceEth)
+        const expectedAliceBalance = expectedPrice.mul(amountAliceEth).div(xauOne)
         const erc20AliceBalance = await ounce['balanceOf(address)'](alice.address)
         assert(erc20AliceBalance.eq(expectedAliceBalance), `wrong ERC20 balance ${erc20AliceBalance} ${expectedAliceBalance}`)
 
@@ -44,10 +44,10 @@ describe("vault", async function() {
             'failed to apply fee to unvault'
         )
 
-        const amountBobEth = 10
+        const amountBobEth = ethers.BigNumber.from('10' + eighteenZeros)
         await vault(ounce, bob, amountBobEth)
 
-        const expectedBobBalance = expectedPrice.mul(amountBobEth)
+        const expectedBobBalance = expectedPrice.mul(amountBobEth).div(xauOne)
         const erc20BobBalance = await ounce['balanceOf(address)'](bob.address)
         assert(erc20BobBalance.eq(expectedBobBalance), `wrong bob erc20 balance ${erc20BobBalance} ${expectedBobBalance}`)
 
