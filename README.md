@@ -4,6 +4,14 @@ Ounce is both an erc1155 and erc20.
 All token behaviour is default Open Zeppelin.
 This works because none of the function names collide, or if they do the signature overloads cleanly (e.g. `_mint`).
 
+## Purpose
+
+Product made for ourselves.
+During bear markets BTC, ETH, alt-coin holders may want to move to more stable currencies.
+But do not believe in viability / stability of national fiat currencies USDC.
+Nor in the construction of stablecoins e.g. USDT.
+So we create a token contract for ETH that stabilises the flucations of ETH and potentially allows it to return to ATH values faster, as well as drop slower.
+
 ## Vaulting
 
 Simply send ETH to the contract.
