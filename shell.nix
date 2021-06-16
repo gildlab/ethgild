@@ -13,20 +13,26 @@ let
  hardhat test --network localhost
  '';
 
+ manticore = pkgs.writeShellScriptBin "manticore" ''
+ export d=$(mktemp -d)
+ python3 -m venv ''${d}/venv
+ source ''${d}/venv/bin/activate
+ pip install manticore
+ manticore
+ '';
+
  security-check = pkgs.writeShellScriptBin "security-check" ''
- rm -rf artifacts
- rm -rf cache
- rm -rf node_modules
- npm install
- export tmpdir=$(mktemp -d)
- python3 -m venv ''${tmpdir}/venv
- source ''${tmpdir}/venv/bin/activate
+ export d=$(mktemp -d)
+ python3 -m venv ''${d}/venv
+ source ''${d}/venv/bin/activate
  pip install slither-analyzer
- slither . --npx-disable
+ slither --exclude-dependencies --npx-disable .
  '';
 
  ci-test = pkgs.writeShellScriptBin "ci-test" ''
- hardhat test
+ ci-lint
+ local-test
+ security-check
  '';
 in
 pkgs.stdenv.mkDerivation {
@@ -39,6 +45,7 @@ pkgs.stdenv.mkDerivation {
   local-test
   ci-test
   ci-lint
+  manticore
  ];
 
  shellHook = ''

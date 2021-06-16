@@ -16,12 +16,13 @@ export const deployOunce = async () => {
     return ounce
 }
 
-export const vault = async (ounce:Ounce, signer:any, amountEth:any) => {
+export const vault = async (ounce:Ounce, signer:any, amountEth:any, data:any) => {
     const tx = await signer.sendTransaction({
         to: ounce.address,
-        value: amountEth
+        value: amountEth,
+        data: data
     })
-    tx.wait()
+    await tx.wait()
 }
 export const expectedPrice = ethers.BigNumber.from('129872166')
 

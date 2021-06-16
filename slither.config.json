@@ -1,0 +1,3 @@
+{
+    "detectors_to_exclude": "erc721-interface,solc-version,low-level-calls"
+}
