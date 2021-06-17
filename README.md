@@ -16,13 +16,14 @@ Burn 100.1% erc20 against any erc1155 to unlock the ETH that was created against
 
 Trade either the erc20 and/or the erc1155 on any markets that support those standards.
 
-More information in the comments on `ethgild.sol`.
+[More information in the comments of `ethgild.sol`](https://github.com/thedavidmeister/ethgild/blob/main/contracts/ethgild.sol).
+
 I tried about 5x different documentation generators for solidity but they were all old, broken and/or too clunky.
 Most important is to have the comments on the code as it is deployed onchain, so this readme is a summary only.
 
 ## Why would I want to gild ETH?
 
-Because you can sell the erc20 and/or erc1155 to people who want to unlock ETH.
+Because you can sell the ETHg and/or erc1155 to people who want to ungild their ETH or hold gilded ETH.
 
 If that sounds circular, consider the following (oversimplified) example to leverage ETH:
 
@@ -82,6 +83,10 @@ Note that the security check and lints run on CI but the hardhat tests do not.
 This is because i'm not sure the best way to get the local node running on CI. `@TODO`.
 
 ### Tests
+
+To run the tests locally run `local-node` and `local-test` in different terminals.
+
+These commands are available from the `nix-shell` and can be reviewed in `shell.nix`.
 
 #### constants
 

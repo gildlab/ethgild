@@ -13,14 +13,6 @@ let
  hardhat test --network localhost
  '';
 
- manticore = pkgs.writeShellScriptBin "manticore" ''
- export d=$(mktemp -d)
- python3 -m venv ''${d}/venv
- source ''${d}/venv/bin/activate
- pip install manticore
- manticore
- '';
-
  security-check = pkgs.writeShellScriptBin "security-check" ''
  export d=$(mktemp -d)
  python3 -m venv ''${d}/venv
@@ -45,7 +37,6 @@ pkgs.stdenv.mkDerivation {
   local-test
   ci-test
   ci-lint
-  manticore
  ];
 
  shellHook = ''
