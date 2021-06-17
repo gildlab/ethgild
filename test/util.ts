@@ -1,24 +1,24 @@
 import chai from 'chai'
 import { ethers } from 'hardhat'
-import type { Ounce } from '../typechain/Ounce'
+import type { EthGild } from '../typechain/EthGild'
 const { assert } = chai
 
 export const eighteenZeros = '000000000000000000'
 export const xauOne = '100000000'
 
-export const deployOunce = async () => {
-    const ounceFactory = await ethers.getContractFactory(
-        'Ounce'
+export const deployEthGild = async () => {
+    const ethGildFactory = await ethers.getContractFactory(
+        'EthGild'
     )
-    const ounce = await ounceFactory.deploy()
-    await ounce.deployed()
+    const ethGild = await ethGildFactory.deploy()
+    await ethGild.deployed()
 
-    return ounce
+    return ethGild
 }
 
-export const vault = async (ounce:Ounce, signer:any, amountEth:any, data:any) => {
+export const gild = async (ethGild:EthGild, signer:any, amountEth:any, data:any) => {
     const tx = await signer.sendTransaction({
-        to: ounce.address,
+        to: ethGild.address,
         value: amountEth,
         data: data
     })

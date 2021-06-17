@@ -1,27 +1,27 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { deployOunce } from './util'
+import { deployEthGild } from './util'
 
 chai.use(solidity)
 const { assert } = chai
 
 describe("constants", async function() {
     it('should have correct constants', async function() {
-        const ounce = await deployOunce()
+        const ethGild = await deployEthGild()
 
-        const name = await ounce.NAME()
-        const symbol = await ounce.SYMBOL()
-        const vaultUri = await ounce.VAULT_URI()
-        const overburnNumerator = await ounce.ERC20_OVERBURN_NUMERATOR()
-        const overburnDenominator = await ounce.ERC20_OVERBURN_DENOMINATOR()
-        const xauDecimals = await ounce.XAU_DECIMALS()
-        const chainlinkXauUsd = await ounce.CHAINLINK_XAUUSD()
-        const chainlinkEthUsd = await ounce.CHAINLINK_ETHUSD()
-        const decimals = await ounce.decimals()
+        const name = await ethGild.NAME()
+        const symbol = await ethGild.SYMBOL()
+        const gildUri = await ethGild.GILD_URI()
+        const overburnNumerator = await ethGild.ERC20_OVERBURN_NUMERATOR()
+        const overburnDenominator = await ethGild.ERC20_OVERBURN_DENOMINATOR()
+        const xauDecimals = await ethGild.XAU_DECIMALS()
+        const chainlinkXauUsd = await ethGild.CHAINLINK_XAUUSD()
+        const chainlinkEthUsd = await ethGild.CHAINLINK_ETHUSD()
+        const decimals = await ethGild.decimals()
 
-        assert(name === 'Ounce', 'wrong name')
-        assert(symbol === 'oXAU', 'wrong symbol')
-        assert(vaultUri === 'https://oxau.crypto/{id}', 'wrong uri')
+        assert(name === 'EthGild', 'wrong name')
+        assert(symbol === 'ETHg', 'wrong symbol')
+        assert(gildUri === 'https://ethgild.crypto/#/id/{id}', 'wrong uri')
         assert(overburnNumerator.eq(1001), 'wrong fee numerator')
         assert(overburnDenominator.eq(1000), 'wrong fee denominator')
         assert(xauDecimals.eq(8), 'wrong xau decimals')

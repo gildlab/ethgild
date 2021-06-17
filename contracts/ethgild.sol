@@ -10,10 +10,22 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-/// @title Ounce
+/// @title EthGild
 /// @author thedavidmeister
 ///
-/// Ounce is both an erc1155 and erc20.
+/// Gild: to wrap with gold.
+///
+/// Similar to wrapped eth (WETH).
+/// WETH swaps ETH 1:1 with an erc20 token that can be unwrapped to get the original ETH back.
+/// GildEth (ETHg) swaps ETH with an erc20 token at the current gold price that can be unwrapped to get the original ETH back.
+/// The gold price for each wrapping is represented as an NFT (erc1155) owned by the wrapper.
+/// Anyone who owns the NFT and correct amount of ETHg can unwrap the ETH.
+/// 0.1% more ETHg must be burned when it is ungilded than gilded.
+/// The overburn traps a tiny sliver of ETH in each gilding to help ETHg price recover faster after a market shock.
+/// The temporary glut of ETHg dumped in a market crash should be soaked up from the overburn long before waiting for a new ETH ATH.
+/// 0.1% is somewhat arbitrary but is intended to be less than a typical AMM trade that includes fee % + slippage + gas.
+///
+/// EthGild is both an erc1155 and erc20.
 /// All token behaviour is default Open Zeppelin.
 /// This works because none of the function names collide, or if they do the signature overloads cleanly (e.g. `_mint`).
 ///
@@ -23,52 +35,53 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// During bear markets cryptocurrency users may want exposure to precious metals.
 /// But do not want to rely on or back fiat currencies tied to a state.
 /// Nor on the construction of stablecoins.
-/// Ounce is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to (hopefully) create an emergent soft peg.
+/// EthGild is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to (hopefully) create an emergent soft peg.
 ///
-/// ## Vaulting
+/// ## Gilding
 ///
 /// Simply send ETH to the contract.
 /// The erc1155 is minted as the current gold price in ETH as its id, and the price multiplied by ETH locked as amount (18 decimals).
 /// The erc20 is minted as the price multiplied by ETH locked as amount (18 decimals).
-/// The ETH locked is whatever is sent to the contract as a normal transaction.
+/// The ETH gilded is whatever is sent to the contract as a normal transaction.
 ///
-/// ## Unvaulting
+/// ## Ungilding
 ///
-/// The erc1155 id (unvault price) and amount of ETH to unvault must be specified to the unvault function.
-/// The erc1155 under the price id is burned as ETH being unvaulted multiplied by the unvault price.
+/// The erc1155 id (ungild price) and amount of ETH to ungild must be specified to the ungild function.
+/// The erc1155 under the price id is burned as ETH being ungild multiplied by the ungild price.
 /// The erc20 is burned as 1001/1000 times the erc1155 burn.
 /// The ETH amount is sent to `msg.sender`.
 ///
 /// ## Reentrancy
 ///
 /// The erc20 minting and all burning is not reentrant.
-/// But both receive and unvault end with possibly reentrant calls to the msg.sender.
+/// But both receive and ungild end with possibly reentrant calls to the msg.sender.
 /// `receive` will attempt to treat the `msg.sender` as an `IERC1155Receiver`.
-/// `unvault` will call the sender with the appropriate ETH amount.
+/// `ungild` will call the sender with the appropriate ETH amount.
 /// This should be safe for the contract state but may facilitate creative use-cases.
 ///
 /// ## Tokenomics
 ///
 /// - Hard price cap at 1 ounce of gold.
-///   - Exceeding this allows to vault 1 eth, sell minted ounces, buy more than 1 eth, repeat infinitely.
+///   - Exceeding this allows to gild 1 eth, sell minted ETHg, buy more than 1 eth, repeat infinitely.
 /// - Hard price cap at max recent ETH drawdown.
-///   - Exceeding this allows all vaults to be unlocked on a market buy of ounces cheaper than the vaulted ETH.
+///   - Exceeding this allows all gilded eth to be ungilded on a market buy of ETHg cheaper than the gilded ETH backing it.
 /// - Ranging between two caps.
 ///   - Sell high to leverage ETH without liquidation threat.
-///     - Vault 1 ETH for ~1 ETH of ounce, sell ounce for ETH, wait for pump.
-///     - Unvault original eth for roughly starting ounce price, sell ~2 ETH.
+///     - Gild 1 ETH for ~1 ETH of ETHg, sell ETHg for ETH, wait for pump.
+///     - Ungild original eth for roughly starting ETHg price, sell ~2 ETH.
 ///   - Buy low to trap degens.
-///     - Ultimately every ounce +0.1% must be burned for ETH to be returned.
-///     - ETH should always be more desirable long term than ounces so eventually the price will recover.
-///     - Should find a natural equilibrium between vaults and unvaults based on market conditions.
+///     - Ultimately every ETHg +0.1% must be burned for ETH to be returned.
+///     - ETH should always be more desirable long term than ETHg so eventually the price will recover.
+///     - A "bank run" on ETHg pushes the ETHg price _higher_ as it is burned to ungild ETH.
+///     - Should find a natural equilibrium between gild and ungild based on market conditions.
 ///   - Use in range for sort-of protected ETH value.
-///     - If ETH is uncomfortably high then vault and keep ounce.
-///     - Vaulting is not a trade so is immune to front-running and slippage.
+///     - If ETH is uncomfortably high then gild and keep ETHg.
+///     - Gilding is not a trade so is immune to front-running and slippage.
 ///     - Price based on gold oracle so does not rely on fiat for stability.
-///     - If ETH crashes then ounce probably will too but ounce may recover stability faster.
-///     - ETH can be unvaulted for 0.1% haircut at any time if market remains strong.
+///     - If ETH crashes then ETHg probably will too but ETHg may recover stability faster.
+///     - ETH can be ungilded for 0.1% haircut at any time if market remains strong.
 ///   - Use in range for LP on AMM with low IL.
-///     - Pair with other gold tokens knowing that oXAU is bounded [0.x-1) with gold price.
+///     - Pair with other gold tokens knowing that ETHg is bounded [0.x-1) with gold price.
 ///     - IL is credibly impermanent.
 ///     - All liquidity on AMM is locking ETH so more liquidity implies tighter price range.
 ///     - Should always be baseline supply/demand from leveraging use-case.
@@ -83,33 +96,33 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// - There is NO peg
 /// - There is NO DAO
 /// - There are NO liquidations
-/// - There is NO collateralisation ratio (but 100%+ of all tokens minted must be burned to unvault ETH)
+/// - There is NO collateralisation ratio (but 100%+ of all tokens minted must be burned to ungild ETH)
 /// - This is all HIGHLY EXPERIMENTAL and comes with NO WARRANTY
 /// - The tokenomics are HIGHLY EXPERIMENTAL and NOT FINANCIAL ADVICE
 /// - If this contract is EXPLOITED or contains BUGS
 ///   - There is NO support or compensation
 ///   - There MAY be a NEW contract deployed without the exploit/bug
-contract Ounce is ERC1155, ERC20 {
+contract EthGild is ERC1155, ERC20 {
     // Chainlink oracles are signed integers so we need to handle them as unsigned for price feed.
     using SafeCast for int256;
     using SafeMath for uint256;
 
-    /// @param caller the address vaulting ETH.
-    /// @param xauPrice the XAU price the ETH was vaulted at.
-    /// @param ethAmount the amount of ETH vaulted.
-    event Vault(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
-    /// @param caller the address unvaulting ETH.
-    /// @param xauPrice the XAU price the ETH is unvaulted at.
-    /// @param ethAmount the amount of ETH unvaulted.
-    event Unvault(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
+    /// @param caller the address gilding ETH.
+    /// @param xauPrice the XAU price the ETH was gilded at.
+    /// @param ethAmount the amount of ETH gilded.
+    event Gild(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
+    /// @param caller the address ungilding ETH.
+    /// @param xauPrice the XAU price the ETH is ungilded at.
+    /// @param ethAmount the amount of ETH ungilded.
+    event Ungild(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
 
     /// erc20 name.
-    string public constant NAME = "Ounce";
+    string public constant NAME = "EthGild";
     /// erc20 symbol.
-    string public constant SYMBOL = "oXAU";
+    string public constant SYMBOL = "ETHg";
     /// erc1155 uri.
-    /// Note the erc1155 id is simply the xauPrice at which erc20 tokens can burn it to unlock ETH.
-    string public constant VAULT_URI = "https://oxau.crypto/{id}";
+    /// Note the erc1155 id is simply the xauPrice at which ETHg tokens can burn it to unlock ETH.
+    string public constant GILD_URI = "https://ethgild.crypto/#/id/{id}";
 
     /// erc20 is burned 0.1% faster than erc1155.
     /// This is the numerator for that.
@@ -124,9 +137,9 @@ contract Ounce is ERC1155, ERC20 {
     AggregatorV3Interface public constant CHAINLINK_XAUUSD = AggregatorV3Interface(0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6);
     AggregatorV3Interface public constant CHAINLINK_ETHUSD = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
-    constructor () ERC20(NAME, SYMBOL) ERC1155(VAULT_URI) { } //solhint-disable no-empty-blocks
+    constructor () ERC20(NAME, SYMBOL) ERC1155(GILD_URI) { } //solhint-disable no-empty-blocks
 
-    // Returns an oXAU price in ETH or reverts.
+    // Returns an XAU price in ETH or reverts.
     // Internally calls two separate chainlink oracles to factor out the USD price.
     // Ideally we'd avoid referencing USD even for internal math but chainlink doesn't support it.
     function price() public view returns (uint256) {
@@ -136,54 +149,54 @@ contract Ounce is ERC1155, ERC20 {
     }
 
     /// Burn roughly equal (1001:1000 ratio) erc20:erc1155 to receive initial ETH refund.
-    /// If the `msg.sender` does not have _both_ the erc1155 and erc20 balances for a given price the ETH will not unvault.
+    /// If the `msg.sender` does not have _both_ the erc1155 and erc20 balances for a given price the ETH will not ungild.
     /// The erc20 and erc1155 amounts as `xauPrice * ethAmount` (+0.1% for erc20) will be burned.
-    /// @param xauPrice oXAU price in ETH. MUST correspond to an erc1155 balance held by `msg.sender`.
-    /// @param ethAmount the amount of ETH to unvault.
-    function unvault(uint256 xauPrice, uint256 ethAmount) external {
+    /// @param xauPrice XAU price in ETH. MUST correspond to an erc1155 balance held by `msg.sender`.
+    /// @param ethAmount the amount of ETH to ungild.
+    function ungild(uint256 xauPrice, uint256 ethAmount) external {
         // Amount of oXAU to burn.
-        uint256 _xauAmount = ethAmount.mul(xauPrice);
-        emit Unvault(msg.sender, xauPrice, ethAmount);
+        uint256 _ethgAmount = ethAmount.mul(xauPrice);
+        emit Ungild(msg.sender, xauPrice, ethAmount);
 
         // erc20 burn.
         // 0.1% more than erc1155 burn.
         // NOT reentrant.
-        _burn(msg.sender, _xauAmount.mul(ERC20_OVERBURN_NUMERATOR).div(ERC20_OVERBURN_DENOMINATOR).div(10 ** XAU_DECIMALS));
+        _burn(msg.sender, _ethgAmount.mul(ERC20_OVERBURN_NUMERATOR).div(ERC20_OVERBURN_DENOMINATOR).div(10 ** XAU_DECIMALS));
 
         // erc1155 burn.
         // NOT reentrant (doesn't trigger `IERC1155Receiver`).
-        _burn(msg.sender, xauPrice, _xauAmount.div(10 ** XAU_DECIMALS));
+        _burn(msg.sender, xauPrice, _ethgAmount.div(10 ** XAU_DECIMALS));
 
-        // ETH refund.
+        // ETH ungild.
         // Reentrant via. sender's `receive` function.
         (bool _refundSuccess, ) = msg.sender.call{value: ethAmount}(""); // solhint-disable avoid-low-level-calls
-        require(_refundSuccess, "ETH_REFUND");
+        require(_refundSuccess, "ETH_UNGILD");
     }
 
-    /// Puts ETH in a vault for equal parts oXAU erc20 and erc1155 tokens.
-    /// @param xauPrice oXAU price in ETH.
-    /// @param ethAmount amount of ETH to put in vault.
-    function vault(uint256 xauPrice, uint256 ethAmount) private {
+    /// Gilds ETH for equal parts ETHg erc20 and erc1155 tokens.
+    /// @param xauPrice XAU price in ETH.
+    /// @param ethAmount amount of ETH to gild.
+    function gild(uint256 xauPrice, uint256 ethAmount) private {
         require(ethAmount > 0, "ZERO_ETH");
 
-        // Amount of oXAU to mint.
-        uint256 _xauAmount = ethAmount.mul(xauPrice).div(10 ** XAU_DECIMALS);
-        emit Vault(msg.sender, xauPrice, ethAmount);
+        // Amount of ETHg to mint.
+        uint256 _ethgAmount = ethAmount.mul(xauPrice).div(10 ** XAU_DECIMALS);
+        emit Gild(msg.sender, xauPrice, ethAmount);
 
         // erc20 mint.
         // NOT reentrant.
-        _mint(msg.sender, _xauAmount);
+        _mint(msg.sender, _ethgAmount);
 
         // erc1155 mint.
         // Reentrant via. `IERC1155Receiver`.
-        _mint(msg.sender, xauPrice, _xauAmount, "");
+        _mint(msg.sender, xauPrice, _ethgAmount, "");
     }
 
     receive() external payable {
-        vault(price(), msg.value);
+        gild(price(), msg.value);
     }
 
     fallback() external payable {
-        vault(price(), msg.value);
+        gild(price(), msg.value);
     }
 }
