@@ -21,9 +21,9 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// Product made for ourselves.
 /// During bear markets cryptocurrency users may want more stable currencies.
-/// But do not want to rely on or back currencies USDC.
-/// Nor in the construction of stablecoins e.g. USDT.
-/// So we create a token contract for ETH that stabilises the flucations of ETH and potentially allows it to return to ATH values faster, as well as drop slower.
+/// But do not want to rely on or back fiat currencies tied to a state.
+/// Nor on the construction of stablecoins.
+/// Ounce is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to create an emergent soft peg.
 ///
 /// ## Vaulting
 ///
@@ -133,8 +133,7 @@ contract Ounce is ERC1155, ERC20 {
 
     /// Burn roughly equal (1001:1000 ratio) erc20:erc1155 to receive initial ETH refund.
     /// If the `msg.sender` does not have _both_ the erc1155 and erc20 balances for a given price the ETH will not unvault.
-    /// The erc20 and erc1155 amounts as `xauPrice * ethAmount` will be burned.
-    /// 0.1% more erc20 than erc1155 will be burned.
+    /// The erc20 and erc1155 amounts as `xauPrice * ethAmount` (+0.1% for erc20) will be burned.
     /// @param xauPrice oXAU price in ETH. MUST correspond to an erc1155 balance held by `msg.sender`.
     /// @param ethAmount the amount of ETH to unvault.
     function unvault(uint256 xauPrice, uint256 ethAmount) external {
@@ -152,7 +151,7 @@ contract Ounce is ERC1155, ERC20 {
         _burn(msg.sender, xauPrice, _xauAmount.div(10 ** XAU_DECIMALS));
 
         // ETH refund.
-        // Reentrant.
+        // Reentrant via. sender's `receive` function.
         (bool _refundSuccess, ) = msg.sender.call{value: ethAmount}(""); // solhint-disable avoid-low-level-calls
         require(_refundSuccess, "ETH_REFUND");
     }
@@ -172,7 +171,7 @@ contract Ounce is ERC1155, ERC20 {
         _mint(msg.sender, _xauAmount);
 
         // erc1155 mint.
-        // Reentrant due to call to `IERC1155Receiver`.
+        // Reentrant via. `IERC1155Receiver`.
         _mint(msg.sender, xauPrice, _xauAmount, "");
     }
 
