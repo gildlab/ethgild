@@ -19,7 +19,7 @@ describe("constants", async function() {
         const chainlinkEthUsd = await ounce.CHAINLINK_ETHUSD()
         const decimals = await ounce.decimals()
 
-        assert(name === 'ounce', 'wrong name')
+        assert(name === 'Ounce', 'wrong name')
         assert(symbol === 'oXAU', 'wrong symbol')
         assert(vaultUri === 'https://oxau.crypto/{id}', 'wrong uri')
         assert(overburnNumerator.eq(1001), 'wrong fee numerator')

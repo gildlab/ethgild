@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 // Chainlink imports.
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
@@ -18,6 +16,14 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// Ounce is both an erc1155 and erc20.
 /// All token behaviour is default Open Zeppelin.
 /// This works because none of the function names collide, or if they do the signature overloads cleanly (e.g. `_mint`).
+///
+/// ## Purpose
+///
+/// Product made for ourselves.
+/// During bear markets cryptocurrency users may want more stable currencies.
+/// But do not want to rely on or back currencies USDC.
+/// Nor in the construction of stablecoins e.g. USDT.
+/// So we create a token contract for ETH that stabilises the flucations of ETH and potentially allows it to return to ATH values faster, as well as drop slower.
 ///
 /// ## Vaulting
 ///
@@ -93,18 +99,18 @@ contract Ounce is ERC1155, ERC20 {
     /// @param ethAmount the amount of ETH unvaulted.
     event Unvault(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
 
-    /// ERC20 name.
-    string public constant NAME = "ounce";
-    /// ERC20 symbol.
+    /// erc20 name.
+    string public constant NAME = "Ounce";
+    /// erc20 symbol.
     string public constant SYMBOL = "oXAU";
-    /// ERC1155 uri.
-    /// Note the ERC1155 id is simply the xauPrice at which ERC20 tokens can burn it to unlock ETH.
+    /// erc1155 uri.
+    /// Note the erc1155 id is simply the xauPrice at which erc20 tokens can burn it to unlock ETH.
     string public constant VAULT_URI = "https://oxau.crypto/{id}";
 
-    /// ERC20 is burned 0.1% faster than ERC1155.
+    /// erc20 is burned 0.1% faster than erc1155.
     /// This is the numerator for that.
     uint256 public constant ERC20_OVERBURN_NUMERATOR = 1001;
-    /// ERC20 is burned 0.1% faster than ERC1155.
+    /// erc20 is burned 0.1% faster than erc1155.
     /// This is the denominator for that.
     uint256 public constant ERC20_OVERBURN_DENOMINATOR = 1000;
 
@@ -136,12 +142,12 @@ contract Ounce is ERC1155, ERC20 {
         uint256 _xauAmount = ethAmount.mul(xauPrice);
         emit Unvault(msg.sender, xauPrice, ethAmount);
 
-        // ERC20 burn.
-        // 0.1% more than ERC1155 burn.
+        // erc20 burn.
+        // 0.1% more than erc1155 burn.
         // NOT reentrant.
         _burn(msg.sender, _xauAmount.mul(ERC20_OVERBURN_NUMERATOR).div(ERC20_OVERBURN_DENOMINATOR).div(10 ** XAU_DECIMALS));
 
-        // ERC1155 burn.
+        // erc1155 burn.
         // NOT reentrant (doesn't trigger `IERC1155Receiver`).
         _burn(msg.sender, xauPrice, _xauAmount.div(10 ** XAU_DECIMALS));
 
@@ -159,14 +165,13 @@ contract Ounce is ERC1155, ERC20 {
 
         // Amount of oXAU to mint.
         uint256 _xauAmount = ethAmount.mul(xauPrice).div(10 ** XAU_DECIMALS);
-        console.log("foo vault");
         emit Vault(msg.sender, xauPrice, ethAmount);
 
-        // ERC20 mint.
+        // erc20 mint.
         // NOT reentrant.
         _mint(msg.sender, _xauAmount);
 
-        // ERC1155 mint.
+        // erc1155 mint.
         // Reentrant due to call to `IERC1155Receiver`.
         _mint(msg.sender, xauPrice, _xauAmount, "");
     }

@@ -22,17 +22,6 @@ describe("vault", async function() {
         assert(price.eq(expectedPrice), `bad price ${price} ${expectedPrice}`)
 
         const amountAliceEth = ethers.BigNumber.from('100' + eighteenZeros)
-        let didVaultEvent = false
-        ounce.on('Vault', (address, xauPrice, ethAmount) => {
-            console.log('vault event')
-            assert(address === alice.address, 'wrong vault address')
-            assert(xauPrice === price, 'wrong vault price')
-            assert(ethAmount === amountAliceEth, 'wrong eth amount')
-            didVaultEvent = true
-        })
-        ounce.on('Unvault', (address, xauPrice, ethAmount) => {
-            console.log('unvault event')
-        })
         await vault(ounce, alice, amountAliceEth, [])
 
         const expectedAliceBalance = expectedPrice.mul(amountAliceEth).div(xauOne)
@@ -76,7 +65,5 @@ describe("vault", async function() {
         await aliceOunce.unvault(price, amountAliceEth)
         const erc20AliceBalanceUnvault = await ounce['balanceOf(address)'](alice.address)
         assert(erc20AliceBalanceUnvault.eq(0), `wrong alice balance after unvault ${erc20AliceBalanceUnvault} 0`)
-
-        // assert(didVaultEvent, 'did not vault event')
     })
 })
