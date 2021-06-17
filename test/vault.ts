@@ -115,12 +115,10 @@ describe("vault", async function() {
         // bob can withdraw now
         const bobEthBefore = await bob.getBalance()
         const bobUnvaultTx = await bobOunce.unvault(price, bobEthAmount)
-        console.log(bobUnvaultTx)
         const bobUnvaultTxReceipt = await bobUnvaultTx.wait()
-        console.log(bobUnvaultTxReceipt)
         const bobEthAfter = await bob.getBalance()
         const bobEthDiff = bobEthAfter.sub(bobEthBefore)
-        const bobEthDiffExpected = bobEthAmount.sub(bobUnvaultTxReceipt.cumulativeGasUsed)
+        const bobEthDiffExpected = bobEthAmount.sub(bobUnvaultTxReceipt.gasUsed.mul(bobUnvaultTx.gasPrice))
         assert(bobEthAfter.sub(bobEthBefore).eq(bobEthDiffExpected), `wrong bob diff ${bobEthDiffExpected} ${bobEthDiff}`)
     })
 })
