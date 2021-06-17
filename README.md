@@ -36,9 +36,19 @@ _Hopefully_ the erc20 price volatility is somewhere between ETH and fiat/gold.
 ## Why would I want to buy the erc20?
 
 Because you believe that _eventually_ all vaulted ETH will want to be unvaulted by _somebody_.
+Therefore you can buy low and sell high.
+Therefore you can LP on standard AMMs and collect fees with limited IL.
+
+Actually the erc20 is burned at 0.1% faster rate than the erc1155 so a sliver of ETH is trapped in every vault.
+This should provide sustainable demand on the erc20 token, pushing the price higher.
 
 As the price of the erc20 drops the benefits of vaulting become less and the incentives to unlock vaults increase.
 
 The more erc20 that is bought or locked in contracts (e.g. an AMM), the more ETH is unvaultable.
 
 There is no explicit peg to arbitrage, but very cheap erc20 could quickly lead to a bank run on vaults.
+The bank run is safe because every erc20 minted is mapped to a specific ETH reserve by the erc1155.
+
+## How is the gold price determined?
+
+Chainlink oracles.

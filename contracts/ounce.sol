@@ -23,7 +23,7 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// During bear markets cryptocurrency users may want exposure to precious metals.
 /// But do not want to rely on or back fiat currencies tied to a state.
 /// Nor on the construction of stablecoins.
-/// Ounce is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to create an emergent soft peg.
+/// Ounce is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to (hopefully) create an emergent soft peg.
 ///
 /// ## Vaulting
 ///
@@ -80,6 +80,10 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// - Contract has NO owner or other administrative functions
 /// - Contract has NO upgrades
+/// - There is NO peg
+/// - There is NO DAO
+/// - There are NO liquidations
+/// - There is NO collateralisation ratio (but 100%+ of all tokens minted must be burned to unvault ETH)
 /// - This is all HIGHLY EXPERIMENTAL and comes with NO WARRANTY
 /// - The tokenomics are HIGHLY EXPERIMENTAL and NOT FINANCIAL ADVICE
 /// - If this contract is EXPLOITED or contains BUGS
