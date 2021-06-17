@@ -52,3 +52,26 @@ The bank run is safe because every erc20 minted is mapped to a specific ETH rese
 ## How is the gold price determined?
 
 Chainlink oracles.
+
+## Dev stuff
+
+### Local environment & CI
+
+Uses nixos.
+
+Install `nix-shell` - https://nixos.org/download.html.
+
+Run `nix-shell` in this repo to drop into the shell.
+
+From here run hardhat as normal.
+
+Some additional commands are included for dev.
+
+`local-node` - runs a hardhat node forked at a specific block that has a known oracle price for testing against.
+`local-test` - runs hardhat tests against the local node
+`security-check` - runs slither security scan
+`ci-lint` - run solhint against the contract
+
+Note that the security check and lints run on CI but the hardhat tests do not.
+
+This is because i'm not sure the best way to get the local node running on CI. `@TODO`.

@@ -53,8 +53,8 @@ describe("vault", async function() {
         const erc1155BobBalance = await ounce['balanceOf(address,uint256)'](bob.address, price)
         assert(erc1155BobBalance.eq(expectedBobBalance), `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`)
 
-        const bobToAliceEth = erc20AliceBalance.mul(1001).div(1000).sub(erc20AliceBalance)
-        await bobOunce.transfer(alice.address, bobToAliceEth)
+        const bobToAliceOunce = erc20AliceBalance.mul(1001).div(1000).sub(erc20AliceBalance).sub(1)
+        await bobOunce.transfer(alice.address, bobToAliceOunce)
 
         // alice cannot withdraw a different price vault.
         await assertError(
@@ -63,9 +63,21 @@ describe("vault", async function() {
             'failed to prevent vault price manipulation'
         )
 
+        // alice cannot withdraw with less than the overburn erc20
+        await assertError(
+            async () => await aliceOunce.unvault(price, aliceEthAmount),
+            'burn amount exceeds balance',
+            'failed to overburn'
+        )
+
+        await bobOunce.transfer(alice.address, 1)
+
         await aliceOunce.unvault(price, aliceEthAmount)
         const erc20AliceBalanceUnvault = await ounce['balanceOf(address)'](alice.address)
-        assert(erc20AliceBalanceUnvault.eq(0), `wrong alice balance after unvault ${erc20AliceBalanceUnvault} 0`)
+        assert(erc20AliceBalanceUnvault.eq(0), `wrong alice erc20 balance after unvault ${erc20AliceBalanceUnvault} 0`)
+
+        const erc1155AliceBalanceUnvault = await ounce['balanceOf(address,uint256)'](alice.address, price)
+        assert(erc1155AliceBalanceUnvault.eq(0), `wrong alice erc1155 balance after unvault ${erc1155AliceBalanceUnvault} 0`)
     })
 
     it('should trade erc1155', async function() {
