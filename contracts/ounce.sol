@@ -20,7 +20,7 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// ## Purpose
 ///
 /// Product made for ourselves.
-/// During bear markets cryptocurrency users may want more stable currencies.
+/// During bear markets cryptocurrency users may want exposure to precious metals.
 /// But do not want to rely on or back fiat currencies tied to a state.
 /// Nor on the construction of stablecoins.
 /// Ounce is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to create an emergent soft peg.
@@ -61,7 +61,7 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///     - Ultimately every ounce +0.1% must be burned for ETH to be returned.
 ///     - ETH should always be more desirable long term than ounces so eventually the price will recover.
 ///     - Should find a natural equilibrium between vaults and unvaults based on market conditions.
-///   - Use in range for stable-ish protection of ETH value.
+///   - Use in range for sort-of protected ETH value.
 ///     - If ETH is uncomfortably high then vault and keep ounce.
 ///     - Vaulting is not a trade so is immune to front-running and slippage.
 ///     - Price based on gold oracle so does not rely on fiat for stability.

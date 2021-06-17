@@ -1,74 +1,44 @@
 # sol-ounce
 
-Ounce is both an erc1155 and erc20.
-All token behaviour is default Open Zeppelin.
-This works because none of the function names collide, or if they do the signature overloads cleanly (e.g. `_mint`).
+**THIS IS AN EXPERIMENT. MIT LICENSE. THAT MEANS NO WARRANTY.**
 
-## Purpose
+A hybrid erc20 and erc1155 that mints/burns at the current gold price denominated in ETH.
 
-Product made for ourselves.
-During bear markets BTC, ETH, alt-coin holders may want to move to more stable currencies.
-But do not believe in viability / stability of national fiat currencies USDC.
-Nor in the construction of stablecoins e.g. USDT.
-So we create a token contract for ETH that stabilises the flucations of ETH and potentially allows it to return to ATH values faster, as well as drop slower.
+Not a stable coin.
 
-## Vaulting
+No pegs. No collateral ratios. No DAOs. No admins. No upgrades. No liquidations. No complex contracts.
 
-Simply send ETH to the contract.
-The erc1155 is minted as the current gold price in ETH as its id, and the price multiplied by ETH locked as amount (18 decimals).
-The erc20 is minted as the price multiplied by ETH locked as amount (18 decimals).
-The ETH locked is whatever is sent to the contract as a normal transaction.
+Send ETH to the contract to receive erc20 and erc1155 in equal amounts at current gold price.
 
-## Unvaulting
+Burn 100.1% erc20 against any erc1155 to unlock the ETH that was created against that erc1155.
 
-The erc1155 id (unvault price) and amount of ETH to unvault must be specified to the unvault function.
-The erc1155 under the price id is burned as ETH being unvaulted multiplied by the unvault price.
-The erc20 is burned as 1001/1000 times the erc1155 burn.
-The ETH amount is sent to `msg.sender`.
+Trade either the erc20 and/or the erc1155 on any markets that support those standards.
 
-## Reentrancy
+More information in the comments on `Ounce.sol`.
+I tried about 5x different documentation generators for solidity but they were all old, broken and/or too clunky.
+Most important is to have the comments on the code as it is deployed onchain, so this readme is a summary only.
 
-The erc20 minting and all burning is not reentrant.
-But both receive and unvault end with possibly reentrant calls to the msg.sender.
-`receive` will attempt to treat the msg.sender as an erc1155 receiver.
-`unvault` will call the sender with the appropriate ETH amount.
-This should be safe for the contract state but may facilitate creative use-cases.
+## Why would I want to vault ETH?
 
-## Tokenomics
+Because you can sell the erc20 and/or erc1155 to people who want to unlock ETH.
 
-- Hard price cap at 1 ounce of gold.
-  - Exceeding this allows to vault 1 eth, sell minted ounces, buy more than 1 eth, repeat infinitely.
-- Hard price cap at max recent ETH drawdown.
-  - Exceeding this allows all vaults to be unlocked on a market buy of ounces cheaper than the vaulted ETH.
-- Ranging between two caps.
-  - Sell high to leverage ETH without liquidation threat.
-    - Vault 1 ETH for ~1 ETH of ounce, sell ounce for ETH, wait for pump.
-    - Unvault original eth for roughly starting ounce price, sell ~2 ETH.
-  - Buy low to trap degens.
-    - Ultimately every ounce +0.1% must be burned for ETH to be returned.
-    - ETH should always be more desirable long term than ounces so eventually the price will recover.
-    - Should find a natural equilibrium between vaults and unvaults based on market conditions.
-  - Use in range for stable-ish protection of ETH value.
-    - If ETH is uncomfortably high then vault and keep ounce.
-    - Vaulting is not a trade so is immune to front-running and slippage.
-    - Price based on gold oracle so does not rely on fiat for stability.
-    - If ETH crashes then ounce probably will too but ounce may recover stability faster.
-    - ETH can be unvaulted for 0.1% haircut at any time if market remains strong.
-  - Use in range for LP on AMM with low IL.
-    - Pair with other gold tokens knowing that oXAU is bounded [0.x-1) with gold price.
-    - IL is credibly impermanent.
-    - All liquidity on AMM is locking ETH so more liquidity implies tighter price range.
-    - Should always be baseline supply/demand from leveraging use-case.
-- Applicable to any token/price pair
-  - ETH and gold seem the most obvious first pair to experiment with.
-  - If it works then basically any token/pair should work as long as there is demand for the base token.
+If that sounds circular, consider the following (oversimplified) example to leverage ETH:
 
-## Administration
+If the market price of the erc20 is 0.8x the price of gold then vault 1 ETH and buy 0.8 ETH.
+If the price of ETH goes up 50% against gold then sell 0.8 ETH for 1.6x erc20 minted, unlock 1 ETH and sell remaining erc20.
 
-- Contract has NO owner or other administrative functions
-- Contract has NO upgrades
-- This is all HIGHLY EXPERIMENTAL and comes with NO WARRANTY
-- The tokenomics are HIGHLY EXPERIMENTAL and NOT FINANCIAL ADVICE
-- If this contract is EXPLOITED or contains BUGS
-  - There is NO support or compensation
-  - There MAY be a NEW contract deployed without the exploit/bug
+Feel somewhat safe knowing that the price of the erc20 can never be higher than the price of gold.
+For example, if the price of erc20 is 1.1x gold price then vault 1 ETH to buy 1.1 ETH, infinitely.
+
+Of course the price of ETH, erc20, erc1155 and gold are all variable and unpredictable over time.
+_Hopefully_ the erc20 price volatility is somewhere between ETH and fiat/gold.
+
+## Why would I want to buy the erc20?
+
+Because you believe that _eventually_ all vaulted ETH will want to be unvaulted by _somebody_.
+
+As the price of the erc20 drops the benefits of vaulting become less and the incentives to unlock vaults increase.
+
+The more erc20 that is bought or locked in contracts (e.g. an AMM), the more ETH is unvaultable.
+
+There is no explicit peg to arbitrage, but very cheap erc20 could quickly lead to a bank run on vaults.
