@@ -33,31 +33,32 @@ import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// Product made for ourselves.
 /// During bear markets cryptocurrency users may want exposure to precious metals.
-/// But do not want to rely on or back fiat currencies tied to a state.
+/// But do not want to rely on or back nation state fiat.
 /// Nor on the construction of stablecoins.
 /// EthGild is a token contract that is fully collateralized by ETH and uses tradeable gold price snapshots to (hopefully) create an emergent soft peg.
 ///
 /// ## Gilding
 ///
 /// Simply send ETH to the contract.
+/// `gild` is a private function wrapped by both `receive` and `fallback`.
 /// The erc1155 is minted as the current gold price in ETH as its id, and the price multiplied by ETH locked as amount (18 decimals).
-/// The erc20 is minted as the price multiplied by ETH locked as amount (18 decimals).
+/// The ETHg erc20 is minted as the price multiplied by ETH locked as amount (18 decimals).
 /// The ETH gilded is whatever is sent to the contract as a normal transaction.
 ///
 /// ## Ungilding
 ///
 /// The erc1155 id (ungild price) and amount of ETH to ungild must be specified to the ungild function.
 /// The erc1155 under the price id is burned as ETH being ungild multiplied by the ungild price.
-/// The erc20 is burned as 1001/1000 times the erc1155 burn.
+/// The ETHg erc20 is burned as 1001/1000 times the erc1155 burn.
 /// The ETH amount is sent to `msg.sender`.
 ///
 /// ## Reentrancy
 ///
-/// The erc20 minting and all burning is not reentrant.
-/// But both receive and ungild end with possibly reentrant calls to the msg.sender.
-/// `receive` will attempt to treat the `msg.sender` as an `IERC1155Receiver`.
+/// The erc20 minting and all burning is not reentrant but the erc1155 mint _is_ reentrant.
+/// Both gild and ungild end with possibly reentrant calls to the msg.sender.
+/// `gild` will attempt to treat the `msg.sender` as an `IERC1155Receiver`.
 /// `ungild` will call the sender with the appropriate ETH amount.
-/// This should be safe for the contract state but may facilitate creative use-cases.
+/// This should be safe for the contract state and may facilitate creative use-cases.
 ///
 /// ## Tokenomics
 ///
