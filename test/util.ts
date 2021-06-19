@@ -27,3 +27,7 @@ export const assertError = async (f:Function, s:string, e:string) => {
     }
     assert(didError, e)
   }
+
+  export const expectedName = 'EthGild'
+  export const expectedSymbol = 'ETHg'
+  export const expectedUri = 'https://ethgild.crypto/#/id/{id}'

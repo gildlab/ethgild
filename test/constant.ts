@@ -1,6 +1,6 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { deployEthGild } from './util'
+import { deployEthGild, expectedName, expectedSymbol, expectedUri } from './util'
 
 chai.use(solidity)
 const { assert } = chai
@@ -19,9 +19,9 @@ describe("constants", async function() {
         const chainlinkEthUsd = await ethGild.CHAINLINK_ETHUSD()
         const decimals = await ethGild.decimals()
 
-        assert(name === 'EthGild', 'wrong name')
-        assert(symbol === 'ETHg', 'wrong symbol')
-        assert(gildUri === 'https://ethgild.crypto/#/id/{id}', 'wrong uri')
+        assert(name === expectedName, 'wrong name')
+        assert(symbol === expectedSymbol, 'wrong symbol')
+        assert(gildUri === expectedUri, 'wrong uri')
         assert(overburnNumerator.eq(1001), 'wrong fee numerator')
         assert(overburnDenominator.eq(1000), 'wrong fee denominator')
         assert(xauDecimals.eq(8), 'wrong xau decimals')

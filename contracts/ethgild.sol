@@ -30,7 +30,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// Anyone who wants to ungild all their ETH must first acquire a small amount of additional ETHg from a fellow gilder.
 /// The heaviest stress on ETHg will likely occur during rapid ETH market price spike and crash cycles.
 /// We should expect large amounts of ETHg to be minted by skittish ETH hodlers each time ETH nears an ATH or similar market event.
-/// As the market price of ETH crashes with large new ETHg supply, there will be a lot of pressure on ETHg, likely a lot of short term chaos.
+/// As the market price of ETH crashes with large new ETHg supply, there will be a lot of pressure on ETHg, likely short term chaos.
 /// As gild/ungild cycles continue the overburn will soak up some ETHg glut in the medium term.
 /// The overburn guarantees that a "bank run" on ETHg will force the market price upward towards the current reference gold price, incentivising new gildings.
 /// Long term the steady increase of locked ETH in the system will cushion future shocks to the ETHg market price by establishing an ever rising floor on the ETH-denominated market cap.
@@ -45,8 +45,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// ## Gilding
 ///
-/// Simply send ETH to the contract.
-/// `gild` is a private function wrapped by both `receive` and `fallback`.
+/// Call the payable `gild` function with an ETH `value` to be gilded.
 /// The "reference price" is source from chainlink oracle for internal calculations, nothing is actually bought/sold/traded in a gild.
 /// The erc1155 is minted as the current reference price in ETH as its id, and the reference price multiplied by ETH locked as amount (18 decimals).
 /// The ETHg erc20 is minted as the reference price multiplied by ETH locked as amount (18 decimals).
@@ -54,7 +53,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// ## Ungilding
 ///
-/// The erc1155 id (reference price) and amount of ETH to ungild must be specified to the ungild function.
+/// The erc1155 id (reference price) and amount of ETH to ungild must be specified to the `ungild` function.
 /// The erc1155 under the reference price id is burned as ETH being ungild multiplied by the reference price.
 /// The ETHg erc20 is burned as 1001/1000 times the erc1155 burn.
 /// The ETH amount is sent to `msg.sender` (excludes gas).
@@ -62,7 +61,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// ## Reentrancy
 ///
 /// The erc20 minting and all burning is not reentrant but the erc1155 mint _is_ reentrant.
-/// Both gild and ungild end with reentrant calls to the `msg.sender`.
+/// Both `gild` and `ungild` end with reentrant calls to the `msg.sender`.
 /// `gild` will attempt to treat the `msg.sender` as an `IERC1155Receiver`.
 /// `ungild` will call the sender's `receive` function when it sends the ungilded ETH.
 /// This is safe for the `EthGild` contract state as the reentrant calls are last and allowed to facilitate creative use-cases.
@@ -103,11 +102,11 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// - There is NO collateralisation ratio.
 /// - ETHg is increasingly overcollateralised due to overburn.
 /// - There is NO WARRANTY (read the MIT license).
-/// - The tokenomics are theoretical, have zero empirical evidence (yet) and are certainly NOT FINANCIAL ADVICE.
+/// - The tokenomics are hypothetical, have zero empirical evidence (yet) and are certainly NOT FINANCIAL ADVICE.
 /// - If this contract is EXPLOITED or contains BUGS
 ///   - There is NO support or compensation.
 ///   - There MAY be a NEW contract deployed without the exploit/bug but I am not obligated to engineer or deploy any fix (you can do that if you want to).
-/// - I would LOVE it if you want to build on top of this as a primitive.
+/// - Please feel welcome to build on top of this as a primitive.
 contract EthGild is ERC1155, ERC20 {
     // Chainlink oracles are signed integers so we need to handle them as unsigned.
     using SafeCast for int256;
@@ -206,6 +205,7 @@ contract EthGild is ERC1155, ERC20 {
     }
 
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
+    /// Set the ETH value in the transaction as the sender to gild ETH.
     function gild() external payable {
         require(msg.value > 0, "GILD_ZERO");
 

@@ -10,9 +10,9 @@ Not a stable coin.
 
 No pegs. No collateral ratios. No DAOs. No admins. No upgrades. No liquidations. No complex contracts.
 
-Send ETH to the contract to receive erc20 and erc1155 in equal amounts at current reference gold price.
+Send ETH to the payable `gild` function to gild it and receive ETHg erc20 and erc1155 in equal amounts at current reference gold price.
 
-Burn 100.1% erc20 against any erc1155 to unlock the ETH that was created against that erc1155.
+Call `ungild` to burn 100.1% erc20 against any erc1155 to ungild the ETH that was created against that erc1155.
 
 Trade either the erc20 and/or the erc1155 on any markets that support those standards.
 
@@ -105,8 +105,7 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 
 #### events
 
-- [x] `Gild` emmitted on `receive` for sender, with price and eth amount
-- [x] `Gild` emmitted on `fallback` for sender, with price and eth amount
+- [x] `Gild` emmitted on `gild` for sender, with price and eth amount
 - [x] `Ungild` emmitted on `ungild` for sender, with price and eth amount
 
 #### oracle
@@ -126,3 +125,15 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 - [x] signers can only burn their own tokens
 - [x] signers need both erc20 and erc1155 to burn and ungild eth
 - [ ] mocked oracle can create two different erc1155 at different prices
+
+#### Fallback
+
+- [x] `fallback` and `receive` both error (user must use payable `gild` function explicitly)
+
+#### ERC20
+
+- [x] Open Zeppelin erc20 constructs correctly with `name` and `symbol`
+
+#### ERC1155
+
+- [x] Open Zeppelin erc1155 constructs correctly with `uri` for any id
