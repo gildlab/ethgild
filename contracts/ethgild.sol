@@ -10,8 +10,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-import "hardhat/console.sol";
-
 /// @title EthGild
 /// @author thedavidmeister
 ///
@@ -163,7 +161,6 @@ contract EthGild is ERC1155, ERC20 {
     function referencePrice() public view returns (uint256) {
         (, int256 _xauUsd, , , ) = CHAINLINK_XAUUSD.latestRoundData();
         (, int256 _ethUsd, , , ) = CHAINLINK_ETHUSD.latestRoundData();
-        console.log("%s %s", _xauUsd.toUint256(), _ethUsd.toUint256());
         return
             _ethUsd.toUint256().mul(10**XAU_DECIMALS).div(_xauUsd.toUint256());
     }
