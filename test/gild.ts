@@ -8,6 +8,16 @@ chai.use(solidity)
 const { expect, assert } = chai
 
 describe("gild", async function() {
+    it('should not zero gild', async function() {
+        const ethGild = await deployEthGild() as EthGild
+
+        await assertError(
+            async () => await ethGild.gild(),
+            'revert GILD_ZERO',
+            'failed to prevent a zero value gild'
+        )
+    })
+
     it('should gild', async function() {
         const signers = await ethers.getSigners()
         const ethGild = await deployEthGild() as EthGild

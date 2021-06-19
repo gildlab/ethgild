@@ -124,6 +124,7 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 - [x] both erc20 and erc1155 is burned
 - [x] signers can only burn their own tokens
 - [x] signers need both erc20 and erc1155 to burn and ungild eth
+- [x] zero value gild is an error
 - [ ] mocked oracle can create two different erc1155 at different prices
 
 #### Fallback
