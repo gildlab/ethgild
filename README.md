@@ -2,7 +2,7 @@
 
 **THIS IS AN EXPERIMENT. MIT LICENSE. THAT MEANS NO WARRANTY.**
 
-A hybrid erc20 and erc1155 that mints/burns at the current gold price denominated in ETH.
+A hybrid erc20 and erc1155 that mints/burns at a reference gold price from chainlink oracles, denominated in ETH.
 
 The erc20 is called `EthGild` with symbol `ETHg`. It works much like wrapping/unwrapping `ETH` to `WETH`.
 
@@ -10,7 +10,7 @@ Not a stable coin.
 
 No pegs. No collateral ratios. No DAOs. No admins. No upgrades. No liquidations. No complex contracts.
 
-Send ETH to the contract to receive erc20 and erc1155 in equal amounts at current gold price.
+Send ETH to the contract to receive erc20 and erc1155 in equal amounts at current reference gold price.
 
 Burn 100.1% erc20 against any erc1155 to unlock the ETH that was created against that erc1155.
 
@@ -21,20 +21,23 @@ Trade either the erc20 and/or the erc1155 on any markets that support those stan
 I tried about 5x different documentation generators for solidity but they were all old, broken and/or too clunky.
 Most important is to have the comments on the code as it is deployed onchain, so this readme is a summary only.
 
+If I get a documentation generator working for solidity `0.8.4` I will update this readme and host some docs somewhere :)
+
 ## Why would I want to gild ETH?
 
 Because you can sell the ETHg and/or erc1155 to people who want to ungild their ETH or hold gilded ETH.
 
 If that sounds circular, consider the following (oversimplified) example to leverage ETH:
 
-If the market price of ETHg is 0.8x the price of gold then gild 1 ETH and buy 0.8 ETH.
-If the price of ETH goes up 50% against gold then sell 0.8 ETH for 1.6x erc20 minted, unlock 1 ETH and sell remaining erc20.
+If the market price of ETHg is 0.8x the reference price of gold then gild 1 ETH and buy 0.8 ETH.
+If the market price of ETH goes up 50% against gold then sell 0.8 ETH for 1.6x erc20 minted, unlock 1 ETH and sell remaining erc20.
 
-Feel somewhat safe knowing that the price of the erc20 can never be higher than the price of gold.
-For example, if the price of ETHg is 1.1x gold price then gild 1 ETH to buy 1.1 ETH, infinitely.
+Feel somewhat safe knowing that the market price of ETHg erc20 can never be higher than the reference price of gold.
+For example, if the market price of ETHg is 1.1x gold price then gild 1 ETH to buy 1.1 ETH, infinitely.
+This means there is an upper limit on the cost to ungild later.
 
-Of course the price of ETH, erc20, erc1155 and gold are all variable and unpredictable over time.
-_Hopefully_ the erc20 price volatility is somewhere between ETH and fiat/gold.
+Of course the market price of ETH, erc20, erc1155 and gold are all variable and unpredictable over time.
+_Hopefully_ the ETHg erc20 market price volatility is somewhere between ETH and fiat/gold.
 
 ## Why would I want to buy ETHg?
 
@@ -46,16 +49,16 @@ Unlike algorithmic coins, there is real ETH behind every ETHg enforced and track
 Unlike pegged coins, there is no active management or explicit definition of what "high" or "low" should be - figure it out.
 
 ETHg is burned at 0.1% faster rate than the erc1155 so a sliver of ETH is trapped for every gilding.
-This should provide sustainable demand on the erc20 token, pushing the price higher.
+This should provide sustainable demand on the erc20 token, pushing the  market price higher.
 
-As the price of the erc20 drops the benefits of gilding become less and the incentives to ungild increases.
+As the market price of the erc20 drops the benefits of gilding become less and the incentives to ungild increases.
 
 The more ETHg that is bought or locked in contracts (e.g. an AMM), the more ETH is ungildable.
 
 There is no explicit peg to arbitrage, but very cheap ETHg could quickly lead to a bank run on gilded ETH.
 The bank run is safe because every erc20 minted is mapped to a specific ETH reserve by the erc1155.
 
-## How is the gold price determined?
+## How is the reference gold price determined?
 
 Chainlink oracles.
 

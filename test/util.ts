@@ -24,7 +24,7 @@ export const gild = async (ethGild:EthGild, signer:any, amountEth:any, data:any)
     })
     await tx.wait()
 }
-export const expectedPrice = ethers.BigNumber.from('135299829')
+export const expectedReferencePrice = ethers.BigNumber.from('135299829')
 
 export const assertError = async (f:Function, s:string, e:string) => {
     let didError = false

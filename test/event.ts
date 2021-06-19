@@ -14,7 +14,7 @@ describe('gild events', async function() {
 
         const alice = signers[0]
 
-        const price = await ethGild.price()
+        const referencePrice = await ethGild.referencePrice()
 
         const ethAmount = 50
         const gildTx = await alice.sendTransaction({
@@ -24,18 +24,18 @@ describe('gild events', async function() {
 
         await expect(gildTx).to.emit(ethGild, 'Gild').withArgs(
             alice.address,
-            price,
+            referencePrice,
             ethAmount
         )
 
         const aliceBalance = await ethGild['balanceOf(address)'](alice.address)
         const ungildEthAmount = aliceBalance.div(ethAmount)
 
-        const ungildTx = await ethGild.ungild(price, ungildEthAmount)
+        const ungildTx = await ethGild.ungild(referencePrice, ungildEthAmount)
 
         await expect(ungildTx).to.emit(ethGild, 'Ungild').withArgs(
             alice.address,
-            price,
+            referencePrice,
             ungildEthAmount
         )
     })
@@ -46,7 +46,7 @@ describe('gild events', async function() {
 
         const alice = signers[0]
 
-        const price = await ethGild.price()
+        const referencePrice = await ethGild.referencePrice()
 
         const ethAmount = 20
         // When data is sent with the transaction `fallback` will be called instead of `receive`.
@@ -59,7 +59,7 @@ describe('gild events', async function() {
 
         await expect(gildTx).to.emit(ethGild, 'Gild').withArgs(
             alice.address,
-            price,
+            referencePrice,
             ethAmount
         )
     })
