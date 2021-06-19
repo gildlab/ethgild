@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.0;
 
 // Chainlink imports.
@@ -101,7 +101,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// - There are NO liquidations.
 /// - There is NO collateralisation ratio.
 /// - ETHg is increasingly overcollateralised due to overburn.
-/// - There is NO WARRANTY (read the MIT license).
+/// - There is NO WARRANTY and the code is PUBLIC DOMAIN (read the UNLICENSE).
 /// - The tokenomics are hypothetical, have zero empirical evidence (yet) and are certainly NOT FINANCIAL ADVICE.
 /// - If this contract is EXPLOITED or contains BUGS
 ///   - There is NO support or compensation.

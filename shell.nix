@@ -18,7 +18,7 @@ let
  python3 -m venv ''${d}/venv
  source ''${d}/venv/bin/activate
  pip install slither-analyzer
- slither --exclude-dependencies --filter=hardhat --npx-disable .
+ slither --exclude-dependencies --filter-paths=hardhat,contracts/test --npx-disable .
  '';
 
  ci-test = pkgs.writeShellScriptBin "ci-test" ''

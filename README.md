@@ -1,7 +1,5 @@
 # EthGild
 
-**THIS IS AN EXPERIMENT. MIT LICENSE. THAT MEANS NO WARRANTY.**
-
 A hybrid erc20 and erc1155 that mints/burns at a reference gold price from chainlink oracles, denominated in ETH.
 
 The erc20 is called `EthGild` with symbol `ETHg`. It works much like wrapping/unwrapping `ETH` to `WETH`.
