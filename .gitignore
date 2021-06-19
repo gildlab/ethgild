@@ -4,3 +4,4 @@ cache
 typechain
 .env
 venv
+bin

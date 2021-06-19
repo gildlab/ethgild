@@ -13,7 +13,7 @@ export const config = {
   },
   solidity: {
     compilers: [
-      { version: "0.8.5", settings: {
+      { version: "0.8.4", settings: {
         optimizer: {
           enabled: true
         }

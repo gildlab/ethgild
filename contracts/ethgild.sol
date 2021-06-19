@@ -7,8 +7,8 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 // Open Zeppelin imports.
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 /// @title EthGild
 /// @author thedavidmeister
@@ -111,11 +111,19 @@ contract EthGild is ERC1155, ERC20 {
     /// @param caller the address gilding ETH.
     /// @param xauPrice the XAU price the ETH was gilded at.
     /// @param ethAmount the amount of ETH gilded.
-    event Gild(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
+    event Gild(
+        address indexed caller,
+        uint256 indexed xauPrice,
+        uint256 indexed ethAmount
+    );
     /// @param caller the address ungilding ETH.
     /// @param xauPrice the XAU price the ETH is ungilded at.
     /// @param ethAmount the amount of ETH ungilded.
-    event Ungild(address indexed caller, uint256 indexed xauPrice, uint256 indexed ethAmount);
+    event Ungild(
+        address indexed caller,
+        uint256 indexed xauPrice,
+        uint256 indexed ethAmount
+    );
 
     /// erc20 name.
     string public constant NAME = "EthGild";
@@ -135,18 +143,21 @@ contract EthGild is ERC1155, ERC20 {
     // Chainlink oracles.
     // https://docs.chain.link/docs/ethereum-addresses/
     uint256 public constant XAU_DECIMALS = 8;
-    AggregatorV3Interface public constant CHAINLINK_XAUUSD = AggregatorV3Interface(0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6);
-    AggregatorV3Interface public constant CHAINLINK_ETHUSD = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    AggregatorV3Interface public constant CHAINLINK_XAUUSD =
+        AggregatorV3Interface(0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6);
+    AggregatorV3Interface public constant CHAINLINK_ETHUSD =
+        AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
-    constructor () ERC20(NAME, SYMBOL) ERC1155(GILD_URI) { } //solhint-disable no-empty-blocks
+    constructor() ERC20(NAME, SYMBOL) ERC1155(GILD_URI) {} //solhint-disable no-empty-blocks
 
     // Returns an XAU price in ETH or reverts.
     // Internally calls two separate chainlink oracles to factor out the USD price.
     // Ideally we'd avoid referencing USD even for internal math but chainlink doesn't support it.
     function price() public view returns (uint256) {
-        ( , int256 _xauUsd, , , ) = CHAINLINK_XAUUSD.latestRoundData();
-        ( , int256 _ethUsd, , , ) = CHAINLINK_ETHUSD.latestRoundData();
-        return _ethUsd.toUint256().mul(10 ** XAU_DECIMALS).div(_xauUsd.toUint256());
+        (, int256 _xauUsd, , , ) = CHAINLINK_XAUUSD.latestRoundData();
+        (, int256 _ethUsd, , , ) = CHAINLINK_ETHUSD.latestRoundData();
+        return
+            _ethUsd.toUint256().mul(10**XAU_DECIMALS).div(_xauUsd.toUint256());
     }
 
     /// Burn roughly equal (1001:1000 ratio) erc20:erc1155 to receive initial ETH refund.
@@ -162,11 +173,17 @@ contract EthGild is ERC1155, ERC20 {
         // erc20 burn.
         // 0.1% more than erc1155 burn.
         // NOT reentrant.
-        _burn(msg.sender, _ethgAmount.mul(ERC20_OVERBURN_NUMERATOR).div(ERC20_OVERBURN_DENOMINATOR).div(10 ** XAU_DECIMALS));
+        _burn(
+            msg.sender,
+            _ethgAmount
+                .mul(ERC20_OVERBURN_NUMERATOR)
+                .div(ERC20_OVERBURN_DENOMINATOR)
+                .div(10**XAU_DECIMALS)
+        );
 
         // erc1155 burn.
         // NOT reentrant (doesn't trigger `IERC1155Receiver`).
-        _burn(msg.sender, xauPrice, _ethgAmount.div(10 ** XAU_DECIMALS));
+        _burn(msg.sender, xauPrice, _ethgAmount.div(10**XAU_DECIMALS));
 
         // ETH ungild.
         // Reentrant via. sender's `receive` function.
@@ -181,7 +198,7 @@ contract EthGild is ERC1155, ERC20 {
         require(ethAmount > 0, "ZERO_ETH");
 
         // Amount of ETHg to mint.
-        uint256 _ethgAmount = ethAmount.mul(xauPrice).div(10 ** XAU_DECIMALS);
+        uint256 _ethgAmount = ethAmount.mul(xauPrice).div(10**XAU_DECIMALS);
         emit Gild(msg.sender, xauPrice, ethAmount);
 
         // erc20 mint.
