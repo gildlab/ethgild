@@ -18,6 +18,37 @@ describe("gild", async function() {
         )
     })
 
+    it('should gild a sensible reference price', async function() {
+        // At the time of writing
+        // Block number: 12666285
+        //
+        // Trading View ETHUSD: 2218.71
+        // Chainlink ETHUSD (8 decimals): 2228 25543758
+        //
+        // Trading View XAUUSD: 1763.95
+        // Chainlink XAUUSD (8 decimals): 1767 15500000
+        //
+        // ~ 1 ETH should buy 1.26092812321 XAU
+
+        const signers = await ethers.getSigners()
+        const ethGild = await deployEthGild() as EthGild
+
+        const alice = signers[0]
+
+        const aliceEthGild = ethGild.connect(alice)
+
+        const aliceEthAmount = ethers.BigNumber.from('1' + eighteenZeros)
+        await aliceEthGild.gild({value: aliceEthAmount})
+
+        // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
+        const expectedEthG = '1260928120000000000';
+        const aliceEthG = await aliceEthGild['balanceOf(address)'](alice.address)
+        assert(
+            aliceEthG.eq(expectedEthG),
+            `wrong alice ETHg ${expectedEthG} ${aliceEthG}`
+        )
+    })
+
     it('should gild', async function() {
         const signers = await ethers.getSigners()
         const ethGild = await deployEthGild() as EthGild

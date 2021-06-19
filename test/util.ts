@@ -15,7 +15,7 @@ export const deployEthGild = async () => {
     return ethGild
 }
 
-export const expectedReferencePrice = ethers.BigNumber.from('135299829')
+export const expectedReferencePrice = ethers.BigNumber.from('126092812')
 
 export const assertError = async (f:Function, s:string, e:string) => {
     let didError = false

@@ -6,7 +6,7 @@ let
  '';
 
  local-node = pkgs.writeShellScriptBin "local-node" ''
- hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/''${ALCHEMY_API_KEY} --fork-block-number 12652533
+ hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/''${ALCHEMY_API_KEY} --fork-block-number 12666285
  '';
 
  local-test = pkgs.writeShellScriptBin "local-test" ''
