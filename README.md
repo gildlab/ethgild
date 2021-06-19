@@ -139,3 +139,10 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 #### ERC1155
 
 - [x] Open Zeppelin erc1155 constructs correctly with `uri` for any id
+
+#### Reentrant
+
+- [x] `msg.sender` can respond to `gild` with `erc1155Receiver` with reentrant calls
+- [x] errors in `erc1155Receiver` on `gild` propagate and error in `EthGild`
+- [x] `msg.sender` can respond to `ungild` with `receive` with reentrant calls
+- [x] errors in `receive` on `ungild` propagate and error in `EthGild`

@@ -33,7 +33,7 @@ contract TestReentrant is IERC1155Receiver {
         }
     }
 
-    receive() payable external {
+    receive() external payable {
         require(msg.value > 10, "LOW_VALUE");
         didReceivePayable = true;
     }
@@ -42,6 +42,10 @@ contract TestReentrant is IERC1155Receiver {
     /// Reentrant call should fail.
     function lowValueUngild(EthGild ethGild, uint256 id) external {
         ethGild.ungild(id, 5);
+    }
+
+    function gild(EthGild ethGild) external payable {
+        ethGild.gild{value:msg.value}();
     }
 
     /// @inheritdoc IERC1155Receiver
