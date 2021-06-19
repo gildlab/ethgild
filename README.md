@@ -115,6 +115,7 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 
 #### gild
 
+- [x] cross reference gilded ETHg against Trading View and Chainlink
 - [x] erc1155 minted at oracle price with price * eth amount
 - [x] erc20 minted with same amount as erc1155
 - [x] multiple signers can create and transfer balances for both erc20 and erc1155
