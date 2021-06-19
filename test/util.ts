@@ -1,6 +1,5 @@
 import chai from 'chai'
 import { ethers } from 'hardhat'
-import type { EthGild } from '../typechain/EthGild'
 const { assert } = chai
 
 export const eighteenZeros = '000000000000000000'
@@ -16,14 +15,6 @@ export const deployEthGild = async () => {
     return ethGild
 }
 
-export const gild = async (ethGild:EthGild, signer:any, amountEth:any, data:any) => {
-    const tx = await signer.sendTransaction({
-        to: ethGild.address,
-        value: amountEth,
-        data: data
-    })
-    await tx.wait()
-}
 export const expectedReferencePrice = ethers.BigNumber.from('135299829')
 
 export const assertError = async (f:Function, s:string, e:string) => {

@@ -30,12 +30,12 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// Anyone who wants to ungild all their ETH must first acquire a small amount of additional ETHg from a fellow gilder.
 /// The heaviest stress on ETHg will likely occur during rapid ETH market price spike and crash cycles.
 /// We should expect large amounts of ETHg to be minted by skittish ETH hodlers each time ETH nears an ATH or similar market event.
-/// As the market price of ETH crashes with large new ETHg supply, there will be a lot of pressure on ETHg, likely a lot of short term chaos for ETHg.
-/// As gild/ungild cycles continue the overburn will soak up the ETHg glut in the medium term.
-/// The overburn also guarantees that any "bank run" on ETHg will force the market price upward towards the current reference gold price, incentivising new gildings.
-/// Long term the steady increase of locked ETH in the system will cushion future shocks to the ETHg market price as oustanding NFTs represent data points in an emergent "moving average".
-/// 0.1% is somewhat arbitrary but is intended to be competetive with typical onchain trades that include fee % + slippage + gas.
-/// Hopefully the target audience finds it more compelling to wrap ETH to ETHg than trade their ETH away for stablecoins.
+/// As the market price of ETH crashes with large new ETHg supply, there will be a lot of pressure on ETHg, likely a lot of short term chaos.
+/// As gild/ungild cycles continue the overburn will soak up some ETHg glut in the medium term.
+/// The overburn guarantees that a "bank run" on ETHg will force the market price upward towards the current reference gold price, incentivising new gildings.
+/// Long term the steady increase of locked ETH in the system will cushion future shocks to the ETHg market price by establishing an ever rising floor on the ETH-denominated market cap.
+/// 0.1% is somewhat arbitrary but is intended to be competetive with typical onchain DEX trades that include fee % + slippage + gas.
+/// The goal is for the target audience to find it more compelling to wrap ETH to ETHg than trade their ETH away for stablecoins.
 ///
 /// ## Implementation
 ///
@@ -57,12 +57,12 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// The erc1155 id (reference price) and amount of ETH to ungild must be specified to the ungild function.
 /// The erc1155 under the reference price id is burned as ETH being ungild multiplied by the reference price.
 /// The ETHg erc20 is burned as 1001/1000 times the erc1155 burn.
-/// The ETH amount is sent to `msg.sender`.
+/// The ETH amount is sent to `msg.sender` (excludes gas).
 ///
 /// ## Reentrancy
 ///
 /// The erc20 minting and all burning is not reentrant but the erc1155 mint _is_ reentrant.
-/// Both gild and ungild end with reentrant calls to the msg.sender.
+/// Both gild and ungild end with reentrant calls to the `msg.sender`.
 /// `gild` will attempt to treat the `msg.sender` as an `IERC1155Receiver`.
 /// `ungild` will call the sender's `receive` function when it sends the ungilded ETH.
 /// This is safe for the `EthGild` contract state as the reentrant calls are last and allowed to facilitate creative use-cases.
@@ -95,19 +95,19 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// ## Administration
 ///
-/// - Contract has NO owner or other administrative functions
-/// - Contract has NO upgrades
-/// - There is NO peg
-/// - There is NO DAO
-/// - There are NO liquidations
-/// - There is NO collateralisation ratio
-/// - ETHg is increasingly overcollateralised due to overburn
-/// - This is all HIGHLY EXPERIMENTAL and comes with NO WARRANTY
-/// - The tokenomics are HIGHLY EXPERIMENTAL and NOT FINANCIAL ADVICE
+/// - Contract has NO owner or other administrative functions.
+/// - Contract has NO upgrades.
+/// - There is NO peg.
+/// - There is NO DAO.
+/// - There are NO liquidations.
+/// - There is NO collateralisation ratio.
+/// - ETHg is increasingly overcollateralised due to overburn.
+/// - There is NO WARRANTY (read the MIT license).
+/// - The tokenomics are theoretical, have zero empirical evidence (yet) and are certainly NOT FINANCIAL ADVICE.
 /// - If this contract is EXPLOITED or contains BUGS
-///   - There is NO support or compensation
-///   - There MAY be a NEW contract deployed without the exploit/bug
-/// - I would LOVE it if you want to build on top of this as a primitive
+///   - There is NO support or compensation.
+///   - There MAY be a NEW contract deployed without the exploit/bug but I am not obligated to engineer or deploy any fix (you can do that if you want to).
+/// - I would LOVE it if you want to build on top of this as a primitive.
 contract EthGild is ERC1155, ERC20 {
     // Chainlink oracles are signed integers so we need to handle them as unsigned.
     using SafeCast for int256;
@@ -135,7 +135,7 @@ contract EthGild is ERC1155, ERC20 {
     /// erc20 symbol.
     string public constant SYMBOL = "ETHg";
     /// erc1155 uri.
-    /// Note the erc1155 id is simply the reference XAU price at which ETHg tokens can burn it to unlock ETH.
+    /// Note the erc1155 id is simply the reference XAU price at which ETHg tokens can burn against to unlock ETH.
     string public constant GILD_URI = "https://ethgild.crypto/#/id/{id}";
 
     /// erc20 is burned 0.1% faster than erc1155.
@@ -156,7 +156,7 @@ contract EthGild is ERC1155, ERC20 {
     constructor() ERC20(NAME, SYMBOL) ERC1155(GILD_URI) {} //solhint-disable no-empty-blocks
 
     /// Returns a reference XAU price in ETH or reverts.
-    /// Internally calls two separate chainlink oracles to factor out the USD price.
+    /// Calls two separate chainlink oracles to factor out the USD price.
     /// Ideally we'd avoid referencing USD even for internal math but chainlink doesn't support that yet.
     /// Having two calls costs extra gas and deriving a reference price from some arbitrary fiat adds no value.
     function referencePrice() public view returns (uint256) {
@@ -182,30 +182,38 @@ contract EthGild is ERC1155, ERC20 {
         _burn(
             msg.sender,
             _ethgAmount
+                // Overburn ETHg.
                 .mul(ERC20_OVERBURN_NUMERATOR)
                 .div(ERC20_OVERBURN_DENOMINATOR)
+                // Compensate multiplication of xauReferencePrice.
                 .div(10**XAU_DECIMALS)
         );
 
         // erc1155 burn.
         // NOT reentrant (doesn't trigger `IERC1155Receiver`).
-        _burn(msg.sender, xauReferencePrice, _ethgAmount.div(10**XAU_DECIMALS));
+        _burn(
+            msg.sender,
+            // Reference price is the erc1155 id.
+            xauReferencePrice,
+            // Compensate multiplication of xauReferencePrice.
+            _ethgAmount.div(10**XAU_DECIMALS)
+        );
 
         // ETH ungild.
-        // Reentrant via. sender's `receive` function.
+        // Reentrant via. sender's `receive` or `fallback` function.
         (bool _refundSuccess, ) = msg.sender.call{value: ethAmount}(""); // solhint-disable avoid-low-level-calls
         require(_refundSuccess, "UNGILD_ETH");
     }
 
-    /// Gilds ETH for equal parts ETHg erc20 and erc1155 tokens.
-    /// @param xauReferencePrice XAU reference price in ETH.
-    /// @param ethAmount amount of ETH to gild.
-    function gild(uint256 xauReferencePrice, uint256 ethAmount) private {
-        require(ethAmount > 0, "GILD_ZERO");
+    /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
+    function gild() external payable {
+        require(msg.value > 0, "GILD_ZERO");
+
+        uint256 _referencePrice = referencePrice();
 
         // Amount of ETHg to mint.
-        uint256 _ethgAmount = ethAmount.mul(xauReferencePrice).div(10**XAU_DECIMALS);
-        emit Gild(msg.sender, xauReferencePrice, ethAmount);
+        uint256 _ethgAmount = msg.value.mul(_referencePrice).div(10**XAU_DECIMALS);
+        emit Gild(msg.sender, _referencePrice, msg.value);
 
         // erc20 mint.
         // NOT reentrant.
@@ -213,14 +221,6 @@ contract EthGild is ERC1155, ERC20 {
 
         // erc1155 mint.
         // Reentrant via. `IERC1155Receiver`.
-        _mint(msg.sender, xauReferencePrice, _ethgAmount, "");
-    }
-
-    receive() external payable {
-        gild(referencePrice(), msg.value);
-    }
-
-    fallback() external payable {
-        gild(referencePrice(), msg.value);
+        _mint(msg.sender, _referencePrice, _ethgAmount, "");
     }
 }

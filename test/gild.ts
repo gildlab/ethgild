@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
-import { deployEthGild, expectedReferencePrice, assertError, gild, eighteenZeros, xauOne } from './util'
+import { deployEthGild, expectedReferencePrice, assertError, eighteenZeros, xauOne } from './util'
 import type { EthGild } from '../typechain/EthGild'
 
 chai.use(solidity)
@@ -22,7 +22,7 @@ describe("gild", async function() {
         assert(referencePrice.eq(expectedReferencePrice), `bad referencePrice ${referencePrice} ${expectedReferencePrice}`)
 
         const aliceEthAmount = ethers.BigNumber.from('100' + eighteenZeros)
-        await gild(ethGild, alice, aliceEthAmount, [])
+        await aliceEthGild.gild({value: aliceEthAmount})
 
         const expectedAliceBalance = expectedReferencePrice.mul(aliceEthAmount).div(xauOne)
         const ethgAliceBalance = await ethGild['balanceOf(address)'](alice.address)
@@ -44,7 +44,7 @@ describe("gild", async function() {
         )
 
         const bobEthAmount = ethers.BigNumber.from('10' + eighteenZeros)
-        await gild(ethGild, bob, bobEthAmount, [])
+        await bobEthGild.gild({value: bobEthAmount})
 
         const expectedBobBalance = expectedReferencePrice.mul(bobEthAmount).div(xauOne)
         const ethgBobBalance = await ethGild['balanceOf(address)'](bob.address)
@@ -95,7 +95,7 @@ describe("gild", async function() {
         const aliceEthAmount = ethers.BigNumber.from('10' + eighteenZeros)
         const bobEthAmount = ethers.BigNumber.from('9' + eighteenZeros)
 
-        await gild(ethGild, alice, aliceEthAmount, [])
+        await aliceEthGild.gild({value: aliceEthAmount})
 
         const aliceBalance = await ethGild['balanceOf(address)'](alice.address)
         // erc1155 transfer.

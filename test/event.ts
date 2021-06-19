@@ -8,7 +8,7 @@ chai.use(solidity)
 const { expect, assert } = chai
 
 describe('gild events', async function() {
-    it('should emit events on receive', async function() {
+    it('should emit events on gild and ungild', async function() {
         const signers = await ethers.getSigners()
         const ethGild = await deployEthGild() as EthGild
 
@@ -17,12 +17,7 @@ describe('gild events', async function() {
         const referencePrice = await ethGild.referencePrice()
 
         const ethAmount = 50
-        const gildTx = await alice.sendTransaction({
-            to: ethGild.address,
-            value: ethAmount,
-        })
-
-        await expect(gildTx).to.emit(ethGild, 'Gild').withArgs(
+        await expect(ethGild.gild({value: ethAmount})).to.emit(ethGild, 'Gild').withArgs(
             alice.address,
             referencePrice,
             ethAmount
@@ -37,30 +32,6 @@ describe('gild events', async function() {
             alice.address,
             referencePrice,
             ungildEthAmount
-        )
-    })
-
-    it('should emit Gild events on fallback', async function() {
-        const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
-
-        const alice = signers[0]
-
-        const referencePrice = await ethGild.referencePrice()
-
-        const ethAmount = 20
-        // When data is sent with the transaction `fallback` will be called instead of `receive`.
-        const data = "0x00"
-        const gildTx = await alice.sendTransaction({
-            to: ethGild.address,
-            value: ethAmount,
-            data,
-        })
-
-        await expect(gildTx).to.emit(ethGild, 'Gild').withArgs(
-            alice.address,
-            referencePrice,
-            ethAmount
         )
     })
 })
