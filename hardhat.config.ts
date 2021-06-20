@@ -15,7 +15,8 @@ export const config = {
     compilers: [
       { version: "0.8.4", settings: {
         optimizer: {
-          enabled: true
+          enabled: true,
+          runs: 100000
         }
       } },
     ],

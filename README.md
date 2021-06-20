@@ -12,6 +12,12 @@ Call `ungild` to burn 100.1% erc20 against any erc1155 to ungild the ETH that wa
 
 Trade either the erc20 and/or the erc1155 on any markets that support those standards.
 
+## Contract deployment
+
+ETH mainnet contract: `0x10e79d0117865b48c825f7db7533ed619d68aac3`
+
+Deployed to ETH mainnet with tx: `0xd4b4c3e18dacbe34a836f112c0650f0870a6bc4f977cceb286cd94442ed643e9`
+
 ## More documentation
 
 [More information in the comments of `ethgild.sol`](https://github.com/thedavidmeister/ethgild/blob/main/contracts/ethgild.sol).
