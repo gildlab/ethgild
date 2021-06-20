@@ -15,7 +15,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///
 /// ## Purpose
 ///
-/// Gild: to wrap with gold.
+/// Gild: to cover with gold.
 ///
 /// A wrapped token that wraps/unwraps according to the reference price of gold in ETH.
 ///
