@@ -48,19 +48,20 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// There are a few key issues that ETH holders face when interacting with stablecoins:
 /// - Stablecoins typically denominated in fiat, which inevitably introduces counterparty risk from the fiat issuer
 /// - Stablecoins with a fixed peg are either "algorithmic" (undercollateralised) or heavily overcollateralized
-///   - The former is a severe case of "works until it doesn't" where a single catastrophic bank run can instantly wipe out the system (e.g. $2 billion wiped out by Titan/Iron overnight)
+///   - The former is a severe case of "works until it doesn't" where a single catastrophic bank run can instantly wipe out the system (e.g. $2 billion wiped out overnight by Titan/Iron)
 ///   - The latter requires complex mechanisms such as liquidations, custody, DAOs etc. to eternally manage the collateral against the peg (e.g. DAI, USDC)
 /// - Moving from ETH to a stablecoin typically means risk of losing ETH, whether you trade it in or borrow against it
-///   - If you trade away your ETH then you trigger a taxable event in many jurisdictions, and risk the market moving against you while you use the stablecoin to pay bills such that you can never buy your ETH back
-///   - If you borrow against your ETH then you face constant liquidation threat, if the market drops sharply for even an hour you can have your ETH forcibly taken from you forever
-///   - Trades can be front-run and suffer slippage, loan liquidations can cascade and need to be defended during periods of super-high (500+ gwei) network fees
+///   - If you trade away your ETH then you trigger a taxable event in many jurisdictions, and risk the market moving against you while you use the stablecoin for short term costs, such that you can never buy your ETH back later
+///   - If you borrow against your ETH then you face constant liquidation threat, if the market drops sharply for even one hour you can have your ETH taken from you forever
+///   - Trades can be front-run and suffer slippage, loan liquidations can cascade and need to be defended even during periods of super-high (500+ gwei) network fees
 ///
 /// EthGild aims to address these concerns in a few ways:
 /// - There is no explicit peg and ETHg ranging anywhere from 0-1x the current gold price should be considered normal
-///   - Removing rigid expectations from the system should mitigate certain psychological factors in sudden price shocks and panics
+///   - Removing rigid expectations from the system should mitigate certain psychological factors that manifest as sudden price shocks and panics
 ///   - There is no need to actively manage the system if there is no peg to maintain and every ETHg gilded is overcollateralised by design
-/// - Gilding/ungilding ETH maintains the gilder's control on their ETH for as long as they hold the erc1155 and can acquire sufficient ETHg
+/// - Gilding/ungilding ETH maintains the gilder's control on their ETH for as long as they hold the erc1155 and can acquire sufficient ETHg to ungild
 /// - Gilding/ungilding based on the gold price denominated in ETH decouples the system from counterparty risk as much as possible
+///   - Physical gold and by extension the gold price does not derive its value from any specific authority and has well established, global liquid markets
 ///   - Of course we now rely on the chain link oracle, this is a tradeoff users will have to decide for themselves to accept
 /// - The overburn mechanism ensures that bank runs on the underlying asset bring the ETHg price _closer_ to the reference gold price
 /// - ETH collateral is never liquidated, the worst case scenario for the erc1155 holder is that they ungild the underlying ETH at the current reference gold price
@@ -76,10 +77,10 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// ## Gilding
 ///
 /// Call the payable `gild` function with an ETH `value` to be gilded.
-/// The "reference price" is source from chainlink oracle for internal calculations, nothing is actually bought/sold/traded in a gild.
+/// The "reference price" is source from Chainlink oracle for internal calculations, nothing is actually bought/sold/traded in a gild.
 /// The erc1155 is minted as the current reference price in ETH as its id, and the reference price multiplied by ETH locked as amount (18 decimals).
 /// The ETHg erc20 is minted as the reference price multiplied by ETH locked as amount (18 decimals).
-/// The ETH amount is calculated as the `msg.value` sent to the `EthGild` contract (excludes gas).
+/// The ETH amount is calculated as the `msg.value` sent to the EthGild contract (excludes gas).
 ///
 /// ## Ungilding
 ///
@@ -94,7 +95,7 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 /// Both `gild` and `ungild` end with reentrant calls to the `msg.sender`.
 /// `gild` will attempt to treat the `msg.sender` as an `IERC1155Receiver`.
 /// `ungild` will call the sender's `receive` function when it sends the ungilded ETH.
-/// This is safe for the `EthGild` contract state as the reentrant calls are last and allowed to facilitate creative use-cases.
+/// This is safe for the EthGild contract state as the reentrant calls are last and allowed to facilitate creative use-cases.
 ///
 /// ## Tokenomics
 ///
@@ -129,6 +130,28 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 ///   - There is NO support or compensation.
 ///   - There MAY be a NEW contract deployed without the exploit/bug but I am not obligated to engineer or deploy any specific fix.
 /// - Please feel welcome to build on top of this as a primitive (read the UNLICENSE).
+///
+/// ## Smart contract risk
+///
+/// Every smart contract has significant "unknown risks".
+/// This contract may suffer unforeseen bugs or exploits.
+/// These bugs or exploits may result in partial or complete loss of your funds if you choose to use it.
+/// These bugs or exploits may only manifest when combined with onchain factors that do not exist and cannot be predicted today.
+/// For example, consider the innovation of flash loans and the implications to all existing contracts.
+/// Audits and other professional reviews will be conducted over time if and when TVL justifies it.
+/// Ultimately, the only useful measure of risk is `total value locked x time` which cannot be measured in advance.
+///
+/// ## Oracle risk
+///
+/// The Chainlink oracles could cease to function or report incorrect data.
+/// As EthGild is not targetting a strict peg or actively liquidating participants, there is some tolerance for temporarily incorrect data.
+/// However, if the reference price is significantly wrong for an extended period of time this does harm the system, up to and including existential risk.
+/// As there are no administrative functions for EthGild, there is no ability to change the oracle data source after deployment.
+/// Changing the oracle means deploying an entirely new contract with NO MIGRATION PATH.
+/// You should NOT use this contract unless you have confidence in the Chainlink oracle to maintain price feeds for as long as you hold either the erc20 or erc1155.
+/// The Chainlink oracle contracts themselves are proxy contracts, which means that the owner (Chainlink) can modify the data source over time.
+/// This is great as it means that data should be available even as they iterate on their contracts, as long as they support backwards compatibility for `AggregatorV3Interface`.
+/// This also means that EthGild can never be more secure than Chainlink itself, if their oracles are damaged somehow then EthGild suffers too.
 contract EthGild is ERC1155, ERC20 {
     // Chainlink oracles are signed integers so we need to handle them as unsigned.
     using SafeCast for int256;
@@ -177,8 +200,8 @@ contract EthGild is ERC1155, ERC20 {
     constructor() ERC20(NAME, SYMBOL) ERC1155(GILD_URI) {} //solhint-disable no-empty-blocks
 
     /// Returns a reference XAU price in ETH or reverts.
-    /// Calls two separate chainlink oracles to factor out the USD price.
-    /// Ideally we'd avoid referencing USD even for internal math but chainlink doesn't support that yet.
+    /// Calls two separate Chainlink oracles to factor out the USD price.
+    /// Ideally we'd avoid referencing USD even for internal math but Chainlink doesn't support that yet.
     /// Having two calls costs extra gas and deriving a reference price from some arbitrary fiat adds no value.
     function referencePrice() public view returns (uint256) {
         (, int256 _xauUsd, , , ) = CHAINLINK_XAUUSD.latestRoundData();

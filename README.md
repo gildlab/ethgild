@@ -2,7 +2,7 @@
 
 Gild: to cover with gold.
 
-A hybrid erc20 and erc1155 that mints/burns at a reference gold price from chainlink oracles, denominated in ETH.
+A hybrid erc20 and erc1155 that mints/burns at a reference gold price from Chainlink oracles, denominated in ETH.
 
 The erc20 is called `EthGild` with symbol `ETHg`. It works much like wrapping/unwrapping `ETH` to `WETH`.
 
@@ -51,7 +51,7 @@ This should provide sustainable demand on the erc20 token, pushing the  market p
 
 As the market price of the erc20 drops the benefits of gilding become less and the incentives to ungild increases.
 
-The more ETHg that is bought or locked in contracts (e.g. an AMM), the more ETH is ungildable.
+The more ETHg that is bought or locked in contracts (e.g. an AMM), the more ETH is no longer ungildable.
 
 There is no explicit peg to arbitrage, but very cheap ETHg could quickly lead to a bank run on gilded ETH.
 The bank run brings the ETHg price _up_ due to the overburn mechanism and standard AMM bonding curves.
@@ -104,7 +104,7 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 - [x] gild uri is `https://ethgild.crypto/#/id/{id}`
 - [x] overburn numerator is `1001`
 - [x] overburn denominator is `1000`
-- [x] xau decimals for chainlink oracle is `8`
+- [x] xau decimals for Chainlink oracle is `8`
 - [x] xau oracle is `0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6`
 - [x] eth oracle is `0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419`
 - [x] erc20 decimals is `18`
