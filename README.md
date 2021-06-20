@@ -4,15 +4,13 @@ A hybrid erc20 and erc1155 that mints/burns at a reference gold price from chain
 
 The erc20 is called `EthGild` with symbol `ETHg`. It works much like wrapping/unwrapping `ETH` to `WETH`.
 
-Not a stable coin.
-
-No pegs. No collateral ratios. No DAOs. No admins. No upgrades. No liquidations. No complex contracts.
-
 Send ETH to the payable `gild` function to gild it and receive ETHg erc20 and erc1155 in equal amounts at current reference gold price.
 
 Call `ungild` to burn 100.1% erc20 against any erc1155 to ungild the ETH that was created against that erc1155.
 
 Trade either the erc20 and/or the erc1155 on any markets that support those standards.
+
+## More documentation
 
 [More information in the comments of `ethgild.sol`](https://github.com/thedavidmeister/ethgild/blob/main/contracts/ethgild.sol).
 
@@ -23,7 +21,7 @@ If I get a documentation generator working for solidity `0.8.4` I will update th
 
 ## Why would I want to gild ETH?
 
-Because you can sell the ETHg and/or erc1155 to people who want to ungild their ETH or hold gilded ETH.
+Because you can sell the ETHg and/or erc1155 to people who want to ungild their ETH or hold/trade gilded ETH.
 
 If that sounds circular, consider the following (oversimplified) example to leverage ETH:
 
@@ -35,13 +33,13 @@ For example, if the market price of ETHg is 1.1x gold price then gild 1 ETH to b
 This means there is an upper limit on the cost to ungild later.
 
 Of course the market price of ETH, erc20, erc1155 and gold are all variable and unpredictable over time.
-_Hopefully_ the ETHg erc20 market price volatility is somewhere between ETH and fiat/gold.
+Hopefully the ETHg erc20 market price volatility is somewhere between ETH and fiat/gold.
 
 ## Why would I want to buy ETHg?
 
-Because you believe that _eventually_ all gilded ETH will want to be ungilded by _somebody_.
-Therefore you can buy low and sell high.
-Therefore you can LP on standard AMMs and collect fees with limited IL.
+You believe that eventually all gilded ETH will want to be ungilded.
+You can buy low and sell high.
+You can LP on standard AMMs and collect fees with limited IL.
 
 Unlike algorithmic coins, there is real ETH behind every ETHg enforced and tracked by erc1155 tokens.
 Unlike pegged coins, there is no active management or explicit definition of what "high" or "low" should be - figure it out.
@@ -54,7 +52,15 @@ As the market price of the erc20 drops the benefits of gilding become less and t
 The more ETHg that is bought or locked in contracts (e.g. an AMM), the more ETH is ungildable.
 
 There is no explicit peg to arbitrage, but very cheap ETHg could quickly lead to a bank run on gilded ETH.
-The bank run is safe because every erc20 minted is mapped to a specific ETH reserve by the erc1155.
+The bank run brings the ETHg price _up_ due to the overburn mechanism and standard AMM bonding curves.
+
+## UNLICENSE
+
+EthGild is public domain and comes with no warranty.
+
+See UNLICENSE for details.
+
+https://unlicense.org/
 
 ## How is the reference gold price determined?
 
