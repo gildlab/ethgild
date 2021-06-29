@@ -14,7 +14,9 @@
         "ts-generator": "^0.1.1",
         "ts-node": "^10.0.0",
         "typechain": "^5.0.0",
-        "typescript": "^4.3.2"
+        "typescript": "^4.3.2",
+        "yargs-parser": ">=13.1.2",
+        "mem": ">=4.0.0"
     },
     "dependencies": {
         "solhint": "^3.3.6",
