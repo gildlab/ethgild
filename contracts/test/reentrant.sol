@@ -6,7 +6,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 
 // EthGild import for reentrancy.
-import {EthGild} from "../ethgild.sol";
+import {EthGild} from "../EthGild.sol";
 
 /// @title TestReentrant
 /// @author thedavidmeister

@@ -20,7 +20,7 @@ Deployed to ETH mainnet with tx: `0xd4b4c3e18dacbe34a836f112c0650f0870a6bc4f977c
 
 ## More documentation
 
-[More information in the comments of `ethgild.sol`](https://github.com/thedavidmeister/ethgild/blob/main/contracts/ethgild.sol).
+[More information in the comments of `EthGild.sol`](https://github.com/thedavidmeister/ethgild/blob/main/contracts/EthGild.sol).
 
 I tried about 5x different documentation generators for solidity but they were all old, broken and/or too clunky.
 Most important is to have the comments on the code as it is deployed onchain, so this readme is a summary only.
