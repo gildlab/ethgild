@@ -6,7 +6,6 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
 // Open Zeppelin imports.
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
@@ -155,7 +154,6 @@ import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 contract EthGild is ERC1155, ERC20 {
     // Chainlink oracles are signed integers so we need to handle them as unsigned.
     using SafeCast for int256;
-    using SafeMath for uint256;
 
     /// @param caller the address gilding ETH.
     /// @param xauReferencePrice the reference XAU price the ETH was gilded at.
@@ -207,7 +205,7 @@ contract EthGild is ERC1155, ERC20 {
         (, int256 _xauUsd, , , ) = CHAINLINK_XAUUSD.latestRoundData();
         (, int256 _ethUsd, , , ) = CHAINLINK_ETHUSD.latestRoundData();
         return
-            _ethUsd.toUint256().mul(10**XAU_DECIMALS).div(_xauUsd.toUint256());
+            ( _ethUsd.toUint256() * 10**XAU_DECIMALS ) / _xauUsd.toUint256();
     }
 
     /// Overburn ETHg at 1001:1000 ratio to receive initial ETH refund.
@@ -217,7 +215,7 @@ contract EthGild is ERC1155, ERC20 {
     /// @param ethAmount the amount of ETH to ungild.
     function ungild(uint256 xauReferencePrice, uint256 ethAmount) external {
         // Amount of ETHg to burn.
-        uint256 _ethgAmount = ethAmount.mul(xauReferencePrice);
+        uint256 _ethgAmount = ethAmount * xauReferencePrice;
         emit Ungild(msg.sender, xauReferencePrice, ethAmount);
 
         // ETHg erc20 burn.
@@ -225,12 +223,10 @@ contract EthGild is ERC1155, ERC20 {
         // NOT reentrant.
         _burn(
             msg.sender,
-            _ethgAmount
-                // Overburn ETHg.
-                .mul(ERC20_OVERBURN_NUMERATOR)
-                .div(ERC20_OVERBURN_DENOMINATOR)
+            // Overburn ETHg.
+            _ethgAmount * ERC20_OVERBURN_NUMERATOR /
                 // Compensate multiplication of xauReferencePrice.
-                .div(10**XAU_DECIMALS)
+                ( ERC20_OVERBURN_DENOMINATOR * 10**XAU_DECIMALS )
         );
 
         // erc1155 burn.
@@ -240,7 +236,7 @@ contract EthGild is ERC1155, ERC20 {
             // Reference price is the erc1155 id.
             xauReferencePrice,
             // Compensate multiplication of xauReferencePrice.
-            _ethgAmount.div(10**XAU_DECIMALS)
+            _ethgAmount / 10**XAU_DECIMALS
         );
 
         // ETH ungild.
@@ -257,7 +253,7 @@ contract EthGild is ERC1155, ERC20 {
         uint256 _referencePrice = referencePrice();
 
         // Amount of ETHg to mint.
-        uint256 _ethgAmount = msg.value.mul(_referencePrice).div(10**XAU_DECIMALS);
+        uint256 _ethgAmount = ( msg.value * _referencePrice ) / 10**XAU_DECIMALS;
         emit Gild(msg.sender, _referencePrice, msg.value);
 
         // erc20 mint.
