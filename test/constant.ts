@@ -1,6 +1,6 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
-import { deployEthGild, expectedName, expectedSymbol, expectedUri } from './util'
+import { chainlinkXauUsd, chainlinkEthUsd, deployEthGild, expectedName, expectedSymbol, expectedUri } from './util'
 
 chai.use(solidity)
 const { assert } = chai
@@ -15,8 +15,8 @@ describe("constants", async function() {
         const overburnNumerator = await ethGild.ERC20_OVERBURN_NUMERATOR()
         const overburnDenominator = await ethGild.ERC20_OVERBURN_DENOMINATOR()
         const xauDecimals = await ethGild.XAU_DECIMALS()
-        const chainlinkXauUsd = await ethGild.CHAINLINK_XAUUSD()
-        const chainlinkEthUsd = await ethGild.CHAINLINK_ETHUSD()
+        const chainlinkXauUsdResult = await ethGild.chainlinkXauUsd()
+        const chainlinkEthUsdResult = await ethGild.chainlinkEthUsd()
         const decimals = await ethGild.decimals()
 
         assert(name === expectedName, 'wrong name')
@@ -25,8 +25,8 @@ describe("constants", async function() {
         assert(overburnNumerator.eq(1001), 'wrong fee numerator')
         assert(overburnDenominator.eq(1000), 'wrong fee denominator')
         assert(xauDecimals.eq(8), 'wrong xau decimals')
-        assert(chainlinkXauUsd === '0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6', 'wrong chainlink xau oracle')
-        assert(chainlinkEthUsd === '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419', 'wrong chainlink eth oracle')
+        assert(chainlinkXauUsdResult === chainlinkXauUsd, 'wrong chainlink xau oracle')
+        assert(chainlinkEthUsdResult === chainlinkEthUsd, 'wrong chainlink eth oracle')
         assert(decimals === 18, 'wrong decimals')
     })
 
