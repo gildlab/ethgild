@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
-import { deployEthGild, expectedReferencePrice, expectedUri } from './util'
+import { deployEthGild, expectedReferencePrice, expectedUri, expected1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
 
 chai.use(solidity)
@@ -36,13 +36,13 @@ describe('erc1155 usage', async function() {
             `wrong erc20 balance ${expectedErc20Balance} ${erc20Balance}`
         )
 
-        const erc1155Balance = await ethGild['balanceOf(address,uint256)'](signers[0].address, expectedReferencePrice)
+        const erc1155Balance = await ethGild['balanceOf(address,uint256)'](signers[0].address, expected1155ID)
         assert(
             erc1155Balance.eq(expectedErc1155Balance),
             `wrong erc1155 balance ${expectedErc20Balance} ${erc1155Balance}`
         )
 
-        await ethGild.safeTransferFrom(signers[0].address, signers[1].address, expectedReferencePrice, '630', [])
+        await ethGild.safeTransferFrom(signers[0].address, signers[1].address, expected1155ID, '630', [])
 
         const erc20BalanceAfter = await ethGild['balanceOf(address)'](signers[0].address)
         assert(
@@ -56,13 +56,13 @@ describe('erc1155 usage', async function() {
             `wrong erc20 balance after 2 0 ${erc20BalanceAfter2}`
         )
 
-        const erc1155BalanceAfter = await ethGild['balanceOf(address,uint256)'](signers[0].address, expectedReferencePrice)
+        const erc1155BalanceAfter = await ethGild['balanceOf(address,uint256)'](signers[0].address, expected1155ID)
         assert(
             erc1155BalanceAfter.eq(expectedErc1155BalanceAfter),
             `wrong erc1155 balance after ${expectedErc1155BalanceAfter} ${erc1155BalanceAfter}`
         )
 
-        const erc1155BalanceAfter2 = await ethGild['balanceOf(address,uint256)'](signers[1].address, expectedReferencePrice)
+        const erc1155BalanceAfter2 = await ethGild['balanceOf(address,uint256)'](signers[1].address, expected1155ID)
         assert(
             erc1155BalanceAfter2.eq(expectedErc1155BalanceAfter),
             `wrong erc1155 balance 2 after ${expectedErc1155BalanceAfter} ${erc1155BalanceAfter2}`

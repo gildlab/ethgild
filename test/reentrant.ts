@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
-import { deployEthGild, assertError, expectedReferencePrice } from './util'
+import { deployEthGild, assertError, expectedReferencePrice, expected1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
 import type { TestReentrant } from '../typechain/TestReentrant'
 
@@ -12,7 +12,7 @@ describe('reentrant behaviour', async function() {
     it('should receive and erc1155 receive', async function() {
         const ethGild = await deployEthGild() as EthGild
 
-        const ethAmount = 100
+        const ethAmount = 100000
 
         const testReentrantFactory = await ethers.getContractFactory('TestReentrant')
         const testReentrant = await testReentrantFactory.deploy()
@@ -26,9 +26,9 @@ describe('reentrant behaviour', async function() {
         const erc1155ReceivedId = await testReentrant.erc1155Received(0)
         const erc1155ReceivedValue = await testReentrant.erc1155Received(1)
 
-        assert(erc1155ReceivedId.eq(expectedReferencePrice), 'wrong reference price')
+        assert(erc1155ReceivedId.eq(expected1155ID), 'wrong ID')
 
-        const expectedValue = expectedReferencePrice.mul(ethAmount).div(100000000)
+        const expectedValue = expectedReferencePrice.mul(ethAmount).div(100000000).div(2)
         assert(erc1155ReceivedValue.eq(expectedValue), `wrong received value ${expectedValue} ${erc1155ReceivedValue}`)
     })
 
@@ -39,7 +39,7 @@ describe('reentrant behaviour', async function() {
         const testReentrant = await testReentrantFactory.deploy()
         await testReentrant.deployed()
 
-        await testReentrant.gild(ethGild.address, {value: 100})
+        await testReentrant.gild(ethGild.address, {value: 2000})
 
         await assertError(
             async () => await testReentrant.lowValueUngild(ethGild.address, expectedReferencePrice),
@@ -56,7 +56,7 @@ describe('reentrant behaviour', async function() {
         await testReentrant.deployed()
 
         await assertError(
-            async () => await testReentrant.gild(ethGild.address, {value: 5}),
+            async () => await testReentrant.gild(ethGild.address, {value: 1800}),
             'revert ERC1155: ERC1155Receiver rejected tokens',
             'failed to revert an error in erc1155 receive',
         )

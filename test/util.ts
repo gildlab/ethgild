@@ -67,3 +67,4 @@ export const getEventArgs = async (
 export const generate1155ID = (referencePrice: BigNumber, xauDecimals: number):BigNumber => {
   return BigNumber.from(referencePrice.toBigInt() << BigInt(8) | BigInt(xauDecimals))
 }
+export const expected1155ID = generate1155ID(expectedReferencePrice, 8)

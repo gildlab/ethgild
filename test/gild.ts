@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
-import { deployEthGild, expectedReferencePrice, assertError, eighteenZeros, xauOne } from './util'
+import { deployEthGild, expectedReferencePrice, assertError, eighteenZeros, xauOne, generate1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
 
 chai.use(solidity)
@@ -13,7 +13,7 @@ describe("gild", async function() {
 
         await assertError(
             async () => await ethGild.gild(),
-            'revert GILD_ZERO',
+            'revert MIN_GILD',
             'failed to prevent a zero value gild'
         )
     })
@@ -60,7 +60,7 @@ describe("gild", async function() {
         const bobEthGild = ethGild.connect(bob)
 
         const [xauDecimals, referencePrice] = await ethGild.referencePrice()
-        const id1155 = referencePrice.toNumber() << 8 | xauDecimals
+        const id1155 = generate1155ID(referencePrice, xauDecimals)
         assert(referencePrice.eq(expectedReferencePrice), `bad referencePrice ${referencePrice} ${expectedReferencePrice}`)
 
         const aliceEthAmount = ethers.BigNumber.from('100' + eighteenZeros)
@@ -80,7 +80,7 @@ describe("gild", async function() {
         assert(bobErc1155Balance.eq(0), `wrong bob erc1155 balance ${bobErc1155Balance} 0`)
 
         await assertError(
-            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, aliceEthAmount),
+            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, erc1155Balance),
             'burn amount exceeds balance',
             'failed to apply fee to ungild'
         )
@@ -100,21 +100,21 @@ describe("gild", async function() {
 
         // alice cannot withdraw a different referencePrice gild.
         await assertError(
-            async () => await aliceEthGild.ungild(xauDecimals, referencePrice.sub(1), aliceEthAmount),
+            async () => await aliceEthGild.ungild(xauDecimals, referencePrice.sub(1), 1000),
             'burn amount exceeds balance',
             'failed to prevent gild referencePrice manipulation'
         )
 
         // alice cannot withdraw with less than the overburn erc20
         await assertError(
-            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, aliceEthAmount),
+            async () => await aliceEthGild.ungild(xauDecimals, id1155, erc1155Balance),
             'burn amount exceeds balance',
             'failed to overburn'
         )
 
         await bobEthGild.transfer(alice.address, 1)
 
-        await aliceEthGild.ungild(xauDecimals, referencePrice, aliceEthAmount)
+        await aliceEthGild.ungild(xauDecimals, referencePrice, erc1155Balance)
         const erc20AliceBalanceUngild = await ethGild['balanceOf(address)'](alice.address)
         assert(erc20AliceBalanceUngild.eq(0), `wrong alice erc20 balance after ungild ${erc20AliceBalanceUngild} 0`)
 
@@ -133,7 +133,7 @@ describe("gild", async function() {
         const bobEthGild = ethGild.connect(bob)
 
         const [xauDecimals, referencePrice] = await ethGild.referencePrice()
-        const id1155 = referencePrice.toNumber() << 8 | xauDecimals
+        const id1155 = generate1155ID(referencePrice, xauDecimals)
 
         const aliceEthAmount = ethers.BigNumber.from('10' + eighteenZeros)
         const bobEthAmount = ethers.BigNumber.from('9' + eighteenZeros)
@@ -146,14 +146,14 @@ describe("gild", async function() {
 
         // alice cannot withdraw after sending to bob.
         await assertError(
-            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, 1),
+            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, 1000),
             'burn amount exceeds balance',
             'failed to prevent alice withdrawing after sending erc1155'
         )
 
         // bob cannot withdraw without erc20
         await assertError(
-            async () => await bobEthGild.ungild(xauDecimals, referencePrice, bobEthAmount),
+            async () => await bobEthGild.ungild(xauDecimals, referencePrice, 1000),
             'burn amount exceeds balance',
             'failed to prevent bob withdrawing without receiving erc20'
         )
@@ -162,18 +162,21 @@ describe("gild", async function() {
         await aliceEthGild.transfer(bob.address, aliceBalance)
 
         await assertError(
-            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, 1),
+            async () => await aliceEthGild.ungild(xauDecimals, referencePrice, 1000),
             'burn amount exceeds balance',
             'failed to prevent alice withdrawing after sending erc1155 and erc20'
         )
 
         // bob can withdraw now
         const bobEthBefore = await bob.getBalance()
-        const bobUngildTx = await bobEthGild.ungild(xauDecimals, referencePrice, bobEthAmount)
+        const erc1155BobBalance = await ethGild['balanceOf(address,uint256)'](bob.address, id1155)
+        const bobUngildTx = await bobEthGild.ungild(xauDecimals, referencePrice, erc1155BobBalance.mul(1000).div(1001))
         const bobUngildTxReceipt = await bobUngildTx.wait()
+        const erc1155BobBalanceAfter = await ethGild['balanceOf(address,uint256)'](bob.address, id1155)
         const bobEthAfter = await bob.getBalance()
         const bobEthDiff = bobEthAfter.sub(bobEthBefore)
-        const bobEthDiffExpected = bobEthAmount.sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice))
+        // Bob withdraw alice's gilded eth
+        const bobEthDiffExpected = aliceEthAmount.mul(1000).div(1001).sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice))
         assert(bobEthAfter.sub(bobEthBefore).eq(bobEthDiffExpected), `wrong bob diff ${bobEthDiffExpected} ${bobEthDiff}`)
     })
 })

@@ -1,7 +1,7 @@
 import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
-import { deployEthGild, expectedName, expectedReferencePrice, expectedSymbol } from './util'
+import { deployEthGild, expectedName, expectedReferencePrice, expectedSymbol, expected1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
 
 chai.use(solidity)
@@ -36,7 +36,7 @@ describe('erc20 usage', async function() {
             `wrong erc20 balance ${expectedErc20Balance} ${erc20Balance}`
         )
 
-        const erc1155Balance = await ethGild['balanceOf(address,uint256)'](signers[0].address, expectedReferencePrice)
+        const erc1155Balance = await ethGild['balanceOf(address,uint256)'](signers[0].address, expected1155ID)
         assert(
             erc1155Balance.eq(expectedErc1155Balance),
             `wrong erc1155 balance ${expectedErc20Balance} ${erc1155Balance}`
@@ -56,14 +56,14 @@ describe('erc20 usage', async function() {
             `wrong erc20 balance after 2 ${expectedErc20BalanceAfter} ${erc20BalanceAfter2}`
         )
 
-        const erc1155BalanceAfter = await ethGild['balanceOf(address,uint256)'](signers[0].address, expectedReferencePrice)
+        const erc1155BalanceAfter = await ethGild['balanceOf(address,uint256)'](signers[0].address, expected1155ID)
         assert(
             erc1155BalanceAfter.eq(expectedErc20Balance),
             `wrong erc1155 balance after ${expectedErc1155BalanceAfter} ${erc1155BalanceAfter}`
         )
 
         assert(
-            (await ethGild['balanceOf(address,uint256)'](signers[1].address, expectedReferencePrice)).eq(0),
+            (await ethGild['balanceOf(address,uint256)'](signers[1].address, expected1155ID)).eq(0),
             `wrong erc1155 balance 2 after ${expectedErc1155BalanceAfter} ${erc1155BalanceAfter}`
         )
     })

@@ -8,7 +8,7 @@ chai.use(solidity)
 const { expect, assert } = chai
 
 describe('gild events', async function () {
-    it.only('should emit events on gild and ungild', async function () {
+    it('should emit events on gild and ungild', async function () {
         const signers = await ethers.getSigners()
         const ethGild = await deployEthGild() as EthGild
 
@@ -51,9 +51,6 @@ describe('gild events', async function () {
         // Ungild ETH is always rounded down.
         const ungildEthAmount = ungildAmount.mul(Math.pow(10, xauDecimals)).div(referencePrice)
 
-        console.log(ungildEthAmount.toString())
-        console.log(ungildEventArgs, ungildAmount.toString(), xauDecimals, referencePrice.toString())
-
         assert(ungildEventArgs.sender === alice.address, `incorrect ungild sender. expected ${alice.address} got ${ungildEventArgs.sender}`)
         assert(ungildEventArgs.xauReferencePrice.eq(referencePrice), `incorrect ungild xauReferencePrice. expected ${referencePrice} got ${ungildEventArgs.xauReferencePrice}`)
         assert(
@@ -62,7 +59,6 @@ describe('gild events', async function () {
         )
 
         const alice1155BalanceAfter = await ethGild['balanceOf(address,uint256)'](alice.address, id1155)
-        console.log(alice1155BalanceAfter)
         const expected1155BalanceAfter = alice1155BalanceBefore.sub(ungildAmount)
         assert(alice1155BalanceAfter.eq(expected1155BalanceAfter), `incorrect 1155 balance after. expected ${expected1155BalanceAfter} got ${alice1155BalanceAfter}`)
     })
