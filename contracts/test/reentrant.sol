@@ -26,7 +26,7 @@ contract TestReentrant is IERC1155Receiver {
     ) external override returns (bytes4) {
         if (value > 100) {
             erc1155Received = [id, value];
-            EthGild(msg.sender).ungild(id, 50);
+            EthGild(msg.sender).ungild(8, id, 50);
             return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
         } else {
             return bytes4(keccak256("garbage"));
@@ -41,7 +41,7 @@ contract TestReentrant is IERC1155Receiver {
     /// Ungilds too little ETH to satisfy the receive.
     /// Reentrant call should fail.
     function lowValueUngild(EthGild ethGild, uint256 id) external {
-        ethGild.ungild(id, 5);
+        ethGild.ungild(8, id, 5);
     }
 
     function gild(EthGild ethGild) external payable {

@@ -226,10 +226,18 @@ struct OracleConfig {
 /// never be more secure than Chainlink itself, if their oracles are damaged
 /// somehow then EthGild suffers too.
 contract EthGild is ERC1155, ERC20 {
+    event AltURI(
+        /// `msg.sender` logging the new alt URI.
+        address sender,
+        /// Alternative URI the erc1155 can be found at.
+        string altURI
+    );
     /// Some ETH has been gilded.
     event Gild(
         /// `msg.sender` address gilding ETH.
         address sender,
+        /// Oracle reporting reference price at this decimals.
+        uint8 xauDecimals,
         /// Reference XAU price the ETH was gilded at.
         uint256 xauReferencePrice,
         /// Amount of ETH gilded.
@@ -239,6 +247,8 @@ contract EthGild is ERC1155, ERC20 {
     event Ungild(
         /// `msg.sender` address ungilding ETH.
         address sender,
+        /// Oracle reporting reference price at this decimals.
+        uint8 xauDecimals,
         /// Reference XAU price the ETH was ungilded at.
         uint256 xauReferencePrice,
         /// Amount of ETH ungilded.
@@ -262,9 +272,7 @@ contract EthGild is ERC1155, ERC20 {
     uint256 public constant ERC20_OVERBURN_DENOMINATOR = 1000;
 
     // Chainlink oracles.
-    // https://docs.chain.link/docs/ethereum-addresses/
-    uint256 public constant XAU_DECIMALS = 8;
-    uint256 public constant XAU_DECIMALS_MULTIPLIER = 10**XAU_DECIMALS;
+    // https://docs.chain.link/docs/ethereum-addresses/s
     AggregatorV3Interface public immutable chainlinkXauUsd;
     AggregatorV3Interface public immutable chainlinkEthUsd;
 
@@ -277,17 +285,25 @@ contract EthGild is ERC1155, ERC20 {
         chainlinkEthUsd = oracleConfig_.chainlinkEthUsd;
     }
 
+    function altURI(string calldata altUri_) external {
+        emit AltURI(msg.sender, altUri_);
+    }
+
     /// Returns a uint256 reference XAU price in ETH or reverts.
     /// Calls two separate Chainlink oracles to factor out the USD price.
     /// Ideally we'd avoid referencing USD even for internal math but Chainlink
     /// doesn't support that yet. Having two calls costs extra gas and deriving
     /// a reference price from some arbitrary fiat adds no value.
-    function referencePrice() public view returns (uint256) {
+    function referencePrice() public view returns (uint8, uint256) {
+        uint8 xauDecimals_ = chainlinkXauUsd.decimals();
         (, int256 xauUsd_, , , ) = chainlinkXauUsd.latestRoundData();
         (, int256 ethUsd_, , , ) = chainlinkEthUsd.latestRoundData();
         require(xauUsd_ >= 0, "NEGATIVE_XAUUSD");
         require(ethUsd_ >= 0, "NEGATIVE_ETHUSD");
-        return (uint256(ethUsd_) * XAU_DECIMALS_MULTIPLIER) / uint256(xauUsd_);
+        return (
+            xauDecimals_,
+            (uint256(ethUsd_) * 10**xauDecimals_) / uint256(xauUsd_)
+        );
     }
 
     /// Overburn ETHg at 1001:1000 ratio to receive initial ETH refund.
@@ -298,10 +314,13 @@ contract EthGild is ERC1155, ERC20 {
     /// @param xauReferencePrice_ XAU reference price in ETH. MUST correspond
     /// to an erc1155 balance held by `msg.sender`.
     /// @param erc1155Amount_ the amount of ETH to ungild.
-    function ungild(uint256 xauReferencePrice_, uint256 erc1155Amount_)
-        external
-    {
+    function ungild(
+        uint8 xauDecimals_,
+        uint256 xauReferencePrice_,
+        uint256 erc1155Amount_
+    ) external {
         require(erc1155Amount_ >= ERC20_OVERBURN_DENOMINATOR, "MIN_UNGILD");
+        uint256 id_ = (xauReferencePrice_ << 8) | xauDecimals_;
         // ETHg erc20 burn.
         // 0.1% more than erc1155 burn.
         // NOT reentrant.
@@ -313,13 +332,12 @@ contract EthGild is ERC1155, ERC20 {
 
         // erc1155 burn.
         // NOT reentrant.
-        // Reference price is the erc1155 id.
-        _burn(msg.sender, xauReferencePrice_, erc1155Amount_);
+        _burn(msg.sender, id_, erc1155Amount_);
 
         // Amount of ETHg to burn.
-        uint256 ethAmount_ = (erc1155Amount_ * XAU_DECIMALS_MULTIPLIER) /
+        uint256 ethAmount_ = (erc1155Amount_ * 10**xauDecimals_) /
             xauReferencePrice_;
-        emit Ungild(msg.sender, xauReferencePrice_, ethAmount_);
+        emit Ungild(msg.sender, xauDecimals_, xauReferencePrice_, ethAmount_);
 
         // ETH ungild.
         // Reentrant via. sender's `receive` or `fallback` function.
@@ -331,13 +349,12 @@ contract EthGild is ERC1155, ERC20 {
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
     /// Set the ETH value in the transaction as the sender to gild that ETH.
     function gild() external payable {
-        uint256 referencePrice_ = referencePrice();
+        (uint8 xauDecimals_, uint256 referencePrice_) = referencePrice();
 
         // Amount of ETHg to mint.
-        uint256 ethgAmount_ = (msg.value * referencePrice_) /
-            XAU_DECIMALS_MULTIPLIER;
+        uint256 ethgAmount_ = (msg.value * referencePrice_) / 10**xauDecimals_;
         require(ethgAmount_ >= ERC20_OVERBURN_DENOMINATOR, "MIN_GILD");
-        emit Gild(msg.sender, referencePrice_, msg.value);
+        emit Gild(msg.sender, xauDecimals_, referencePrice_, msg.value);
 
         // erc20 mint.
         // NOT reentrant.
@@ -345,6 +362,11 @@ contract EthGild is ERC1155, ERC20 {
 
         // erc1155 mint.
         // Reentrant via. `IERC1155Receiver`.
-        _mint(msg.sender, referencePrice_, ethgAmount_, "");
+        _mint(
+            msg.sender,
+            (referencePrice_ << 8) | xauDecimals_,
+            ethgAmount_,
+            ""
+        );
     }
 }

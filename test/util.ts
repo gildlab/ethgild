@@ -1,6 +1,6 @@
 import chai from 'chai'
 import { ethers } from 'hardhat'
-import { ContractTransaction, Contract } from 'ethers'
+import { ContractTransaction, Contract, BigNumber } from 'ethers'
 const { assert } = chai
 import { Result } from "ethers/lib/utils";
 
@@ -40,14 +40,10 @@ export const assertError = async (f:Function, s:string, e:string) => {
   export const expectedSymbol = 'ETHg'
   export const expectedUri = 'https://ethgild.crypto/#/id/{id}'
 
-  /**
- *
- * @param tx - transaction where event occurs
- * @param eventName - name of event
- * @param contract - contract object holding the address, filters, interface
- * @param contractAddressOverride - (optional) override the contract address which emits this event
- * @returns Event arguments, can be deconstructed by array index or by object key
- */
+/// @param tx - transaction where event occurs
+/// @param eventName - name of event
+/// @param contract - contract object holding the address, filters, interface
+/// @returns Event arguments, can be deconstructed by array index or by object key
 export const getEventArgs = async (
     tx: ContractTransaction,
     eventName: string,
@@ -67,3 +63,7 @@ export const getEventArgs = async (
 
     return contract.interface.decodeEventLog(eventName, eventObj.data);
   };
+
+export const generate1155ID = (referencePrice: BigNumber, xauDecimals: number):BigNumber => {
+  return BigNumber.from(referencePrice.toBigInt() << BigInt(8) | BigInt(xauDecimals))
+}

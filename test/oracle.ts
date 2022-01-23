@@ -10,8 +10,9 @@ describe("oracle", async function() {
     it("should have an oracle", async function() {
         const ethGild = await deployEthGild()
 
-        const referencePrice = await ethGild.referencePrice()
+        const [xauDecimals, referencePrice] = await ethGild.referencePrice()
 
+        assert(xauDecimals == 8, `wrong xauDecimals`)
         assert(referencePrice.eq(expectedReferencePrice), `wrong referencePrice. got ${referencePrice}. expected ${expectedReferencePrice}`)
     })
 })
