@@ -53,7 +53,7 @@ Unlike algorithmic coins, there is real ETH behind every ETHg enforced and track
 Unlike pegged coins, there is no active management or explicit definition of what "high" or "low" should be - figure it out.
 
 ETHg is burned at 0.1% faster rate than the erc1155 so a sliver of ETH is trapped for every gilding.
-This should provide sustainable demand on the erc20 token, pushing the  market price higher.
+This should provide sustainable demand on the erc20 token, pushing the market price higher.
 
 As the market price of the erc20 drops the benefits of gilding become less and the incentives to ungild increases.
 
@@ -128,7 +128,7 @@ These commands are available from the `nix-shell` and can be reviewed in `shell.
 #### gild
 
 - [x] cross reference gilded ETHg against Trading View and Chainlink
-- [x] erc1155 minted at oracle price with price * eth amount
+- [x] erc1155 minted at oracle price with price \* eth amount
 - [x] erc20 minted with same amount as erc1155
 - [x] multiple signers can create and transfer balances for both erc20 and erc1155
 - [x] 100.1% overburn erc20 required for full erc1155 unlock

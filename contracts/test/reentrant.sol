@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 // Open Zeppelin imports.
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 // EthGild import for reentrancy.
 import {EthGild} from "../ethgild.sol";
@@ -20,32 +21,44 @@ contract TestReentrant is IERC1155Receiver {
     function onERC1155Received(
         address,
         address,
-        uint256 id,
-        uint256 value,
+        uint256 id_,
+        uint256 value_,
         bytes calldata
     ) external override returns (bytes4) {
-        if (value > 100) {
-            erc1155Received = [id, value];
-            EthGild(msg.sender).ungild(id, 50);
-            return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
-        } else {
+        // Exact value sent by lowValueUngild is 1234.
+        if (value_ <= 1234) {
             return bytes4(keccak256("garbage"));
         }
+        if (value_ > 10000) {
+            erc1155Received = [id_, value_];
+            EthGild(msg.sender).gild{value: 1500}();
+            EthGild(msg.sender).ungild(
+                uint8(id_ & 0xFF),
+                id_ >> 8,
+                (value_ * 1000) / 1001
+            );
+        }
+        return
+            bytes4(
+                keccak256(
+                    "onERC1155Received(address,address,uint256,uint256,bytes)"
+                )
+            );
     }
 
     receive() external payable {
-        require(msg.value > 10, "LOW_VALUE");
+        require(msg.value > 1100, "LOW_VALUE");
         didReceivePayable = true;
     }
 
     /// Ungilds too little ETH to satisfy the receive.
     /// Reentrant call should fail.
     function lowValueUngild(EthGild ethGild, uint256 id) external {
-        ethGild.ungild(id, 5);
+        ethGild.ungild(8, id, 1234);
     }
 
     function gild(EthGild ethGild) external payable {
-        ethGild.gild{value:msg.value}();
+        ethGild.gild{value: msg.value / 2}();
     }
 
     /// @inheritdoc IERC1155Receiver
@@ -62,8 +75,14 @@ contract TestReentrant is IERC1155Receiver {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceID) external pure override returns (bool) {
-        return  interfaceID == 0x01ffc9a7 ||    // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
-                interfaceID == 0x4e2312e0;      // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
+    function supportsInterface(bytes4 interfaceID)
+        external
+        pure
+        override
+        returns (bool)
+    {
+        return
+            interfaceID == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
+            interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
     }
 }
