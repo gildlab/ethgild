@@ -8,6 +8,4 @@ jobs:
       - uses: cachix/install-nix-action@v13
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      # something about the test contract breaks slither
-      - run: rm -rf contracts/test
       - run: nix-shell --run security-check

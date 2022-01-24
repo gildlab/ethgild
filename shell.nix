@@ -31,6 +31,7 @@ let
   '';
 
  ci-test = pkgs.writeShellScriptBin "ci-test" ''
+ flush-all
  ci-lint
  hardhat test
  security-check
