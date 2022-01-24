@@ -3,6 +3,7 @@ import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import { deployEthGild, getEventArgs, generate1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
+import type { Oracle } from '../typechain/Oracle'
 
 chai.use(solidity)
 const { expect, assert } = chai
@@ -10,7 +11,7 @@ const { expect, assert } = chai
 describe('gild events', async function () {
     it('should emit events on gild and ungild', async function () {
         const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const alice = signers[0]
 

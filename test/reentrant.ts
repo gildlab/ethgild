@@ -3,6 +3,7 @@ import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import { deployEthGild, assertError, expectedReferencePrice, expected1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
+import type { Oracle } from '../typechain/Oracle'
 import type { TestReentrant } from '../typechain/TestReentrant'
 
 chai.use(solidity)
@@ -10,7 +11,7 @@ const { expect, assert } = chai
 
 describe('reentrant behaviour', async function() {
     it('should receive and erc1155 receive', async function() {
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const ethAmount = 100000
 
@@ -33,13 +34,13 @@ describe('reentrant behaviour', async function() {
     })
 
     it('should error low value reentrant ungild', async function() {
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const testReentrantFactory = await ethers.getContractFactory('TestReentrant')
         const testReentrant = await testReentrantFactory.deploy()
         await testReentrant.deployed()
 
-        await testReentrant.gild(ethGild.address, {value: 2000})
+        await testReentrant.gild(ethGild.address, {value: 3000})
 
         await assertError(
             async () => await testReentrant.lowValueUngild(ethGild.address, expectedReferencePrice),
@@ -49,7 +50,7 @@ describe('reentrant behaviour', async function() {
     })
 
     it('should error low value reentrant gild', async function() {
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const testReentrantFactory = await ethers.getContractFactory('TestReentrant')
         const testReentrant = await testReentrantFactory.deploy()

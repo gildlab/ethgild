@@ -2,6 +2,7 @@ import chai from 'chai'
 import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import type { EthGild } from '../typechain/EthGild'
+import type { Oracle } from '../typechain/Oracle'
 import { deployEthGild, assertError } from './util'
 
 chai.use(solidity)
@@ -10,7 +11,7 @@ const { expect, assert } = chai
 describe("fallback", async function() {
     it('should not fallback', async function() {
         const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const alice = signers[0]
 
@@ -26,7 +27,7 @@ describe("fallback", async function() {
 
     it('should not receive', async function() {
         const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const alice = signers[0]
 

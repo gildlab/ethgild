@@ -11,19 +11,42 @@ export const eighteenZeros = '000000000000000000'
 export const xauOne = '100000000'
 
 export const deployEthGild = async () => {
+    const oracleFactory = await ethers.getContractFactory(
+      'Oracle'
+    )
+    const xauOracle = await oracleFactory.deploy()
+    await xauOracle.deployed()
+    await xauOracle.setDecimals(8)
+    await xauOracle.setRoundData(1, {
+      answer: BigNumber.from('200000000000'),
+      startedAt: BigInt(14065411),
+      updatedAt: BigInt(14065415),
+      answeredInRound: 1,
+    })
+
+    const ethOracle = await oracleFactory.deploy()
+    await ethOracle.deployed()
+    await ethOracle.setDecimals(8)
+    await ethOracle.setRoundData(1, {
+      answer: BigNumber.from('234500000000'),
+      startedAt: BigInt(14065411),
+      updatedAt: BigInt(14065415),
+      answeredInRound: 1,
+    })
+
     const ethGildFactory = await ethers.getContractFactory(
         'EthGild'
     )
     const ethGild = await ethGildFactory.deploy({
-        chainlinkXauUsd,
-        chainlinkEthUsd,
+      chainlinkXauUsd: xauOracle.address,
+      chainlinkEthUsd: ethOracle.address,
     })
     await ethGild.deployed()
 
-    return ethGild
+    return [ethGild, xauOracle, ethOracle]
 }
 
-export const expectedReferencePrice = ethers.BigNumber.from('126092812')
+export const expectedReferencePrice = ethers.BigNumber.from('117250000')
 
 export const assertError = async (f:Function, s:string, e:string) => {
     let didError = false

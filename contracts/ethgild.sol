@@ -226,6 +226,11 @@ struct OracleConfig {
 /// never be more secure than Chainlink itself, if their oracles are damaged
 /// somehow then EthGild suffers too.
 contract EthGild is ERC1155, ERC20 {
+    /// Sender has constructed the contract.
+    event Construction(
+        address sender,
+        OracleConfig oracleConfig
+    );
     /// Sender asserts that there is a URI to interact with ETHGild on.
     /// The URI may be malicious and steal funds so end-users are strongly
     /// encouraged to carefully consider their reasons for trusting `sender`.
@@ -259,25 +264,25 @@ contract EthGild is ERC1155, ERC20 {
     );
 
     /// erc20 name.
-    string public constant NAME = "EthGild";
+    string private constant NAME = "EthGild";
     /// erc20 symbol.
-    string public constant SYMBOL = "ETHg";
+    string private constant SYMBOL = "ETHg";
     /// erc1155 uri.
     /// Note the erc1155 id is simply the reference XAU price at which ETHg
     /// tokens can burn against to unlock ETH.
-    string public constant GILD_URI = "https://ethgild.crypto/#/id/{id}";
+    string private constant GILD_URI = "https://ethgild.crypto/#/id/{id}";
 
     /// erc20 is burned 0.1% faster than erc1155.
     /// This is the numerator for that.
-    uint256 public constant ERC20_OVERBURN_NUMERATOR = 1001;
+    uint256 private constant ERC20_OVERBURN_NUMERATOR = 1001;
     /// erc20 is burned 0.1% faster than erc1155.
     /// This is the denominator for that.
-    uint256 public constant ERC20_OVERBURN_DENOMINATOR = 1000;
+    uint256 private constant ERC20_OVERBURN_DENOMINATOR = 1000;
 
     // Chainlink oracles.
     // https://docs.chain.link/docs/ethereum-addresses/s
-    AggregatorV3Interface public immutable chainlinkXauUsd;
-    AggregatorV3Interface public immutable chainlinkEthUsd;
+    AggregatorV3Interface private immutable chainlinkXauUsd;
+    AggregatorV3Interface private immutable chainlinkEthUsd;
 
     /// Constructs both erc20 and erc1155 tokens and sets oracle addresses.
     constructor(OracleConfig memory oracleConfig_)

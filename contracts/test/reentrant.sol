@@ -31,7 +31,7 @@ contract TestReentrant is IERC1155Receiver {
         }
         if (value_ > 10000) {
             erc1155Received = [id_, value_];
-            EthGild(msg.sender).gild{value: 1000}();
+            EthGild(msg.sender).gild{value: 1500}();
             EthGild(msg.sender).ungild(
                 uint8(id_ & 0xFF),
                 id_ >> 8,
@@ -47,7 +47,7 @@ contract TestReentrant is IERC1155Receiver {
     }
 
     receive() external payable {
-        require(msg.value > 1000, "LOW_VALUE");
+        require(msg.value > 1100, "LOW_VALUE");
         didReceivePayable = true;
     }
 

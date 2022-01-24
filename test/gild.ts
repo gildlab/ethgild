@@ -3,13 +3,14 @@ import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import { deployEthGild, expectedReferencePrice, assertError, eighteenZeros, xauOne, generate1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
+import type { Oracle } from '../typechain/Oracle'
 
 chai.use(solidity)
 const { expect, assert } = chai
 
 describe("gild", async function() {
     it('should not zero gild', async function() {
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         await assertError(
             async () => await ethGild.gild(),
@@ -31,7 +32,7 @@ describe("gild", async function() {
         // ~ 1 ETH should buy 1.26092812321 XAU
 
         const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const alice = signers[0]
 
@@ -41,7 +42,7 @@ describe("gild", async function() {
         await aliceEthGild.gild({value: aliceEthAmount})
 
         // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
-        const expectedEthG = '1260928120000000000';
+        const expectedEthG = '1172500000000000000';
         const aliceEthG = await aliceEthGild['balanceOf(address)'](alice.address)
         assert(
             aliceEthG.eq(expectedEthG),
@@ -51,7 +52,7 @@ describe("gild", async function() {
 
     it('should gild', async function() {
         const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const alice = signers[0]
         const bob = signers[1]
@@ -124,7 +125,7 @@ describe("gild", async function() {
 
     it('should trade erc1155', async function() {
         const signers = await ethers.getSigners()
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const alice = signers[0]
         const bob = signers[1]

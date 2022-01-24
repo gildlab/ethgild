@@ -3,13 +3,14 @@ import { solidity } from 'ethereum-waffle'
 import { ethers } from 'hardhat'
 import { deployEthGild, expectedName, expectedReferencePrice, expectedSymbol, expected1155ID } from './util'
 import type { EthGild } from '../typechain/EthGild'
+import type { Oracle } from '../typechain/Oracle'
 
 chai.use(solidity)
 const { expect, assert } = chai
 
 describe('erc20 usage', async function() {
     it('should construct well', async function() {
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         const erc20Name = await ethGild.name()
         const erc20Symbol = await ethGild.symbol()
@@ -21,14 +22,14 @@ describe('erc20 usage', async function() {
     it('should only send itself', async function() {
         const signers = await ethers.getSigners()
 
-        const ethGild = await deployEthGild() as EthGild
+        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
 
         await ethGild.gild({value: 1000})
 
-        const expectedErc20Balance = ethers.BigNumber.from('1260')
-        const expectedErc20BalanceAfter = ethers.BigNumber.from('630')
-        const expectedErc1155Balance = ethers.BigNumber.from('1260')
-        const expectedErc1155BalanceAfter = ethers.BigNumber.from('1260')
+        const expectedErc20Balance = ethers.BigNumber.from('1172')
+        const expectedErc20BalanceAfter = expectedErc20Balance.div(2)
+        const expectedErc1155Balance = ethers.BigNumber.from('1172')
+        const expectedErc1155BalanceAfter = ethers.BigNumber.from('1172')
 
         const erc20Balance = await ethGild['balanceOf(address)'](signers[0].address)
         assert(
@@ -42,7 +43,7 @@ describe('erc20 usage', async function() {
             `wrong erc1155 balance ${expectedErc20Balance} ${erc1155Balance}`
         )
 
-        await ethGild.transfer(signers[1].address, '630')
+        await ethGild.transfer(signers[1].address, expectedErc20BalanceAfter)
 
         const erc20BalanceAfter = await ethGild['balanceOf(address)'](signers[0].address)
         assert(
