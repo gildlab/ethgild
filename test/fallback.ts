@@ -1,44 +1,54 @@
-import chai from 'chai'
-import { solidity } from 'ethereum-waffle'
-import { ethers } from 'hardhat'
-import type { EthGild } from '../typechain/EthGild'
-import type { Oracle } from '../typechain/Oracle'
-import { deployEthGild, assertError } from './util'
+import chai from "chai";
+import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
+import type { EthGild } from "../typechain/EthGild";
+import type { Oracle } from "../typechain/Oracle";
+import { deployEthGild, assertError } from "./util";
 
-chai.use(solidity)
-const { expect, assert } = chai
+chai.use(solidity);
+const { expect, assert } = chai;
 
-describe("fallback", async function() {
-    it('should not fallback', async function() {
-        const signers = await ethers.getSigners()
-        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
+describe("fallback", async function () {
+  it("should not fallback", async function () {
+    const signers = await ethers.getSigners();
+    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
+      EthGild,
+      Oracle,
+      Oracle
+    ];
 
-        const alice = signers[0]
+    const alice = signers[0];
 
-        await assertError(
-            async () => await alice.sendTransaction({
-                to: ethGild.address,
-                value: 10,
-            }),
-            'function selector was not recognized and there\'s no fallback nor receive function',
-            'failed to error on fallback transaction',
-        )
-    })
+    await assertError(
+      async () =>
+        await alice.sendTransaction({
+          to: ethGild.address,
+          value: 10,
+        }),
+      "function selector was not recognized and there's no fallback nor receive function",
+      "failed to error on fallback transaction"
+    );
+  });
 
-    it('should not receive', async function() {
-        const signers = await ethers.getSigners()
-        const [ethGild, xauOracle, ethOracle] = await deployEthGild() as [EthGild, Oracle, Oracle]
+  it("should not receive", async function () {
+    const signers = await ethers.getSigners();
+    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
+      EthGild,
+      Oracle,
+      Oracle
+    ];
 
-        const alice = signers[0]
+    const alice = signers[0];
 
-        await assertError(
-            async () => await alice.sendTransaction({
-                to: ethGild.address,
-                value: 10,
-                data: "0x01"
-            }),
-            'function selector was not recognized and there\'s no fallback function',
-            'failed to error on receive transaction',
-        )
-    })
-})
+    await assertError(
+      async () =>
+        await alice.sendTransaction({
+          to: ethGild.address,
+          value: 10,
+          data: "0x01",
+        }),
+      "function selector was not recognized and there's no fallback function",
+      "failed to error on receive transaction"
+    );
+  });
+});
