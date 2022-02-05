@@ -7,18 +7,17 @@ import {
   expectedUri,
   expected1155ID,
 } from "./util";
-import type { EthGild } from "../typechain/EthGild";
-import type { Oracle } from "../typechain/Oracle";
+import type { NativeGild } from "../typechain/NativeGild";
+import type { TestPriceOracle } from "../typechain/TestPriceOracle";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, priceOracle] = (await deployEthGild()) as [
+      NativeGild,
+      TestPriceOracle,
     ];
 
     const id = 12345;
@@ -34,10 +33,9 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, priceOracle] = (await deployEthGild()) as [
+      NativeGild,
+      TestPriceOracle,
     ];
 
     await ethGild.gild({ value: 1000 });

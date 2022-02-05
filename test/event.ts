@@ -2,8 +2,8 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import { deployEthGild, getEventArgs, generate1155ID } from "./util";
-import type { EthGild } from "../typechain/EthGild";
-import type { Oracle } from "../typechain/Oracle";
+import type { NativeGild } from "../typechain/NativeGild";
+import type { TestPriceOracle } from "../typechain/TestPriceOracle";
 
 chai.use(solidity);
 const { expect, assert } = chai;
@@ -11,15 +11,14 @@ const { expect, assert } = chai;
 describe("gild events", async function () {
   it("should emit events on gild and ungild", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, priceOracle] = (await deployEthGild()) as [
+      NativeGild,
+      TestPriceOracle,
     ];
 
     const alice = signers[0];
 
-    const [xauDecimals, referencePrice] = await ethGild.referencePrice();
+    const [xauDecimals, referencePrice] = await priceOracle.price();
 
     const ethAmount = 5000;
 

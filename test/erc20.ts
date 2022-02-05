@@ -16,7 +16,7 @@ const { expect, assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployEthGild()) as [
       EthGild,
       Oracle,
       Oracle

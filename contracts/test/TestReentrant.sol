@@ -7,7 +7,7 @@ import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Re
 import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 // EthGild import for reentrancy.
-import {EthGild} from "../ethgild.sol";
+import {NativeGild} from "../gild/NativeGild.sol";
 
 /// @title TestReentrant
 /// @author thedavidmeister
@@ -31,8 +31,8 @@ contract TestReentrant is IERC1155Receiver {
         }
         if (value_ > 10000) {
             erc1155Received = [id_, value_];
-            EthGild(msg.sender).gild{value: 1500}();
-            EthGild(msg.sender).ungild(
+            NativeGild(msg.sender).gild{value: 1500}();
+            NativeGild(msg.sender).ungild(
                 uint8(id_ & 0xFF),
                 id_ >> 8,
                 (value_ * 1000) / 1001
@@ -53,12 +53,12 @@ contract TestReentrant is IERC1155Receiver {
 
     /// Ungilds too little ETH to satisfy the receive.
     /// Reentrant call should fail.
-    function lowValueUngild(EthGild ethGild, uint256 id) external {
-        ethGild.ungild(8, id, 1234);
+    function lowValueUngild(NativeGild nativeGild, uint256 id) external {
+        nativeGild.ungild(8, id, 1234);
     }
 
-    function gild(EthGild ethGild) external payable {
-        ethGild.gild{value: msg.value / 2}();
+    function gild(NativeGild nativeGild) external payable {
+        nativeGild.gild{value: msg.value / 2}();
     }
 
     /// @inheritdoc IERC1155Receiver

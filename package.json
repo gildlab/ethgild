@@ -19,9 +19,9 @@
     "mem": ">=4.0.0"
   },
   "dependencies": {
-    "solhint": "^3.3.6",
+    "@chainlink/contracts": "^0.3.1",
+    "@openzeppelin/contracts": "^4.1.0",
     "hardhat": "^2.3.3",
-    "@chainlink/contracts": "^0.1.7",
-    "@openzeppelin/contracts": "^4.1.0"
+    "solhint": "^3.3.6"
   }
 }

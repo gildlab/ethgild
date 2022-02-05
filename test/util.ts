@@ -11,35 +11,23 @@ export const eighteenZeros = "000000000000000000";
 export const xauOne = "100000000";
 
 export const deployEthGild = async () => {
-  const oracleFactory = await ethers.getContractFactory("Oracle");
-  const xauOracle = await oracleFactory.deploy();
-  await xauOracle.deployed();
-  await xauOracle.setDecimals(8);
-  await xauOracle.setRoundData(1, {
-    answer: BigNumber.from("200000000000"),
-    startedAt: BigInt(14065411),
-    updatedAt: BigInt(14065415),
-    answeredInRound: 1,
-  });
+  const oracleFactory = await ethers.getContractFactory("TestPriceOracle");
+  const priceOracle = await oracleFactory.deploy();
+  await priceOracle.deployed();
+  await priceOracle.setDecimals(8);
+  await priceOracle.setPrice(BigNumber.from("117250000"))
 
-  const ethOracle = await oracleFactory.deploy();
-  await ethOracle.deployed();
-  await ethOracle.setDecimals(8);
-  await ethOracle.setRoundData(1, {
-    answer: BigNumber.from("234500000000"),
-    startedAt: BigInt(14065411),
-    updatedAt: BigInt(14065415),
-    answeredInRound: 1,
-  });
-
-  const ethGildFactory = await ethers.getContractFactory("EthGild");
+  const ethGildFactory = await ethers.getContractFactory("NativeGild");
   const ethGild = await ethGildFactory.deploy({
-    chainlinkXauUsd: xauOracle.address,
-    chainlinkEthUsd: ethOracle.address,
+    name: "EthGild",
+    symbol: "ETHg",
+    erc20OverburnNumerator: 1001,
+    erc20OverburnDenominator: 1000,
+    priceOracle: priceOracle.address,
   });
   await ethGild.deployed();
 
-  return [ethGild, xauOracle, ethOracle];
+  return [ethGild, priceOracle];
 };
 
 export const expectedReferencePrice = ethers.BigNumber.from("117250000");
@@ -57,7 +45,7 @@ export const assertError = async (f: Function, s: string, e: string) => {
 
 export const expectedName = "EthGild";
 export const expectedSymbol = "ETHg";
-export const expectedUri = "https://ethgild.crypto/#/id/{id}";
+export const expectedUri = "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4";
 
 /// @param tx - transaction where event occurs
 /// @param eventName - name of event
