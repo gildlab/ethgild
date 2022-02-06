@@ -6,7 +6,8 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
 import {ERC1155AltURI} from "../erc1155/ERC1155AltURI.sol";
-import {IPriceOracle} from "../price/IPriceOracle.sol";
+import {IPriceOracle} from "../oracle/price/IPriceOracle.sol";
+import {PriceOracleConstants} from "../oracle/price/PriceOracleConstants.sol";
 
 struct NativeGildConfig {
     string name;
@@ -232,23 +233,19 @@ contract NativeGild is ERC20, ERC1155, ERC1155AltURI {
     event Gild(
         /// `msg.sender` address gilding ETH.
         address sender,
-        /// Oracle reporting reference price at this decimals.
-        uint8 xauDecimals,
-        /// Reference XAU price the ETH was gilded at.
-        uint256 xauReferencePrice,
-        /// Amount of ETH gilded.
-        uint256 ethAmount
+        /// Reference price the native token was gilded at.
+        uint256 price,
+        /// Amount of native token gilded.
+        uint256 amount
     );
-    /// Some ETH has been ungilded.
+    /// Some native token has been ungilded.
     event Ungild(
-        /// `msg.sender` address ungilding ETH.
+        /// `msg.sender` address ungilding native token.
         address sender,
-        /// Oracle reporting reference price at this decimals.
-        uint8 xauDecimals,
-        /// Reference XAU price the ETH was ungilded at.
-        uint256 xauReferencePrice,
-        /// Amount of ETH ungilded.
-        uint256 ethAmount
+        /// Reference price the native token was ungilded at.
+        uint256 price,
+        /// Amount of native token ungilded.
+        uint256 amount
     );
 
     string private constant ERC1155_METADATA_URI =
@@ -282,14 +279,9 @@ contract NativeGild is ERC20, ERC1155, ERC1155AltURI {
     /// @param price_ oracle price in Native asset. MUST correspond
     /// to an erc1155 balance held by `msg.sender`.
     /// @param erc1155Amount_ the amount of ETH to ungild.
-    function ungild(
-        uint8 priceDecimals_,
-        uint256 price_,
-        uint256 erc1155Amount_
-    ) external {
+    function ungild(uint256 price_, uint256 erc1155Amount_) external {
         require(erc1155Amount_ >= erc20OverburnDenominator, "MIN_UNGILD");
 
-        uint256 id_ = (price_ << 8) | priceDecimals_;
         // ETHg erc20 burn.
         // 0.1% more than erc1155 burn.
         // NOT reentrant.
@@ -300,11 +292,12 @@ contract NativeGild is ERC20, ERC1155, ERC1155AltURI {
 
         // erc1155 burn.
         // NOT reentrant.
-        _burn(msg.sender, id_, erc1155Amount_);
+        _burn(msg.sender, price_, erc1155Amount_);
 
         // Amount of ETHg to burn.
-        uint256 ethAmount_ = (erc1155Amount_ * 10**priceDecimals_) / price_;
-        emit Ungild(msg.sender, priceDecimals_, price_, ethAmount_);
+        uint256 ethAmount_ = (erc1155Amount_ * PriceOracleConstants.ONE) /
+            price_;
+        emit Ungild(msg.sender, price_, ethAmount_);
 
         // ETH ungild.
         // Reentrant via. sender's `receive` or `fallback` function.
@@ -316,12 +309,12 @@ contract NativeGild is ERC20, ERC1155, ERC1155AltURI {
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
     /// Set the ETH value in the transaction as the sender to gild that ETH.
     function gild() external payable {
-        (uint8 priceDecimals_, uint256 price_) = priceOracle.price();
+        uint256 price_ = priceOracle.price();
 
         // Amount of ETHg to mint.
-        uint256 ethgAmount_ = (msg.value * price_) / 10**priceDecimals_;
+        uint256 ethgAmount_ = (msg.value * price_) / PriceOracleConstants.ONE;
         require(ethgAmount_ >= erc20OverburnDenominator, "MIN_GILD");
-        emit Gild(msg.sender, priceDecimals_, price_, msg.value);
+        emit Gild(msg.sender, price_, msg.value);
 
         // erc20 mint.
         // NOT reentrant.
@@ -329,8 +322,6 @@ contract NativeGild is ERC20, ERC1155, ERC1155AltURI {
 
         // erc1155 mint.
         // Reentrant via. `IERC1155Receiver`.
-        // ensure that bitshifting into an id is lossless.
-        require(price_ & type(uint248).max == price_, "MAX_PRICE");
-        _mint(msg.sender, (price_ << 8) | priceDecimals_, ethgAmount_, "");
+        _mint(msg.sender, price_, ethgAmount_, "");
     }
 }

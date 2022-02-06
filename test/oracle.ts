@@ -15,12 +15,11 @@ describe("oracle", async function () {
       TestPriceOracle,
     ];
 
-    const [xauDecimals, referencePrice] = await priceOracle.price();
+    const price = await priceOracle.price();
 
-    assert(xauDecimals == 8, `wrong xauDecimals`);
     assert(
-      referencePrice.eq(expectedReferencePrice),
-      `wrong referencePrice. got ${referencePrice}. expected ${expectedReferencePrice}`
+      price.eq(expectedReferencePrice),
+      `wrong referencePrice. got ${price}. expected ${expectedReferencePrice}`
     );
   });
 });

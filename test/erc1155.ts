@@ -5,7 +5,7 @@ import {
   deployEthGild,
   expectedReferencePrice,
   expectedUri,
-  expected1155ID,
+  priceOne
 } from "./util";
 import type { NativeGild } from "../typechain/NativeGild";
 import type { TestPriceOracle } from "../typechain/TestPriceOracle";
@@ -38,12 +38,14 @@ describe("erc1155 usage", async function () {
       TestPriceOracle,
     ];
 
-    await ethGild.gild({ value: 1000 });
+    const gildAmount = ethers.BigNumber.from(1000)
+    await ethGild.gild({ value: gildAmount });
 
-    const expectedErc20Balance = ethers.BigNumber.from("1172");
-    const expectedErc20BalanceAfter = ethers.BigNumber.from("1172");
-    const expectedErc1155Balance = ethers.BigNumber.from("1172");
+    const expectedErc20Balance = gildAmount.mul(expectedReferencePrice).div(priceOne);
+    const expectedErc20BalanceAfter = expectedErc20Balance;
+    const expectedErc1155Balance = expectedErc20Balance;
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);
+    const expected1155ID = await priceOracle.price()
 
     const erc20Balance = await ethGild["balanceOf(address)"](
       signers[0].address

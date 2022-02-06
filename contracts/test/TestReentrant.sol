@@ -33,8 +33,7 @@ contract TestReentrant is IERC1155Receiver {
             erc1155Received = [id_, value_];
             NativeGild(msg.sender).gild{value: 1500}();
             NativeGild(msg.sender).ungild(
-                uint8(id_ & 0xFF),
-                id_ >> 8,
+                id_,
                 (value_ * 1000) / 1001
             );
         }
@@ -53,12 +52,12 @@ contract TestReentrant is IERC1155Receiver {
 
     /// Ungilds too little ETH to satisfy the receive.
     /// Reentrant call should fail.
-    function lowValueUngild(NativeGild nativeGild, uint256 id) external {
-        nativeGild.ungild(8, id, 1234);
+    function lowValueUngild(NativeGild nativeGild_, uint256 id_) external {
+        nativeGild_.ungild(id_, 1234);
     }
 
-    function gild(NativeGild nativeGild) external payable {
-        nativeGild.gild{value: msg.value / 2}();
+    function gild(NativeGild nativeGild_) external payable {
+        nativeGild_.gild{value: msg.value / 2}();
     }
 
     /// @inheritdoc IERC1155Receiver
@@ -75,14 +74,14 @@ contract TestReentrant is IERC1155Receiver {
     }
 
     /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceID)
+    function supportsInterface(bytes4 interfaceID_)
         external
         pure
         override
         returns (bool)
     {
         return
-            interfaceID == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
-            interfaceID == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
+            interfaceID_ == 0x01ffc9a7 || // ERC-165 support (i.e. `bytes4(keccak256('supportsInterface(bytes4)'))`).
+            interfaceID_ == 0x4e2312e0; // ERC-1155 `ERC1155TokenReceiver` support (i.e. `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)")) ^ bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`).
     }
 }

@@ -1,9 +1,10 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployEthGild, getEventArgs, generate1155ID } from "./util";
+import { deployEthGild, getEventArgs, priceOne } from "./util";
 import type { NativeGild } from "../typechain/NativeGild";
-import type { TestPriceOracle } from "../typechain/TestPriceOracle";
+import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
+import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
 
 chai.use(solidity);
 const { expect, assert } = chai;
@@ -13,16 +14,18 @@ describe("gild events", async function () {
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployEthGild()) as [
       NativeGild,
-      TestPriceOracle,
+      ChainlinkTwoFeedPriceOracle,
+      TestChainlinkDataFeed,
+      TestChainlinkDataFeed
     ];
 
     const alice = signers[0];
 
-    const [xauDecimals, referencePrice] = await priceOracle.price();
+    const price = await priceOracle.price();
 
     const ethAmount = 5000;
 
-    const id1155 = generate1155ID(referencePrice, xauDecimals);
+    const id1155 = price;
 
     const gildTx = await ethGild.gild({ value: ethAmount });
 
@@ -33,11 +36,11 @@ describe("gild events", async function () {
       `incorrect Gild sender. expected ${alice.address} got ${gildEventArgs.sender}`
     );
     assert(
-      gildEventArgs.xauReferencePrice.eq(referencePrice),
-      `incorrect Gild reference price. expected ${referencePrice} got ${gildEventArgs.xauReferencePrice}`
+      gildEventArgs.price.eq(price),
+      `incorrect Gild reference price. expected ${price} got ${gildEventArgs.xauReferencePrice}`
     );
     assert(
-      gildEventArgs.ethAmount.eq(ethAmount),
+      gildEventArgs.amount.eq(ethAmount),
       `incorrect Gild ethAmount. expected ${ethAmount} got ${gildEventArgs.ethAmount}`
     );
 
@@ -76,38 +79,37 @@ describe("gild events", async function () {
       `incorrect Transfer value. expected ${aliceBalance} got ${gildTransferEventArgs.value}`
     );
 
-    const ungildAmount = aliceBalance.mul(1000).div(1001);
+    const ungildERC1155Amount = aliceBalance.mul(1000).div(1001);
     const ungildTx = await ethGild.ungild(
-      xauDecimals,
-      referencePrice,
-      ungildAmount
+      price,
+      ungildERC1155Amount
     );
 
     const ungildEventArgs = await getEventArgs(ungildTx, "Ungild", ethGild);
 
     // Ungild ETH is always rounded down.
-    const ungildEthAmount = ungildAmount
-      .mul(Math.pow(10, xauDecimals))
-      .div(referencePrice);
+    const ungildAmount = ungildERC1155Amount
+      .mul(priceOne)
+      .div(price);
 
     assert(
       ungildEventArgs.sender === alice.address,
       `incorrect ungild sender. expected ${alice.address} got ${ungildEventArgs.sender}`
     );
     assert(
-      ungildEventArgs.xauReferencePrice.eq(referencePrice),
-      `incorrect ungild xauReferencePrice. expected ${referencePrice} got ${ungildEventArgs.xauReferencePrice}`
+      ungildEventArgs.price.eq(price),
+      `incorrect ungild xauReferencePrice. expected ${price} got ${ungildEventArgs.price}`
     );
     assert(
-      ungildEventArgs.ethAmount.eq(ungildEthAmount),
-      `wrong ungild amount. expected ${ungildEthAmount} actual ${ungildEventArgs.ethAmount}`
+      ungildEventArgs.amount.eq(ungildAmount),
+      `wrong ungild amount. expected ${ungildAmount} actual ${ungildEventArgs.amount}`
     );
 
     const alice1155BalanceAfter = await ethGild["balanceOf(address,uint256)"](
       alice.address,
       id1155
     );
-    const expected1155BalanceAfter = alice1155BalanceBefore.sub(ungildAmount);
+    const expected1155BalanceAfter = alice1155BalanceBefore.sub(ungildERC1155Amount);
     assert(
       alice1155BalanceAfter.eq(expected1155BalanceAfter),
       `incorrect 1155 balance after. expected ${expected1155BalanceAfter} got ${alice1155BalanceAfter}`
