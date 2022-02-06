@@ -2,7 +2,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployEthGild,
+  deployNativeGild,
   expectedName,
   expectedReferencePrice,
   expectedSymbol,
@@ -16,7 +16,7 @@ const { expect, assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
@@ -39,12 +39,13 @@ describe("erc20 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, xauOracle, ethOracle] = (await deployEthGild()) as [
-      NativeGild,
-      ChainlinkTwoFeedPriceOracle,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, priceOracle, xauOracle, ethOracle] =
+      (await deployNativeGild()) as [
+        NativeGild,
+        ChainlinkTwoFeedPriceOracle,
+        TestChainlinkDataFeed,
+        TestChainlinkDataFeed
+      ];
 
     await ethGild.gild({ value: 1000 });
 
@@ -52,7 +53,7 @@ describe("erc20 usage", async function () {
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
     const expectedErc1155Balance = ethers.BigNumber.from("1656");
     const expectedErc1155BalanceAfter = ethers.BigNumber.from("1656");
-    const expected1155ID = await priceOracle.price()
+    const expected1155ID = await priceOracle.price();
 
     const erc20Balance = await ethGild["balanceOf(address)"](
       signers[0].address

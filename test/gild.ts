@@ -2,7 +2,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployEthGild,
+  deployNativeGild,
   expectedReferencePrice,
   assertError,
   eighteenZeros,
@@ -17,7 +17,7 @@ const { expect, assert } = chai;
 
 describe("gild", async function () {
   it("should not zero gild", async function () {
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
@@ -44,7 +44,7 @@ describe("gild", async function () {
     // ~ 1 ETH should buy 1.26092812321 XAU
 
     const signers = await ethers.getSigners();
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
@@ -69,7 +69,7 @@ describe("gild", async function () {
 
   it("should gild", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
@@ -83,7 +83,7 @@ describe("gild", async function () {
     const bobEthGild = ethGild.connect(bob);
 
     const price = await priceOracle.price();
-    const id1155 = price
+    const id1155 = price;
     assert(
       price.eq(expectedReferencePrice),
       `bad referencePrice ${price} ${expectedReferencePrice}`
@@ -126,8 +126,7 @@ describe("gild", async function () {
     );
 
     await assertError(
-      async () =>
-        await aliceEthGild.ungild(price, erc1155Balance),
+      async () => await aliceEthGild.ungild(price, erc1155Balance),
       "burn amount exceeds balance",
       "failed to apply fee to ungild"
     );
@@ -162,16 +161,14 @@ describe("gild", async function () {
 
     // alice cannot withdraw a different referencePrice gild.
     await assertError(
-      async () =>
-        await aliceEthGild.ungild(price.sub(1), 1000),
+      async () => await aliceEthGild.ungild(price.sub(1), 1000),
       "burn amount exceeds balance",
       "failed to prevent gild referencePrice manipulation"
     );
 
     // alice cannot withdraw with less than the overburn erc20
     await assertError(
-      async () =>
-        await aliceEthGild.ungild(id1155, erc1155Balance),
+      async () => await aliceEthGild.ungild(id1155, erc1155Balance),
       "burn amount exceeds balance",
       "failed to overburn"
     );
@@ -198,7 +195,7 @@ describe("gild", async function () {
 
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,

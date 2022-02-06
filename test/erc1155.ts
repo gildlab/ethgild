@@ -2,10 +2,10 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployEthGild,
+  deployNativeGild,
   expectedReferencePrice,
   expectedUri,
-  priceOne
+  priceOne,
 } from "./util";
 import type { NativeGild } from "../typechain/NativeGild";
 import type { TestPriceOracle } from "../typechain/TestPriceOracle";
@@ -15,9 +15,9 @@ const { expect, assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
-      TestPriceOracle,
+      TestPriceOracle
     ];
 
     const id = 12345;
@@ -33,19 +33,21 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
-      TestPriceOracle,
+      TestPriceOracle
     ];
 
-    const gildAmount = ethers.BigNumber.from(1000)
+    const gildAmount = ethers.BigNumber.from(1000);
     await ethGild.gild({ value: gildAmount });
 
-    const expectedErc20Balance = gildAmount.mul(expectedReferencePrice).div(priceOne);
+    const expectedErc20Balance = gildAmount
+      .mul(expectedReferencePrice)
+      .div(priceOne);
     const expectedErc20BalanceAfter = expectedErc20Balance;
     const expectedErc1155Balance = expectedErc20Balance;
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);
-    const expected1155ID = await priceOracle.price()
+    const expected1155ID = await priceOracle.price();
 
     const erc20Balance = await ethGild["balanceOf(address)"](
       signers[0].address

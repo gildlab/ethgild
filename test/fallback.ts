@@ -1,9 +1,10 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import type { EthGild } from "../typechain/EthGild";
-import type { Oracle } from "../typechain/Oracle";
-import { deployEthGild, assertError } from "./util";
+import type { NativeGild } from "../typechain/NativeGild";
+import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
+import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+import { deployNativeGild, assertError } from "./util";
 
 chai.use(solidity);
 const { expect, assert } = chai;
@@ -11,10 +12,11 @@ const { expect, assert } = chai;
 describe("fallback", async function () {
   it("should not fallback", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, xauOracle, ethOracle] = (await deployNativeGild()) as [
+      NativeGild,
+      ChainlinkTwoFeedPriceOracle,
+      TestChainlinkDataFeed,
+      TestChainlinkDataFeed
     ];
 
     const alice = signers[0];
@@ -32,10 +34,11 @@ describe("fallback", async function () {
 
   it("should not receive", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, xauOracle, ethOracle] = (await deployNativeGild()) as [
+      NativeGild,
+      ChainlinkTwoFeedPriceOracle,
+      TestChainlinkDataFeed,
+      TestChainlinkDataFeed
     ];
 
     const alice = signers[0];

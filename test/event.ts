@@ -1,7 +1,7 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployEthGild, getEventArgs, priceOne } from "./util";
+import { deployNativeGild, getEventArgs, priceOne } from "./util";
 import type { NativeGild } from "../typechain/NativeGild";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
@@ -12,7 +12,7 @@ const { expect, assert } = chai;
 describe("gild events", async function () {
   it("should emit events on gild and ungild", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, priceOracle] = (await deployEthGild()) as [
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
       NativeGild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
@@ -80,17 +80,12 @@ describe("gild events", async function () {
     );
 
     const ungildERC1155Amount = aliceBalance.mul(1000).div(1001);
-    const ungildTx = await ethGild.ungild(
-      price,
-      ungildERC1155Amount
-    );
+    const ungildTx = await ethGild.ungild(price, ungildERC1155Amount);
 
     const ungildEventArgs = await getEventArgs(ungildTx, "Ungild", ethGild);
 
     // Ungild ETH is always rounded down.
-    const ungildAmount = ungildERC1155Amount
-      .mul(priceOne)
-      .div(price);
+    const ungildAmount = ungildERC1155Amount.mul(priceOne).div(price);
 
     assert(
       ungildEventArgs.sender === alice.address,
@@ -109,7 +104,8 @@ describe("gild events", async function () {
       alice.address,
       id1155
     );
-    const expected1155BalanceAfter = alice1155BalanceBefore.sub(ungildERC1155Amount);
+    const expected1155BalanceAfter =
+      alice1155BalanceBefore.sub(ungildERC1155Amount);
     assert(
       alice1155BalanceAfter.eq(expected1155BalanceAfter),
       `incorrect 1155 balance after. expected ${expected1155BalanceAfter} got ${alice1155BalanceAfter}`

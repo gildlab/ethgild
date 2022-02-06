@@ -32,23 +32,24 @@ contract ChainlinkTwoFeedPriceOracle is IPriceOracle {
     function price() external view override returns (uint256) {
         (, int256 basePrice_, , , ) = base.latestRoundData();
         (, int256 quotePrice_, , , ) = quote.latestRoundData();
-        require(basePrice_ >= 0, "MIN_BASE_PRICE");
+        require(basePrice_ > 0, "MIN_BASE_PRICE");
         require(quotePrice_ > 0, "MIN_QUOTE_PRICE");
 
+        // We will be dividing by the quote price so we need to add its
+        // decimals to the target.
         uint256 targetDecimals_ = PriceOracleConstants.DECIMALS +
             quote.decimals();
-        uint256 baseDecimals_ = base.decimals();
+        uint256 decimals_ = base.decimals();
 
-        if (targetDecimals_ > baseDecimals_) {
+        if (targetDecimals_ > decimals_) {
             return
-                (uint256(basePrice_) * 10**(targetDecimals_ - baseDecimals_)) /
+                (uint256(basePrice_) * 10**(targetDecimals_ - decimals_)) /
                 uint256(quotePrice_);
-        } else if (targetDecimals_ == baseDecimals_) {
-            return uint256(basePrice_) / uint256(quotePrice_);
-        } else {
+        } else if (decimals_ > targetDecimals_) {
             return
                 uint256(basePrice_) /
-                (uint256(quotePrice_) * 10**(baseDecimals_ - targetDecimals_));
+                (uint256(quotePrice_) * 10**(decimals_ - targetDecimals_));
         }
+        return uint256(basePrice_) / uint256(quotePrice_);
     }
 }

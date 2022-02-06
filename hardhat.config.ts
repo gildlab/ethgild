@@ -9,7 +9,7 @@ export const config = {
     hardhat: {
       blockGasLimit: 100000000,
       allowUnlimitedContractSize: true,
-      hardfork: "london"
+      hardfork: "london",
     },
   },
   solidity: {

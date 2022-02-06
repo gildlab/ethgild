@@ -4,9 +4,12 @@ import { ContractTransaction, Contract, BigNumber } from "ethers";
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
 
-export const ethMainnetFeedRegistry = "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
-export const feedRegistryDenominationEth = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
-export const feedRegistryDenominationXau = "0x0000000000000000000000000000000000000959";
+export const ethMainnetFeedRegistry =
+  "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
+export const feedRegistryDenominationEth =
+  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+export const feedRegistryDenominationXau =
+  "0x0000000000000000000000000000000000000959";
 
 export const chainlinkXauUsd = "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6";
 export const chainlinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
@@ -14,13 +17,15 @@ export const chainlinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
 export const eighteenZeros = "000000000000000000";
 export const xauOne = "100000000";
 
-export const priceOne = ethers.BigNumber.from("1" + eighteenZeros)
+export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
 
-export const usdDecimals = 8
-export const xauDecimals = 8
+export const usdDecimals = 8;
+export const xauDecimals = 8;
 
-export const deployEthGild = async () => {
-  const oracleFactory = await ethers.getContractFactory("TestChainlinkDataFeed");
+export const deployNativeGild = async () => {
+  const oracleFactory = await ethers.getContractFactory(
+    "TestChainlinkDataFeed"
+  );
   const basePriceOracle = await oracleFactory.deploy();
   await basePriceOracle.deployed();
   // ETHUSD as of 2022-02-06
@@ -33,7 +38,7 @@ export const deployEthGild = async () => {
   });
 
   const quotePriceOracle = await oracleFactory.deploy();
-  await quotePriceOracle.deployed()
+  await quotePriceOracle.deployed();
   // XAUUSD as of 2022-02-06
   await quotePriceOracle.setDecimals(xauDecimals);
   await quotePriceOracle.setRoundData(1, {
@@ -43,27 +48,38 @@ export const deployEthGild = async () => {
     answeredInRound: 1,
   });
 
-  const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory("ChainlinkTwoFeedPriceOracle");
-  const chainlinkTwoFeedPriceOracle = await chainlinkTwoFeedPriceOracleFactory.deploy({
-    base: basePriceOracle.address,
-    quote: quotePriceOracle.address,
-  });
+  const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory(
+    "ChainlinkTwoFeedPriceOracle"
+  );
+  const chainlinkTwoFeedPriceOracle =
+    await chainlinkTwoFeedPriceOracleFactory.deploy({
+      base: basePriceOracle.address,
+      quote: quotePriceOracle.address,
+    });
   await chainlinkTwoFeedPriceOracle.deployed();
 
-  const ethGildFactory = await ethers.getContractFactory("NativeGild");
-  const ethGild = await ethGildFactory.deploy({
+  const nativeGildFactory = await ethers.getContractFactory("NativeGild");
+  const nativeGild = await nativeGildFactory.deploy({
     name: "EthGild",
     symbol: "ETHg",
+    uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
     erc20OverburnNumerator: 1001,
     erc20OverburnDenominator: 1000,
     priceOracle: chainlinkTwoFeedPriceOracle.address,
   });
-  await ethGild.deployed();
+  await nativeGild.deployed();
 
-  return [ethGild, chainlinkTwoFeedPriceOracle, basePriceOracle, quotePriceOracle];
+  return [
+    nativeGild,
+    chainlinkTwoFeedPriceOracle,
+    basePriceOracle,
+    quotePriceOracle,
+  ];
 };
 
-export const expectedReferencePrice = ethers.BigNumber.from("1656189669833157724");
+export const expectedReferencePrice = ethers.BigNumber.from(
+  "1656189669833157724"
+);
 
 export const assertError = async (f: Function, s: string, e: string) => {
   let didError = false;
@@ -78,7 +94,8 @@ export const assertError = async (f: Function, s: string, e: string) => {
 
 export const expectedName = "EthGild";
 export const expectedSymbol = "ETHg";
-export const expectedUri = "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4";
+export const expectedUri =
+  "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4";
 
 /// @param tx - transaction where event occurs
 /// @param eventName - name of event
