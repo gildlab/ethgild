@@ -8,26 +8,35 @@ import {IERC1155} from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import {NativeGild} from "../gild/NativeGild.sol";
 
-/// @title TestReentrant
-/// @author thedavidmeister
-///
-/// Only use is to test/show reentrant behaviour in EthGild.
-contract TestReentrant is IERC1155Receiver {
-    bool private shouldUngild;
+contract TestDao is IERC1155Receiver {
+    function doBotStuff(NativeGild nativeGild_) external payable {
+        uint256 price_ = nativeGild_.gild{value: msg.value}();
+
+        // imagine the function does something useful here...
+        // .. DAO STUFF ...
+        // ...
+
+        uint256 balance_ = IERC1155(nativeGild_).balanceOf(
+            address(this),
+            price_
+        );
+        uint256 ungildAmount_ = (balance_ *
+            nativeGild_.erc20OverburnDenominator()) /
+            nativeGild_.erc20OverburnNumerator();
+        nativeGild_.ungild(price_, ungildAmount_);
+    }
+
+    //solhint-disable-next-line no-empty-blocks
+    receive() external payable { }
 
     /// @inheritdoc IERC1155Receiver
     function onERC1155Received(
         address,
         address,
-        uint256 id_,
-        uint256 value_,
+        uint256,
+        uint256,
         bytes calldata
-    ) external override returns (bytes4) {
-        if (shouldUngild) {
-            NativeGild(msg.sender).ungild(id_, (value_ * 1000) / 1001);
-        } else {
-            NativeGild(msg.sender).gild{value: 1500}();
-        }
+    ) external pure override returns (bytes4) {
         return
             bytes4(
                 keccak256(
@@ -35,14 +44,6 @@ contract TestReentrant is IERC1155Receiver {
                 )
             );
     }
-
-    function gild(NativeGild nativeGild_, bool shouldUngild_) external payable {
-        shouldUngild = shouldUngild_;
-        nativeGild_.gild{value: msg.value / 2}();
-    }
-
-    //solhint-disable-next-line no-empty-blocks
-    receive() external payable { }
 
     /// @inheritdoc IERC1155Receiver
     function onERC1155BatchReceived(

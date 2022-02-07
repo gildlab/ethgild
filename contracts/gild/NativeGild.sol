@@ -5,7 +5,7 @@ import "./Gildable.sol";
 
 contract NativeGild is Gildable {
     // solhint-disable-next-line no-empty-blocks
-    constructor (GildConfig memory config_) Gildable(config_) { }
+    constructor(GildConfig memory config_) Gildable(config_) {}
 
     /// Overburn ETHg at 1001:1000 ratio to receive initial ETH refund.
     /// If the `msg.sender` does not have _both_ the erc1155 and erc20 balances
@@ -17,7 +17,6 @@ contract NativeGild is Gildable {
     /// @param erc1155Amount_ the amount of ETH to ungild.
     function ungild(uint256 price_, uint256 erc1155Amount_) external {
         uint256 amount_ = _ungild(price_, erc1155Amount_);
-        // Reentrant via. sender's `receive` or `fallback` function.
         // solhint-disable-next-line avoid-low-level-calls
         (bool refundSuccess_, ) = msg.sender.call{value: amount_}("");
         require(refundSuccess_, "UNGILD_ETH");
@@ -25,7 +24,7 @@ contract NativeGild is Gildable {
 
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
     /// Set the ETH value in the transaction as the sender to gild that ETH.
-    function gild() external payable {
-        _gild(msg.value);
+    function gild() external payable returns (uint256) {
+        return _gild(msg.value);
     }
 }

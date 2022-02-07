@@ -6,7 +6,6 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import {ERC1155AltURI} from "../erc1155/ERC1155AltURI.sol";
 import {IPriceOracle} from "../oracle/price/IPriceOracle.sol";
 import {PriceOracleConstants} from "../oracle/price/PriceOracleConstants.sol";
 
@@ -227,7 +226,7 @@ struct GildConfig {
 /// compatibility for `AggregatorV3Interface`. This also means that EthGild can
 /// never be more secure than Chainlink itself, if their oracles are damaged
 /// somehow then EthGild suffers too.
-contract Gildable is ERC20, ERC1155, ERC1155AltURI, ReentrancyGuard {
+contract Gildable is ERC20, ERC1155, ReentrancyGuard {
     /// Sender has constructed the contract.
     event Construction(address sender, GildConfig config);
 
@@ -252,13 +251,13 @@ contract Gildable is ERC20, ERC1155, ERC1155AltURI, ReentrancyGuard {
 
     /// erc20 is burned faster than erc1155.
     /// This is the numerator for that.
-    uint256 private immutable erc20OverburnNumerator;
+    uint256 public immutable erc20OverburnNumerator;
     /// erc20 is burned faster than erc1155.
     /// This is the denominator for that.
-    uint256 private immutable erc20OverburnDenominator;
+    uint256 public immutable erc20OverburnDenominator;
 
     // Price oracle.
-    IPriceOracle private immutable priceOracle;
+    IPriceOracle public immutable priceOracle;
 
     /// Constructs both erc20 and erc1155 tokens and sets oracle addresses.
     constructor(GildConfig memory config_)
@@ -304,7 +303,7 @@ contract Gildable is ERC20, ERC1155, ERC1155AltURI, ReentrancyGuard {
         return amount_;
     }
 
-    function _gild(uint256 amount_) internal nonReentrant {
+    function _gild(uint256 amount_) internal nonReentrant returns (uint256) {
         uint256 price_ = priceOracle.price();
 
         // Amount of ETHg to mint.
@@ -319,5 +318,6 @@ contract Gildable is ERC20, ERC1155, ERC1155AltURI, ReentrancyGuard {
         // erc1155 mint.
         // Reentrant via. `IERC1155Receiver`.
         _mint(msg.sender, price_, ethgAmount_, "");
+        return price_;
     }
 }

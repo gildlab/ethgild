@@ -20,8 +20,9 @@ contract ERC20Gild is Gildable {
 
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
     /// Set the ETH value in the transaction as the sender to gild that ETH.
-    function gild(uint256 amount_) external {
-        _gild(amount_);
+    function gild(uint256 amount_) external returns (uint256) {
+        uint price_ = _gild(amount_);
         token.safeTransferFrom(msg.sender, address(this), amount_);
+        return price_;
     }
 }
