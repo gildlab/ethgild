@@ -4,7 +4,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      - NIXPKGS_ALLOW_UNFREE: 1
+      NIXPKGS_ALLOW_UNFREE: 1
     steps:
       - uses: actions/checkout@v2
       - uses: cachix/install-nix-action@v13
