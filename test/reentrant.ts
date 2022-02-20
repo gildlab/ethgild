@@ -35,20 +35,24 @@ describe("reentrant behaviour", async function () {
 
     await assertError(
       async () =>
-        await testReentrant.gild(nativeGild.address, false, { value: ethAmount }),
+        await testReentrant.gild(nativeGild.address, false, {
+          value: ethAmount,
+        }),
       "ReentrancyGuard: reentrant call",
-      "failed to prevent reentrant gild call",
+      "failed to prevent reentrant gild call"
     );
 
     await assertError(
       async () =>
-        await testReentrant.gild(nativeGild.address, true, { value: ethAmount }),
+        await testReentrant.gild(nativeGild.address, true, {
+          value: ethAmount,
+        }),
       "ReentrancyGuard: reentrant call",
-      "failed to prevent reentrant ungild call",
+      "failed to prevent reentrant ungild call"
     );
   });
 
-  it("should be possible to atomically gild and ungild non-reentrantly", async function() {
+  it("should be possible to atomically gild and ungild non-reentrantly", async function () {
     const [nativeGild, priceOracle, xauOracle, usdOracle] =
       (await deployNativeGild()) as [
         NativeGild,
@@ -59,12 +63,10 @@ describe("reentrant behaviour", async function () {
 
     const ethAmount = 100000;
 
-    const testDaoFactory = await ethers.getContractFactory(
-      "TestDao"
-    );
+    const testDaoFactory = await ethers.getContractFactory("TestDao");
     const testDao = await testDaoFactory.deploy();
     await testDao.deployed();
 
-    await testDao.doBotStuff(nativeGild.address, { value: ethAmount })
-  })
+    await testDao.doBotStuff(nativeGild.address, { value: ethAmount });
+  });
 });
