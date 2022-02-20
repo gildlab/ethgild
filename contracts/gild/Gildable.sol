@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.0;
 
-// Chainlink imports.
-import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-
 // Open Zeppelin imports.
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-/// Oracle addresses change on every network so we allow them to be set in the
-/// constructor as immutables.
-struct OracleConfig {
-    /// A chainlink compatible XauUsd price oracle.
-    AggregatorV3Interface chainlinkXauUsd;
-    /// A chainlink compatible EthUsd price oracle.
-    AggregatorV3Interface chainlinkEthUsd;
+import {IPriceOracle} from "../oracle/price/IPriceOracle.sol";
+import {PriceOracleConstants} from "../oracle/price/PriceOracleConstants.sol";
+
+struct GildConfig {
+    string name;
+    string symbol;
+    string uri;
+    uint256 erc20OverburnNumerator;
+    uint256 erc20OverburnDenominator;
+    IPriceOracle priceOracle;
 }
 
-/// @title EthGild
+/// @title NativeGild
 /// @author thedavidmeister
 ///
 /// ## Purpose
 ///
 /// Gild: to cover with gold.
 ///
-/// A wrapped token that wraps/unwraps according to the reference price of gold
-/// in ETH.
+/// A wrapped token that wraps/unwraps the native token for an EVM chain
+/// according to a price oracle.
 ///
 /// Similar to wrapped eth (WETH).
 /// WETH "wraps" ETH 1:1 with an erc20 token that can be unwrapped to get the
@@ -225,98 +226,47 @@ struct OracleConfig {
 /// compatibility for `AggregatorV3Interface`. This also means that EthGild can
 /// never be more secure than Chainlink itself, if their oracles are damaged
 /// somehow then EthGild suffers too.
-contract EthGild is ERC1155, ERC20 {
+contract Gildable is ERC20, ERC1155, ReentrancyGuard {
     /// Sender has constructed the contract.
-    event Construction(
-        address sender,
-        OracleConfig oracleConfig
-    );
-    /// Sender asserts that there is a URI to interact with ETHGild on.
-    /// The URI may be malicious and steal funds so end-users are strongly
-    /// encouraged to carefully consider their reasons for trusting `sender`.
-    event AltURI(
-        /// `msg.sender` logging the new alt URI.
-        address sender,
-        /// Alternative URI the erc1155 can be found at.
-        string altURI
-    );
+    event Construction(address sender, GildConfig config);
+
     /// Some ETH has been gilded.
     event Gild(
         /// `msg.sender` address gilding ETH.
         address sender,
-        /// Oracle reporting reference price at this decimals.
-        uint8 xauDecimals,
-        /// Reference XAU price the ETH was gilded at.
-        uint256 xauReferencePrice,
-        /// Amount of ETH gilded.
-        uint256 ethAmount
+        /// Reference price gilded at.
+        uint256 price,
+        /// Amount of token gilded.
+        uint256 amount
     );
-    /// Some ETH has been ungilded.
+    /// Some native token has been ungilded.
     event Ungild(
-        /// `msg.sender` address ungilding ETH.
+        /// `msg.sender` address ungilding native token.
         address sender,
-        /// Oracle reporting reference price at this decimals.
-        uint8 xauDecimals,
-        /// Reference XAU price the ETH was ungilded at.
-        uint256 xauReferencePrice,
-        /// Amount of ETH ungilded.
-        uint256 ethAmount
+        /// Reference price ungilded at.
+        uint256 price,
+        /// Amount of token ungilded.
+        uint256 amount
     );
 
-    /// erc20 name.
-    string private constant NAME = "EthGild";
-    /// erc20 symbol.
-    string private constant SYMBOL = "ETHg";
-    /// erc1155 uri.
-    /// Note the erc1155 id is simply the reference XAU price at which ETHg
-    /// tokens can burn against to unlock ETH.
-    string private constant GILD_URI = "https://ethgild.crypto/#/id/{id}";
-
-    /// erc20 is burned 0.1% faster than erc1155.
+    /// erc20 is burned faster than erc1155.
     /// This is the numerator for that.
-    uint256 private constant ERC20_OVERBURN_NUMERATOR = 1001;
-    /// erc20 is burned 0.1% faster than erc1155.
+    uint256 public immutable erc20OverburnNumerator;
+    /// erc20 is burned faster than erc1155.
     /// This is the denominator for that.
-    uint256 private constant ERC20_OVERBURN_DENOMINATOR = 1000;
+    uint256 public immutable erc20OverburnDenominator;
 
-    // Chainlink oracles.
-    // https://docs.chain.link/docs/ethereum-addresses/s
-    AggregatorV3Interface private immutable chainlinkXauUsd;
-    AggregatorV3Interface private immutable chainlinkEthUsd;
+    // Price oracle.
+    IPriceOracle public immutable priceOracle;
 
     /// Constructs both erc20 and erc1155 tokens and sets oracle addresses.
-    constructor(OracleConfig memory oracleConfig_)
-        ERC20(NAME, SYMBOL)
-        ERC1155(GILD_URI)
+    constructor(GildConfig memory config_)
+        ERC20(config_.name, config_.symbol)
+        ERC1155(config_.uri)
     {
-        chainlinkXauUsd = oracleConfig_.chainlinkXauUsd;
-        chainlinkEthUsd = oracleConfig_.chainlinkEthUsd;
-    }
-
-    /// Log an alternative URI that the sender claims is handling `EthGild`.
-    /// The URI may trivially be malicious so end users are strongly encouraged
-    /// to carefully consider their reasons for trusting `msg.sender` to not
-    /// steal funds.
-    /// @param altUri_ The alternative URI for `EthGild` 1155 tokens.
-    function altURI(string calldata altUri_) external {
-        emit AltURI(msg.sender, altUri_);
-    }
-
-    /// Returns a uint256 reference XAU price in ETH or reverts.
-    /// Calls two separate Chainlink oracles to factor out the USD price.
-    /// Ideally we'd avoid referencing USD even for internal math but Chainlink
-    /// doesn't support that yet. Having two calls costs extra gas and deriving
-    /// a reference price from some arbitrary fiat adds no value.
-    function referencePrice() public view returns (uint8, uint256) {
-        uint8 xauDecimals_ = chainlinkXauUsd.decimals();
-        (, int256 xauUsd_, , , ) = chainlinkXauUsd.latestRoundData();
-        (, int256 ethUsd_, , , ) = chainlinkEthUsd.latestRoundData();
-        require(xauUsd_ >= 0, "NEGATIVE_XAUUSD");
-        require(ethUsd_ >= 0, "NEGATIVE_ETHUSD");
-        return (
-            xauDecimals_,
-            (uint256(ethUsd_) * 10**xauDecimals_) / uint256(xauUsd_)
-        );
+        erc20OverburnNumerator = config_.erc20OverburnNumerator;
+        erc20OverburnDenominator = config_.erc20OverburnDenominator;
+        priceOracle = config_.priceOracle;
     }
 
     /// Overburn ETHg at 1001:1000 ratio to receive initial ETH refund.
@@ -324,50 +274,42 @@ contract EthGild is ERC1155, ERC20 {
     /// for a given reference price the ETH will not ungild. The erc20 and
     /// erc1155 amounts as `xauReferencePrice * ethAmount` (+0.1% for erc20)
     /// will be burned.
-    /// @param xauReferencePrice_ XAU reference price in ETH. MUST correspond
+    /// @param price_ oracle price in Native asset. MUST correspond
     /// to an erc1155 balance held by `msg.sender`.
     /// @param erc1155Amount_ the amount of ETH to ungild.
-    function ungild(
-        uint8 xauDecimals_,
-        uint256 xauReferencePrice_,
-        uint256 erc1155Amount_
-    ) external {
-        require(erc1155Amount_ >= ERC20_OVERBURN_DENOMINATOR, "MIN_UNGILD");
-        uint256 id_ = (xauReferencePrice_ << 8) | xauDecimals_;
+    function _ungild(uint256 price_, uint256 erc1155Amount_)
+        internal
+        nonReentrant
+        returns (uint256)
+    {
+        require(erc1155Amount_ >= erc20OverburnDenominator, "MIN_UNGILD");
+
         // ETHg erc20 burn.
         // 0.1% more than erc1155 burn.
         // NOT reentrant.
         _burn(
             msg.sender,
-            (erc1155Amount_ * ERC20_OVERBURN_NUMERATOR) /
-                ERC20_OVERBURN_DENOMINATOR
+            (erc1155Amount_ * erc20OverburnNumerator) / erc20OverburnDenominator
         );
 
         // erc1155 burn.
         // NOT reentrant.
-        _burn(msg.sender, id_, erc1155Amount_);
+        _burn(msg.sender, price_, erc1155Amount_);
 
-        // Amount of ETHg to burn.
-        uint256 ethAmount_ = (erc1155Amount_ * 10**xauDecimals_) /
-            xauReferencePrice_;
-        emit Ungild(msg.sender, xauDecimals_, xauReferencePrice_, ethAmount_);
+        // Amount of token to ungild.
+        uint256 amount_ = (erc1155Amount_ * PriceOracleConstants.ONE) / price_;
+        emit Ungild(msg.sender, price_, amount_);
 
-        // ETH ungild.
-        // Reentrant via. sender's `receive` or `fallback` function.
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool refundSuccess_, ) = msg.sender.call{value: ethAmount_}("");
-        require(refundSuccess_, "UNGILD_ETH");
+        return amount_;
     }
 
-    /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
-    /// Set the ETH value in the transaction as the sender to gild that ETH.
-    function gild() external payable {
-        (uint8 xauDecimals_, uint256 referencePrice_) = referencePrice();
+    function _gild(uint256 amount_) internal nonReentrant returns (uint256) {
+        uint256 price_ = priceOracle.price();
 
         // Amount of ETHg to mint.
-        uint256 ethgAmount_ = (msg.value * referencePrice_) / 10**xauDecimals_;
-        require(ethgAmount_ >= ERC20_OVERBURN_DENOMINATOR, "MIN_GILD");
-        emit Gild(msg.sender, xauDecimals_, referencePrice_, msg.value);
+        uint256 ethgAmount_ = (amount_ * price_) / PriceOracleConstants.ONE;
+        require(ethgAmount_ >= erc20OverburnDenominator, "MIN_GILD");
+        emit Gild(msg.sender, price_, amount_);
 
         // erc20 mint.
         // NOT reentrant.
@@ -375,11 +317,7 @@ contract EthGild is ERC1155, ERC20 {
 
         // erc1155 mint.
         // Reentrant via. `IERC1155Receiver`.
-        _mint(
-            msg.sender,
-            (referencePrice_ << 8) | xauDecimals_,
-            ethgAmount_,
-            ""
-        );
+        _mint(msg.sender, price_, ethgAmount_, "");
+        return price_;
     }
 }

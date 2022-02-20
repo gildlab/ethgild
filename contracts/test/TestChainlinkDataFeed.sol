@@ -11,7 +11,7 @@ struct RoundData {
     uint80 answeredInRound;
 }
 
-contract Oracle is AggregatorV3Interface {
+contract TestChainlinkDataFeed is AggregatorV3Interface {
     uint8 private _decimals;
     string private _description;
     mapping(uint80 => RoundData) private _roundData;
@@ -28,6 +28,7 @@ contract Oracle is AggregatorV3Interface {
 
     function setRoundData(uint80 roundId_, RoundData memory roundData_) public {
         _roundData[roundId_] = roundData_;
+        // Treat this as the high water mark if appropriate.
         if (roundId_ > _latestRoundId) {
             _latestRoundId = roundId_;
         }

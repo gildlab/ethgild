@@ -36,6 +36,10 @@ let
  hardhat test
  security-check
  '';
+
+ ipfs-add = pkgs.writeShellScriptBin "ipfs-add" ''
+  ipfs add -r --pin --cid-version 1 erc1155Metadata
+ '';
 in
 pkgs.stdenv.mkDerivation {
  name = "shell";
@@ -46,6 +50,8 @@ pkgs.stdenv.mkDerivation {
   flush-all
   ci-test
   ci-lint
+  ipfs-add
+  pkgs.ngrok
  ];
 
  shellHook = ''

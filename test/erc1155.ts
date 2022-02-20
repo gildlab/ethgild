@@ -2,23 +2,22 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployEthGild,
+  deployNativeGild,
   expectedReferencePrice,
   expectedUri,
-  expected1155ID,
+  priceOne,
 } from "./util";
-import type { EthGild } from "../typechain/EthGild";
-import type { Oracle } from "../typechain/Oracle";
+import type { NativeGild } from "../typechain/NativeGild";
+import type { TestPriceOracle } from "../typechain/TestPriceOracle";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
+      NativeGild,
+      TestPriceOracle
     ];
 
     const id = 12345;
@@ -34,18 +33,21 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, xauOracle, ethOracle] = (await deployEthGild()) as [
-      EthGild,
-      Oracle,
-      Oracle
+    const [ethGild, priceOracle] = (await deployNativeGild()) as [
+      NativeGild,
+      TestPriceOracle
     ];
 
-    await ethGild.gild({ value: 1000 });
+    const gildAmount = ethers.BigNumber.from(1000);
+    await ethGild.gild({ value: gildAmount });
 
-    const expectedErc20Balance = ethers.BigNumber.from("1172");
-    const expectedErc20BalanceAfter = ethers.BigNumber.from("1172");
-    const expectedErc1155Balance = ethers.BigNumber.from("1172");
+    const expectedErc20Balance = gildAmount
+      .mul(expectedReferencePrice)
+      .div(priceOne);
+    const expectedErc20BalanceAfter = expectedErc20Balance;
+    const expectedErc1155Balance = expectedErc20Balance;
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);
+    const expected1155ID = await priceOracle.price();
 
     const erc20Balance = await ethGild["balanceOf(address)"](
       signers[0].address
