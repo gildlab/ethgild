@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 // Open Zeppelin imports.
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -11,14 +11,19 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITier.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/libraries/TierReport.sol";
 
-struct AssetConnectConfig {
+struct CertifiedAssetConnectConfig {
     string name;
     string symbol;
     string uri;
 }
 
-contract AssetConnect is ERC20, ERC1155, ReentrancyGuard, AccessControl {
-    event Construction(address sender, AssetConnectConfig config);
+contract CertifiedAssetConnect is
+    ERC20,
+    ERC1155,
+    ReentrancyGuard,
+    AccessControl
+{
+    event Construction(address sender, CertifiedAssetConnectConfig config);
     event Certify(address sender, uint256 until, bytes data);
     event Connect(address sender, uint256 id, uint256 amount, bytes data);
     event Disconnect(address sender, uint256 id, uint256 amount, bytes data);
@@ -44,7 +49,7 @@ contract AssetConnect is ERC20, ERC1155, ReentrancyGuard, AccessControl {
     address private erc1155Tier;
     uint256 private erc1155MinimumTier;
 
-    constructor(AssetConnectConfig memory config_)
+    constructor(CertifiedAssetConnectConfig memory config_)
         ERC20(config_.name, config_.symbol)
         ERC1155(config_.uri)
     {

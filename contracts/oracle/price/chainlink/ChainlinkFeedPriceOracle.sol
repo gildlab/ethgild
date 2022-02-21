@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 // Chainlink imports.
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
@@ -15,6 +15,7 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
 
     constructor(address feed_) {
         feed = AggregatorV3Interface(feed_);
+        emit Construction(msg.sender, feed_);
     }
 
     function price() external view override returns (uint256) {
