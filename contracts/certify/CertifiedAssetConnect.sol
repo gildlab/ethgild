@@ -44,9 +44,9 @@ contract CertifiedAssetConnect is
         keccak256("ERC1155TIERER_ADMIN");
 
     uint256 private certifiedUntil;
-    address private erc20Tier;
+    ITier private erc20Tier;
     uint256 private erc20MinimumTier;
-    address private erc1155Tier;
+    ITier private erc1155Tier;
     uint256 private erc1155MinimumTier;
 
     constructor(CertifiedAssetConnectConfig memory config_)
@@ -91,19 +91,25 @@ contract CertifiedAssetConnect is
         return super.supportsInterface(interfaceId);
     }
 
+    /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
+    /// disable report checking.
+    /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     function setERC20Tier(address tier_, uint256 minimumTier_)
         external
         onlyRole(ERC20TIERER)
     {
-        erc20Tier = tier_;
+        erc20Tier = ITier(tier_);
         erc20MinimumTier = minimumTier_;
     }
 
+    /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
+    /// disable report checking.
+    /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     function setERC1155Tier(address tier_, uint256 minimumTier_)
         external
         onlyRole(ERC1155TIERER)
     {
-        erc1155Tier = tier_;
+        erc1155Tier = ITier(tier_);
         erc1155MinimumTier = minimumTier_;
     }
 
@@ -134,15 +140,15 @@ contract CertifiedAssetConnect is
     }
 
     modifier onlyTier(
-        address tier_,
+        ITier tier_,
         uint256 minimumTier_,
         address to_
     ) {
-        if (tier_ != address(0) && minimumTier_ > 0) {
+        if (address(tier_) != address(0) && minimumTier_ > 0) {
             require(
                 block.number >=
                     TierReport.tierBlock(
-                        ITier(tier_).report(to_),
+                        tier_.report(to_),
                         minimumTier_
                     ),
                 "TIER"

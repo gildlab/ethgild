@@ -6,7 +6,7 @@ import {ChainlinkTwoFeedPriceOracle, ChainlinkTwoFeedPriceOracleConfig} from "./
 
 /// @title ChainlinkFeedPriceOracleFactory
 /// @notice Factory for creating and deploying `ChainlinkFeedPriceOracle`.
-contract ChainlinkFeedPriceOracleFactory is Factory {
+contract ChainlinkTwoFeedPriceOracleFactory is Factory {
     /// @inheritdoc Factory
     function _createChild(bytes calldata data_)
         internal
