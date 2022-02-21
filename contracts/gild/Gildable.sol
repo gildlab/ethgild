@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
 // Open Zeppelin imports.
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -267,6 +267,24 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
         erc20OverburnNumerator = config_.erc20OverburnNumerator;
         erc20OverburnDenominator = config_.erc20OverburnDenominator;
         priceOracle = config_.priceOracle;
+        emit Construction(msg.sender, config_);
+    }
+
+    function _gild(uint256 amount_) internal nonReentrant returns (uint256) {
+        uint256 price_ = priceOracle.price();
+
+        // Amount of ETHg to mint.
+        uint256 ethgAmount_ = (amount_ * price_) / PriceOracleConstants.ONE;
+        require(ethgAmount_ >= erc20OverburnDenominator, "MIN_GILD");
+        emit Gild(msg.sender, price_, amount_);
+
+        // erc20 mint.
+        _mint(msg.sender, ethgAmount_);
+
+        // erc1155 mint.
+        // Receiving contracts MUST implement `IERC1155Receiver`.
+        _mint(msg.sender, price_, ethgAmount_, "");
+        return price_;
     }
 
     /// Overburn ETHg at 1001:1000 ratio to receive initial ETH refund.
@@ -286,14 +304,12 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
 
         // ETHg erc20 burn.
         // 0.1% more than erc1155 burn.
-        // NOT reentrant.
         _burn(
             msg.sender,
             (erc1155Amount_ * erc20OverburnNumerator) / erc20OverburnDenominator
         );
 
         // erc1155 burn.
-        // NOT reentrant.
         _burn(msg.sender, price_, erc1155Amount_);
 
         // Amount of token to ungild.
@@ -301,23 +317,5 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
         emit Ungild(msg.sender, price_, amount_);
 
         return amount_;
-    }
-
-    function _gild(uint256 amount_) internal nonReentrant returns (uint256) {
-        uint256 price_ = priceOracle.price();
-
-        // Amount of ETHg to mint.
-        uint256 ethgAmount_ = (amount_ * price_) / PriceOracleConstants.ONE;
-        require(ethgAmount_ >= erc20OverburnDenominator, "MIN_GILD");
-        emit Gild(msg.sender, price_, amount_);
-
-        // erc20 mint.
-        // NOT reentrant.
-        _mint(msg.sender, ethgAmount_);
-
-        // erc1155 mint.
-        // Reentrant via. `IERC1155Receiver`.
-        _mint(msg.sender, price_, ethgAmount_, "");
-        return price_;
     }
 }

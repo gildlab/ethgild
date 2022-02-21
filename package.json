@@ -21,7 +21,9 @@
     "solhint": "^3.3.6"
   },
   "dependencies": {
+    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#3823d634791a8fdf3ddfb679f0763e03db0c2f62",
     "@chainlink/contracts": "^0.3.1",
-    "@openzeppelin/contracts": "^4.1.0"
+    "@openzeppelin/contracts": "^4.1.0",
+    "@openzeppelin/contracts-upgradeable": "^4.5.1"
   }
 }
