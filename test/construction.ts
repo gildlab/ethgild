@@ -1,33 +1,52 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
+import { expectedReferencePrice,
+} from "./util";
 
 chai.use(solidity);
 const { assert } = chai;
 
-export const expectedReferencePrice = ethers.BigNumber.from(
-  "1391466971980534617"
-);
 
+export const usdDecimals = 8;
+export const xauDecimals = 8;
 
 describe("construction", async function () {
 
-
   it("should set reference price", async function () {
+    const oracleFactory = await ethers.getContractFactory(
+      "TestChainlinkDataFeed"
+    );
+    const basePriceOracle = await oracleFactory.deploy();
+  await basePriceOracle.deployed();
+  // ETHUSD as of 2022-02-06
+  await basePriceOracle.setDecimals(usdDecimals);
+  await basePriceOracle.setRoundData(1, {
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+    answer: "299438264211",
+    answeredInRound: 1,
+  });
 
-    //etherium data feed chainlink oracles of rinkeby testnet
+  const quotePriceOracle = await oracleFactory.deploy();
+  await quotePriceOracle.deployed();
+  // XAUUSD as of 2022-02-06
+  await quotePriceOracle.setDecimals(xauDecimals);
+  await quotePriceOracle.setRoundData(1, {
+    startedAt: Date.now(),
+    updatedAt: Date.now(),
+    answer: "180799500000",
+    answeredInRound: 1,
+  });
 
-    const chainlinkXauUsd = "0x81570059A0cb83888f1459Ec66Aad1Ac16730243";
-    const chainlinkEthUsd = "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e";
-  
     const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory(
         "ChainlinkTwoFeedPriceOracle"
       );
   
     const chainlinkTwoFeedPriceOracle =
     await chainlinkTwoFeedPriceOracleFactory.deploy({
-      base: chainlinkEthUsd,
-      quote: chainlinkXauUsd,
+      base: basePriceOracle.address,
+      quote: quotePriceOracle.address,
     });
     await chainlinkTwoFeedPriceOracle.deployed();
   
