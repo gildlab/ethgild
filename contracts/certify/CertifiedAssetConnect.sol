@@ -128,6 +128,7 @@ contract CertifiedAssetConnect is
     }
 
     modifier onlyCertifiedTransfer(address from_, address to_) {
+        // solhint-disable-next-line not-rely-on-time
         if (block.timestamp > certifiedUntil) {
             // Note the handler ALSO needs to meet associated tier requirements
             // for the token type being handled.
