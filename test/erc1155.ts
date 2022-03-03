@@ -39,7 +39,7 @@ describe("erc1155 usage", async function () {
     ];
 
     const gildAmount = ethers.BigNumber.from(1000);
-    await ethGild.gild({ value: gildAmount });
+    await ethGild.gild(0, { value: gildAmount });
 
     const expectedErc20Balance = gildAmount
       .mul(expectedReferencePrice)

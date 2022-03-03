@@ -270,8 +270,13 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
         emit Construction(msg.sender, config_);
     }
 
-    function _gild(uint256 amount_) internal nonReentrant returns (uint256) {
+    function _gild(uint256 amount_, uint256 minPrice_)
+        internal
+        nonReentrant
+        returns (uint256)
+    {
         uint256 price_ = priceOracle.price();
+        require(price_ >= minPrice_, "MIN_PRICE");
 
         // Amount of ETHg to mint.
         uint256 ethgAmount_ = (amount_ * price_) / PriceOracleConstants.ONE;

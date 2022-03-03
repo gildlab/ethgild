@@ -25,7 +25,7 @@ describe("gild", async function () {
     ];
 
     await assertError(
-      async () => await ethGild.gild(),
+      async () => await ethGild.gild(0),
       "MIN_GILD",
       "failed to prevent a zero value gild"
     );
@@ -56,10 +56,19 @@ describe("gild", async function () {
     const aliceEthGild = ethGild.connect(alice);
 
     const aliceEthAmount = ethers.BigNumber.from("1" + eighteenZeros);
-    await aliceEthGild.gild({ value: aliceEthAmount });
+
+    // Min gild price MUST be respected
+    const oraclePrice = await priceOracle.price();
+    await assertError(
+      async () =>
+        await aliceEthGild.gild(oraclePrice.add(1), { value: aliceEthAmount }),
+      "MIN_PRICE",
+      "failed to respect min price"
+    );
+    await aliceEthGild.gild(oraclePrice, { value: aliceEthAmount });
 
     // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
-    const expectedEthG = await priceOracle.price();
+    const expectedEthG = oraclePrice;
     const aliceEthG = await aliceEthGild["balanceOf(address)"](alice.address);
     assert(
       aliceEthG.eq(expectedEthG),
@@ -90,7 +99,7 @@ describe("gild", async function () {
     );
 
     const aliceEthAmount = ethers.BigNumber.from("100" + eighteenZeros);
-    await aliceEthGild.gild({ value: aliceEthAmount });
+    await aliceEthGild.gild(0, { value: aliceEthAmount });
 
     const expectedAliceBalance = expectedReferencePrice
       .mul(aliceEthAmount)
@@ -132,7 +141,7 @@ describe("gild", async function () {
     );
 
     const bobEthAmount = ethers.BigNumber.from("10" + eighteenZeros);
-    await bobEthGild.gild({ value: bobEthAmount });
+    await bobEthGild.gild(0, { value: bobEthAmount });
 
     const expectedBobBalance = expectedReferencePrice
       .mul(bobEthAmount)
@@ -214,7 +223,7 @@ describe("gild", async function () {
     const aliceEthAmount = ethers.BigNumber.from("10" + eighteenZeros);
     const bobEthAmount = ethers.BigNumber.from("9" + eighteenZeros);
 
-    await aliceEthGild.gild({ value: aliceEthAmount });
+    await aliceEthGild.gild(0, { value: aliceEthAmount });
 
     const aliceBalance = await ethGild["balanceOf(address)"](alice.address);
     // erc1155 transfer.

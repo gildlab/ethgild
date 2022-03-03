@@ -27,7 +27,7 @@ describe("gild events", async function () {
 
     const id1155 = price;
 
-    const gildTx = await ethGild.gild({ value: ethAmount });
+    const gildTx = await ethGild.gild(0, { value: ethAmount });
 
     const gildEventArgs = await getEventArgs(gildTx, "Gild", ethGild);
 

@@ -10,7 +10,7 @@ import {NativeGild} from "../gild/NativeGild.sol";
 
 contract TestDao is IERC1155Receiver {
     function doBotStuff(NativeGild nativeGild_) external payable {
-        uint256 price_ = nativeGild_.gild{value: msg.value}();
+        uint256 price_ = nativeGild_.gild{value: msg.value}(0);
 
         // imagine the function does something useful here...
         // .. DAO STUFF ...

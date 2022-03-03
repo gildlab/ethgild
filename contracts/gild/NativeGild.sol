@@ -24,7 +24,7 @@ contract NativeGild is Gildable {
 
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
     /// Set the ETH value in the transaction as the sender to gild that ETH.
-    function gild() external payable returns (uint256) {
-        return _gild(msg.value);
+    function gild(uint256 minPrice_) external payable returns (uint256) {
+        return _gild(msg.value, minPrice_);
     }
 }

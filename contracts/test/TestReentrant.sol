@@ -26,7 +26,7 @@ contract TestReentrant is IERC1155Receiver {
         if (shouldUngild) {
             NativeGild(msg.sender).ungild(id_, (value_ * 1000) / 1001);
         } else {
-            NativeGild(msg.sender).gild{value: 1500}();
+            NativeGild(msg.sender).gild{value: 1500}(0);
         }
         return
             bytes4(
@@ -38,7 +38,7 @@ contract TestReentrant is IERC1155Receiver {
 
     function gild(NativeGild nativeGild_, bool shouldUngild_) external payable {
         shouldUngild = shouldUngild_;
-        nativeGild_.gild{value: msg.value / 2}();
+        nativeGild_.gild{value: msg.value / 2}(0);
     }
 
     //solhint-disable-next-line no-empty-blocks

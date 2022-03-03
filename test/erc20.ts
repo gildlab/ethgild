@@ -47,7 +47,7 @@ describe("erc20 usage", async function () {
         TestChainlinkDataFeed
       ];
 
-    await ethGild.gild({ value: 1000 });
+    await ethGild.gild(0, { value: 1000 });
 
     const expectedErc20Balance = ethers.BigNumber.from("1656");
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
