@@ -56,10 +56,18 @@ describe("gild", async function () {
     const aliceEthGild = ethGild.connect(alice);
 
     const aliceEthAmount = ethers.BigNumber.from("1" + eighteenZeros);
-    await aliceEthGild.gild(0, { value: aliceEthAmount });
+
+    // Min gild price MUST be respected
+    const oraclePrice = await priceOracle.price();
+    await assertError(
+      async () => await aliceEthGild.gild(oraclePrice.add(1), {value: aliceEthAmount }),
+      "MIN_PRICE",
+      "failed to respect min price"
+    );
+    await aliceEthGild.gild(oraclePrice, { value: aliceEthAmount });
 
     // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
-    const expectedEthG = await priceOracle.price();
+    const expectedEthG = oraclePrice;
     const aliceEthG = await aliceEthGild["balanceOf(address)"](alice.address);
     assert(
       aliceEthG.eq(expectedEthG),
