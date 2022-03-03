@@ -60,7 +60,8 @@ describe("gild", async function () {
     // Min gild price MUST be respected
     const oraclePrice = await priceOracle.price();
     await assertError(
-      async () => await aliceEthGild.gild(oraclePrice.add(1), {value: aliceEthAmount }),
+      async () =>
+        await aliceEthGild.gild(oraclePrice.add(1), { value: aliceEthAmount }),
       "MIN_PRICE",
       "failed to respect min price"
     );
