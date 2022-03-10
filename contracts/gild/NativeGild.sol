@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.12;
 
+import "@openzeppelin/contracts/utils/Address.sol";
+
 import "./Gildable.sol";
 
 contract NativeGild is Gildable {
+    using Address for address payable;
+
     // solhint-disable-next-line no-empty-blocks
     constructor(GildConfig memory config_) Gildable(config_) {}
 
@@ -17,9 +21,7 @@ contract NativeGild is Gildable {
     /// @param erc1155Amount_ the amount of ETH to ungild.
     function ungild(uint256 price_, uint256 erc1155Amount_) external {
         uint256 amount_ = _ungild(price_, erc1155Amount_);
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool refundSuccess_, ) = msg.sender.call{value: amount_}("");
-        require(refundSuccess_, "UNGILD_ETH");
+        payable(msg.sender).sendValue(amount_);
     }
 
     /// Gilds received ETH for equal parts ETHg erc20 and erc1155 tokens.
