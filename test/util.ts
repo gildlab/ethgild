@@ -85,8 +85,15 @@ export const assertError = async (f: Function, s: string, e: string) => {
   let didError = false;
   try {
     await f();
-  } catch (e) {
-    assert(e.toString().includes(s), `error string ${e} does not include ${s}`);
+  } catch (err) {
+    if (err instanceof Error) {
+      assert(
+        err.toString().includes(s),
+        `error string ${err} does not include ${s}`
+      );
+    } else {
+      throw "err not an Error";
+    }
     didError = true;
   }
   assert(didError, e);

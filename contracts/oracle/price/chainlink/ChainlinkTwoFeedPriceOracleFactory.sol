@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CAL
-pragma solidity ^0.8.12;
+pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import {ChainlinkTwoFeedPriceOracle, ChainlinkTwoFeedPriceOracleConfig} from "./ChainlinkTwoFeedPriceOracle.sol";

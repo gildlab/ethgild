@@ -279,7 +279,7 @@ describe("gild", async function () {
     const bobEthDiffExpected = aliceEthAmount
       .mul(1000)
       .div(1001)
-      .sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice));
+      .sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice || 0));
     assert(
       bobEthAfter.sub(bobEthBefore).eq(bobEthDiffExpected),
       `wrong bob diff ${bobEthDiffExpected} ${bobEthDiff}`
