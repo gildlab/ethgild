@@ -12,6 +12,7 @@ import "@beehiveinnovation/rain-protocol/contracts/tier/ITier.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/libraries/TierReport.sol";
 
 struct CertifiedAssetConnectConfig {
+    address admin;
     string name;
     string symbol;
     string uri;
@@ -71,12 +72,12 @@ contract CertifiedAssetConnect is
         _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
         _setRoleAdmin(ERC1155TIERER, ERC1155TIERER_ADMIN);
 
-        _setupRole(CONNECTOR_ADMIN, msg.sender);
-        _setupRole(DISCONNECTOR_ADMIN, msg.sender);
-        _setupRole(CERTIFIER_ADMIN, msg.sender);
-        _setupRole(HANDLER_ADMIN, msg.sender);
-        _setupRole(ERC20TIERER_ADMIN, msg.sender);
-        _setupRole(ERC1155TIERER_ADMIN, msg.sender);
+        _setupRole(CONNECTOR_ADMIN, config_.admin);
+        _setupRole(DISCONNECTOR_ADMIN, config_.admin);
+        _setupRole(CERTIFIER_ADMIN, config_.admin);
+        _setupRole(HANDLER_ADMIN, config_.admin);
+        _setupRole(ERC20TIERER_ADMIN, config_.admin);
+        _setupRole(ERC1155TIERER_ADMIN, config_.admin);
 
         emit Construction(msg.sender, config_);
     }
@@ -148,10 +149,7 @@ contract CertifiedAssetConnect is
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             require(
                 block.number >=
-                    TierReport.tierBlock(
-                        tier_.report(to_),
-                        minimumTier_
-                    ),
+                    TierReport.tierBlock(tier_.report(to_), minimumTier_),
                 "TIER"
             );
         }
