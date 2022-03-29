@@ -55,7 +55,7 @@ pkgs.stdenv.mkDerivation {
  ];
 
  shellHook = ''
-  source .env
+  touch .env && source .env
   export PATH=$( npm bin ):$PATH
   # keep it fresh
   npm install
