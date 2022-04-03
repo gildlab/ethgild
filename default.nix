@@ -44,7 +44,7 @@ in
 pkgs.stdenv.mkDerivation {
  name = "shell";
  buildInputs = [
-  pkgs.nodejs-14_x
+  pkgs.nodejs-17_x
   pkgs.slither-analyzer
   security-check
   flush-all
@@ -55,7 +55,7 @@ pkgs.stdenv.mkDerivation {
  ];
 
  shellHook = ''
-  source .env
+  touch .env && source .env
   export PATH=$( npm bin ):$PATH
   # keep it fresh
   npm install

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.12;
+pragma solidity =0.8.10;
 
 import "@openzeppelin/contracts/utils/Address.sol";
 

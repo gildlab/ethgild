@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.12;
+pragma solidity =0.8.10;
 
 // Chainlink imports.
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";

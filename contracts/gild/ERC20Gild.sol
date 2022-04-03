@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity ^0.8.12;
+pragma solidity =0.8.10;
 
 import "./Gildable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
