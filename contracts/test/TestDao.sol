@@ -27,7 +27,7 @@ contract TestDao is IERC1155Receiver {
     }
 
     //solhint-disable-next-line no-empty-blocks
-    receive() external payable { }
+    receive() external payable {}
 
     /// @inheritdoc IERC1155Receiver
     function onERC1155Received(
