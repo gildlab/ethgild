@@ -2,7 +2,8 @@
 pragma solidity =0.8.10;
 
 // Open Zeppelin imports.
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// solhint-ignore-next-line max-line-length
+import {ERC20, ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -19,7 +20,7 @@ struct CertifiedAssetConnectConfig {
 }
 
 contract CertifiedAssetConnect is
-    ERC20,
+    ERC20Snapshot,
     ERC1155,
     ReentrancyGuard,
     AccessControl
@@ -31,18 +32,27 @@ contract CertifiedAssetConnect is
 
     bytes32 public constant CONNECTOR = keccak256("CONNECTOR");
     bytes32 public constant CONNECTOR_ADMIN = keccak256("CONNECTOR_ADMIN");
+
     bytes32 public constant DISCONNECTOR = keccak256("DISCONNECTOR");
     bytes32 public constant DISCONNECTOR_ADMIN =
         keccak256("DISCONNECTOR_ADMIN");
+
     bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
     bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
+
     bytes32 public constant HANDLER = keccak256("HANDLER");
     bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+
     bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
     bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+
     bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
     bytes32 public constant ERC1155TIERER_ADMIN =
         keccak256("ERC1155TIERER_ADMIN");
+
+    bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
+    bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
+        keccak256("ERC20SNAPSHOTTER_ADMIN");
 
     uint256 private certifiedUntil;
     ITier private erc20Tier;
@@ -72,12 +82,16 @@ contract CertifiedAssetConnect is
         _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
         _setRoleAdmin(ERC1155TIERER, ERC1155TIERER_ADMIN);
 
-        _setupRole(CONNECTOR_ADMIN, config_.admin);
-        _setupRole(DISCONNECTOR_ADMIN, config_.admin);
-        _setupRole(CERTIFIER_ADMIN, config_.admin);
-        _setupRole(HANDLER_ADMIN, config_.admin);
-        _setupRole(ERC20TIERER_ADMIN, config_.admin);
-        _setupRole(ERC1155TIERER_ADMIN, config_.admin);
+        _setRoleAdmin(ERC20SNAPSHOTTER_ADMIN, ERC20SNAPSHOTTER_ADMIN);
+        _setRoleAdmin(ERC20SNAPSHOTTER, ERC20SNAPSHOTTER_ADMIN);
+
+        _grantRole(CONNECTOR_ADMIN, config_.admin);
+        _grantRole(DISCONNECTOR_ADMIN, config_.admin);
+        _grantRole(CERTIFIER_ADMIN, config_.admin);
+        _grantRole(HANDLER_ADMIN, config_.admin);
+        _grantRole(ERC20TIERER_ADMIN, config_.admin);
+        _grantRole(ERC1155TIERER_ADMIN, config_.admin);
+        _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
 
         emit Construction(msg.sender, config_);
     }
@@ -90,6 +104,10 @@ contract CertifiedAssetConnect is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
+        return _snapshot();
     }
 
     /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
