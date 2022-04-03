@@ -2,7 +2,8 @@
 pragma solidity =0.8.10;
 
 // Open Zeppelin imports.
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// solhint-ignore-next-line max-line-length
+import {ERC20, ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -19,7 +20,7 @@ struct CertifiedAssetConnectConfig {
 }
 
 contract CertifiedAssetConnect is
-    ERC20,
+    ERC20Snapshot,
     ERC1155,
     ReentrancyGuard,
     AccessControl
