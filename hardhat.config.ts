@@ -6,6 +6,8 @@ import "hardhat-gas-reporter";
 
 require('dotenv').config();
 
+const {RINKEBY_URL, PRIVATE_KEY, POLYGON_URL } = process.env
+
 export const config = {
   networks: {
     hardhat: {
@@ -14,12 +16,12 @@ export const config = {
       hardfork: "london",
     },
     rinkeby: {
-      url: process.env.RINKEBY_URL,
-      accounts: [ process.env.PRIVATE_KEY ],
+      url: RINKEBY_URL,
+      accounts: [ `0x${PRIVATE_KEY}` ],
     },    
     matic: {
-      url: process.env.POLYGON_URL,
-      accounts: [ process.env.PRIVATE_KEY ],
+      url: POLYGON_URL,
+      accounts: [ `0x${PRIVATE_KEY}` ],
       gasPrice: 50000000000
     },   
   },
