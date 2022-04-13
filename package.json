@@ -26,6 +26,7 @@
     "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#2dd7102e9addf0662bc0aef2a6aacb8b82edf089",
     "@chainlink/contracts": "^0.3.1",
     "@openzeppelin/contracts": "^4.1.0",
-    "@openzeppelin/contracts-upgradeable": "^4.5.1"
+    "@openzeppelin/contracts-upgradeable": "^4.5.1",
+    "dotenv": "^16.0.0"
   }
 }

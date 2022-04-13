@@ -4,6 +4,8 @@ import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 
+require('dotenv').config();
+
 export const config = {
   networks: {
     hardhat: {
@@ -11,6 +13,15 @@ export const config = {
       allowUnlimitedContractSize: true,
       hardfork: "london",
     },
+    rinkeby: {
+      url: process.env.RINKEBY_URL,
+      accounts: [ process.env.PRIVATE_KEY ],
+    },    
+    matic: {
+      url: process.env.POLYGON_URL,
+      accounts: [ process.env.PRIVATE_KEY ],
+      gasPrice: 50000000000
+    },   
   },
   solidity: {
     compilers: [
