@@ -19,7 +19,7 @@ async function main () {
 
   
   const polygonXauUsd = "0x0C466540B2ee1a31b441671eac0ca886e051E410";
-  const polygonEthUsd = "0xF9680D99D6C9589e2a93a78A04A279e509205945";
+  const polygonMaticUsd = "0xab594600376ec9fd91f8e885dadf0ce036862de0";
 
   let chainlinkTwoFeedPriceOracle = null;
 
@@ -29,7 +29,7 @@ async function main () {
       quote: rinkebyXauUsd,
     },
     polygon: {
-      base: polygonEthUsd,
+      base: polygonMaticUsd,
       quote: polygonXauUsd,
     }
   } 
