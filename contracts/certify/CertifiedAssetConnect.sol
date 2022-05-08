@@ -19,6 +19,11 @@ struct CertifiedAssetConnectConfig {
     string uri;
 }
 
+struct ConfiscationReport {
+    uint256 erc20Amount;
+    uint256[2][] erc1155Amounts;
+}
+
 contract CertifiedAssetConnect is
     ERC20Snapshot,
     ERC1155,
@@ -29,6 +34,7 @@ contract CertifiedAssetConnect is
     event Certify(address sender, uint256 until, bytes data);
     event Connect(address sender, uint256 id, uint256 amount, bytes data);
     event Disconnect(address sender, uint256 id, uint256 amount, bytes data);
+    event Confiscate(address sender, ConfiscationReport report);
 
     bytes32 public constant CONNECTOR = keccak256("CONNECTOR");
     bytes32 public constant CONNECTOR_ADMIN = keccak256("CONNECTOR_ADMIN");
@@ -54,7 +60,7 @@ contract CertifiedAssetConnect is
     bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
-    bytes public constant CONFISCATOR = keccak256("CONFISCATOR");
+    bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
     bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
     uint256 private certifiedUntil;
@@ -155,7 +161,7 @@ contract CertifiedAssetConnect is
 
     function enforceValidTransfer(
         ITier tier_,
-        uint minimumTier_,
+        uint256 minimumTier_,
         address from_,
         address to_
     ) internal view {
@@ -188,9 +194,17 @@ contract CertifiedAssetConnect is
         // If there is a tier contract we enforce it.
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             // The sender must have a valid tier.
-            require(block.number >= TierReport.tierBlock(tier_.report(from_), minimumTier_), "SENDER_TIER");
+            require(
+                block.number >=
+                    TierReport.tierBlock(tier_.report(from_), minimumTier_),
+                "SENDER_TIER"
+            );
             // The recipient must have a valid tier.
-            require(block.number >= TierReport.tierBlock(tier_.report(to_), minimumTier_), "RECIPIENT_TIER");
+            require(
+                block.number >=
+                    TierReport.tierBlock(tier_.report(to_), minimumTier_),
+                "RECIPIENT_TIER"
+            );
         }
     }
 
@@ -199,12 +213,8 @@ contract CertifiedAssetConnect is
         address from_,
         address to_,
         uint256
-    )
-        internal
-        override
-    {
+    ) internal view override {
         enforceValidTransfer(erc20Tier, erc20MinimumTier, from_, to_);
-
     }
 
     // @inheritdoc ERC1155
@@ -215,12 +225,8 @@ contract CertifiedAssetConnect is
         uint256[] memory,
         uint256[] memory,
         bytes memory
-    )
-        internal
-        override
-    {
+    ) internal view override {
         enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
-
     }
 
     function connect(uint256 amount_, bytes calldata data_)
@@ -257,17 +263,58 @@ contract CertifiedAssetConnect is
         return id_;
     }
 
-    function confiscate(address confiscatee_) external nonReentrant onlyRole(CONFISCATOR) returns (uint, uint) {
-        uint confiscatedERC20Amount_ = 0;
-        if (block.number < TierReport.tierBlock(erc20Tier.report(confiscatee_), erc20MinimumTier)) {
+    function confiscate(address confiscatee_, uint256[] calldata erc1155Ids_)
+        external
+        nonReentrant
+        onlyRole(CONFISCATOR)
+        returns (ConfiscationReport memory)
+    {
+        uint256 confiscatedERC20Amount_ = 0;
+        if (
+            block.number <
+            TierReport.tierBlock(
+                erc20Tier.report(confiscatee_),
+                erc20MinimumTier
+            )
+        ) {
             confiscatedERC20Amount_ = balanceOf(confiscatee_);
-            transferFrom(confiscatee_, msg.sender);
+            if (confiscatedERC20Amount_ > 0) {
+                _transfer(confiscatee_, msg.sender, confiscatedERC20Amount_);
+            }
         }
 
-        uint confiscatedERC1155Amount_ = 0;
-        if (block.number < TierReport.tierBlock(erc20Tier.report(confiscatee_), erc20MinimumTier)) {
-            confiscatedERC20Amount_ = balanceOf(confiscatee_);
-            transferFrom(confiscatee_, msg.sender);
+        uint256[2][] memory confiscatedERC1155Amounts_ = new uint256[2][](
+            erc1155Ids_.length
+        );
+        for (uint256 i_ = 0; i_ < erc1155Ids_.length; i_++) {
+            if (
+                block.number <
+                TierReport.tierBlock(
+                    erc1155Tier.report(confiscatee_),
+                    erc1155MinimumTier
+                )
+            ) {
+                confiscatedERC1155Amounts_[i_] = [
+                    erc1155Ids_[i_],
+                    balanceOf(confiscatee_, erc1155Ids_[i_])
+                ];
+                if (confiscatedERC1155Amounts_[i_][1] > 0) {
+                    _safeTransferFrom(
+                        confiscatee_,
+                        msg.sender,
+                        confiscatedERC1155Amounts_[i_][0],
+                        confiscatedERC1155Amounts_[i_][1],
+                        ""
+                    );
+                }
+            }
         }
+
+        ConfiscationReport memory report_ = ConfiscationReport(
+            confiscatedERC20Amount_,
+            confiscatedERC1155Amounts_
+        );
+        emit Confiscate(msg.sender, report_);
+        return report_;
     }
 }
