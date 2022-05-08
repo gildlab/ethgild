@@ -286,14 +286,14 @@ contract CertifiedAssetConnect is
         uint256[2][] memory confiscatedERC1155Amounts_ = new uint256[2][](
             erc1155Ids_.length
         );
-        for (uint256 i_ = 0; i_ < erc1155Ids_.length; i_++) {
-            if (
-                block.number <
-                TierReport.tierBlock(
-                    erc1155Tier.report(confiscatee_),
-                    erc1155MinimumTier
-                )
-            ) {
+        if (
+            block.number <
+            TierReport.tierBlock(
+                erc1155Tier.report(confiscatee_),
+                erc1155MinimumTier
+            )
+        ) {
+            for (uint256 i_ = 0; i_ < erc1155Ids_.length; i_++) {
                 confiscatedERC1155Amounts_[i_] = [
                     erc1155Ids_[i_],
                     balanceOf(confiscatee_, erc1155Ids_[i_])
