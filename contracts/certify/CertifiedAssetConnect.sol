@@ -54,6 +54,9 @@ contract CertifiedAssetConnect is
     bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
+    bytes public constant CONFISCATOR = keccak256("CONFISCATOR");
+    bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
+
     uint256 private certifiedUntil;
     ITier private erc20Tier;
     uint256 private erc20MinimumTier;
@@ -85,6 +88,9 @@ contract CertifiedAssetConnect is
         _setRoleAdmin(ERC20SNAPSHOTTER_ADMIN, ERC20SNAPSHOTTER_ADMIN);
         _setRoleAdmin(ERC20SNAPSHOTTER, ERC20SNAPSHOTTER_ADMIN);
 
+        _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
+        _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
+
         _grantRole(CONNECTOR_ADMIN, config_.admin);
         _grantRole(DISCONNECTOR_ADMIN, config_.admin);
         _grantRole(CERTIFIER_ADMIN, config_.admin);
@@ -92,6 +98,7 @@ contract CertifiedAssetConnect is
         _grantRole(ERC20TIERER_ADMIN, config_.admin);
         _grantRole(ERC1155TIERER_ADMIN, config_.admin);
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
+        _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
         emit Construction(msg.sender, config_);
     }
@@ -146,32 +153,45 @@ contract CertifiedAssetConnect is
         emit Certify(msg.sender, until_, data_);
     }
 
-    modifier onlyCertifiedTransfer(address from_, address to_) {
-        // solhint-disable-next-line not-rely-on-time
-        if (block.timestamp > certifiedUntil) {
-            // Note the handler ALSO needs to meet associated tier requirements
-            // for the token type being handled.
-            require(
-                hasRole(HANDLER, from_) || hasRole(HANDLER, to_),
-                "ONLY_HANDLER"
-            );
-        }
-        _;
-    }
-
-    modifier onlyTier(
+    function enforceValidTransfer(
         ITier tier_,
-        uint256 minimumTier_,
+        uint minimumTier_,
+        address from_,
         address to_
-    ) {
-        if (address(tier_) != address(0) && minimumTier_ > 0) {
-            require(
-                block.number >=
-                    TierReport.tierBlock(tier_.report(to_), minimumTier_),
-                "TIER"
-            );
+    ) internal view {
+        // Handlers can ALWAYS send and receive funds.
+        // Handlers bypass BOTH the timestamp on certification AND tier based
+        // restriction.
+        if (hasRole(HANDLER, from_) || hasRole(HANDLER, to_)) {
+            return;
         }
-        _;
+
+        // Minting and burning is always allowed as it is controlled via. RBAC
+        // separately to the tier contracts. Minting and burning is ALSO valid
+        // after the certification expires as it is likely the only way to
+        // repair the system and bring it back to a certifiable state.
+        if (from_ == address(0) || to_ == address(0)) {
+            return;
+        }
+
+        // Confiscation is always allowed as it likely represents some kind of
+        // regulatory/legal requirement. It may also be required to satisfy
+        // certification requirements.
+        if (hasRole(CONFISCATOR, to_)) {
+            return;
+        }
+
+        // Everyone else can only transfer while the certification is valid.
+        //solhint-disable-next-line not-rely-on-time
+        require(block.timestamp <= certifiedUntil, "CERTIFICATION_EXPIRED");
+
+        // If there is a tier contract we enforce it.
+        if (address(tier_) != address(0) && minimumTier_ > 0) {
+            // The sender must have a valid tier.
+            require(block.number >= TierReport.tierBlock(tier_.report(from_), minimumTier_), "SENDER_TIER");
+            // The recipient must have a valid tier.
+            require(block.number >= TierReport.tierBlock(tier_.report(to_), minimumTier_), "RECIPIENT_TIER");
+        }
     }
 
     // @inheritdoc ERC20
@@ -182,10 +202,8 @@ contract CertifiedAssetConnect is
     )
         internal
         override
-        onlyCertifiedTransfer(from_, to_)
-        onlyTier(erc20Tier, erc20MinimumTier, to_)
-    //solhint-disable-next-line no-empty-blocks
     {
+        enforceValidTransfer(erc20Tier, erc20MinimumTier, from_, to_);
 
     }
 
@@ -200,10 +218,8 @@ contract CertifiedAssetConnect is
     )
         internal
         override
-        onlyCertifiedTransfer(from_, to_)
-        onlyTier(erc1155Tier, erc1155MinimumTier, to_)
-    //solhint-disable-next-line no-empty-blocks
     {
+        enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
 
     }
 
@@ -239,5 +255,19 @@ contract CertifiedAssetConnect is
         // erc1155 burn.
         _burn(msg.sender, id_, amount_);
         return id_;
+    }
+
+    function confiscate(address confiscatee_) external nonReentrant onlyRole(CONFISCATOR) returns (uint, uint) {
+        uint confiscatedERC20Amount_ = 0;
+        if (block.number < TierReport.tierBlock(erc20Tier.report(confiscatee_), erc20MinimumTier)) {
+            confiscatedERC20Amount_ = balanceOf(confiscatee_);
+            transferFrom(confiscatee_, msg.sender);
+        }
+
+        uint confiscatedERC1155Amount_ = 0;
+        if (block.number < TierReport.tierBlock(erc20Tier.report(confiscatee_), erc20MinimumTier)) {
+            confiscatedERC20Amount_ = balanceOf(confiscatee_);
+            transferFrom(confiscatee_, msg.sender);
+        }
     }
 }
