@@ -276,7 +276,7 @@ contract CertifiedAssetConnect is
     {
         uint256 confiscatedERC20Amount_ = 0;
         if (
-            erc20Tier == address(0) ||
+            address(erc20Tier) == address(0) ||
             block.number <
             TierReport.tierBlock(
                 erc20Tier.report(confiscatee_),
@@ -293,7 +293,7 @@ contract CertifiedAssetConnect is
             erc1155Ids_.length
         );
         if (
-            erc1155Tier == address(0) ||
+            address(erc1155Tier) == address(0) ||
             block.number <
             TierReport.tierBlock(
                 erc1155Tier.report(confiscatee_),
