@@ -263,6 +263,11 @@ contract CertifiedAssetConnect is
         return id_;
     }
 
+    // If there is no tier address then we always allow confiscations.
+    // This means significant additional trust is placed on the
+    // confiscators.
+    // If there is a tier address we only allow confiscations from
+    // addresses that are NOT currently holding the minimum tier.
     function confiscate(address confiscatee_, uint256[] calldata erc1155Ids_)
         external
         nonReentrant
@@ -271,6 +276,7 @@ contract CertifiedAssetConnect is
     {
         uint256 confiscatedERC20Amount_ = 0;
         if (
+            erc20Tier == address(0) ||
             block.number <
             TierReport.tierBlock(
                 erc20Tier.report(confiscatee_),
@@ -287,6 +293,7 @@ contract CertifiedAssetConnect is
             erc1155Ids_.length
         );
         if (
+            erc1155Tier == address(0) ||
             block.number <
             TierReport.tierBlock(
                 erc1155Tier.report(confiscatee_),
