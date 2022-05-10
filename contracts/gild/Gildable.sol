@@ -13,8 +13,6 @@ struct GildConfig {
     string name;
     string symbol;
     string uri;
-    uint256 erc20OverburnNumerator;
-    uint256 erc20OverburnDenominator;
     IPriceOracle priceOracle;
 }
 
@@ -249,13 +247,6 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
         uint256 amount
     );
 
-    /// erc20 is burned faster than erc1155.
-    /// This is the numerator for that.
-    uint256 public immutable erc20OverburnNumerator;
-    /// erc20 is burned faster than erc1155.
-    /// This is the denominator for that.
-    uint256 public immutable erc20OverburnDenominator;
-
     // Price oracle.
     IPriceOracle public immutable priceOracle;
 
@@ -264,8 +255,6 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
         ERC20(config_.name, config_.symbol)
         ERC1155(config_.uri)
     {
-        erc20OverburnNumerator = config_.erc20OverburnNumerator;
-        erc20OverburnDenominator = config_.erc20OverburnDenominator;
         priceOracle = config_.priceOracle;
         emit Construction(msg.sender, config_);
     }
@@ -280,7 +269,6 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
 
         // Amount of ETHg to mint.
         uint256 ethgAmount_ = (amount_ * price_) / PriceOracleConstants.ONE;
-        require(ethgAmount_ >= erc20OverburnDenominator, "MIN_GILD");
         emit Gild(msg.sender, price_, amount_);
 
         // erc20 mint.
@@ -305,13 +293,11 @@ contract Gildable is ERC20, ERC1155, ReentrancyGuard {
         nonReentrant
         returns (uint256)
     {
-        require(erc1155Amount_ >= erc20OverburnDenominator, "MIN_UNGILD");
-
         // ETHg erc20 burn.
         // 0.1% more than erc1155 burn.
         _burn(
             msg.sender,
-            (erc1155Amount_ * erc20OverburnNumerator) / erc20OverburnDenominator
+            erc1155Amount_
         );
 
         // erc1155 burn.
