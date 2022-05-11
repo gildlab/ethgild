@@ -7,7 +7,7 @@ import {
   expectedUri,
   priceOne,
 } from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
+import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { TestPriceOracle } from "../typechain/TestPriceOracle";
 
 chai.use(solidity);
@@ -16,7 +16,7 @@ const { expect, assert } = chai;
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       TestPriceOracle
     ];
 
@@ -34,7 +34,7 @@ describe("erc1155 usage", async function () {
     const signers = await ethers.getSigners();
 
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       TestPriceOracle
     ];
 

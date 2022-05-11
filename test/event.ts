@@ -2,7 +2,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import { deployNativeGild, getEventArgs, priceOne } from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
+import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
 
@@ -13,7 +13,7 @@ describe("gild events", async function () {
   it("should emit events on gild and ungild", async function () {
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,      
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed

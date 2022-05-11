@@ -7,7 +7,7 @@ import {
   expectedReferencePrice,
   expectedSymbol,
 } from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
+import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
 
@@ -17,7 +17,7 @@ const { expect, assert } = chai;
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
@@ -41,13 +41,13 @@ describe("erc20 usage", async function () {
 
     const [ethGild, priceOracle, xauOracle, ethOracle] =
       (await deployNativeGild()) as [
-        NativeGild,
+        ERC20Gild,
         ChainlinkTwoFeedPriceOracle,
         TestChainlinkDataFeed,
         TestChainlinkDataFeed
       ];
 
-    await ethGild.gild(0, { value: 1000 });
+      await ethGild.gild(0, { value: 1000 });
 
     const expectedErc20Balance = ethers.BigNumber.from("1656");
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);

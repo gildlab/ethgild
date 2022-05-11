@@ -28,6 +28,7 @@ export const deployNativeGild = async () => {
   );
   const basePriceOracle = await oracleFactory.deploy();
   await basePriceOracle.deployed();
+  const signers = await ethers.getSigners();
   // ETHUSD as of 2022-02-06
   await basePriceOracle.setDecimals(usdDecimals);
   await basePriceOracle.setRoundData(1, {
@@ -58,19 +59,18 @@ export const deployNativeGild = async () => {
     });
   await chainlinkTwoFeedPriceOracle.deployed();
 
-  const nativeGildFactory = await ethers.getContractFactory("NativeGild");
-  const nativeGild = await nativeGildFactory.deploy({
+  const nativeGildFactory = await ethers.getContractFactory("ERC20Gild");
+  const ERC20Gild = await nativeGildFactory.deploy({
+    asset: signers[0].address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-    erc20OverburnNumerator: 1001,
-    erc20OverburnDenominator: 1000,
     priceOracle: chainlinkTwoFeedPriceOracle.address,
   });
-  await nativeGild.deployed();
+  await ERC20Gild.deployed();
 
   return [
-    nativeGild,
+    ERC20Gild,
     chainlinkTwoFeedPriceOracle,
     basePriceOracle,
     quotePriceOracle,

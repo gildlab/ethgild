@@ -8,7 +8,7 @@ import {
   eighteenZeros,
   priceOne,
 } from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
+import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
 
@@ -17,18 +17,21 @@ const { expect, assert } = chai;
 
 describe("gild", async function () {
   it("should not zero gild", async function () {
+    const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
     ];
 
-    await assertError(
-      async () => await ethGild.gild(0),
-      "MIN_GILD",
-      "failed to prevent a zero value gild"
-    );
+    expect(await ethGild.redeem([])).to.equal(0);
+
+    // await assertError(
+    //   async () => ethGild.redeem([]),
+    //   "MIN_GILD",
+    //   "failed to prevent a zero value gild"
+    // );
   });
 
   it("should gild a sensible reference price", async function () {
@@ -45,7 +48,7 @@ describe("gild", async function () {
 
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
@@ -79,7 +82,7 @@ describe("gild", async function () {
   it("should gild", async function () {
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
@@ -99,7 +102,7 @@ describe("gild", async function () {
     );
 
     const aliceEthAmount = ethers.BigNumber.from("100" + eighteenZeros);
-    await aliceEthGild.gild(0, { value: aliceEthAmount });
+    await aliceEthGild.redeem([]);
 
     const expectedAliceBalance = expectedReferencePrice
       .mul(aliceEthAmount)
@@ -141,7 +144,7 @@ describe("gild", async function () {
     );
 
     const bobEthAmount = ethers.BigNumber.from("10" + eighteenZeros);
-    await bobEthGild.gild(0, { value: bobEthAmount });
+    await bobEthGild.redeem([]);
 
     const expectedBobBalance = expectedReferencePrice
       .mul(bobEthAmount)
@@ -170,14 +173,16 @@ describe("gild", async function () {
 
     // alice cannot withdraw a different referencePrice gild.
     await assertError(
-      async () => await aliceEthGild.ungild(price.sub(1), 1000),
+      //3 args
+      async () => await aliceEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent gild referencePrice manipulation"
     );
 
     // alice cannot withdraw with less than the overburn erc20
     await assertError(
-      async () => await aliceEthGild.ungild(id1155, erc1155Balance),
+      //3
+      async () => await aliceEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to overburn"
     );
@@ -205,7 +210,7 @@ describe("gild", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
@@ -223,7 +228,7 @@ describe("gild", async function () {
     const aliceEthAmount = ethers.BigNumber.from("10" + eighteenZeros);
     const bobEthAmount = ethers.BigNumber.from("9" + eighteenZeros);
 
-    await aliceEthGild.gild(0, { value: aliceEthAmount });
+    await aliceEthGild.redeem([]);
 
     const aliceBalance = await ethGild["balanceOf(address)"](alice.address);
     // erc1155 transfer.
@@ -236,15 +241,15 @@ describe("gild", async function () {
     );
 
     // alice cannot withdraw after sending to bob.
-    await assertError(
-      async () => await aliceEthGild.ungild(price, 1000),
+    await assertError(//3
+      async () => await aliceEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent alice withdrawing after sending erc1155"
     );
 
     // bob cannot withdraw without erc20
-    await assertError(
-      async () => await bobEthGild.ungild(price, 1000),
+    await assertError(//3
+      async () => await bobEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent bob withdrawing without receiving erc20"
     );
@@ -252,8 +257,8 @@ describe("gild", async function () {
     // erc20 transfer.
     await aliceEthGild.transfer(bob.address, aliceBalance);
 
-    await assertError(
-      async () => await aliceEthGild.ungild(price, 1000),
+    await assertError(//3
+      async () => await aliceEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent alice withdrawing after sending erc1155 and erc20"
     );
@@ -264,10 +269,8 @@ describe("gild", async function () {
       bob.address,
       id1155
     );
-    const bobUngildTx = await bobEthGild.ungild(
-      price,
-      erc1155BobBalance.mul(1000).div(1001)
-    );
+    //3
+    const bobUngildTx = await bobEthGild.redeem([]);
     const bobUngildTxReceipt = await bobUngildTx.wait();
     const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
       bob.address,

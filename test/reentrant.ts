@@ -7,10 +7,9 @@ import {
   expectedReferencePrice,
   priceOne,
 } from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
+import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
-import type { TestReentrant } from "../typechain/TestReentrant";
 
 chai.use(solidity);
 const { expect, assert } = chai;
@@ -19,7 +18,7 @@ describe("reentrant behaviour", async function () {
   it("should receive and erc1155 receive", async function () {
     const [nativeGild, priceOracle, xauOracle, usdOracle] =
       (await deployNativeGild()) as [
-        NativeGild,
+        ERC20Gild,
         ChainlinkTwoFeedPriceOracle,
         TestChainlinkDataFeed,
         TestChainlinkDataFeed
@@ -55,7 +54,7 @@ describe("reentrant behaviour", async function () {
   it("should be possible to atomically gild and ungild non-reentrantly", async function () {
     const [nativeGild, priceOracle, xauOracle, usdOracle] =
       (await deployNativeGild()) as [
-        NativeGild,
+        ERC20Gild,
         ChainlinkTwoFeedPriceOracle,
         TestChainlinkDataFeed,
         TestChainlinkDataFeed
