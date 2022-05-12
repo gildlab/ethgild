@@ -11,7 +11,7 @@ const { expect, assert } = chai;
 describe("oracle", async function () {
   it("should have an oracle", async function () {
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-        ERC20Gild,
+      ERC20Gild,
       TestPriceOracle
     ];
 

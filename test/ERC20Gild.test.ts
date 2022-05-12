@@ -241,14 +241,16 @@ describe("gild", async function () {
     );
 
     // alice cannot withdraw after sending to bob.
-    await assertError(//3
+    await assertError(
+      //3
       async () => await aliceEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent alice withdrawing after sending erc1155"
     );
 
     // bob cannot withdraw without erc20
-    await assertError(//3
+    await assertError(
+      //3
       async () => await bobEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent bob withdrawing without receiving erc20"
@@ -257,7 +259,8 @@ describe("gild", async function () {
     // erc20 transfer.
     await aliceEthGild.transfer(bob.address, aliceBalance);
 
-    await assertError(//3
+    await assertError(
+      //3
       async () => await aliceEthGild.redeem([]),
       "burn amount exceeds balance",
       "failed to prevent alice withdrawing after sending erc1155 and erc20"
