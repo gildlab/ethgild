@@ -25,13 +25,12 @@ describe("gild", async function () {
       TestChainlinkDataFeed
     ];
 
-    expect(await ethGild.redeem([])).to.equal(0);
-
-    // await assertError(
-    //   async () => ethGild.redeem([]),
-    //   "MIN_GILD",
-    //   "failed to prevent a zero value gild"
-    // );
+    
+    await assertError(
+      async () => await ethGild["redeem(uint256,address,address,uint256)"](0, signers[0].address, signers[1].address, 100),
+      "MIN_GILD",
+      "failed to prevent a zero value gild"
+    );
   });
 
   it("should gild a sensible reference price", async function () {
