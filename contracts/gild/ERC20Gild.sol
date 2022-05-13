@@ -21,7 +21,7 @@ struct ERC20GildConfig {
 }
 
 contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
-    using Math for uint;
+    using Math for uint256;
     using SafeERC20 for IERC20;
 
     event Construction(address caller, ERC20GildConfig config);
@@ -31,62 +31,106 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
 
     IPriceOracle public immutable priceOracle;
 
-    mapping(address => uint) public minPrices;
+    mapping(address => uint256) public minPrices;
+    mapping(address => uint256) public prices;
 
-    mapping(address => uint) public prices;
-
-    constructor(ERC20GildConfig memory config_) ERC20(config_.name, config_.symbol) ERC1155(config_.uri) {
+    constructor(ERC20GildConfig memory config_)
+        ERC20(config_.name, config_.symbol)
+        ERC1155(config_.uri)
+    {
         asset = config_.asset;
         priceOracle = IPriceOracle(config_.priceOracle);
         emit Construction(msg.sender, config_);
     }
 
-    function _calculateDeposit(uint assets_, uint price_, uint minPrice_) internal pure returns (uint) {
+    /// Calculate how many shares_ will be minted in return for assets_.
+    /// @return shares_
+    function _calculateDeposit(
+        uint256 assets_,
+        uint256 price_,
+        uint256 minPrice_
+    ) internal pure returns (uint256) {
         require(price_ >= minPrice_, "MIN_PRICE");
+        // IRC4626:
+        // If (1) it’s calculating how many shares to issue to a user for a
+        // certain amount of the underlying tokens they provide, it should
+        // round down.
         return (assets_ * price_) / PriceOracleConstants.ONE;
     }
 
-    function _calculateMint(uint shares_, uint price_, uint minPrice_) internal pure returns (uint) {
+    /// Calculate how many assets_ are needed to mint shares_.
+    /// @return assets_
+    function _calculateMint(
+        uint256 shares_,
+        uint256 price_,
+        uint256 minPrice_
+    ) internal pure returns (uint256) {
         require(price_ >= minPrice_, "MIN_PRICE");
-        return _calculateRedeem(shares_, price_);
+        // IERC4626:
+        // If (2) it’s calculating the amount of underlying tokens a user has
+        // to provide to receive a certain amount of shares, it should
+        // round up.
+        return (shares_ * PriceOracleConstants.ONE).ceilDiv(price_);
     }
 
+    /// Calculate how many shares_ to burn to withdraw assets_.
+    /// @return shares_
+    function _calculateWithdraw(uint256 assets_, uint256 price_)
+        internal
+        pure
+        returns (uint256)
+    {
+        // IERC4626:
+        // If (1) it’s calculating the amount of shares a user has to supply to
+        // receive a given amount of the underlying tokens, it should round up.
+        return (assets_ * price_).ceilDiv(PriceOracleConstants.ONE);
+    }
+
+    /// Calculate how many assets_ to withdraw for burning shares_.
     /// @return assets_
-    function _calculateRedeem(uint shares_, uint price_) internal pure returns (uint) {
+    function _calculateRedeem(uint256 shares_, uint256 price_)
+        internal
+        pure
+        returns (uint256)
+    {
+        // IERC4626:
+        // If (2) it’s determining the amount of the underlying tokens to
+        // transfer to them for returning a certain amount of shares, it should
+        // round down.
         return (shares_ * PriceOracleConstants.ONE) / price_;
     }
 
-    function setMinPrice(uint minPrice_) external {
+    function setMinPrice(uint256 minPrice_) external {
         minPrices[msg.sender] = minPrice_;
     }
 
-    function setPrice(uint price_) external {
+    function setPrice(uint256 price_) external {
         prices[msg.sender] = price_;
     }
 
     /// @inheritdoc IERC4626
-    function totalAssets() external view returns (uint) {
-        // There are NO fees so the "managed" assets are the balance.
+    function totalAssets() external view returns (uint256) {
+        // There are NO fees so the managed assets are the balance.
         return IERC20(asset).balanceOf(address(this));
     }
 
     /// @inheritdoc IERC4626
-    function convertToShares(uint assets_) external view returns (uint) {
+    function convertToShares(uint256 assets_) external view returns (uint256) {
         return _calculateDeposit(assets_, priceOracle.price(), 0);
     }
 
     /// @inheritdoc IERC4626
-    function convertToAssets(uint shares_) external view returns (uint) {
+    function convertToAssets(uint256 shares_) external view returns (uint256) {
         return _calculateRedeem(shares_, priceOracle.price());
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address) external pure returns (uint) {
-        return type(uint).max;
+    function maxDeposit(address) external pure returns (uint256) {
+        return type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
-    function previewDeposit(uint assets_) external view returns (uint) {
+    function previewDeposit(uint256 assets_) external view returns (uint256) {
         return _calculateDeposit(assets_, priceOracle.price(), 0);
     }
 
@@ -94,24 +138,40 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// minimum price they need to call `setMinPrice` first in a separate call.
     /// Alternatively they can use the off-spec overloaded `deposit` method.
     /// @inheritdoc IERC4626
-    function deposit(uint assets_, address receiver_) external nonReentrant returns (uint) {
+    function deposit(uint256 assets_, address receiver_)
+        external
+        nonReentrant
+        returns (uint256)
+    {
         return deposit(assets_, receiver_, minPrices[msg.sender]);
     }
 
     /// Overloaded `deposit` to allow `minPrice_` to be passed directly without
     /// the additional `setMinPrice` call, which saves gas and can provide a
     /// better UX overall.
-    function deposit(uint assets_, address receiver_, uint minPrice_) public returns (uint) {
-        uint price_ = priceOracle.price();
-        uint shares_ = _calculateDeposit(assets_, price_, minPrice_);
+    function deposit(
+        uint256 assets_,
+        address receiver_,
+        uint256 minPrice_
+    ) public returns (uint256) {
+        uint256 price_ = priceOracle.price();
+        uint256 shares_ = _calculateDeposit(assets_, price_, minPrice_);
 
         return _deposit(assets_, receiver_, shares_, price_);
     }
 
-    function _deposit(uint assets_, address receiver_, uint shares_, uint price_) internal nonReentrant returns (uint) {
+    /// _deposit handles minting and emitting events according to spec.
+    /// It does NOT do any calculations so shares and assets need to be handled
+    /// correctly according to spec including rounding, in the calling context.
+    function _deposit(
+        uint256 assets_,
+        address receiver_,
+        uint256 shares_,
+        uint256 price_
+    ) internal nonReentrant returns (uint256) {
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
 
-        IERC20(asset).safeTransfer(msg.sender, assets_);
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), assets_);
 
         // erc20 mint.
         _mint(receiver_, shares_);
@@ -124,25 +184,37 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address) external pure returns (uint) {
-        return type(uint).max;
+    function maxMint(address) external pure returns (uint256) {
+        return type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
-    function previewMint(uint shares_) external view returns (uint) {
+    function previewMint(uint256 shares_) external view returns (uint256) {
         return _calculateMint(shares_, priceOracle.price(), 0);
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint shares_, address receiver_) external returns (uint) {
-        uint price_ = priceOracle.price();
-        uint assets_ = _calculateMint(shares_, price_, minPrices[msg.sender]);
+    function mint(uint256 shares_, address receiver_)
+        external
+        returns (uint256)
+    {
+        return mint(shares_, receiver_, minPrices[msg.sender]);
+    }
+
+    /// @return assets_
+    function mint(uint shares_, address receiver_, uint minPrice_) public returns (uint) {
+        uint256 price_ = priceOracle.price();
+        uint256 assets_ = _calculateMint(
+            shares_,
+            price_,
+            minPrice_
+        );
         _deposit(assets_, receiver_, shares_, price_);
         return assets_;
     }
 
     /// @inheritdoc IERC4626
-    function maxWithdraw(address owner_) external view returns (uint) {
+    function maxWithdraw(address owner_) external view returns (uint256) {
         return maxWithdraw(owner_, prices[owner_]);
     }
 
@@ -151,30 +223,54 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// check the withdraw against. The burnable ERC20 is capped per-withdraw
     /// to the balance of a price-bound ERC1155.
     /// @return max assets.
-    function maxWithdraw(address owner_, uint price_) public view returns (uint) {
-        return _calculateRedeem(balanceOf(owner_, price_), price_);
+    function maxWithdraw(address owner_, uint256 price_)
+        public
+        view
+        returns (uint256)
+    {
+        return _calculateWithdraw(balanceOf(owner_, price_), price_);
     }
 
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint assets_) external view returns (uint) {
+    function previewWithdraw(uint256 assets_) external view returns (uint256) {
         return previewWithdraw(assets_, prices[msg.sender]);
     }
 
-    function previewWithdraw(uint assets_, uint price_) public pure returns (uint) {
-        return _calculateDeposit(assets_, price_, 0);
+    function previewWithdraw(uint256 assets_, uint256 price_)
+        public
+        pure
+        returns (uint256)
+    {
+        return _calculateWithdraw(assets_, price_);
     }
 
     /// @inheritdoc IERC4626
-    function withdraw(uint assets_, address receiver_, address owner_) external returns (uint) {
+    function withdraw(
+        uint256 assets_,
+        address receiver_,
+        address owner_
+    ) external returns (uint256) {
         return withdraw(assets_, receiver_, owner_, prices[owner_]);
     }
 
-    function withdraw(uint assets_, address receiver_, address owner_, uint price_) public returns (uint) {
-        return _withdraw(assets_, receiver_, owner_, price_);
+    function withdraw(
+        uint256 assets_,
+        address receiver_,
+        address owner_,
+        uint256 price_
+    ) public returns (uint256) {
+        uint256 shares_ = _calculateWithdraw(assets_, price_);
+        return _withdraw(assets_, receiver_, owner_, shares_, price_);
     }
 
-    function _withdraw(uint assets_, address receiver_, address owner_, uint price_) internal nonReentrant returns (uint) {
-        uint shares_ = _calculateDeposit(assets_, price_, 0);
+    /// @return shares_
+    function _withdraw(
+        uint256 assets_,
+        address receiver_,
+        address owner_,
+        uint256 shares_,
+        uint256 price_
+    ) internal nonReentrant returns (uint256) {
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
 
         // erc20 burn.
@@ -189,31 +285,48 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner_) external view returns (uint) {
+    function maxRedeem(address owner_) external view returns (uint256) {
         return maxRedeem(owner_, prices[owner_]);
     }
 
-    function maxRedeem(address owner_, uint price_) public view returns (uint) {
+    function maxRedeem(address owner_, uint256 price_)
+        public
+        view
+        returns (uint256)
+    {
         return balanceOf(owner_, price_);
     }
 
     /// @inheritdoc IERC4626
-    function previewRedeem(uint shares_) external view returns (uint) {
+    function previewRedeem(uint256 shares_) external view returns (uint256) {
         return _calculateRedeem(shares_, prices[msg.sender]);
     }
 
-    function previewRedeem(uint shares_, uint price_) public pure returns (uint) {
+    function previewRedeem(uint256 shares_, uint256 price_)
+        public
+        pure
+        returns (uint256)
+    {
         return _calculateRedeem(shares_, price_);
     }
 
     /// @inheritdoc IERC4626
-    function redeem(uint shares_, address receiver_, address owner_) external returns (uint) {
+    function redeem(
+        uint256 shares_,
+        address receiver_,
+        address owner_
+    ) external returns (uint256) {
         return redeem(shares_, receiver_, owner_, prices[owner_]);
     }
 
-    function redeem(uint shares_, address receiver_, address owner_, uint price_) public returns (uint) {
-        uint assets_ = _calculateRedeem(shares_, price_);
-        _withdraw(assets_, receiver_, owner_, price_);
+    function redeem(
+        uint256 shares_,
+        address receiver_,
+        address owner_,
+        uint256 price_
+    ) public returns (uint256) {
+        uint256 assets_ = _calculateRedeem(shares_, price_);
+        _withdraw(assets_, receiver_, owner_, shares_, price_);
         return assets_;
     }
 }

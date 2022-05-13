@@ -13,7 +13,7 @@ describe("gild events", async function () {
   it("should emit events on gild and ungild", async function () {
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      ERC20Gild,      
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
