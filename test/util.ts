@@ -49,6 +49,14 @@ export const deployNativeGild = async () => {
     answeredInRound: 1,
   });
 
+
+  const testErc20 = await ethers.getContractFactory(
+    "TestErc20"
+  );
+  const testErc20Contract = await testErc20.deploy();
+  await testErc20Contract.deployed();
+
+
   const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkTwoFeedPriceOracle"
   );
@@ -61,7 +69,7 @@ export const deployNativeGild = async () => {
 
   const nativeGildFactory = await ethers.getContractFactory("ERC20Gild");
   const ERC20Gild = await nativeGildFactory.deploy({
-    asset: signers[0].address,
+    asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
@@ -96,7 +104,7 @@ export const assertError = async (f: Function, s: string, e: string) => {
     }
     didError = true;
   }
-  assert(didError, e);
+  assert(didError, e); 
 };
 
 export const expectedName = "EthGild";
