@@ -7,27 +7,53 @@ import {
   assertError,
   eighteenZeros,
   priceOne,
+  ONE,
+  RESERVE_ONE
 } from "./util";
 import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+import type { TestErc20 } from "../typechain/TestErc20";
+
 
 chai.use(solidity);
+
 const { expect, assert } = chai;
 
 describe("gild", async function () {
   it("should not zero gild", async function () {
+
     const signers = await ethers.getSigners();
-    const [ethGild, priceOracle] = (await deployNativeGild()) as [
+    const alice = signers[1];
+
+
+
+    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
       ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
+      TestErc20,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
     ];
 
-    
+    const totalTokenSupply = ethers.BigNumber.from("2000").mul(ONE);
+    const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
+    const fee = ethers.BigNumber.from("1").mul(RESERVE_ONE);
+
+    const desiredUnitsAlice = totalTokenSupply;
+    const costAlice = staticPrice.mul(desiredUnitsAlice).div(ONE);
+
+    // give alice reserve to cover cost + (fee * 2)
+    await erc20Token.transfer(alice.address, costAlice.add(fee.mul(2)));
+
+    const aliceReserveBalance = await erc20Token.balanceOf(alice.address);
+
+    await erc20Token
+    .connect(alice)
+    .approve(ethGild.address, aliceReserveBalance);
+
     await assertError(
-      async () => await ethGild["redeem(uint256,address,address,uint256)"](0, signers[0].address, signers[1].address, 100),
+      async () => await ethGild["deposit(uint256,address)"](ethers.BigNumber.from(0), ethGild.address),
       "MIN_GILD",
       "failed to prevent a zero value gild"
     );
@@ -63,7 +89,7 @@ describe("gild", async function () {
     const oraclePrice = await priceOracle.price();
     await assertError(
       async () =>
-        await aliceEthGild.gild(oraclePrice.add(1), { value: aliceEthAmount }),
+        await aliceEthGild["redeem(uint256,address,address,uint256)"](oraclePrice.add(1), { value: aliceEthAmount }),
       "MIN_PRICE",
       "failed to respect min price"
     );
@@ -291,3 +317,4 @@ describe("gild", async function () {
     );
   });
 });
+

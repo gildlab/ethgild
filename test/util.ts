@@ -15,12 +15,17 @@ export const chainlinkXauUsd = "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6";
 export const chainlinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
 
 export const eighteenZeros = "000000000000000000";
+export const sixZeros = "000000";
 export const xauOne = "100000000";
 
 export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;
+
+export const ONE = ethers.BigNumber.from("1" + eighteenZeros);
+export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
+
 
 export const deployNativeGild = async () => {
   const oracleFactory = await ethers.getContractFactory(
@@ -80,6 +85,7 @@ export const deployNativeGild = async () => {
   return [
     ERC20Gild,
     chainlinkTwoFeedPriceOracle,
+    testErc20Contract,
     basePriceOracle,
     quotePriceOracle,
   ];
