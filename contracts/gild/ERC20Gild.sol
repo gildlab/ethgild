@@ -140,7 +140,6 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// @inheritdoc IERC4626
     function deposit(uint256 assets_, address receiver_)
         external
-        nonReentrant
         returns (uint256)
     {
         return deposit(assets_, receiver_, minPrices[msg.sender]);
