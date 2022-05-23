@@ -20,8 +20,8 @@ chai.use(solidity);
 
 const { expect, assert } = chai;
 
-describe("gild", async function () {
-  it("should not zero gild", async function () {
+describe("deposit", async function () {
+  it("should not zero deposit", async function () {
 
     const signers = await ethers.getSigners();
     const alice = signers[1];
@@ -32,7 +32,7 @@ describe("gild", async function () {
       ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestErc20,
-      TestChainlinkDataFeed, 
+      TestChainlinkDataFeed,
       TestChainlinkDataFeed
     ];
 
@@ -53,8 +53,8 @@ describe("gild", async function () {
 
     await assertError(
       async () => await ethGild["deposit(uint256,address)"](ethers.BigNumber.from(0), alice.address),
-      "MIN_GILD",
-      "failed to prevent a zero value gild"
+      "0_ASSETS",
+      "failed to prevent a zero value deposit"
     );
   });
 
@@ -88,7 +88,7 @@ describe("gild", async function () {
 
   //   // Min gild price MUST be respected
   //   const oraclePrice = await priceOracle.price();
-  
+
 
   //   await assertError(
   //     async () => await ethGild["deposit(uint256,address,uint256)"](ethers.BigNumber.from(100), ethGild.address, ethers.BigNumber.from(1)),

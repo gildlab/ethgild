@@ -168,6 +168,10 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         uint256 shares_,
         uint256 price_
     ) internal nonReentrant returns (uint256) {
+        require(assets_ > 0, "0_ASSETS");
+        require(receiver_ != address(0), "0_RECEIVER");
+        require(shares_ > 0, "0_SHARES");
+        require(price_ > 0, "0_PRICE");
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), assets_);
@@ -270,6 +274,12 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         uint256 shares_,
         uint256 price_
     ) internal nonReentrant returns (uint256) {
+        require(assets_ > 0, "0_ASSETS");
+        require(receiver_ != address(0), "0_RECEIVER");
+        require(owner_ != address(0), "0_OWNER");
+        require(shares_ > 0, "0_SHARES");
+        require(price_ > 0, "0_PRICE");
+
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
 
         // erc20 burn.
