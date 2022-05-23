@@ -58,53 +58,63 @@ describe("deposit", async function () {
     );
   });
 
-  // it("should gild a sensible reference price", async function () {
-  //   // At the time of writing
-  //   // Block number: 12666285
-  //   //
-  //   // Trading View ETHUSD: 2218.71
-  //   // Chainlink ETHUSD (8 decimals): 2228 25543758
-  //   //
-  //   // Trading View XAUUSD: 1763.95
-  //   // Chainlink XAUUSD (8 decimals): 1767 15500000
-  //   //
-  //   // ~ 1 ETH should buy 1.26092812321 XAU
+  it("should deposit a sensible reference price", async function () {
+    // At the time of writing
+    // Block number: 12666285
+    //
+    // Trading View ETHUSD: 2218.71
+    // Chainlink ETHUSD (8 decimals): 2228 25543758
+    //
+    // Trading View XAUUSD: 1763.95
+    // Chainlink XAUUSD (8 decimals): 1767 15500000
+    //
+    // ~ 1 ETH should buy 1.26092812321 XAU
 
-  //   const signers = await ethers.getSigners();
-  //   const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
-  //     ERC20Gild,
-  //     ChainlinkTwoFeedPriceOracle,
-  //     TestErc20,
-  //     TestChainlinkDataFeed,
-  //     TestChainlinkDataFeed
-  //   ];
+    const signers = await ethers.getSigners();
 
-  //   const alice = signers[0];
-  //   const aliceReserveBalance = await erc20Token.balanceOf(alice.address);
+    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+      ERC20Gild,
+      ChainlinkTwoFeedPriceOracle,
+      TestErc20,
+      TestChainlinkDataFeed,
+      TestChainlinkDataFeed
+    ];
 
-  //   await ethGild.connect(alice).approve(ethGild.address, aliceReserveBalance);;
+    const alice = signers[0];
 
-  //   const aliceEthAmount = ethers.BigNumber.from("1" + eighteenZeros);
+    const totalTokenSupply = ethers.BigNumber.from("2000").mul(ONE);
+    const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
 
-  //   // Min gild price MUST be respected
-  //   const oraclePrice = await priceOracle.price();
+    const desiredUnitsAlice = totalTokenSupply;
+    const costAlice = staticPrice.mul(desiredUnitsAlice).div(ONE);
 
+    // give alice reserve to cover cost
+    await erc20Token.transfer(alice.address, costAlice);
 
-  //   await assertError(
-  //     async () => await ethGild["deposit(uint256,address,uint256)"](ethers.BigNumber.from(100), ethGild.address, ethers.BigNumber.from(1)),
-  //     "MIN_PRICE",
-  //     "failed to respect min price"
-  //   );
-  //   // await aliceEthGild.deposit(oraclePrice, { value: aliceEthAmount });
+    // Min gild price MUST be respected
+    const oraclePrice = await priceOracle.price();
+   
+    await erc20Token.connect(alice).approve(ethGild.address, oraclePrice.add(1));
+    console.log("oraclePrice.add(1)", oraclePrice.add(1));
 
-  //   // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
-  //   const expectedEthG = oraclePrice;
-  //   const aliceEthG = await ethGild["balanceOf(address)"](alice.address);
-  //   assert(
-  //     aliceEthG.eq(expectedEthG),
-  //     `wrong alice ETHg ${expectedEthG} ${aliceEthG}`
-  //   );
-  // });
+    const aliceEthAmount = ethers.BigNumber.from("1" + eighteenZeros);
+    
+    await assertError(
+      async () =>
+      await ethGild["deposit(uint256,address,uint256)"](oraclePrice.add(1), alice.address, aliceEthAmount),
+      "MIN_PRICE",
+      "failed to respect min price"
+    );
+    await ethGild["deposit(uint256,address,uint256)"](oraclePrice, alice.address, aliceEthAmount);
+
+    // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
+    const expectedEthG = oraclePrice;
+    const aliceEthG = await ethGild["balanceOf(address)"](alice.address);
+    assert(
+      aliceEthG.eq(expectedEthG),
+      `wrong alice ETHg ${expectedEthG} ${aliceEthG}`
+    );
+  });
 
   // it("should gild", async function () {
   //   const signers = await ethers.getSigners();
