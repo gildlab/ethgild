@@ -154,6 +154,7 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         uint256 minPrice_
     ) public returns (uint256) {
         uint256 price_ = priceOracle.price();
+        require(minPrice_ <= price_, "MIN_PRICE");
         uint256 shares_ = _calculateDeposit(assets_, price_, minPrice_);
 
         return _deposit(assets_, receiver_, shares_, price_);

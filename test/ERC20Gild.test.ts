@@ -80,39 +80,33 @@ describe("deposit", async function () {
       TestChainlinkDataFeed
     ];
 
-    const alice = signers[0];
+    const alice = signers[1];
 
-    const totalTokenSupply = ethers.BigNumber.from("2000").mul(ONE);
-    const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
+    const totalTokenSupply = await erc20Token.totalSupply()
 
-    const desiredUnitsAlice = totalTokenSupply;
-    const costAlice = staticPrice.mul(desiredUnitsAlice).div(ONE);
+    const aliceDepositAmount = totalTokenSupply.div(2)
 
     // give alice reserve to cover cost
-    await erc20Token.transfer(alice.address, costAlice);
+    await erc20Token.transfer(alice.address, aliceDepositAmount);
 
     // Min gild price MUST be respected
     const oraclePrice = await priceOracle.price();
-   
-    await erc20Token.connect(alice).approve(ethGild.address, oraclePrice.add(1));
-    console.log("oraclePrice.add(1)", oraclePrice.add(1));
 
-    const aliceEthAmount = ethers.BigNumber.from("1" + eighteenZeros);
-    
+    await erc20Token.connect(alice).increaseAllowance(ethGild.address, aliceDepositAmount);
+
     await assertError(
       async () =>
-      await ethGild["deposit(uint256,address,uint256)"](oraclePrice.add(1), alice.address, aliceEthAmount),
+      await ethGild.connect(alice)["deposit(uint256,address,uint256)"](aliceDepositAmount, alice.address, oraclePrice.add(1)),
       "MIN_PRICE",
       "failed to respect min price"
     );
-    await ethGild["deposit(uint256,address,uint256)"](oraclePrice, alice.address, aliceEthAmount);
+    await ethGild.connect(alice)["deposit(uint256,address,uint256)"](aliceDepositAmount, alice.address, oraclePrice);
 
-    // XAU to 8 decimal places (from oracle) with 18 decimals (as erc20 standard).
-    const expectedEthG = oraclePrice;
-    const aliceEthG = await ethGild["balanceOf(address)"](alice.address);
+    const expectedShares = oraclePrice.mul(aliceDepositAmount).div(ONE);
+    const aliceShares = await ethGild["balanceOf(address)"](alice.address);
     assert(
-      aliceEthG.eq(expectedEthG),
-      `wrong alice ETHg ${expectedEthG} ${aliceEthG}`
+      aliceShares.eq(expectedShares),
+      `wrong alice ETHg ${expectedShares} ${aliceShares}`
     );
   });
 
