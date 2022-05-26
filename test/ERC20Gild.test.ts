@@ -123,7 +123,6 @@ describe("deposit", async function () {
     const alice = signers[0];
     const bob = signers[1];
 
-    const aliceEthGild = ethGild.connect(alice);
     const bobEthGild = ethGild.connect(bob);
 
     const price = await priceOracle.price();
@@ -133,41 +132,47 @@ describe("deposit", async function () {
       `bad referencePrice ${price} ${expectedReferencePrice}`
     );
 
-    // const aliceEthAmount = ethers.BigNumber.from("100" + eighteenZeros);
-    // await aliceEthGild.redeem([]);
+    const totalTokenSupply = await erc20Token.totalSupply()
 
-    // const expectedAliceBalance = expectedReferencePrice
-    //   .mul(aliceEthAmount)
-    //   .div(priceOne);
-    // const ethgAliceBalance = await ethGild["balanceOf(address)"](alice.address);
-    // assert(
-    //   ethgAliceBalance.eq(expectedAliceBalance),
-    //   `wrong ERC20 balance ${ethgAliceBalance} ${expectedAliceBalance}`
-    // );
+    const aliceEthAmount = totalTokenSupply.div(2)
 
-    // const bobErc20Balance = await ethGild["balanceOf(address)"](bob.address);
-    // assert(
-    //   bobErc20Balance.eq(0),
-    //   `wrong bob erc20 balance ${bobErc20Balance} 0`
-    // );
 
-    // const erc1155Balance = await ethGild["balanceOf(address,uint256)"](
-    //   alice.address,
-    //   id1155
-    // );
-    // assert(
-    //   erc1155Balance.eq(expectedAliceBalance),
-    //   `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
-    // );
+    await erc20Token.connect(alice).increaseAllowance(ethGild.address, aliceEthAmount);
 
-    // const bobErc1155Balance = await ethGild["balanceOf(address,uint256)"](
-    //   bob.address,
-    //   id1155
-    // );
-    // assert(
-    //   bobErc1155Balance.eq(0),
-    //   `wrong bob erc1155 balance ${bobErc1155Balance} 0`
-    // );
+    await ethGild.connect(alice)["deposit(uint256,address)"](aliceEthAmount, alice.address);
+
+    const expectedAliceBalance = expectedReferencePrice
+      .mul(aliceEthAmount)
+      .div(priceOne);
+    const ethgAliceBalance = await ethGild["balanceOf(address)"](alice.address);
+    assert(
+      ethgAliceBalance.eq(expectedAliceBalance),
+      `wrong ERC20 balance ${ethgAliceBalance} ${expectedAliceBalance}`
+    );
+
+    const bobErc20Balance = await ethGild["balanceOf(address)"](bob.address);
+    assert(
+      bobErc20Balance.eq(0),
+      `wrong bob erc20 balance ${bobErc20Balance} 0`
+    );
+
+    const erc1155Balance = await ethGild["balanceOf(address,uint256)"](
+      alice.address,
+      id1155
+    );
+    assert(
+      erc1155Balance.eq(expectedAliceBalance),
+      `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
+    );
+
+    const bobErc1155Balance = await ethGild["balanceOf(address,uint256)"](
+      bob.address,
+      id1155
+    );
+    assert(
+      bobErc1155Balance.eq(0),
+      `wrong bob erc1155 balance ${bobErc1155Balance} 0`
+    );
 
     // await assertError(
     //   async () => await aliceEthGild.ungild(price, erc1155Balance),
