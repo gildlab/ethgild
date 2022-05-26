@@ -23,7 +23,6 @@ export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const ONE = ethers.BigNumber.from("1" + eighteenZeros);
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
 

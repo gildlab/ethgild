@@ -7,7 +7,6 @@ import {
   assertError,
   eighteenZeros,
   priceOne,
-  ONE,
   RESERVE_ONE
 } from "./util";
 import type { ERC20Gild } from "../typechain/ERC20Gild";
@@ -36,11 +35,11 @@ describe("deposit", async function () {
       TestChainlinkDataFeed
     ];
 
-    const totalTokenSupply = ethers.BigNumber.from("2000").mul(ONE);
+    const totalTokenSupply = ethers.BigNumber.from("2000").mul(priceOne);
     const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
 
     const desiredUnitsAlice = totalTokenSupply;
-    const costAlice = staticPrice.mul(desiredUnitsAlice).div(ONE);
+    const costAlice = staticPrice.mul(desiredUnitsAlice).div(priceOne);
 
     // give alice reserve to cover cost
     await erc20Token.transfer(alice.address, costAlice);
@@ -102,7 +101,7 @@ describe("deposit", async function () {
     );
     await ethGild.connect(alice)["deposit(uint256,address,uint256)"](aliceDepositAmount, alice.address, oraclePrice);
 
-    const expectedShares = oraclePrice.mul(aliceDepositAmount).div(ONE);
+    const expectedShares = oraclePrice.mul(aliceDepositAmount).div(priceOne);
     const aliceShares = await ethGild["balanceOf(address)"](alice.address);
     assert(
       aliceShares.eq(expectedShares),
@@ -110,133 +109,135 @@ describe("deposit", async function () {
     );
   });
 
-  // it("should gild", async function () {
-  //   const signers = await ethers.getSigners();
-  //   const [ethGild, priceOracle] = (await deployNativeGild()) as [
-  //     ERC20Gild,
-  //     ChainlinkTwoFeedPriceOracle,
-  //     TestChainlinkDataFeed,
-  //     TestChainlinkDataFeed
-  //   ];
+  it("should deposit", async function () {
+    const signers = await ethers.getSigners();
 
-  //   const alice = signers[0];
-  //   const bob = signers[1];
+    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+      ERC20Gild,
+      ChainlinkTwoFeedPriceOracle,
+      TestErc20,
+      TestChainlinkDataFeed,
+      TestChainlinkDataFeed
+    ];
 
-  //   const aliceEthGild = ethGild.connect(alice);
-  //   const bobEthGild = ethGild.connect(bob);
+    const alice = signers[0];
+    const bob = signers[1];
 
-  //   const price = await priceOracle.price();
-  //   const id1155 = price;
-  //   assert(
-  //     price.eq(expectedReferencePrice),
-  //     `bad referencePrice ${price} ${expectedReferencePrice}`
-  //   );
+    const aliceEthGild = ethGild.connect(alice);
+    const bobEthGild = ethGild.connect(bob);
 
-  //   const aliceEthAmount = ethers.BigNumber.from("100" + eighteenZeros);
-  //   await aliceEthGild.redeem([]);
+    const price = await priceOracle.price();
+    const id1155 = price;
+    assert(
+      price.eq(expectedReferencePrice),
+      `bad referencePrice ${price} ${expectedReferencePrice}`
+    );
 
-  //   const expectedAliceBalance = expectedReferencePrice
-  //     .mul(aliceEthAmount)
-  //     .div(priceOne);
-  //   const ethgAliceBalance = await ethGild["balanceOf(address)"](alice.address);
-  //   assert(
-  //     ethgAliceBalance.eq(expectedAliceBalance),
-  //     `wrong ERC20 balance ${ethgAliceBalance} ${expectedAliceBalance}`
-  //   );
+    // const aliceEthAmount = ethers.BigNumber.from("100" + eighteenZeros);
+    // await aliceEthGild.redeem([]);
 
-  //   const bobErc20Balance = await ethGild["balanceOf(address)"](bob.address);
-  //   assert(
-  //     bobErc20Balance.eq(0),
-  //     `wrong bob erc20 balance ${bobErc20Balance} 0`
-  //   );
+    // const expectedAliceBalance = expectedReferencePrice
+    //   .mul(aliceEthAmount)
+    //   .div(priceOne);
+    // const ethgAliceBalance = await ethGild["balanceOf(address)"](alice.address);
+    // assert(
+    //   ethgAliceBalance.eq(expectedAliceBalance),
+    //   `wrong ERC20 balance ${ethgAliceBalance} ${expectedAliceBalance}`
+    // );
 
-  //   const erc1155Balance = await ethGild["balanceOf(address,uint256)"](
-  //     alice.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     erc1155Balance.eq(expectedAliceBalance),
-  //     `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
-  //   );
+    // const bobErc20Balance = await ethGild["balanceOf(address)"](bob.address);
+    // assert(
+    //   bobErc20Balance.eq(0),
+    //   `wrong bob erc20 balance ${bobErc20Balance} 0`
+    // );
 
-  //   const bobErc1155Balance = await ethGild["balanceOf(address,uint256)"](
-  //     bob.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     bobErc1155Balance.eq(0),
-  //     `wrong bob erc1155 balance ${bobErc1155Balance} 0`
-  //   );
+    // const erc1155Balance = await ethGild["balanceOf(address,uint256)"](
+    //   alice.address,
+    //   id1155
+    // );
+    // assert(
+    //   erc1155Balance.eq(expectedAliceBalance),
+    //   `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
+    // );
 
-  //   await assertError(
-  //     async () => await aliceEthGild.ungild(price, erc1155Balance),
-  //     "burn amount exceeds balance",
-  //     "failed to apply fee to ungild"
-  //   );
+    // const bobErc1155Balance = await ethGild["balanceOf(address,uint256)"](
+    //   bob.address,
+    //   id1155
+    // );
+    // assert(
+    //   bobErc1155Balance.eq(0),
+    //   `wrong bob erc1155 balance ${bobErc1155Balance} 0`
+    // );
 
-  //   const bobEthAmount = ethers.BigNumber.from("10" + eighteenZeros);
-  //   await bobEthGild.redeem([]);
+    // await assertError(
+    //   async () => await aliceEthGild.ungild(price, erc1155Balance),
+    //   "burn amount exceeds balance",
+    //   "failed to apply fee to ungild"
+    // );
 
-  //   const expectedBobBalance = expectedReferencePrice
-  //     .mul(bobEthAmount)
-  //     .div(priceOne);
-  //   const ethgBobBalance = await ethGild["balanceOf(address)"](bob.address);
-  //   assert(
-  //     ethgBobBalance.eq(expectedBobBalance),
-  //     `wrong bob erc20 balance ${ethgBobBalance} ${expectedBobBalance}`
-  //   );
+    // const bobEthAmount = ethers.BigNumber.from("10" + eighteenZeros);
+    // await bobEthGild.redeem([]);
 
-  //   const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
-  //     bob.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     erc1155BobBalance.eq(expectedBobBalance),
-  //     `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`
-  //   );
+    // const expectedBobBalance = expectedReferencePrice
+    //   .mul(bobEthAmount)
+    //   .div(priceOne);
+    // const ethgBobBalance = await ethGild["balanceOf(address)"](bob.address);
+    // assert(
+    //   ethgBobBalance.eq(expectedBobBalance),
+    //   `wrong bob erc20 balance ${ethgBobBalance} ${expectedBobBalance}`
+    // );
 
-  //   const bobToAliceEthg = ethgAliceBalance
-  //     .mul(1001)
-  //     .div(1000)
-  //     .sub(ethgAliceBalance)
-  //     .sub(1);
-  //   await bobEthGild.transfer(alice.address, bobToAliceEthg);
+    // const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
+    //   bob.address,
+    //   id1155
+    // );
+    // assert(
+    //   erc1155BobBalance.eq(expectedBobBalance),
+    //   `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`
+    // );
 
-  //   // alice cannot withdraw a different referencePrice gild.
-  //   await assertError(
-  //     //3 args
-  //     async () => await aliceEthGild.redeem([]),
-  //     "burn amount exceeds balance",
-  //     "failed to prevent gild referencePrice manipulation"
-  //   );
+    // const bobToAliceEthg = ethgAliceBalance
+    //   .mul(1001)
+    //   .div(1000)
+    //   .sub(ethgAliceBalance)
+    //   .sub(1);
+    // await bobEthGild.transfer(alice.address, bobToAliceEthg);
 
-  //   // alice cannot withdraw with less than the overburn erc20
-  //   await assertError(
-  //     //3
-  //     async () => await aliceEthGild.redeem([]),
-  //     "burn amount exceeds balance",
-  //     "failed to overburn"
-  //   );
+    // // alice cannot withdraw a different referencePrice gild.
+    // await assertError(
+    //   //3 args
+    //   async () => await aliceEthGild.redeem([]),
+    //   "burn amount exceeds balance",
+    //   "failed to prevent gild referencePrice manipulation"
+    // );
 
-  //   await bobEthGild.transfer(alice.address, 1);
+    // // alice cannot withdraw with less than the overburn erc20
+    // await assertError(
+    //   //3
+    //   async () => await aliceEthGild.redeem([]),
+    //   "burn amount exceeds balance",
+    //   "failed to overburn"
+    // );
 
-  //   await aliceEthGild.ungild(price, erc1155Balance);
-  //   const erc20AliceBalanceUngild = await ethGild["balanceOf(address)"](
-  //     alice.address
-  //   );
-  //   assert(
-  //     erc20AliceBalanceUngild.eq(0),
-  //     `wrong alice erc20 balance after ungild ${erc20AliceBalanceUngild} 0`
-  //   );
+    // await bobEthGild.transfer(alice.address, 1);
 
-  //   const erc1155AliceBalanceUngild = await ethGild[
-  //     "balanceOf(address,uint256)"
-  //   ](alice.address, id1155);
-  //   assert(
-  //     erc1155AliceBalanceUngild.eq(0),
-  //     `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
-  //   );
-  // });
+    // await aliceEthGild.ungild(price, erc1155Balance);
+    // const erc20AliceBalanceUngild = await ethGild["balanceOf(address)"](
+    //   alice.address
+    // );
+    // assert(
+    //   erc20AliceBalanceUngild.eq(0),
+    //   `wrong alice erc20 balance after ungild ${erc20AliceBalanceUngild} 0`
+    // );
+
+    // const erc1155AliceBalanceUngild = await ethGild[
+    //   "balanceOf(address,uint256)"
+    // ](alice.address, id1155);
+    // assert(
+    //   erc1155AliceBalanceUngild.eq(0),
+    //   `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
+    // );
+  });
 
   // it("should trade erc1155", async function () {
   //   const signers = await ethers.getSigners();
