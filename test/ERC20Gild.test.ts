@@ -233,16 +233,17 @@ describe("deposit", async function () {
 
 
     
-    // await ethGild.connect(bob).transfer(alice.address, 1);
-    // await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance, alice.address, erc20Token.address, price);
-    // const erc20AliceBalanceWithdraw = await ethGild["balanceOf(address)"](
-    //   alice.address
-    // );
+    await ethGild.connect(bob).transfer(alice.address, 1);
+
+    await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance, alice.address, erc20Token.address, price);
+    const erc20AliceBalanceWithdraw = await ethGild["balanceOf(address)"](
+      alice.address
+    );
     
-    // assert(
-    //   erc20AliceBalanceWithdraw.eq(0),
-    //   `wrong alice erc20 balance after ungild ${erc20AliceBalanceWithdraw} 0`
-    // );
+    assert(
+      erc20AliceBalanceWithdraw.eq(0),
+      `wrong alice erc20 balance after ungild ${erc20AliceBalanceWithdraw} 0`
+    );
 
 
     // const erc1155AliceBalanceUngild = await ethGild[
