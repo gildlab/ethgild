@@ -109,7 +109,7 @@ describe("deposit", async function () {
     );
   });
 
-  it("should deposit", async function () {
+  it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
 
     const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
@@ -173,7 +173,7 @@ describe("deposit", async function () {
     );
 
     await assertError(
-      async () => await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance,alice.address, erc20Token.address, price),
+      async () => await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance, alice.address, erc20Token.address, price),
       "burn amount exceeds balance",
       "failed to apply fee to ungild"
     );
@@ -213,15 +213,7 @@ describe("deposit", async function () {
     //   .div(1000)
     //   .sub(ethgAliceBalance)
     //   .sub(1);
-    // await bobEthGild.transfer(alice.address, bobToAliceEthg);
-
-    // alice cannot withdraw a different referencePrice deposit.
-
-    await assertError(
-      async () => await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance.sub(1), alice.address, erc20Token.address, price),
-      "burn amount exceeds balance",
-      "failed to prevent gild referencePrice manipulation"
-    );
+    // await ethGild.connect(bob).transfer(alice.address, bobToAliceEthg);
 
     // // alice cannot withdraw with less than the overburn erc20
     // await assertError(
@@ -231,11 +223,7 @@ describe("deposit", async function () {
     //   "failed to overburn"
     // );
 
-
-    
-    await ethGild.connect(bob).transfer(alice.address, 1);
-
-    await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance, alice.address, erc20Token.address, price);
+    await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance, alice.address, alice.address, price);
     const erc20AliceBalanceWithdraw = await ethGild["balanceOf(address)"](
       alice.address
     );
@@ -245,14 +233,21 @@ describe("deposit", async function () {
       `wrong alice erc20 balance after ungild ${erc20AliceBalanceWithdraw} 0`
     );
 
+    // alice cannot withdraw a different referencePrice deposit.
+    await assertError(
+      async () => await ethGild.connect(alice)["redeem(uint256,address,address,uint256)"](erc1155Balance.sub(1), alice.address, alice.address, price),
+      "burn amount exceeds balance",
+      "failed to prevent gild referencePrice manipulation"
+    );
 
-    // const erc1155AliceBalanceUngild = await ethGild[
-    //   "balanceOf(address,uint256)"
-    // ](alice.address, id1155);
-    // assert(
-    //   erc1155AliceBalanceUngild.eq(0),
-    //   `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
-    // );
+    const erc1155AliceBalanceUngild = await ethGild[
+      "balanceOf(address,uint256)"
+    ](alice.address, id1155);
+    assert(
+      erc1155AliceBalanceUngild.eq(0),
+      `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
+    );
+
   });
 
   // it("should trade erc1155", async function () {
