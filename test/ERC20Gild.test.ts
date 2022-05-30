@@ -287,36 +287,36 @@ describe("deposit", async function () {
 
     const aliceBalance = await ethGild["balanceOf(address)"](alice.address);
     // erc1155 transfer.
-    // await aliceEthGild.safeTransferFrom(
-    //   alice.address,
-    //   bob.address,
-    //   id1155,
-    //   aliceBalance,
-    //   []
-    // );
+    await aliceEthGild.safeTransferFrom(
+      alice.address,
+      bob.address,
+      id1155,
+      aliceBalance,
+      []
+    );
 
     // alice cannot withdraw after sending to bob.
-    // await assertError(
-    //   async () => await aliceEthGild["redeem(uint256,address,address,uint256)"](1000, alice.address, alice.address, price),
-    //   "burn amount exceeds balance",
-    //   "failed to prevent alice withdrawing after sending erc1155"
-    // );
+    await assertError(
+      async () => await aliceEthGild["redeem(uint256,address,address,uint256)"](1000, alice.address, alice.address, price),
+      "burn amount exceeds balance",
+      "failed to prevent alice withdrawing after sending erc1155"
+    );
 
-    // // bob cannot withdraw without erc20
-    // await assertError(
-    //   async () => await bobEthGild.ungild(price, 1000),
-    //   "burn amount exceeds balance",
-    //   "failed to prevent bob withdrawing without receiving erc20"
-    // );
+    // bob cannot withdraw without erc20
+    await assertError(
+      async () => await bobEthGild["redeem(uint256,address,address,uint256)"](1000,bob.address, bob.address, price),
+      "burn amount exceeds balance",
+      "failed to prevent bob withdrawing without receiving erc20"
+    );
 
     // // erc20 transfer.
-    // await aliceEthGild.transfer(bob.address, aliceBalance);
+    await aliceEthGild.transfer(bob.address, aliceBalance);
 
-    // await assertError(
-    //   async () => await aliceEthGild.ungild(price, 1000),
-    //   "burn amount exceeds balance",
-    //   "failed to prevent alice withdrawing after sending erc1155 and erc20"
-    // );
+    await assertError(
+      async () => await aliceEthGild["redeem(uint256,address,address,uint256)"](1000, alice.address, alice.address, price),
+      "burn amount exceeds balance",
+      "failed to prevent alice withdrawing after sending erc1155 and erc20"
+    );
 
     // // bob can withdraw now
     // const bobEthBefore = await bob.getBalance();
@@ -324,10 +324,7 @@ describe("deposit", async function () {
     //   bob.address,
     //   id1155
     // );
-    // const bobUngildTx = await bobEthGild.ungild(
-    //   price,
-    //   erc1155BobBalance.mul(1000).div(1001)
-    // );
+    // const bobUngildTx = await bobEthGild["redeem(uint256,address,address,uint256)"](  erc1155BobBalance.mul(1000).div(1001), bob.address, bob.address, price);
     // const bobUngildTxReceipt = await bobUngildTx.wait();
     // const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
     //   bob.address,
