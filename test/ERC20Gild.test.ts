@@ -318,29 +318,29 @@ describe("deposit", async function () {
       "failed to prevent alice withdrawing after sending erc1155 and erc20"
     );
 
-    // // bob can withdraw now
-    // const bobEthBefore = await bob.getBalance();
-    // const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
-    //   bob.address,
-    //   id1155
-    // );
-    // const bobUngildTx = await bobEthGild["redeem(uint256,address,address,uint256)"](  erc1155BobBalance.mul(1000).div(1001), bob.address, bob.address, price);
-    // const bobUngildTxReceipt = await bobUngildTx.wait();
-    // const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
-    //   bob.address,
-    //   id1155
-    // );
-    // const bobEthAfter = await bob.getBalance();
-    // const bobEthDiff = bobEthAfter.sub(bobEthBefore);
-    // // Bob withdraw alice's gilded eth
-    // const bobEthDiffExpected = aliceEthAmount
-    //   .mul(1000)
-    //   .div(1001)
-    //   .sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice || 0));
-    // assert(
-    //   bobEthAfter.sub(bobEthBefore).eq(bobEthDiffExpected),
-    //   `wrong bob diff ${bobEthDiffExpected} ${bobEthDiff}`
-    // );
+   // bob can withdraw now
+    const bobEthBefore = await bob.getBalance();
+    const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
+      bob.address,
+      id1155
+    );
+    
+    const bobUngildTx = await bobEthGild["redeem(uint256,address,address,uint256)"](
+      erc1155BobBalance, bob.address, bob.address, price
+    );
+    const bobUngildTxReceipt = await bobUngildTx.wait();
+    const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
+      bob.address,
+      id1155
+    );
+    const bobEthAfter = await bob.getBalance();
+    const bobEthDiff = bobEthAfter.sub(bobEthBefore);
+    // Bob withdraw alice's gilded eth
+    const bobEthDiffExpected = aliceEthAmount
+    .sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice || 0));
+    assert(
+      bobEthDiff.eq(bobEthDiffExpected),
+      `wrong bob diff ${bobEthDiffExpected} ${bobEthDiff}`
+    );
   });
 });
-
