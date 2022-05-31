@@ -8,6 +8,7 @@ import {
   priceOne,
 } from "./util";
 import type { ERC20Gild } from "../typechain/ERC20Gild";
+import type { TestErc20 } from "../typechain/TestErc20";
 import type { TestPriceOracle } from "../typechain/TestPriceOracle";
 
 chai.use(solidity);
@@ -33,13 +34,19 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
       ERC20Gild,
-      TestPriceOracle
+      TestPriceOracle,
+      TestErc20
     ];
 
+    const alice = signers[0];
     const gildAmount = ethers.BigNumber.from(1000);
-    await ethGild.gild(0, { value: gildAmount });
+
+  
+    await erc20Token.connect(alice).increaseAllowance(ethGild.address, gildAmount);
+    await ethGild.connect(alice)["deposit(uint256,address)"](gildAmount, alice.address);
+
 
     const expectedErc20Balance = gildAmount
       .mul(expectedReferencePrice)
