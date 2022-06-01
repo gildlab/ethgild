@@ -184,7 +184,7 @@ describe("deposit", async function () {
     const bobEthAmount = totalTokenSupply.div(3)
 
     await erc20Token.transfer(bob.address, bobEthAmount);
-    
+
     await erc20Token.connect(bob).increaseAllowance(ethGild.address, bobEthAmount);
 
     await ethGild.connect(bob)["deposit(uint256,address)"](bobEthAmount, bob.address);
@@ -227,7 +227,7 @@ describe("deposit", async function () {
     const erc20AliceBalanceWithdraw = await ethGild["balanceOf(address)"](
       alice.address
     );
-    
+
     assert(
       erc20AliceBalanceWithdraw.eq(0),
       `wrong alice erc20 balance after ungild ${erc20AliceBalanceWithdraw} 0`
@@ -272,26 +272,23 @@ describe("deposit", async function () {
 
     let totalTokenSupply = await erc20Token.totalSupply()
 
-    const aliceEthAmount = totalTokenSupply.div(2)
+    const aliceAssetBalanceAmount = totalTokenSupply.div(2)
 
-    await erc20Token.transfer(alice.address, aliceEthAmount);
-    
+    await erc20Token.transfer(alice.address, aliceAssetBalanceAmount);
 
-    await erc20Token.connect(alice).increaseAllowance(ethGild.address, aliceEthAmount);
-
-    
+    await erc20Token.connect(alice).increaseAllowance(ethGild.address, aliceAssetBalanceAmount);
 
     // const bobEthAmount = ethers.BigNumber.from("9" + eighteenZeros);
 
-    await aliceEthGild["deposit(uint256,address)"](aliceEthAmount, alice.address);
+    await aliceEthGild["deposit(uint256,address)"](aliceAssetBalanceAmount, alice.address);
 
-    const aliceBalance = await ethGild["balanceOf(address)"](alice.address);
+    const aliceShareBalance = await ethGild["balanceOf(address)"](alice.address);
     // erc1155 transfer.
     await aliceEthGild.safeTransferFrom(
       alice.address,
       bob.address,
       id1155,
-      aliceBalance,
+      aliceShareBalance,
       []
     );
 
@@ -310,7 +307,7 @@ describe("deposit", async function () {
     );
 
     // // erc20 transfer.
-    await aliceEthGild.transfer(bob.address, aliceBalance);
+    await aliceEthGild.transfer(bob.address, aliceShareBalance);
 
     await assertError(
       async () => await aliceEthGild["redeem(uint256,address,address,uint256)"](1000, alice.address, alice.address, price),
@@ -319,28 +316,33 @@ describe("deposit", async function () {
     );
 
    // bob can withdraw now
-    const bobEthBefore = await bob.getBalance();
+    const bobBalanceBefore = await erc20Token.balanceOf(bob.address);
     const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
-    
+
     const bobUngildTx = await bobEthGild["redeem(uint256,address,address,uint256)"](
       erc1155BobBalance, bob.address, bob.address, price
     );
-    const bobUngildTxReceipt = await bobUngildTx.wait();
+    await bobUngildTx.wait();
     const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
-    const bobEthAfter = await bob.getBalance();
-    const bobEthDiff = bobEthAfter.sub(bobEthBefore);
-    // Bob withdraw alice's gilded eth
-    const bobEthDiffExpected = aliceEthAmount
-    .sub(bobUngildTxReceipt.gasUsed.mul(bobUngildTx.gasPrice || 0));
+    const bobBalanceAfter = await erc20Token.balanceOf(bob.address);
+    const bobBalanceDiff = bobBalanceAfter.sub(bobBalanceBefore);
+    //   // Bob withdraw alice's gilded eth
+    const bobBalanceDiffExpected = aliceAssetBalanceAmount
+      // redeem rounds down so bob loses 1 token in the round trip
+      .sub(1);
     assert(
-      bobEthDiff.eq(bobEthDiffExpected),
-      `wrong bob diff ${bobEthDiffExpected} ${bobEthDiff}`
+      bobBalanceDiff.eq(bobBalanceDiffExpected),
+      `wrong bob diff ${bobBalanceDiffExpected} ${bobBalanceDiff}`
     );
+    assert(
+      erc1155BobBalanceAfter.eq(0),
+      `bob did not redeem all shares`
+    )
   });
 });
