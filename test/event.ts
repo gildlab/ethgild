@@ -6,12 +6,13 @@ import type { ERC20Gild } from "../typechain/ERC20Gild";
 import type { TestErc20 } from "../typechain/TestErc20";
 import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
 import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+import { LogDescription } from "ethers/lib/utils";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("events", async function () {
-  it("should emit events on gild and ungild", async function () {
+  it("should emit events on deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
     const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
       ERC20Gild,
@@ -34,15 +35,6 @@ describe("events", async function () {
 
     const gildEventArgs = await getEventArgs(gildTx, "Deposit", ethGild);
 
-    //todo: figure it out
-    // assert(
-    //   gildEventArgs.sender === alice.address,
-    //   `incorrect Gild sender. expected ${alice.address} got ${gildEventArgs.sender}`
-    // );
-    // assert(
-    //   gildEventArgs.price.eq(price),
-    //   `incorrect Gild reference price. expected ${price} got ${gildEventArgs.xauReferencePrice}`
-    // );
     assert(
       gildEventArgs.assets.eq(ethAmount),
       `incorrect Gild ethAmount. expected ${ethAmount} got ${gildEventArgs.assets}`
@@ -83,27 +75,28 @@ describe("events", async function () {
       `incorrect Transfer value. expected ${aliceBalance} got ${gildTransferEventArgs.value}`
     );
 
-    const ungildERC1155Amount = aliceBalance.mul(1000).div(1001);
+    const ungildERC1155Amount = aliceBalance
     const ungildTx = await ethGild["redeem(uint256,address,address,uint256)"](ungildERC1155Amount, alice.address, alice.address, price);
 
     const ungildEventArgs = await getEventArgs(ungildTx, "Withdraw", ethGild);
-
     // Ungild ETH is always rounded down.
     const ungildAmount = ungildERC1155Amount.mul(priceOne).div(price);
-    //todo: figure it out
-    // assert(
-    //   ungildEventArgs.sender === alice.address,
-    //   `incorrect ungild sender. expected ${alice.address} got ${ungildEventArgs.sender}`
-    // );
-    // assert(
-    //   ungildEventArgs.price.eq(price),
-    //   `incorrect ungild xauReferencePrice. expected ${price} got ${ungildEventArgs.price}`
-    // );
     assert(
       ungildEventArgs.assets.eq(ungildAmount),
       `wrong ungild amount. expected ${ungildAmount} actual ${ungildEventArgs.assets}`
     );
 
+
+    const ungildTransferSingleEventArgs = await getEventArgs(
+      ungildTx,
+      "TransferSingle",
+      ethGild
+    );
+
+    assert(
+      ungildTransferSingleEventArgs.id.eq(id1155),
+      `incorrect TransferSingle id. expected ${id1155} got ${ungildTransferSingleEventArgs.id}`
+    );
     const alice1155BalanceAfter = await ethGild["balanceOf(address,uint256)"](
       alice.address,
       id1155
