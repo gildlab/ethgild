@@ -15,6 +15,7 @@ export const chainlinkXauUsd = "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6";
 export const chainlinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
 
 export const eighteenZeros = "000000000000000000";
+export const sixZeros = "000000";
 export const xauOne = "100000000";
 
 export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
@@ -22,12 +23,15 @@ export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const deployNativeGild = async () => {
+export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
+
+export const deployERC20Gild = async () => {
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
   const basePriceOracle = await oracleFactory.deploy();
   await basePriceOracle.deployed();
+  const signers = await ethers.getSigners();
   // ETHUSD as of 2022-02-06
   await basePriceOracle.setDecimals(usdDecimals);
   await basePriceOracle.setRoundData(1, {
@@ -48,6 +52,10 @@ export const deployNativeGild = async () => {
     answeredInRound: 1,
   });
 
+  const testErc20 = await ethers.getContractFactory("TestErc20");
+  const testErc20Contract = await testErc20.deploy();
+  await testErc20Contract.deployed();
+
   const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkTwoFeedPriceOracle"
   );
@@ -58,20 +66,20 @@ export const deployNativeGild = async () => {
     });
   await chainlinkTwoFeedPriceOracle.deployed();
 
-  const nativeGildFactory = await ethers.getContractFactory("NativeGild");
-  const nativeGild = await nativeGildFactory.deploy({
+  const erc20GildFactory = await ethers.getContractFactory("ERC20Gild");
+  const ERC20Gild = await erc20GildFactory.deploy({
+    asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-    erc20OverburnNumerator: 1001,
-    erc20OverburnDenominator: 1000,
     priceOracle: chainlinkTwoFeedPriceOracle.address,
   });
-  await nativeGild.deployed();
+  await ERC20Gild.deployed();
 
   return [
-    nativeGild,
+    ERC20Gild,
     chainlinkTwoFeedPriceOracle,
+    testErc20Contract,
     basePriceOracle,
     quotePriceOracle,
   ];

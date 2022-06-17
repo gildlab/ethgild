@@ -2,22 +2,24 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployNativeGild,
+  deployERC20Gild,
   expectedName,
   expectedReferencePrice,
   expectedSymbol,
-} from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
-import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+} from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { TestErc20 } from "../../typechain/TestErc20";
+
+import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
+import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+    const [ethGild, priceOracle] = (await deployERC20Gild()) as [
+      ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestChainlinkDataFeed,
       TestChainlinkDataFeed
@@ -39,15 +41,21 @@ describe("erc20 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, xauOracle, ethOracle] =
-      (await deployNativeGild()) as [
-        NativeGild,
+    const [ethGild, priceOracle, erc20Token, xauOracle, ethOracle] =
+      (await deployERC20Gild()) as [
+        ERC20Gild,
         ChainlinkTwoFeedPriceOracle,
+        TestErc20,
         TestChainlinkDataFeed,
         TestChainlinkDataFeed
       ];
 
-    await ethGild.gild(0, { value: 1000 });
+    const alice = signers[0];
+
+    await erc20Token.connect(alice).increaseAllowance(ethGild.address, 1000);
+    await ethGild
+      .connect(alice)
+      ["deposit(uint256,address)"](1000, alice.address);
 
     const expectedErc20Balance = ethers.BigNumber.from("1656");
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);

@@ -2,21 +2,22 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployNativeGild,
+  deployERC20Gild,
   expectedReferencePrice,
   expectedUri,
   priceOne,
-} from "./util";
-import type { NativeGild } from "../typechain/NativeGild";
-import type { TestPriceOracle } from "../typechain/TestPriceOracle";
+} from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { TestErc20 } from "../../typechain/TestErc20";
+import type { TestPriceOracle } from "../../typechain/TestPriceOracle";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
+    const [ethGild, priceOracle] = (await deployERC20Gild()) as [
+      ERC20Gild,
       TestPriceOracle
     ];
 
@@ -33,13 +34,21 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle] = (await deployNativeGild()) as [
-      NativeGild,
-      TestPriceOracle
+    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
+      ERC20Gild,
+      TestPriceOracle,
+      TestErc20
     ];
 
+    const alice = signers[0];
     const gildAmount = ethers.BigNumber.from(1000);
-    await ethGild.gild(0, { value: gildAmount });
+
+    await erc20Token
+      .connect(alice)
+      .increaseAllowance(ethGild.address, gildAmount);
+    await ethGild
+      .connect(alice)
+      ["deposit(uint256,address)"](gildAmount, alice.address);
 
     const expectedErc20Balance = gildAmount
       .mul(expectedReferencePrice)

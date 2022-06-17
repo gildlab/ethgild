@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: CAL
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
