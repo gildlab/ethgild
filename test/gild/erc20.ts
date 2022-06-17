@@ -53,8 +53,9 @@ describe("erc20 usage", async function () {
     const alice = signers[0];
 
     await erc20Token.connect(alice).increaseAllowance(ethGild.address, 1000);
-    await ethGild.connect(alice)["deposit(uint256,address)"](1000, alice.address);
-
+    await ethGild
+      .connect(alice)
+      ["deposit(uint256,address)"](1000, alice.address);
 
     const expectedErc20Balance = ethers.BigNumber.from("1656");
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);

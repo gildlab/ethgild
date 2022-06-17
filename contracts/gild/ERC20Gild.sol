@@ -206,13 +206,13 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// @return assets_
-    function mint(uint shares_, address receiver_, uint minPrice_) public returns (uint) {
+    function mint(
+        uint256 shares_,
+        address receiver_,
+        uint256 minPrice_
+    ) public returns (uint256) {
         uint256 price_ = priceOracle.price();
-        uint256 assets_ = _calculateMint(
-            shares_,
-            price_,
-            minPrice_
-        );
+        uint256 assets_ = _calculateMint(shares_, price_, minPrice_);
         _deposit(assets_, receiver_, shares_, price_);
         return assets_;
     }

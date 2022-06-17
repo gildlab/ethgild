@@ -4,9 +4,9 @@ import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 
-require('dotenv').config();
+require("dotenv").config();
 
-const {RINKEBY_URL, PRIVATE_KEY, POLYGON_URL } = process.env
+const { RINKEBY_URL, PRIVATE_KEY, POLYGON_URL } = process.env;
 
 export const config = {
   networks: {
@@ -17,12 +17,12 @@ export const config = {
     },
     rinkeby: {
       url: RINKEBY_URL || "",
-      accounts: PRIVATE_KEY ? [ `0x${PRIVATE_KEY}` ] : [ ],
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
     },
     matic: {
       url: POLYGON_URL || "",
-      accounts: PRIVATE_KEY ? [ `0x${PRIVATE_KEY}` ] : [ ],
-      gasPrice: 50000000000
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 50000000000,
     },
   },
   solidity: {

@@ -2,8 +2,8 @@ let
   pkgs = import
     (builtins.fetchTarball {
       name = "nixos-unstable-2021-10-01";
-      url = "https://github.com/nixos/nixpkgs/archive/fa5e153653a1b48e4a21a14b341e2e01835ba8b5.tar.gz";
-      sha256 = "1yvqxrw0ila4y6mryhpf32c8ydljfmfbvijxra2dawvhcfbbm2rw";
+      url = "https://github.com/nixos/nixpkgs/archive/8161cdf3ac174cf8d1b59fad113010671262cca7.tar.gz";
+      sha256 = "1nna04bdl5jmrkw130s8iv9fk376k8jm8yjyx2k2gipxd9d75slr";
     })
     { };
 
@@ -44,7 +44,7 @@ in
 pkgs.stdenv.mkDerivation {
  name = "shell";
  buildInputs = [
-  pkgs.nodejs-17_x
+  pkgs.nodejs-16_x
   pkgs.slither-analyzer
   security-check
   flush-all

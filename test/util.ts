@@ -25,7 +25,6 @@ export const xauDecimals = 8;
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
-
 export const deployERC20Gild = async () => {
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
@@ -53,13 +52,9 @@ export const deployERC20Gild = async () => {
     answeredInRound: 1,
   });
 
-
-  const testErc20 = await ethers.getContractFactory(
-    "TestErc20"
-  );
+  const testErc20 = await ethers.getContractFactory("TestErc20");
   const testErc20Contract = await testErc20.deploy();
   await testErc20Contract.deployed();
-
 
   const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkTwoFeedPriceOracle"

@@ -29,9 +29,13 @@ describe("events", async function () {
     const ethAmount = 5000;
 
     const id1155 = price;
-    await erc20Token.connect(alice).increaseAllowance(ethGild.address, ethAmount);
+    await erc20Token
+      .connect(alice)
+      .increaseAllowance(ethGild.address, ethAmount);
 
-    const gildTx = await ethGild.connect(alice)["deposit(uint256,address)"](ethAmount, alice.address);
+    const gildTx = await ethGild
+      .connect(alice)
+      ["deposit(uint256,address)"](ethAmount, alice.address);
 
     const gildEventArgs = await getEventArgs(gildTx, "Deposit", ethGild);
 
@@ -75,8 +79,13 @@ describe("events", async function () {
       `incorrect Transfer value. expected ${aliceBalance} got ${gildTransferEventArgs.value}`
     );
 
-    const ungildERC1155Amount = aliceBalance
-    const ungildTx = await ethGild["redeem(uint256,address,address,uint256)"](ungildERC1155Amount, alice.address, alice.address, price);
+    const ungildERC1155Amount = aliceBalance;
+    const ungildTx = await ethGild["redeem(uint256,address,address,uint256)"](
+      ungildERC1155Amount,
+      alice.address,
+      alice.address,
+      price
+    );
 
     const ungildEventArgs = await getEventArgs(ungildTx, "Withdraw", ethGild);
     // Ungild ETH is always rounded down.
@@ -85,7 +94,6 @@ describe("events", async function () {
       ungildEventArgs.assets.eq(ungildAmount),
       `wrong ungild amount. expected ${ungildAmount} actual ${ungildEventArgs.assets}`
     );
-
 
     const ungildTransferSingleEventArgs = await getEventArgs(
       ungildTx,
