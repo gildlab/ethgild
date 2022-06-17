@@ -26,7 +26,7 @@ export const xauDecimals = 8;
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
 
-export const deployNativeGild = async () => {
+export const deployERC20Gild = async () => {
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
@@ -71,8 +71,8 @@ export const deployNativeGild = async () => {
     });
   await chainlinkTwoFeedPriceOracle.deployed();
 
-  const nativeGildFactory = await ethers.getContractFactory("ERC20Gild");
-  const ERC20Gild = await nativeGildFactory.deploy({
+  const erc20GildFactory = await ethers.getContractFactory("ERC20Gild");
+  const ERC20Gild = await erc20GildFactory.deploy({
     asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
@@ -109,7 +109,7 @@ export const assertError = async (f: Function, s: string, e: string) => {
     }
     didError = true;
   }
-  assert(didError, e); 
+  assert(didError, e);
 };
 
 export const expectedName = "EthGild";

@@ -2,7 +2,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployNativeGild,
+  deployERC20Gild,
   expectedReferencePrice,
   assertError,
   eighteenZeros,
@@ -27,7 +27,7 @@ describe("deposit", async function () {
 
 
 
-    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
       ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestErc20,
@@ -71,7 +71,7 @@ describe("deposit", async function () {
 
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
       ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestErc20,
@@ -112,7 +112,7 @@ describe("deposit", async function () {
   it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
       ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestErc20,
@@ -253,7 +253,7 @@ describe("deposit", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
       ERC20Gild,
       ChainlinkTwoFeedPriceOracle,
       TestErc20,

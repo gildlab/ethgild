@@ -2,7 +2,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployNativeGild,
+  deployERC20Gild,
   expectedReferencePrice,
   expectedUri,
   priceOne,
@@ -16,7 +16,7 @@ const { expect, assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle] = (await deployERC20Gild()) as [
       ERC20Gild,
       TestPriceOracle
     ];
@@ -34,7 +34,7 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployNativeGild()) as [
+    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
       ERC20Gild,
       TestPriceOracle,
       TestErc20
@@ -43,7 +43,7 @@ describe("erc1155 usage", async function () {
     const alice = signers[0];
     const gildAmount = ethers.BigNumber.from(1000);
 
-  
+
     await erc20Token.connect(alice).increaseAllowance(ethGild.address, gildAmount);
     await ethGild.connect(alice)["deposit(uint256,address)"](gildAmount, alice.address);
 
