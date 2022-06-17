@@ -1,11 +1,11 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployNativeGild, getEventArgs, priceOne } from "./util";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
-import type { TestErc20 } from "../typechain/TestErc20";
-import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+import { deployNativeGild, getEventArgs, priceOne } from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { TestErc20 } from "../../typechain/TestErc20";
+import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
+import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
 import { LogDescription } from "ethers/lib/utils";
 
 chai.use(solidity);

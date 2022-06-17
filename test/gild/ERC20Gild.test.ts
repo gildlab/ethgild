@@ -8,11 +8,11 @@ import {
   eighteenZeros,
   priceOne,
   RESERVE_ONE
-} from "./util";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
-import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
-import type { TestErc20 } from "../typechain/TestErc20";
+} from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
+import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
+import type { TestErc20 } from "../../typechain/TestErc20";
 
 
 chai.use(solidity);

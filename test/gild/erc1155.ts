@@ -6,10 +6,10 @@ import {
   expectedReferencePrice,
   expectedUri,
   priceOne,
-} from "./util";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
-import type { TestErc20 } from "../typechain/TestErc20";
-import type { TestPriceOracle } from "../typechain/TestPriceOracle";
+} from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { TestErc20 } from "../../typechain/TestErc20";
+import type { TestPriceOracle } from "../../typechain/TestPriceOracle";
 
 chai.use(solidity);
 const { expect, assert } = chai;

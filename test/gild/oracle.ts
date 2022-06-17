@@ -1,9 +1,9 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployNativeGild, expectedReferencePrice } from "./util";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
-import type { TestPriceOracle } from "../typechain/TestPriceOracle";
+import { deployNativeGild, expectedReferencePrice } from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { TestPriceOracle } from "../../typechain/TestPriceOracle";
 
 chai.use(solidity);
 const { expect, assert } = chai;

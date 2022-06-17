@@ -1,7 +1,7 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { expectedReferencePrice } from "./util";
+import { expectedReferencePrice } from "../util";
 
 chai.use(solidity);
 const { assert } = chai;
@@ -9,7 +9,7 @@ const { assert } = chai;
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-describe("construction", async function () {
+describe("oracle construction", async function () {
   it("should set reference price", async function () {
     const oracleFactory = await ethers.getContractFactory(
       "TestChainlinkDataFeed"

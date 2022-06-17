@@ -6,12 +6,12 @@ import {
   expectedName,
   expectedReferencePrice,
   expectedSymbol,
-} from "./util";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
-import type { TestErc20 } from "../typechain/TestErc20";
+} from "../util";
+import type { ERC20Gild } from "../../typechain/ERC20Gild";
+import type { TestErc20 } from "../../typechain/TestErc20";
 
-import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
+import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
 
 chai.use(solidity);
 const { expect, assert } = chai;

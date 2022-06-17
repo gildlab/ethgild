@@ -16,14 +16,14 @@ export const config = {
       hardfork: "london",
     },
     rinkeby: {
-      url: RINKEBY_URL,
-      accounts: [ `0x${PRIVATE_KEY}` ],
-    },    
+      url: RINKEBY_URL || "",
+      accounts: PRIVATE_KEY ? [ `0x${PRIVATE_KEY}` ] : [ ],
+    },
     matic: {
-      url: POLYGON_URL,
-      accounts: [ `0x${PRIVATE_KEY}` ],
+      url: POLYGON_URL || "",
+      accounts: PRIVATE_KEY ? [ `0x${PRIVATE_KEY}` ] : [ ],
       gasPrice: 50000000000
-    },   
+    },
   },
   solidity: {
     compilers: [
