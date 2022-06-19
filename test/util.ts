@@ -3,6 +3,11 @@ import { ethers } from "hardhat";
 import { ContractTransaction, Contract, BigNumber } from "ethers";
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
+import type { ERC20PriceOracleVault } from "../typechain/ERC20PriceOracleVault";
+import type { ChainlinkFeedPriceOracle } from "../typechain/ChainlinkFeedPriceOracle";
+import type { TwoPriceOracle } from "../typechain/TwoPriceOracle";
+import type { TestErc20 } from "../typechain/TestErc20";
+import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
 
 export const ethMainnetFeedRegistry =
   "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
@@ -25,7 +30,15 @@ export const xauDecimals = 8;
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
-export const deployERC20Gild = async () => {
+export const deployERC20PriceOracleVault = async (): Promise<
+  [
+    ERC20PriceOracleVault,
+    TestErc20,
+    TwoPriceOracle,
+    TestChainlinkDataFeed,
+    TestChainlinkDataFeed
+  ]
+> => {
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
@@ -35,8 +48,8 @@ export const deployERC20Gild = async () => {
   // ETHUSD as of 2022-02-06
   await basePriceOracle.setDecimals(usdDecimals);
   await basePriceOracle.setRoundData(1, {
-    startedAt: Date.now(),
-    updatedAt: Date.now(),
+    startedAt: BigNumber.from(Date.now()).div(1000),
+    updatedAt: BigNumber.from(Date.now()).div(1000),
     answer: "299438264211",
     answeredInRound: 1,
   });
@@ -46,8 +59,8 @@ export const deployERC20Gild = async () => {
   // XAUUSD as of 2022-02-06
   await quotePriceOracle.setDecimals(xauDecimals);
   await quotePriceOracle.setRoundData(1, {
-    startedAt: Date.now(),
-    updatedAt: Date.now(),
+    startedAt: BigNumber.from(Date.now()).div(1000),
+    updatedAt: BigNumber.from(Date.now()).div(1000),
     answer: "180799500000",
     answeredInRound: 1,
   });
@@ -56,30 +69,46 @@ export const deployERC20Gild = async () => {
   const testErc20Contract = await testErc20.deploy();
   await testErc20Contract.deployed();
 
-  const chainlinkTwoFeedPriceOracleFactory = await ethers.getContractFactory(
-    "ChainlinkTwoFeedPriceOracle"
+  const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
+    "ChainlinkFeedPriceOracle"
   );
-  const chainlinkTwoFeedPriceOracle =
-    await chainlinkTwoFeedPriceOracleFactory.deploy({
-      base: basePriceOracle.address,
-      quote: quotePriceOracle.address,
+  const chainlinkFeedPriceOracleBase =
+    await chainlinkFeedPriceOracleFactory.deploy({
+      feed: basePriceOracle.address,
+      staleAfter: 1000,
     });
-  await chainlinkTwoFeedPriceOracle.deployed();
+  const chainlinkFeedPriceOracleQuote =
+    await chainlinkFeedPriceOracleFactory.deploy({
+      feed: quotePriceOracle.address,
+      staleAfter: 1000,
+    });
+  await chainlinkFeedPriceOracleBase.deployed();
+  await chainlinkFeedPriceOracleQuote.deployed();
 
-  const erc20GildFactory = await ethers.getContractFactory("ERC20Gild");
-  const ERC20Gild = await erc20GildFactory.deploy({
+  const twoPriceOracleFactory = await ethers.getContractFactory(
+    "TwoPriceOracle"
+  );
+  const twoPriceOracle = await twoPriceOracleFactory.deploy({
+    base: chainlinkFeedPriceOracleBase.address,
+    quote: chainlinkFeedPriceOracleQuote.address,
+  });
+
+  const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleVault"
+  );
+  const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy({
     asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-    priceOracle: chainlinkTwoFeedPriceOracle.address,
-  });
-  await ERC20Gild.deployed();
+    priceOracle: twoPriceOracle.address,
+  })) as ERC20PriceOracleVault;
+  await erc20PriceOracleVault.deployed();
 
   return [
-    ERC20Gild,
-    chainlinkTwoFeedPriceOracle,
+    erc20PriceOracleVault,
     testErc20Contract,
+    twoPriceOracle,
     basePriceOracle,
     quotePriceOracle,
   ];

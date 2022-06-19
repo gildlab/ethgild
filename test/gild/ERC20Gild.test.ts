@@ -2,17 +2,12 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployERC20Gild,
+  deployERC20PriceOracleVault,
   expectedReferencePrice,
   assertError,
-  eighteenZeros,
   priceOne,
   RESERVE_ONE,
 } from "../util";
-import type { ERC20Gild } from "../../typechain/ERC20Gild";
-import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
-import type { TestErc20 } from "../../typechain/TestErc20";
 
 chai.use(solidity);
 
@@ -23,13 +18,7 @@ describe("deposit", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[1];
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [vault, asset] = await deployERC20PriceOracleVault();
 
     const totalTokenSupply = ethers.BigNumber.from("2000").mul(priceOne);
     const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
@@ -38,17 +27,15 @@ describe("deposit", async function () {
     const costAlice = staticPrice.mul(desiredUnitsAlice).div(priceOne);
 
     // give alice reserve to cover cost
-    await erc20Token.transfer(alice.address, costAlice);
+    await asset.transfer(alice.address, costAlice);
 
-    const aliceReserveBalance = await erc20Token.balanceOf(alice.address);
+    const aliceReserveBalance = await asset.balanceOf(alice.address);
 
-    await erc20Token
-      .connect(alice)
-      .approve(ethGild.address, aliceReserveBalance);
+    await asset.connect(alice).approve(vault.address, aliceReserveBalance);
 
     await assertError(
       async () =>
-        await ethGild["deposit(uint256,address)"](
+        await vault["deposit(uint256,address)"](
           ethers.BigNumber.from(0),
           alice.address
         ),
@@ -71,33 +58,27 @@ describe("deposit", async function () {
 
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
     const alice = signers[1];
 
-    const totalTokenSupply = await erc20Token.totalSupply();
+    const totalTokenSupply = await asset.totalSupply();
 
     const aliceDepositAmount = totalTokenSupply.div(2);
 
     // give alice reserve to cover cost
-    await erc20Token.transfer(alice.address, aliceDepositAmount);
+    await asset.transfer(alice.address, aliceDepositAmount);
 
     // Min gild price MUST be respected
     const oraclePrice = await priceOracle.price();
 
-    await erc20Token
+    await asset
       .connect(alice)
-      .increaseAllowance(ethGild.address, aliceDepositAmount);
+      .increaseAllowance(vault.address, aliceDepositAmount);
 
     await assertError(
       async () =>
-        await ethGild
+        await vault
           .connect(alice)
           ["deposit(uint256,address,uint256)"](
             aliceDepositAmount,
@@ -107,7 +88,7 @@ describe("deposit", async function () {
       "MIN_PRICE",
       "failed to respect min price"
     );
-    await ethGild
+    await vault
       .connect(alice)
       ["deposit(uint256,address,uint256)"](
         aliceDepositAmount,
@@ -116,7 +97,7 @@ describe("deposit", async function () {
       );
 
     const expectedShares = oraclePrice.mul(aliceDepositAmount).div(priceOne);
-    const aliceShares = await ethGild["balanceOf(address)"](alice.address);
+    const aliceShares = await vault["balanceOf(address)"](alice.address);
     assert(
       aliceShares.eq(expectedShares),
       `wrong alice ETHg ${expectedShares} ${aliceShares}`
@@ -126,13 +107,7 @@ describe("deposit", async function () {
   it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -144,34 +119,32 @@ describe("deposit", async function () {
       `bad referencePrice ${price} ${expectedReferencePrice}`
     );
 
-    let totalTokenSupply = await erc20Token.totalSupply();
+    let totalTokenSupply = await asset.totalSupply();
 
     const aliceEthAmount = totalTokenSupply.div(2);
 
-    await erc20Token
-      .connect(alice)
-      .increaseAllowance(ethGild.address, aliceEthAmount);
+    await asset.connect(alice).increaseAllowance(vault.address, aliceEthAmount);
 
-    await ethGild
+    await vault
       .connect(alice)
       ["deposit(uint256,address)"](aliceEthAmount, alice.address);
 
     const expectedAliceBalance = expectedReferencePrice
       .mul(aliceEthAmount)
       .div(priceOne);
-    const ethgAliceBalance = await ethGild["balanceOf(address)"](alice.address);
+    const ethgAliceBalance = await vault["balanceOf(address)"](alice.address);
     assert(
       ethgAliceBalance.eq(expectedAliceBalance),
       `wrong ERC20 balance ${ethgAliceBalance} ${expectedAliceBalance}`
     );
 
-    const bobErc20Balance = await ethGild["balanceOf(address)"](bob.address);
+    const bobErc20Balance = await vault["balanceOf(address)"](bob.address);
     assert(
       bobErc20Balance.eq(0),
       `wrong bob erc20 balance ${bobErc20Balance} 0`
     );
 
-    const erc1155Balance = await ethGild["balanceOf(address,uint256)"](
+    const erc1155Balance = await vault["balanceOf(address,uint256)"](
       alice.address,
       id1155
     );
@@ -180,7 +153,7 @@ describe("deposit", async function () {
       `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
     );
 
-    const bobErc1155Balance = await ethGild["balanceOf(address,uint256)"](
+    const bobErc1155Balance = await vault["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
@@ -191,42 +164,40 @@ describe("deposit", async function () {
 
     await assertError(
       async () =>
-        await ethGild
+        await vault
           .connect(alice)
           ["redeem(uint256,address,address,uint256)"](
             erc1155Balance,
             alice.address,
-            erc20Token.address,
+            asset.address,
             price
           ),
       "burn amount exceeds balance",
       "failed to apply fee to ungild"
     );
 
-    totalTokenSupply = await erc20Token.totalSupply();
+    totalTokenSupply = await asset.totalSupply();
 
     const bobEthAmount = totalTokenSupply.div(3);
 
-    await erc20Token.transfer(bob.address, bobEthAmount);
+    await asset.transfer(bob.address, bobEthAmount);
 
-    await erc20Token
-      .connect(bob)
-      .increaseAllowance(ethGild.address, bobEthAmount);
+    await asset.connect(bob).increaseAllowance(vault.address, bobEthAmount);
 
-    await ethGild
+    await vault
       .connect(bob)
       ["deposit(uint256,address)"](bobEthAmount, bob.address);
 
     const expectedBobBalance = expectedReferencePrice
       .mul(bobEthAmount)
       .div(priceOne);
-    const ethgBobBalance = await ethGild["balanceOf(address)"](bob.address);
+    const ethgBobBalance = await vault["balanceOf(address)"](bob.address);
     assert(
       ethgBobBalance.eq(expectedBobBalance),
       `wrong bob erc20 balance ${ethgBobBalance} ${expectedBobBalance}`
     );
 
-    const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
+    const erc1155BobBalance = await vault["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
@@ -250,7 +221,7 @@ describe("deposit", async function () {
     //   "failed to overburn"
     // );
 
-    await ethGild
+    await vault
       .connect(alice)
       ["redeem(uint256,address,address,uint256)"](
         erc1155Balance,
@@ -258,7 +229,7 @@ describe("deposit", async function () {
         alice.address,
         price
       );
-    const erc20AliceBalanceWithdraw = await ethGild["balanceOf(address)"](
+    const erc20AliceBalanceWithdraw = await vault["balanceOf(address)"](
       alice.address
     );
 
@@ -270,7 +241,7 @@ describe("deposit", async function () {
     // alice cannot withdraw a different referencePrice deposit.
     await assertError(
       async () =>
-        await ethGild
+        await vault
           .connect(alice)
           ["redeem(uint256,address,address,uint256)"](
             erc1155Balance.sub(1),
@@ -282,9 +253,10 @@ describe("deposit", async function () {
       "failed to prevent gild referencePrice manipulation"
     );
 
-    const erc1155AliceBalanceUngild = await ethGild[
-      "balanceOf(address,uint256)"
-    ](alice.address, id1155);
+    const erc1155AliceBalanceUngild = await vault["balanceOf(address,uint256)"](
+      alice.address,
+      id1155
+    );
     assert(
       erc1155AliceBalanceUngild.eq(0),
       `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
@@ -294,13 +266,8 @@ describe("deposit", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, erc20Token, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];

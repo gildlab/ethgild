@@ -2,11 +2,11 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import "./ChainlinkFeedPriceOracle.sol";
+import {ERC20PriceOracleVault, ConstructionConfig} from "./ERC20PriceOracleVault.sol";
 
-/// @title ChainlinkFeedPriceOracleFactory
-/// @notice Factory for creating and deploying `ChainlinkFeedPriceOracle`.
-contract ChainlinkFeedPriceOracleFactory is Factory {
+/// @title ERC20PriceOracleVaultFactory
+/// @notice Factory for creating and deploying `ERC20PriceOracleVault`.
+contract ERC20PriceOracleVaultFactory is Factory {
     /// @inheritdoc Factory
     function _createChild(bytes calldata data_)
         internal
@@ -19,7 +19,7 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
         // deployments.
         return
             address(
-                new ChainlinkFeedPriceOracle(
+                new ERC20PriceOracleVault(
                     abi.decode(data_, (ConstructionConfig))
                 )
             );
@@ -29,12 +29,12 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param config_ construction configuration for the oracle.
-    /// @return New `ChainlinkFeedPriceOracle` child contract address.
-    function createChildTyped(ConstructionConfig memory config_)
+    /// @param config_ construction config for the `ERC20PriceOracleVault`.
+    /// @return New `ERC20PriceOracleVault` child contract address.
+    function createChildTyped(ConstructionConfig calldata config_)
         external
-        returns (ChainlinkFeedPriceOracle)
+        returns (ERC20PriceOracleVault)
     {
-        return ChainlinkFeedPriceOracle(this.createChild(abi.encode(config_)));
+        return ERC20PriceOracleVault(this.createChild(abi.encode(config_)));
     }
 }

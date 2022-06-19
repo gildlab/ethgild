@@ -2,28 +2,17 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
-  deployERC20Gild,
+  deployERC20PriceOracleVault,
   expectedName,
-  expectedReferencePrice,
   expectedSymbol,
 } from "../util";
-import type { ERC20Gild } from "../../typechain/ERC20Gild";
-import type { TestErc20 } from "../../typechain/TestErc20";
-
-import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild] = await deployERC20PriceOracleVault();
 
     const erc20Name = await ethGild.name();
     const erc20Symbol = await ethGild.symbol();
@@ -41,21 +30,13 @@ describe("erc20 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token, xauOracle, ethOracle] =
-      (await deployERC20Gild()) as [
-        ERC20Gild,
-        ChainlinkTwoFeedPriceOracle,
-        TestErc20,
-        TestChainlinkDataFeed,
-        TestChainlinkDataFeed
-      ];
+    const [vault, erc20Token, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
 
-    await erc20Token.connect(alice).increaseAllowance(ethGild.address, 1000);
-    await ethGild
-      .connect(alice)
-      ["deposit(uint256,address)"](1000, alice.address);
+    await erc20Token.connect(alice).increaseAllowance(vault.address, 1000);
+    await vault.connect(alice)["deposit(uint256,address)"](1000, alice.address);
 
     const expectedErc20Balance = ethers.BigNumber.from("1656");
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
@@ -63,15 +44,13 @@ describe("erc20 usage", async function () {
     const expectedErc1155BalanceAfter = ethers.BigNumber.from("1656");
     const expected1155ID = await priceOracle.price();
 
-    const erc20Balance = await ethGild["balanceOf(address)"](
-      signers[0].address
-    );
+    const erc20Balance = await vault["balanceOf(address)"](signers[0].address);
     assert(
       erc20Balance.eq(expectedErc20Balance),
       `wrong erc20 balance ${expectedErc20Balance} ${erc20Balance}`
     );
 
-    const erc1155Balance = await ethGild["balanceOf(address,uint256)"](
+    const erc1155Balance = await vault["balanceOf(address,uint256)"](
       signers[0].address,
       expected1155ID
     );
@@ -80,9 +59,9 @@ describe("erc20 usage", async function () {
       `wrong erc1155 balance ${expectedErc20Balance} ${erc1155Balance}`
     );
 
-    await ethGild.transfer(signers[1].address, expectedErc20BalanceAfter);
+    await vault.transfer(signers[1].address, expectedErc20BalanceAfter);
 
-    const erc20BalanceAfter = await ethGild["balanceOf(address)"](
+    const erc20BalanceAfter = await vault["balanceOf(address)"](
       signers[0].address
     );
     assert(
@@ -90,7 +69,7 @@ describe("erc20 usage", async function () {
       `wrong erc20 balance after ${expectedErc20BalanceAfter} ${erc20BalanceAfter}`
     );
 
-    const erc20BalanceAfter2 = await ethGild["balanceOf(address)"](
+    const erc20BalanceAfter2 = await vault["balanceOf(address)"](
       signers[1].address
     );
     assert(
@@ -98,7 +77,7 @@ describe("erc20 usage", async function () {
       `wrong erc20 balance after 2 ${expectedErc20BalanceAfter} ${erc20BalanceAfter2}`
     );
 
-    const erc1155BalanceAfter = await ethGild["balanceOf(address,uint256)"](
+    const erc1155BalanceAfter = await vault["balanceOf(address,uint256)"](
       signers[0].address,
       expected1155ID
     );
@@ -109,7 +88,7 @@ describe("erc20 usage", async function () {
 
     assert(
       (
-        await ethGild["balanceOf(address,uint256)"](
+        await vault["balanceOf(address,uint256)"](
           signers[1].address,
           expected1155ID
         )

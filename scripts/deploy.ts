@@ -1,9 +1,11 @@
 // scripts/deploy.js
 import { ethers, artifacts } from "hardhat";
-import type { ChainlinkTwoFeedPriceOracleFactory } from "../typechain/ChainlinkTwoFeedPriceOracleFactory";
-import type { ChainlinkTwoFeedPriceOracle } from "../typechain/ChainlinkTwoFeedPriceOracle";
-import type { ERC20GildFactory } from "../typechain/ERC20GildFactory";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
+import type { ChainlinkFeedPriceOracleFactory } from "../typechain/ChainlinkFeedPriceOracleFactory";
+import type { ChainlinkFeedPriceOracle } from "../typechain/ChainlinkFeedPriceOracle";
+import type { TwoPriceOracle } from "../typechain/TwoPriceOracle";
+import type { TwoPriceOracleFactory } from "../typechain/TwoPriceOracleFactory";
+import type { ERC20PriceOracleVaultFactory } from "../typechain/ERC20PriceOracleVaultFactory";
+import type { ERC20PriceOracleVault } from "../typechain/ERC20PriceOracleVault";
 
 import type { Contract } from "ethers";
 import { getEventArgs } from "../test/util";
@@ -17,87 +19,162 @@ async function main() {
   const polygonXauUsd = "0x0C466540B2ee1a31b441671eac0ca886e051E410";
   const polygonMaticUsd = "0xab594600376ec9fd91f8e885dadf0ce036862de0";
 
-  let chainlinkTwoFeedPriceOracle = null;
-
-  const chainlinkTwoFeedPriceOracleConfig = {
+  const chainlinkFeedPriceOracleConfig = {
     rinkeby: {
       base: rinkebyEthUsd,
+      // 1 hour
+      baseStaleAfter: 60 * 60,
       quote: rinkebyXauUsd,
+      // 48 hours
+      quoteStaleAfter: 48 * 60 * 60,
     },
     polygon: {
       base: polygonMaticUsd,
+      // 1 hour
+      baseStaleAfter: 60 * 60,
       quote: polygonXauUsd,
+      // 48 hours
+      quoteStaleAfter: 48 * 60 * 60,
     },
   };
 
-  const chainlinkTwoFeedPriceOracleFactoryFactory =
-    await ethers.getContractFactory("ChainlinkTwoFeedPriceOracleFactory");
+  const chainlinkFeedPriceOracleFactoryFactory =
+    await ethers.getContractFactory("ChainlinkFeedPriceOracleFactory");
 
-  const chainlinkTwoFeedPriceOracleFactory =
-    (await chainlinkTwoFeedPriceOracleFactoryFactory.deploy()) as ChainlinkTwoFeedPriceOracleFactory;
+  const chainlinkFeedPriceOracleFactory =
+    (await chainlinkFeedPriceOracleFactoryFactory.deploy()) as ChainlinkFeedPriceOracleFactory;
 
-  await chainlinkTwoFeedPriceOracleFactory.deployed();
+  await chainlinkFeedPriceOracleFactory.deployed();
   console.log(
-    "chainlinkTwoFeedPriceOracleFactory deployed to:",
-    chainlinkTwoFeedPriceOracleFactory.address
+    "chainlinkFeedPriceOracleFactory deployed to:",
+    chainlinkFeedPriceOracleFactory.address
   );
 
-  const tx = await chainlinkTwoFeedPriceOracleFactory.createChildTyped(
-    chainlinkTwoFeedPriceOracleConfig.polygon
-  );
-  chainlinkTwoFeedPriceOracle = new ethers.Contract(
+  // Deploy chainlink oracle adapter for base.
+  const txBase = await chainlinkFeedPriceOracleFactory.createChildTyped({
+    feed: chainlinkFeedPriceOracleConfig.polygon.base,
+    staleAfter: chainlinkFeedPriceOracleConfig.polygon.baseStaleAfter,
+  });
+  const basePriceOracle = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(tx, "NewChild", chainlinkTwoFeedPriceOracleFactory))
-          .child
+        (
+          await getEventArgs(
+            txBase,
+            "NewChild",
+            chainlinkFeedPriceOracleFactory
+          )
+        ).child
       ),
       20
     ),
 
-    (await artifacts.readArtifact("ChainlinkTwoFeedPriceOracle")).abi,
+    (await artifacts.readArtifact("ChainlinkFeedPriceOracle")).abi,
     deployer
-  ) as ChainlinkTwoFeedPriceOracle & Contract;
+  ) as ChainlinkFeedPriceOracle & Contract;
+  await basePriceOracle.deployed();
 
-  await chainlinkTwoFeedPriceOracle.deployed();
-  console.log(
-    "chainlinkTwoFeedPriceOracle deployed to:",
-    chainlinkTwoFeedPriceOracle.address
+  // Deploy chainlink oracle adapter for quote.
+  const txQuote = await chainlinkFeedPriceOracleFactory.createChildTyped({
+    feed: chainlinkFeedPriceOracleConfig.polygon.quote,
+    staleAfter: chainlinkFeedPriceOracleConfig.polygon.quoteStaleAfter,
+  });
+  const quotePriceOracle = new ethers.Contract(
+    ethers.utils.hexZeroPad(
+      ethers.utils.hexStripZeros(
+        (
+          await getEventArgs(
+            txBase,
+            "NewChild",
+            chainlinkFeedPriceOracleFactory
+          )
+        ).child
+      ),
+      20
+    ),
+
+    (await artifacts.readArtifact("ChainlinkFeedPriceOracle")).abi,
+    deployer
+  ) as ChainlinkFeedPriceOracle & Contract;
+  await quotePriceOracle.deployed();
+
+  const twoPriceOracleFactoryFactory = await ethers.getContractFactory(
+    "TwoPriceOracleFactory"
   );
+  const twoPriceOracleFactory =
+    (await twoPriceOracleFactoryFactory.deploy()) as TwoPriceOracleFactory;
+  await twoPriceOracleFactory.deployed();
+
+  console.log(
+    "twoPriceOracleFactory deployed to:",
+    twoPriceOracleFactory.address
+  );
+
+  const txTwoPriceOracle = await twoPriceOracleFactory.createChildTyped({
+    base: basePriceOracle.address,
+    quote: quotePriceOracle.address,
+  });
+  const twoPriceOracle = new ethers.Contract(
+    ethers.utils.hexZeroPad(
+      ethers.utils.hexStripZeros(
+        (await getEventArgs(txBase, "NewChild", twoPriceOracleFactory)).child
+      ),
+      20
+    ),
+
+    (await artifacts.readArtifact("TwoPriceOracle")).abi,
+    deployer
+  ) as ChainlinkFeedPriceOracle & Contract;
 
   const erc20ContractAddress = "0xc778417E063141139Fce010982780140Aa0cD5Ab";
 
-  let gildConfig = {
+  let erc20PriceOracleVaultConfig = {
     asset: erc20ContractAddress,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-    priceOracle: chainlinkTwoFeedPriceOracle.address,
+    priceOracle: twoPriceOracle.address,
   };
 
-  const erc20GildFactoryFactory = await ethers.getContractFactory(
-    "ERC20GildFactory"
+  const erc20PriceOracleVaultFactoryFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleVaultFactory"
   );
 
-  const erc20GildFactory =
-    (await erc20GildFactoryFactory.deploy()) as ERC20GildFactory;
+  const erc20PriceOracleVaultFactory =
+    (await erc20PriceOracleVaultFactoryFactory.deploy()) as ERC20PriceOracleVaultFactory;
 
-  await erc20GildFactory.deployed();
-  console.log("ERC20GildFactoryFactory deployed to:", erc20GildFactory.address);
+  await erc20PriceOracleVaultFactory.deployed();
+  console.log(
+    "ERC20PriceOracleVaultFactoryFactory deployed to:",
+    erc20PriceOracleVaultFactory.address
+  );
 
-  const erc20GildTx = await erc20GildFactory.createChildTyped(gildConfig);
-  const erc20Gild = new ethers.Contract(
+  const erc20PriceOracleVaultTx =
+    await erc20PriceOracleVaultFactory.createChildTyped(
+      erc20PriceOracleVaultConfig
+    );
+  const erc20PriceOracleVault = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(erc20GildTx, "NewChild", erc20GildFactory)).child
+        (
+          await getEventArgs(
+            erc20PriceOracleVaultTx,
+            "NewChild",
+            erc20PriceOracleVaultFactory
+          )
+        ).child
       ),
       20
     ),
-    (await artifacts.readArtifact("ERC20Gild")).abi,
+    (await artifacts.readArtifact("ERC20PriceOracleVault")).abi,
     deployer
-  ) as ERC20Gild & Contract;
+  ) as ERC20PriceOracleVault & Contract;
 
-  await erc20Gild.deployed();
-  console.log("ERC20Gild deployed to:", erc20Gild.address);
+  await erc20PriceOracleVault.deployed();
+  console.log(
+    "ERC20PriceOracleVault deployed to:",
+    erc20PriceOracleVault.address
+  );
 }
 
 main()
