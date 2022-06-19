@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import { ContractTransaction, Contract, BigNumber } from "ethers";
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
-import type { ERC20Gild } from "../typechain/ERC20Gild";
+import type { ERC20PriceOracleVault } from "../typechain/ERC20PriceOracleVault";
 import type { ChainlinkFeedPriceOracle } from "../typechain/ChainlinkFeedPriceOracle";
 import type { TwoPriceOracle } from "../typechain/TwoPriceOracle";
 import type { TestErc20 } from "../typechain/TestErc20";
@@ -30,8 +30,8 @@ export const xauDecimals = 8;
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
-export const deployERC20Gild = async ():Promise<[
-  ERC20Gild,
+export const deployERC20PriceOracleVault = async ():Promise<[
+  ERC20PriceOracleVault,
   TestErc20,
   TwoPriceOracle,
   TestChainlinkDataFeed,
@@ -82,18 +82,18 @@ export const deployERC20Gild = async ():Promise<[
     quote: chainlinkFeedPriceOracleQuote.address,
   })
 
-  const erc20GildFactory = await ethers.getContractFactory("ERC20Gild");
-  const ERC20Gild = await erc20GildFactory.deploy({
+  const erc20PriceOracleVaultFactory = await ethers.getContractFactory("ERC20PriceOracleVault");
+  const erc20PriceOracleVault = await erc20PriceOracleVaultFactory.deploy({
     asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
     priceOracle: twoPriceOracle.address,
-  });
-  await ERC20Gild.deployed();
+  }) as ERC20PriceOracleVault;
+  await erc20PriceOracleVault.deployed();
 
   return [
-    ERC20Gild,
+    erc20PriceOracleVault,
     testErc20Contract,
     twoPriceOracle,
     basePriceOracle,

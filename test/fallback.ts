@@ -1,7 +1,7 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployERC20Gild, assertError } from "./util";
+import { deployERC20PriceOracleVault, assertError } from "./util";
 
 chai.use(solidity);
 const { expect, assert } = chai;
@@ -9,7 +9,7 @@ const { expect, assert } = chai;
 describe("fallback", async function () {
   it("should not fallback", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild] = await deployERC20Gild();
+    const [ethGild] = await deployERC20PriceOracleVault();
 
     const alice = signers[0];
 
@@ -26,7 +26,7 @@ describe("fallback", async function () {
 
   it("should not receive", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild] = await deployERC20Gild();
+    const [ethGild] = await deployERC20PriceOracleVault();
 
     const alice = signers[0];
 

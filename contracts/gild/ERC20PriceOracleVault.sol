@@ -10,9 +10,13 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../oracle/price/IPriceOracle.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
-
-struct ERC20GildConfig {
+/// All config required to construct `ERC20PriceOracleVault`.
+/// @param asset `ERC4626` underlying asset.
+/// @param name `ERC20` name for `ERC4626` shares.
+/// @param symbol `ERC20` symbol for `ERC4626` shares.
+/// @param uri `ERC1155` uri for deposit receipts.
+/// @param address `IPriceOracle` oracle to define share mints upon deposit.
+struct ConstructionConfig {
     address asset;
     string name;
     string symbol;
@@ -20,7 +24,45 @@ struct ERC20GildConfig {
     address priceOracle;
 }
 
-/// @title ERC20Gild
+/// @title ERC20PriceOracleVault
+/// @notice An ERC4626 vault that mints shares according to a price oracle. As
+/// shares are minted an associated ERC1155 NFT receipt is minted for the
+/// asset depositor. The price oracle defines the amount of shares minted for
+/// each deposit. The price oracle's base MUST be the deposited asset but the
+/// price quote can be anything with a reliable oracle.
+///
+/// When the assets are withdrawn from the vault, the withdrawer must provide a
+/// receipt from a previous deposit. The receipt amount and the original
+/// shares minted are the same according to the price at the time of deposit.
+/// The withdraw burns shares in return for assets as per ERC4626 AND burns the
+/// receipt nominated by the withdrawer. The current price from the oracle is
+/// irrelevant to withdraws, only the receipt price is relevant.
+///
+/// As an analogy, consider buying a shirt on sale and then attempting to get a
+/// refund for it after the sale ends. The store will refund the shirt but only
+/// at the sale price marked on the receipt, NOT the current price of the same
+/// shirt in-store.
+///
+/// This dual 20/1155 token system allows for a dynamic shares:asset mint
+/// ratio on deposits without withdrawals ever being able to remove more assets
+/// than were ever deposited.
+///
+/// Where this gets interesting is trying to discover a price for the ERC20
+/// share token. The share token can't be worth 0 because it represents a claim
+/// on a fully collateralized vault of assets. The share token also can't be
+/// worth more than the current oracle price as it would allow depositors to
+/// buy infinite assets. To see why this is true, consider that selling 1 asset
+/// for a token pegged to the price buys the same number of pegged tokens as
+/// depositing 1 asset yields minted shares. If 1 share buys more than 1 pegged
+/// token then depositing 1 asset and selling the minted shares buys more than
+/// 1 asset. This sets up an infinite loop which can't exist in a real market.
+///
+/// ERC20PriceOracleVault shares are useful primitives that convert a valuable
+/// but volatile asset (e.g. wBTC/wETH) into shares that trade in a range (0, 1)
+/// of some reference price. Such a primitive MAY have trustless utility in
+/// domains such as providing liquidity on DEX/AMMs, non-liquidating leverage
+/// for speculation, risk management, etc.
+///
 /// Note on ERC4626 rounding requirements:
 /// In various places the ERC4626 specification defines whether a function
 /// rounds up or round down when calculating mints and burns. This is to ensure
@@ -34,11 +76,11 @@ struct ERC20GildConfig {
 /// to guarantee total withdrawals are strictly <= deposits, we always add 1
 /// wei to the "round up" function results unconditionally. This saves gas and
 /// simplifies the contract overall.
-contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
+contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using FixedPointMath for uint256;
 
-    event Construction(address caller, ERC20GildConfig config);
+    event Construction(address caller, ConstructionConfig config);
 
     /// @inheritdoc IERC4626
     address public immutable asset;
@@ -48,7 +90,7 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     mapping(address => uint256) public minPrices;
     mapping(address => uint256) public prices;
 
-    constructor(ERC20GildConfig memory config_)
+    constructor(ConstructionConfig memory config_)
         ERC20(config_.name, config_.symbol)
         ERC1155(config_.uri)
     {
