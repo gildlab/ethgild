@@ -5,14 +5,9 @@ import {
   deployERC20Gild,
   expectedReferencePrice,
   assertError,
-  eighteenZeros,
   priceOne,
   RESERVE_ONE,
 } from "../util";
-import type { ERC20Gild } from "../../typechain/ERC20Gild";
-import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
-import type { TestErc20 } from "../../typechain/TestErc20";
 
 chai.use(solidity);
 
@@ -23,13 +18,7 @@ describe("deposit", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[1];
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, erc20Token] = await deployERC20Gild();
 
     const totalTokenSupply = ethers.BigNumber.from("2000").mul(priceOne);
     const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
@@ -71,13 +60,7 @@ describe("deposit", async function () {
 
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, erc20Token, priceOracle] = await deployERC20Gild();
 
     const alice = signers[1];
 
@@ -126,13 +109,7 @@ describe("deposit", async function () {
   it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, erc20Token, priceOracle] = await deployERC20Gild();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -294,13 +271,7 @@ describe("deposit", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, erc20Token, priceOracle] = await deployERC20Gild();
 
     const alice = signers[0];
     const bob = signers[1];

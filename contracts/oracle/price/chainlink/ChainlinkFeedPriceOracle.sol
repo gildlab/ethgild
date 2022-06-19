@@ -1,35 +1,61 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.10;
 
-// Chainlink imports.
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-import "../PriceOracleConstants.sol";
 import "../IPriceOracle.sol";
 
-/// https://docs.chain.link/docs/get-the-latest-price/#getting-a-different-price-denomination
+/// All data required to construct the contract.
+/// @param feed The address of the underlying chainlink oracle.
+/// @param staleAfter The duration after which price data will be considered
+/// too stale for use and error.
+struct ConstructionConfig {
+    address feed;
+    uint256 staleAfter;
+}
+
+/// @title ChainlinkFeedPriceOracle
+/// @notice Converts a single chainlink price oracle to an `IPriceOracle`.
+/// This involves:
+/// - Fetching latest round data from chainlink
+/// - Rejecting negative price values
+/// - Fetching decimals from chainlink
+/// - Rescaling chainlink price data to target decimals if required
 contract ChainlinkFeedPriceOracle is IPriceOracle {
-    event Construction(address sender, address feed);
+    using SafeCast for int256;
+    using FixedPointMath for uint256;
 
-    AggregatorV3Interface private immutable feed;
+    /// Emitted upon deployment and construction of oracle
+    /// @param sender `msg.sender` that deploys the oracle.
+    /// @param config All config used to construct the contract.
+    event Construction(address sender, ConstructionConfig config);
 
-    constructor(address feed_) {
-        feed = AggregatorV3Interface(feed_);
-        emit Construction(msg.sender, feed_);
+    /// Immutable copy of `ConstructionConfig.feed`.
+    AggregatorV3Interface public immutable feed;
+
+    /// Immutable copy of `ConstructionConfig.staleAfter`.
+    uint256 public immutable staleAfter;
+
+    /// Constructor.
+    /// @param config_ All config required to construct the contract.
+    constructor(ConstructionConfig memory config_) {
+        feed = AggregatorV3Interface(config_.feed);
+        staleAfter = config_.staleAfter;
+        emit Construction(msg.sender, config_);
     }
 
-    function price() external view override returns (uint256) {
-        (, int256 price_, , , ) = feed.latestRoundData();
-        require(price_ > 0, "MIN_BASE_PRICE");
+    /// @inheritdoc IPriceOracle
+    function price() external view override returns (uint256 price_) {
+        (, int256 answer_, , uint256 updatedAt_, ) = feed.latestRoundData();
+        require(answer_ > 0, "MIN_BASE_PRICE");
+        // Checked time comparison ensures no updates from the future as that
+        // would overflow, and no stale prices.
+        // solhint-disable-next-line not-rely-on-time
+        require(block.timestamp - updatedAt_ < staleAfter, "STALE_PRICE");
 
-        uint256 targetDecimals_ = PriceOracleConstants.DECIMALS;
-        uint256 decimals_ = feed.decimals();
-
-        if (targetDecimals_ > decimals_) {
-            return uint256(price_) * 10**(targetDecimals_ - decimals_);
-        } else if (decimals_ > targetDecimals_) {
-            return uint256(price_) / 10**(decimals_ - targetDecimals_);
-        }
-        return uint256(price_);
+        // Safely cast the answer to uint and scale it to 18 decimal FP.
+        price_ = answer_.toUint256().scale18(feed.decimals());
     }
 }

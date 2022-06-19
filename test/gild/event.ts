@@ -2,11 +2,6 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import { deployERC20Gild, getEventArgs, priceOne } from "../util";
-import type { ERC20Gild } from "../../typechain/ERC20Gild";
-import type { TestErc20 } from "../../typechain/TestErc20";
-import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
-import { LogDescription } from "ethers/lib/utils";
 
 chai.use(solidity);
 const { expect, assert } = chai;
@@ -14,13 +9,7 @@ const { expect, assert } = chai;
 describe("events", async function () {
   it("should emit events on deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, priceOracle, erc20Token] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestErc20,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild, erc20Token, priceOracle] = await deployERC20Gild();
 
     const alice = signers[0];
 

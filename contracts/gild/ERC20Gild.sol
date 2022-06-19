@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "../erc4626/IERC4626.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../oracle/price/IPriceOracle.sol";
-import "../oracle/price/PriceOracleConstants.sol";
+import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 
 import "@openzeppelin/contracts/utils/math/Math.sol";
 
@@ -20,9 +20,23 @@ struct ERC20GildConfig {
     address priceOracle;
 }
 
+/// @title ERC20Gild
+/// Note on ERC4626 rounding requirements:
+/// In various places the ERC4626 specification defines whether a function
+/// rounds up or round down when calculating mints and burns. This is to ensure
+/// that rounding erros always favour the vault, in that deposited assets will
+/// slowly accrue as dust (1 wei per rounding error) wherever the deposit and
+/// withdraw round trip cannot be precisely calculated. Technically to achieve
+/// this we should do something like the Open Zeppelin `ceilDiv` function that
+/// includes checks that `X % Y == 0` before rounding up after the integer
+/// division that first floors the result. We don't do that. To achieve the
+/// stated goals of ERC4626 rounding, which is setting aside 1 wei for security
+/// to guarantee total withdrawals are strictly <= deposits, we always add 1
+/// wei to the "round up" function results unconditionally. This saves gas and
+/// simplifies the contract overall.
 contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
-    using Math for uint256;
     using SafeERC20 for IERC20;
+    using FixedPointMath for uint256;
 
     event Construction(address caller, ERC20GildConfig config);
 
@@ -49,13 +63,13 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         uint256 assets_,
         uint256 price_,
         uint256 minPrice_
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint256 shares_) {
         require(price_ >= minPrice_, "MIN_PRICE");
         // IRC4626:
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
         // round down.
-        return (assets_ * price_) / PriceOracleConstants.ONE;
+        shares_ = assets_.fixedPointMul(price_);
     }
 
     /// Calculate how many assets_ are needed to mint shares_.
@@ -64,13 +78,13 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         uint256 shares_,
         uint256 price_,
         uint256 minPrice_
-    ) internal pure returns (uint256) {
+    ) internal pure returns (uint256 assets_) {
         require(price_ >= minPrice_, "MIN_PRICE");
         // IERC4626:
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
         // round up.
-        return (shares_ * PriceOracleConstants.ONE).ceilDiv(price_);
+        assets_ = shares_.fixedPointDiv(price_) + 1;
     }
 
     /// Calculate how many shares_ to burn to withdraw assets_.
@@ -78,12 +92,12 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     function _calculateWithdraw(uint256 assets_, uint256 price_)
         internal
         pure
-        returns (uint256)
+        returns (uint256 shares_)
     {
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
-        return (assets_ * price_).ceilDiv(PriceOracleConstants.ONE);
+        shares_ = assets_.fixedPointMul(price_) + 1;
     }
 
     /// Calculate how many assets_ to withdraw for burning shares_.
@@ -91,13 +105,13 @@ contract ERC20Gild is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     function _calculateRedeem(uint256 shares_, uint256 price_)
         internal
         pure
-        returns (uint256)
+        returns (uint256 assets_)
     {
         // IERC4626:
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
         // round down.
-        return (shares_ * PriceOracleConstants.ONE) / price_;
+        assets_ = shares_.fixedPointDiv(price_);
     }
 
     function setMinPrice(uint256 minPrice_) external {

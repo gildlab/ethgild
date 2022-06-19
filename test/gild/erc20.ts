@@ -4,26 +4,15 @@ import { ethers } from "hardhat";
 import {
   deployERC20Gild,
   expectedName,
-  expectedReferencePrice,
   expectedSymbol,
 } from "../util";
-import type { ERC20Gild } from "../../typechain/ERC20Gild";
-import type { TestErc20 } from "../../typechain/TestErc20";
-
-import type { ChainlinkTwoFeedPriceOracle } from "../../typechain/ChainlinkTwoFeedPriceOracle";
-import type { TestChainlinkDataFeed } from "../../typechain/TestChainlinkDataFeed";
 
 chai.use(solidity);
 const { expect, assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild, priceOracle] = (await deployERC20Gild()) as [
-      ERC20Gild,
-      ChainlinkTwoFeedPriceOracle,
-      TestChainlinkDataFeed,
-      TestChainlinkDataFeed
-    ];
+    const [ethGild] = (await deployERC20Gild());
 
     const erc20Name = await ethGild.name();
     const erc20Symbol = await ethGild.symbol();
@@ -41,14 +30,8 @@ describe("erc20 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, priceOracle, erc20Token, xauOracle, ethOracle] =
-      (await deployERC20Gild()) as [
-        ERC20Gild,
-        ChainlinkTwoFeedPriceOracle,
-        TestErc20,
-        TestChainlinkDataFeed,
-        TestChainlinkDataFeed
-      ];
+    const [ethGild, erc20Token, priceOracle] =
+      (await deployERC20Gild());
 
     const alice = signers[0];
 

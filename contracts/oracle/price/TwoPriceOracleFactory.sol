@@ -2,11 +2,11 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import "./ChainlinkFeedPriceOracle.sol";
+import "./TwoPriceOracle.sol";
 
-/// @title ChainlinkFeedPriceOracleFactory
-/// @notice Factory for creating and deploying `ChainlinkFeedPriceOracle`.
-contract ChainlinkFeedPriceOracleFactory is Factory {
+/// @title TwoPriceOracleFactory
+/// @notice Factory for creating and deploying `TwoPriceOracle`.
+contract TwoPriceOracleFactory is Factory {
     /// @inheritdoc Factory
     function _createChild(bytes calldata data_)
         internal
@@ -18,19 +18,19 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
         // optimizing for use of cheap immutables at runtime rather than cheap
         // deployments.
         return
-            address(new ChainlinkFeedPriceOracle(abi.decode(data_, (ConstructionConfig))));
+            address(new TwoPriceOracle(abi.decode(data_, (ConstructionConfig))));
     }
 
     /// Typed wrapper for `createChild` with Source.
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param config_ construction configuration for the oracle.
+    /// @param config_ Construction config for the oracle.
     /// @return New `ChainlinkFeedPriceOracle` child contract address.
     function createChildTyped(ConstructionConfig memory config_)
         external
-        returns (ChainlinkFeedPriceOracle)
+        returns (TwoPriceOracle)
     {
-        return ChainlinkFeedPriceOracle(this.createChild(abi.encode(config_)));
+        return TwoPriceOracle(this.createChild(abi.encode(config_)));
     }
 }
