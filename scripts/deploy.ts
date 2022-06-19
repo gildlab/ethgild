@@ -58,8 +58,13 @@ async function main() {
   const basePriceOracle = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(txBase, "NewChild", chainlinkFeedPriceOracleFactory))
-          .child
+        (
+          await getEventArgs(
+            txBase,
+            "NewChild",
+            chainlinkFeedPriceOracleFactory
+          )
+        ).child
       ),
       20
     ),
@@ -67,7 +72,7 @@ async function main() {
     (await artifacts.readArtifact("ChainlinkFeedPriceOracle")).abi,
     deployer
   ) as ChainlinkFeedPriceOracle & Contract;
-  await basePriceOracle.deployed()
+  await basePriceOracle.deployed();
 
   // Deploy chainlink oracle adapter for quote.
   const txQuote = await chainlinkFeedPriceOracleFactory.createChildTyped({
@@ -77,8 +82,13 @@ async function main() {
   const quotePriceOracle = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(txBase, "NewChild", chainlinkFeedPriceOracleFactory))
-          .child
+        (
+          await getEventArgs(
+            txBase,
+            "NewChild",
+            chainlinkFeedPriceOracleFactory
+          )
+        ).child
       ),
       20
     ),
@@ -86,11 +96,14 @@ async function main() {
     (await artifacts.readArtifact("ChainlinkFeedPriceOracle")).abi,
     deployer
   ) as ChainlinkFeedPriceOracle & Contract;
-  await quotePriceOracle.deployed()
+  await quotePriceOracle.deployed();
 
-  const twoPriceOracleFactoryFactory = await ethers.getContractFactory("TwoPriceOracleFactory")
-  const twoPriceOracleFactory = (await twoPriceOracleFactoryFactory.deploy()) as TwoPriceOracleFactory
-  await twoPriceOracleFactory.deployed()
+  const twoPriceOracleFactoryFactory = await ethers.getContractFactory(
+    "TwoPriceOracleFactory"
+  );
+  const twoPriceOracleFactory =
+    (await twoPriceOracleFactoryFactory.deploy()) as TwoPriceOracleFactory;
+  await twoPriceOracleFactory.deployed();
 
   console.log(
     "twoPriceOracleFactory deployed to:",
@@ -100,12 +113,11 @@ async function main() {
   const txTwoPriceOracle = await twoPriceOracleFactory.createChildTyped({
     base: basePriceOracle.address,
     quote: quotePriceOracle.address,
-  })
+  });
   const twoPriceOracle = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(txBase, "NewChild", twoPriceOracleFactory))
-          .child
+        (await getEventArgs(txBase, "NewChild", twoPriceOracleFactory)).child
       ),
       20
     ),
@@ -132,13 +144,25 @@ async function main() {
     (await erc20PriceOracleVaultFactoryFactory.deploy()) as ERC20PriceOracleVaultFactory;
 
   await erc20PriceOracleVaultFactory.deployed();
-  console.log("ERC20PriceOracleVaultFactoryFactory deployed to:", erc20PriceOracleVaultFactory.address);
+  console.log(
+    "ERC20PriceOracleVaultFactoryFactory deployed to:",
+    erc20PriceOracleVaultFactory.address
+  );
 
-  const erc20PriceOracleVaultTx = await erc20PriceOracleVaultFactory.createChildTyped(erc20PriceOracleVaultConfig);
+  const erc20PriceOracleVaultTx =
+    await erc20PriceOracleVaultFactory.createChildTyped(
+      erc20PriceOracleVaultConfig
+    );
   const erc20PriceOracleVault = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(erc20PriceOracleVaultTx, "NewChild", erc20PriceOracleVaultFactory)).child
+        (
+          await getEventArgs(
+            erc20PriceOracleVaultTx,
+            "NewChild",
+            erc20PriceOracleVaultFactory
+          )
+        ).child
       ),
       20
     ),
@@ -147,7 +171,10 @@ async function main() {
   ) as ERC20PriceOracleVault & Contract;
 
   await erc20PriceOracleVault.deployed();
-  console.log("ERC20PriceOracleVault deployed to:", erc20PriceOracleVault.address);
+  console.log(
+    "ERC20PriceOracleVault deployed to:",
+    erc20PriceOracleVault.address
+  );
 }
 
 main()

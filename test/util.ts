@@ -30,13 +30,15 @@ export const xauDecimals = 8;
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
-export const deployERC20PriceOracleVault = async ():Promise<[
-  ERC20PriceOracleVault,
-  TestErc20,
-  TwoPriceOracle,
-  TestChainlinkDataFeed,
-  TestChainlinkDataFeed
-]> => {
+export const deployERC20PriceOracleVault = async (): Promise<
+  [
+    ERC20PriceOracleVault,
+    TestErc20,
+    TwoPriceOracle,
+    TestChainlinkDataFeed,
+    TestChainlinkDataFeed
+  ]
+> => {
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
@@ -71,25 +73,36 @@ export const deployERC20PriceOracleVault = async ():Promise<[
     "ChainlinkFeedPriceOracle"
   );
   const chainlinkFeedPriceOracleBase =
-  await chainlinkFeedPriceOracleFactory.deploy({ feed: basePriceOracle.address, staleAfter: 1000 })
-  const chainlinkFeedPriceOracleQuote = await chainlinkFeedPriceOracleFactory.deploy({ feed: quotePriceOracle.address, staleAfter: 1000 })
+    await chainlinkFeedPriceOracleFactory.deploy({
+      feed: basePriceOracle.address,
+      staleAfter: 1000,
+    });
+  const chainlinkFeedPriceOracleQuote =
+    await chainlinkFeedPriceOracleFactory.deploy({
+      feed: quotePriceOracle.address,
+      staleAfter: 1000,
+    });
   await chainlinkFeedPriceOracleBase.deployed();
   await chainlinkFeedPriceOracleQuote.deployed();
 
-  const twoPriceOracleFactory = await ethers.getContractFactory("TwoPriceOracle")
+  const twoPriceOracleFactory = await ethers.getContractFactory(
+    "TwoPriceOracle"
+  );
   const twoPriceOracle = await twoPriceOracleFactory.deploy({
     base: chainlinkFeedPriceOracleBase.address,
     quote: chainlinkFeedPriceOracleQuote.address,
-  })
+  });
 
-  const erc20PriceOracleVaultFactory = await ethers.getContractFactory("ERC20PriceOracleVault");
-  const erc20PriceOracleVault = await erc20PriceOracleVaultFactory.deploy({
+  const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleVault"
+  );
+  const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy({
     asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
     priceOracle: twoPriceOracle.address,
-  }) as ERC20PriceOracleVault;
+  })) as ERC20PriceOracleVault;
   await erc20PriceOracleVault.deployed();
 
   return [

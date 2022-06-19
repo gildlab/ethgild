@@ -18,7 +18,11 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
         // optimizing for use of cheap immutables at runtime rather than cheap
         // deployments.
         return
-            address(new ChainlinkFeedPriceOracle(abi.decode(data_, (ConstructionConfig))));
+            address(
+                new ChainlinkFeedPriceOracle(
+                    abi.decode(data_, (ConstructionConfig))
+                )
+            );
     }
 
     /// Typed wrapper for `createChild` with Source.

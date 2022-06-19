@@ -13,7 +13,7 @@ const { expect, assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild] = await deployERC20PriceOracleVault()
+    const [ethGild] = await deployERC20PriceOracleVault();
 
     const id = 12345;
 
@@ -28,7 +28,8 @@ describe("erc1155 usage", async function () {
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, erc20Token, priceOracle] = await deployERC20PriceOracleVault();
+    const [ethGild, erc20Token, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const gildAmount = ethers.BigNumber.from(1000);

@@ -17,7 +17,12 @@ contract ERC20PriceOracleVaultFactory is Factory {
         // This is built directly with `new` instead of cloning as we're
         // optimizing for use of cheap immutables at runtime rather than cheap
         // deployments.
-        return address(new ERC20PriceOracleVault(abi.decode(data_, (ConstructionConfig))));
+        return
+            address(
+                new ERC20PriceOracleVault(
+                    abi.decode(data_, (ConstructionConfig))
+                )
+            );
     }
 
     /// Typed wrapper for `createChild` with Source.

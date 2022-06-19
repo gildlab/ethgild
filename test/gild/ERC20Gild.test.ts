@@ -31,9 +31,7 @@ describe("deposit", async function () {
 
     const aliceReserveBalance = await asset.balanceOf(alice.address);
 
-    await asset
-      .connect(alice)
-      .approve(vault.address, aliceReserveBalance);
+    await asset.connect(alice).approve(vault.address, aliceReserveBalance);
 
     await assertError(
       async () =>
@@ -125,9 +123,7 @@ describe("deposit", async function () {
 
     const aliceEthAmount = totalTokenSupply.div(2);
 
-    await asset
-      .connect(alice)
-      .increaseAllowance(vault.address, aliceEthAmount);
+    await asset.connect(alice).increaseAllowance(vault.address, aliceEthAmount);
 
     await vault
       .connect(alice)
@@ -186,9 +182,7 @@ describe("deposit", async function () {
 
     await asset.transfer(bob.address, bobEthAmount);
 
-    await asset
-      .connect(bob)
-      .increaseAllowance(vault.address, bobEthAmount);
+    await asset.connect(bob).increaseAllowance(vault.address, bobEthAmount);
 
     await vault
       .connect(bob)
@@ -259,9 +253,10 @@ describe("deposit", async function () {
       "failed to prevent gild referencePrice manipulation"
     );
 
-    const erc1155AliceBalanceUngild = await vault[
-      "balanceOf(address,uint256)"
-    ](alice.address, id1155);
+    const erc1155AliceBalanceUngild = await vault["balanceOf(address,uint256)"](
+      alice.address,
+      id1155
+    );
     assert(
       erc1155AliceBalanceUngild.eq(0),
       `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
@@ -271,7 +266,8 @@ describe("deposit", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, erc20Token, priceOracle] = await deployERC20PriceOracleVault();
+    const [ethGild, erc20Token, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];

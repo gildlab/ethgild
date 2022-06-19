@@ -12,7 +12,8 @@ export const xauDecimals = 8;
 
 describe("oracle construction", async function () {
   it("should set reference price", async function () {
-    const [_vault, _erc20, priceOracle, basePriceOracle, quotePriceOracle] = await deployERC20PriceOracleVault();
+    const [_vault, _erc20, priceOracle, basePriceOracle, quotePriceOracle] =
+      await deployERC20PriceOracleVault();
 
     // ETHUSD as of 2022-02-06
     await basePriceOracle.setDecimals(usdDecimals);

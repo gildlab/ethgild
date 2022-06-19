@@ -39,7 +39,7 @@ contract TwoPriceOracle is IPriceOracle {
 
     /// Calculates the price as `base / quote`.
     /// @inheritdoc IPriceOracle
-    function price() external view override returns (uint price_) {
+    function price() external view override returns (uint256 price_) {
         price_ = base.price().fixedPointDiv(quote.price());
     }
 }

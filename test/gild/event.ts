@@ -9,7 +9,8 @@ const { expect, assert } = chai;
 describe("events", async function () {
   it("should emit events on deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, erc20Token, priceOracle] = await deployERC20PriceOracleVault();
+    const [ethGild, erc20Token, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
 

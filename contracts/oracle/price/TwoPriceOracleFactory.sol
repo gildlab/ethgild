@@ -18,7 +18,9 @@ contract TwoPriceOracleFactory is Factory {
         // optimizing for use of cheap immutables at runtime rather than cheap
         // deployments.
         return
-            address(new TwoPriceOracle(abi.decode(data_, (ConstructionConfig))));
+            address(
+                new TwoPriceOracle(abi.decode(data_, (ConstructionConfig)))
+            );
     }
 
     /// Typed wrapper for `createChild` with Source.
