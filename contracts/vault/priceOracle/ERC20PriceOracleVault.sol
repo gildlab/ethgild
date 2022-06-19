@@ -5,9 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "../erc4626/IERC4626.sol";
+import "../../erc4626/IERC4626.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "../oracle/price/IPriceOracle.sol";
+import "../../oracle/price/IPriceOracle.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 
 /// All config required to construct `ERC20PriceOracleVault`.
