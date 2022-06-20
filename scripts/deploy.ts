@@ -84,7 +84,7 @@ async function main() {
       ethers.utils.hexStripZeros(
         (
           await getEventArgs(
-            txBase,
+            txQuote,
             "NewChild",
             chainlinkFeedPriceOracleFactory
           )
@@ -117,7 +117,7 @@ async function main() {
   const twoPriceOracle = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(txBase, "NewChild", twoPriceOracleFactory)).child
+        (await getEventArgs(txTwoPriceOracle, "NewChild", twoPriceOracleFactory)).child
       ),
       20
     ),
