@@ -314,23 +314,28 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// @inheritdoc IERC4626
-    function previewDeposit(uint256 assets_) external view returns (uint256) {
-        return
-            _calculateDeposit(
-                assets_,
-                priceOracle.price(),
-                // IERC4626:
-                // > MUST NOT revert due to vault specific user/global limits.
-                // > MAY revert due to other conditions that would also cause
-                // > deposit to revert.
-                // Unclear if the min price set by the user for themselves is a
-                // "vault specific user limit" or "other conditions that would
-                // also cause deposit to revert".
-                // The conservative interpretation is that the user will WANT
-                // the preview calculation to revert according to their own
-                // preferences they set for themselves onchain.
-                minPrices[msg.sender]
-            );
+    function previewDeposit(uint256 assets_)
+        external
+        view
+        returns (uint256 shares_)
+    {
+        shares_ = _calculateDeposit(
+            assets_,
+            priceOracle.price(),
+            // IERC4626:
+            // > MUST NOT revert due to vault specific user/global limits.
+            // > MAY revert due to other conditions that would also cause
+            // > deposit to revert.
+            // Unclear if the min price set by the user for themselves is a
+            // "vault specific user limit" or "other conditions that would
+            // also cause deposit to revert".
+            // The conservative interpretation is that the user will WANT
+            // the preview calculation to revert according to their own
+            // preferences they set for themselves onchain.
+            // If the user did not set a min price it will fallback to 0
+            // and never revert.
+            minPrices[msg.sender]
+        );
     }
 
     /// If the sender wants to use the ERC4626 `deposit` function and set a
@@ -339,41 +344,56 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// @inheritdoc IERC4626
     function deposit(uint256 assets_, address receiver_)
         external
-        returns (uint256)
+        returns (uint256 shares_)
     {
-        return deposit(assets_, receiver_, minPrices[msg.sender]);
+        shares_ = deposit(assets_, receiver_, minPrices[msg.sender]);
     }
 
     /// Overloaded `deposit` to allow `minPrice_` to be passed directly without
     /// the additional `setMinPrice` call, which saves gas and can provide a
     /// better UX overall.
+    /// @param assets_ As per IERC4626 `deposit`.
+    /// @param receiver_ As per IERC4626 `deposit`.
+    /// @param minPrice_ Caller can set the minimum price they'll accept from
+    /// the oracle, otherwise the transaction is rolled back.
+    /// @return shares_ As per IERC4626 `deposit`.
     function deposit(
         uint256 assets_,
         address receiver_,
         uint256 minPrice_
-    ) public returns (uint256) {
+    ) public returns (uint256 shares_) {
         uint256 price_ = priceOracle.price();
         require(minPrice_ <= price_, "MIN_PRICE");
-        uint256 shares_ = _calculateDeposit(assets_, price_, minPrice_);
+        shares_ = _calculateDeposit(assets_, price_, minPrice_);
 
-        return _deposit(assets_, receiver_, shares_, price_);
+        _deposit(assets_, receiver_, shares_, price_);
     }
 
-    /// _deposit handles minting and emitting events according to spec.
+    /// Handles minting and emitting events according to spec.
     /// It does NOT do any calculations so shares and assets need to be handled
     /// correctly according to spec including rounding, in the calling context.
+    /// Depositing reentrantly is never ok so we restrict that here in the
+    /// internal function rather than on the external methods.
+    /// @param assets_ As per IERC4626 `deposit`.
+    /// @param receiver_ As per IERC4626 `deposit`.
+    /// @param shares_ Amount of shares to mint for receiver. MAY be different
+    /// due to rounding in different contexts so caller MUST calculate
+    /// according to the rounding specification.
+    /// @param price_ Price the deposit is to be minted under. Will be the ID of
+    /// the 1155 and MUST be provided on withdrawal.
     function _deposit(
         uint256 assets_,
         address receiver_,
         uint256 shares_,
         uint256 price_
-    ) internal nonReentrant returns (uint256) {
+    ) internal nonReentrant {
         require(assets_ > 0, "0_ASSETS");
         require(receiver_ != address(0), "0_RECEIVER");
         require(shares_ > 0, "0_SHARES");
         require(price_ > 0, "0_PRICE");
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
 
+        // Take assets before minting shares.
         IERC20(asset).safeTransferFrom(msg.sender, address(this), assets_);
 
         // erc20 mint.
@@ -382,98 +402,178 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
         _mint(receiver_, price_, shares_, "");
-
-        return shares_;
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address) external pure returns (uint256) {
-        return type(uint256).max;
+    function maxMint(address) external pure returns (uint256 maxShares_) {
+        maxShares_ = type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
-    function previewMint(uint256 shares_) external view returns (uint256) {
-        return _calculateMint(shares_, priceOracle.price(), 0);
+    function previewMint(uint256 shares_)
+        external
+        view
+        returns (uint256 assets_)
+    {
+        assets_ = _calculateMint(
+            shares_,
+            priceOracle.price(),
+            // IERC4626:
+            // > MUST NOT revert due to vault specific user/global limits.
+            // > MAY revert due to other conditions that would also cause mint
+            // > to revert.
+            // Unclear if the min price set by the user for themselves is a
+            // "vault specific user limit" or "other conditions that would
+            // also cause mint to revert".
+            // The conservative interpretation is that the user will WANT
+            // the preview calculation to revert according to their own
+            // preferences they set for themselves onchain.
+            // If the user did not set a min price it will fallback to 0
+            // and never revert.
+            minPrices[msg.sender]
+        );
     }
 
+    /// If the sender wants to use the ERC4626 `mint` function and set a
+    /// minimum price they need to call `setMinPrice` first in a separate call.
+    /// Alternatively they can use the off-spec overloaded `mint` method.
     /// @inheritdoc IERC4626
     function mint(uint256 shares_, address receiver_)
         external
-        returns (uint256)
+        returns (uint256 assets_)
     {
-        return mint(shares_, receiver_, minPrices[msg.sender]);
+        assets_ = mint(shares_, receiver_, minPrices[msg.sender]);
     }
 
-    /// @return assets_
+    /// Overloaded version of IERC4626 `mint` that allows directly passing the
+    /// minimum price to avoid additional gas and transactions.
+    /// @param shares_ As per IERC4626 `mint`.
+    /// @param receiver_ As per IERC4626 `mint`.
+    /// @param minPrice_ Caller can set the minimum price they'll accept from
+    /// the oracle, otherwise the transaction is rolled back.
+    /// @return assets_ As per IERC4626 `mint`.
     function mint(
         uint256 shares_,
         address receiver_,
         uint256 minPrice_
-    ) public returns (uint256) {
+    ) public returns (uint256 assets_) {
         uint256 price_ = priceOracle.price();
-        uint256 assets_ = _calculateMint(shares_, price_, minPrice_);
+        assets_ = _calculateMint(shares_, price_, minPrice_);
         _deposit(assets_, receiver_, shares_, price_);
-        return assets_;
     }
 
+    /// As withdrawal requires a price the vault deposits are non fungible. This
+    /// means the maximum amount of underlying asset that a user can withdraw is
+    /// specific to the 1155 receipt they want to burn to handle the withdraw.
+    /// A user with multiple receipts will only ever see the maxWithdraw for a
+    /// single receipt. For most use cases it would be recommended to call the
+    /// overloaded `maxWithdraw` that has the withdraw price paramaterised. This
+    /// can be looped over to build a view over several withdraw prices.
     /// @inheritdoc IERC4626
-    function maxWithdraw(address owner_) external view returns (uint256) {
-        return maxWithdraw(owner_, withdrawPrices[owner_]);
+    function maxWithdraw(address owner_) external view returns (uint256 maxAssets_) {
+        maxAssets_ = maxWithdraw(owner_, withdrawPrices[owner_]);
     }
 
-    /// Overloaded `maxWithdraw` that allows setting a price directly. The
+    /// Overloaded `maxWithdraw` that allows passing a price directly. The
     /// price needs to be provided so that we know which ERC1155 balance to
     /// check the withdraw against. The burnable ERC20 is capped per-withdraw
-    /// to the balance of a price-bound ERC1155.
-    /// @return max assets.
+    /// to the balance of a price-bound ERC1155. If a user has multiple 1155
+    /// receipts they will need to call `maxWithdraw` multiple times to
+    /// calculate a global withdrawal limit across all receipts.
+    /// @param owner_ As per IERC4626 `maxWithdraw`.
+    /// @param price_ The reference price to check the max withdrawal against
+    /// for a specific receipt the owner presumably holds. Max withdrawal will
+    /// be 0 if the user does not hold a receipt.
+    /// @return maxAssets_ As per IERC4626 `maxWithdraw`.
     function maxWithdraw(address owner_, uint256 price_)
         public
         view
-        returns (uint256)
+        returns (uint256 maxAssets_)
     {
-        return _calculateWithdraw(balanceOf(owner_, price_), price_);
+        // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
+        // latter requires knowing the assets being withdrawn, which is what we
+        // are attempting to reverse engineer from the owner's receipt balance.
+        maxAssets_ = _calculateRedeem(balanceOf(owner_, price_), price_);
     }
 
+    /// Previewing withdrawal will only calculate the shares required to
+    /// withdraw assets against their singular preset withdraw price. To
+    /// calculate many withdrawals for a set of recieipts it is cheaper and
+    /// easier to use the overloaded version that allows prices to be passed in
+    /// as arguments.
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 assets_) external view returns (uint256) {
-        return previewWithdraw(assets_, withdrawPrices[msg.sender]);
+    function previewWithdraw(uint256 assets_) external view returns (uint256 shares_) {
+        shares_ = previewWithdraw(assets_, withdrawPrices[msg.sender]);
     }
 
+    /// Overloaded version of IERC4626 that allows caller to pass in the price
+    /// to preview. Multiple receipt holders will need to call this function
+    /// for each recieipt price to preview all their withdrawals.
+    /// @param assets_ As per IERC4626 `previewWithdraw`.
+    /// @param price_ The mint/receipt price to preview a withdrawal for.
+    /// @return shares_ As per IERC4626 `previewWithdraw`.
     function previewWithdraw(uint256 assets_, uint256 price_)
         public
         pure
-        returns (uint256)
+        returns (uint256 shares_)
     {
-        return _calculateWithdraw(assets_, price_);
+        shares_ = _calculateWithdraw(assets_, price_);
     }
 
+    /// Withdraws against the current withdraw price set by the owner.
+    /// This enables spec compliant withdrawals but is additional gas and
+    /// transactions for the user to set the withdraw price in storage before
+    /// each withdrawal. The overloaded `withdraw` function allows passing in a
+    /// receipt price directly, which may be cheaper and more convenient.
     /// @inheritdoc IERC4626
     function withdraw(
         uint256 assets_,
         address receiver_,
         address owner_
-    ) external returns (uint256) {
-        return withdraw(assets_, receiver_, owner_, withdrawPrices[owner_]);
+    ) external returns (uint256 shares_) {
+        shares_ = withdraw(assets_, receiver_, owner_, withdrawPrices[owner_]);
     }
 
+    /// Overloaded version of IERC4626 `withdraw` that allows the price to be
+    /// passed directly.
+    /// @param assets_ As per IERC4626 `withdraw`.
+    /// @param receiver_ As per IERC4626 `withdraw`.
+    /// @param owner_ As per IERC4626 `withdraw`.
+    /// @param price_ As per `_withdraw`.
+    /// @param price_ The mint/receipt price to withdraw against. The owner
+    /// MUST hold the receipt for the price in addition to the shares being
+    /// burned for withdrawal.
     function withdraw(
         uint256 assets_,
         address receiver_,
         address owner_,
         uint256 price_
-    ) public returns (uint256) {
-        uint256 shares_ = _calculateWithdraw(assets_, price_);
-        return _withdraw(assets_, receiver_, owner_, shares_, price_);
+    ) public returns (uint256 shares_) {
+        shares_ = _calculateWithdraw(assets_, price_);
+        _withdraw(assets_, receiver_, owner_, shares_, price_);
     }
 
-    /// @return shares_
+    /// Handles burning shares, withdrawing assets and emitting events to spec.
+    /// It does NOT do any calculations so shares and assets need to be correct
+    /// according to spec including rounding, in the calling context.
+    /// Withdrawing reentrantly is never ok so we restrict that here in the
+    /// internal function rather than on the external methods.
+    /// @param assets_ As per IERC4626 `withdraw`.
+    /// @param receiver_ As per IERC4626 `withdraw`.
+    /// @param owner_ As per IERC4626 `withdraw`.
+    /// @param shares_ Caller MUST calculate the correct shares to burn for
+    /// withdrawal at `price_`. It is caller's responsibility to handle rounding
+    /// correctly as per 4626 spec.
+    /// @param price_ The mint/receipt price to withdraw against. The owner
+    /// MUST hold the receipt for the price in addition to the shares being
+    /// burned for withdrawal.
     function _withdraw(
         uint256 assets_,
         address receiver_,
         address owner_,
         uint256 shares_,
         uint256 price_
-    ) internal nonReentrant returns (uint256) {
+    ) internal nonReentrant {
         require(assets_ > 0, "0_ASSETS");
         require(receiver_ != address(0), "0_RECEIVER");
         require(owner_ != address(0), "0_OWNER");
@@ -482,60 +582,97 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
 
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
 
+        // IERC4626:
+        // > MUST support a withdraw flow where the shares are burned from owner
+        // > directly where owner is msg.sender or msg.sender has ERC-20
+        // > approval over the shares of owner.
+        // Note that we do NOT require the caller has allowance over the receipt
+        // in order to burn the shares to withdraw assets.
+        if (owner_ != msg.sender) {
+            _spendAllowance(owner_, msg.sender, shares_);
+        }
+
         // erc20 burn.
         _burn(owner_, shares_);
 
         // erc1155 burn.
         _burn(owner_, price_, shares_);
 
+        // Send assets after burning shares.
         IERC20(asset).safeTransfer(receiver_, assets_);
-
-        return shares_;
     }
 
+    /// Max redemption is only relevant to the currently set withdraw price for
+    /// the owner. Checking a different max redemption requires the owner
+    /// setting a different withdraw price which costs gas and an additional
+    /// transaction. The overloaded maxRedeem function allows the price being
+    /// checked against to be passed in directly.
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner_) external view returns (uint256) {
-        return maxRedeem(owner_, withdrawPrices[owner_]);
+    function maxRedeem(address owner_) external view returns (uint256 maxShares_) {
+        maxShares_ = maxRedeem(owner_, withdrawPrices[owner_]);
     }
 
+    /// Overloaded maxRedeem function that allows the redemption price to be
+    /// passed directly. The maximum number of shares that can be redeemed is
+    /// simply the balance of the associated receipt NFT the user holds for the
+    /// given price.
+    /// @param owner_ As per IERC4626 `maxRedeem`.
+    /// @param price_ The reference price to check the owner's 1155 balance for.
+    /// @return maxShares_ As per IERC4626 `maxRedeem`.
     function maxRedeem(address owner_, uint256 price_)
         public
         view
-        returns (uint256)
+        returns (uint256 maxShares_)
     {
-        return balanceOf(owner_, price_);
+        maxShares_ = balanceOf(owner_, price_);
     }
 
+    /// Preview redeem is only relevant to the currently set withdraw price for
+    /// the caller. The overloaded previewRedeem allows the price to be passed
+    /// directly which may avoid gas costs and additional transactions.
     /// @inheritdoc IERC4626
-    function previewRedeem(uint256 shares_) external view returns (uint256) {
-        return _calculateRedeem(shares_, withdrawPrices[msg.sender]);
+    function previewRedeem(uint256 shares_) external view returns (uint256 assets_) {
+        assets_ = _calculateRedeem(shares_, withdrawPrices[msg.sender]);
     }
 
+    /// Overloaded previewRedeem that allows price to redeem for to be passed
+    /// directly.
+    /// @param shares_ As per IERC4626.
+    /// @param price_ The price to calculate redemption against.
     function previewRedeem(uint256 shares_, uint256 price_)
         public
         pure
-        returns (uint256)
+        returns (uint256 assets_)
     {
-        return _calculateRedeem(shares_, price_);
+        assets_ = _calculateRedeem(shares_, price_);
     }
 
+    /// Redeems at the currently set withdraw price for the owner. The
+    /// overloaded redeem function allows the price to be passed in rather than
+    /// set separately in storage.
     /// @inheritdoc IERC4626
     function redeem(
         uint256 shares_,
         address receiver_,
         address owner_
-    ) external returns (uint256) {
-        return redeem(shares_, receiver_, owner_, withdrawPrices[owner_]);
+    ) external returns (uint256 assets_) {
+        assets_ = redeem(shares_, receiver_, owner_, withdrawPrices[owner_]);
     }
 
+    /// Overloaded redeem that allows the price to redeem at to be passed in.
+    /// @param shares_ As per IERC4626 `redeem`.
+    /// @param receiver_ As per IERC4626 `redeem`.
+    /// @param owner_ As per IERC4626 `redeem`.
+    /// @param price_ The reference price to redeem against. The owner MUST hold
+    /// a receipt of at least `shares_` amount and `price_` ID in order to
+    /// redeem.
     function redeem(
         uint256 shares_,
         address receiver_,
         address owner_,
         uint256 price_
-    ) public returns (uint256) {
-        uint256 assets_ = _calculateRedeem(shares_, price_);
+    ) public returns (uint256 assets_) {
+        assets_ = _calculateRedeem(shares_, price_);
         _withdraw(assets_, receiver_, owner_, shares_, price_);
-        return assets_;
     }
 }
