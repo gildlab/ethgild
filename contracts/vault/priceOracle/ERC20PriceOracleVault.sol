@@ -470,7 +470,11 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// overloaded `maxWithdraw` that has the withdraw price paramaterised. This
     /// can be looped over to build a view over several withdraw prices.
     /// @inheritdoc IERC4626
-    function maxWithdraw(address owner_) external view returns (uint256 maxAssets_) {
+    function maxWithdraw(address owner_)
+        external
+        view
+        returns (uint256 maxAssets_)
+    {
         maxAssets_ = maxWithdraw(owner_, withdrawPrices[owner_]);
     }
 
@@ -502,7 +506,11 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// easier to use the overloaded version that allows prices to be passed in
     /// as arguments.
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 assets_) external view returns (uint256 shares_) {
+    function previewWithdraw(uint256 assets_)
+        external
+        view
+        returns (uint256 shares_)
+    {
         shares_ = previewWithdraw(assets_, withdrawPrices[msg.sender]);
     }
 
@@ -608,7 +616,11 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// transaction. The overloaded maxRedeem function allows the price being
     /// checked against to be passed in directly.
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner_) external view returns (uint256 maxShares_) {
+    function maxRedeem(address owner_)
+        external
+        view
+        returns (uint256 maxShares_)
+    {
         maxShares_ = maxRedeem(owner_, withdrawPrices[owner_]);
     }
 
@@ -631,7 +643,11 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     /// the caller. The overloaded previewRedeem allows the price to be passed
     /// directly which may avoid gas costs and additional transactions.
     /// @inheritdoc IERC4626
-    function previewRedeem(uint256 shares_) external view returns (uint256 assets_) {
+    function previewRedeem(uint256 shares_)
+        external
+        view
+        returns (uint256 assets_)
+    {
         assets_ = _calculateRedeem(shares_, withdrawPrices[msg.sender]);
     }
 
