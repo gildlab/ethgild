@@ -63,6 +63,50 @@ struct ConstructionConfig {
 /// domains such as providing liquidity on DEX/AMMs, non-liquidating leverage
 /// for speculation, risk management, etc.
 ///
+/// Note on use of price oracles:
+/// At the time of writing Chainlink oracles seem to be "best in class" oracles
+/// yet suffer from several points of centralisation and counterparty risk. As
+/// there are no owner/admin keys on `ERC20PriceOracleVault` this represents an
+/// existential risk to the system if the price feeds stop behaving correctly.
+/// This is because the wrong number of shares will be minted upon deposit and
+/// nobody can modify the oracle address read by the vault. Long term holders
+/// of the share tokens are the most likely bagholders in the case of some
+/// oracle degradation as the fundamental tokenomics could break in arbitrary
+/// ways due to incorrect minting.
+///
+/// Oracles can be silently paused:
+/// Such as during the UST depegging event when Luna price was misreported by
+/// chainlink oracles. Chainlink oracles report timestamps since last update
+/// but every oracle has its own "heartbeat" during which prices are able to
+/// NOT update unless the price deviation target is hit. It is impossible to
+/// know from onchain timestamps within a heartbeat whether a price deviation
+/// has not been hit or if a price deviation has been hit but the feed is
+/// paused. The impact of this is specific to the configuration of the feed
+/// which is NOT visible onchain, for example at the time of writing ETH/USD
+/// feed updates every block, which the XAU/USD feed has a 24 hour heartbeat.
+/// These values were discovered offchain by the author.
+///
+/// Oracles are owned and can be modified:
+/// The underlying aggregator for an oracle can be changed by the owner. A new
+/// aggregator may have different heartbeat and deviance parameters, so an
+/// already deployed guard against stale data could become overly conservative
+/// and start blocking deposits unnecessarily, for example.
+///
+/// Mitigations:
+/// The `IPriceOracle` contracts do their best to guard against stale or
+/// invalid data by erroring which would pause all new depositing, while still
+/// allowing withdrawing. The `ChainlinkFeedPriceOracle` also does its best to
+/// read the onchain data that does exist such as `decimals` before converting
+/// prices to 18 decimal fixed point values. The best case scenario under a
+/// broken oracle is that most users become aware of what is happening and pull
+/// their collateral. One problem is that the system is designed to force some
+/// collateral to be "sticky" in the vault as different wallets hold the 1155
+/// and 20 tokens, so co-ordinating them for redemption may be impossible. In
+/// this case it MAY be possible to build anew vault contract that includes a
+/// matchmaking service for the compromised vault, to redeem old collateral for
+/// itself and reissue new tokens against itself. At the time of writing such a
+/// migration path is NOT implemented.
+///
 /// Note on ERC4626 rounding requirements:
 /// In various places the ERC4626 specification defines whether a function
 /// rounds up or round down when calculating mints and burns. This is to ensure
@@ -80,16 +124,30 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using FixedPointMath for uint256;
 
+    /// Emitted when deployed and constructed.
+    /// @param caller `msg.sender` that deployed the contract.
+    /// @param config All construction config.
     event Construction(address caller, ConstructionConfig config);
 
     /// @inheritdoc IERC4626
     address public immutable asset;
 
+    /// The price oracle used for all minting calculations.
     IPriceOracle public immutable priceOracle;
 
+    /// Users MAY OPTIONALLY set minimum prices for 4626 deposits. Alternatively
+    /// they MAY avoid the gas cost of modifying storage and call the
+    /// non-standard equivalent functions that take a minimum price parameter.
     mapping(address => uint256) public minPrices;
-    mapping(address => uint256) public prices;
 
+    /// Users MAY OPTIONALLY set the receipt price they want to withdraw as a
+    /// two step workflow and call the 4626 standard withdraw functions.
+    /// Alternatively they MAY avoid the gas cost of modifying storage and call
+    /// the non-standard equivalent functions that take a price parameter.
+    mapping(address => uint256) public withdrawPrices;
+
+    /// Constructor.
+    /// @param config_ All necessary config for deployment.
     constructor(ConstructionConfig memory config_)
         ERC20(config_.name, config_.symbol)
         ERC1155(config_.uri)
@@ -100,7 +158,11 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// Calculate how many shares_ will be minted in return for assets_.
-    /// @return shares_
+    /// @param assets_ Amount of assets being deposited.
+    /// @param price_ The oracle price to deposit against.
+    /// @param minPrice_ The minimum price required by the depositor. Will
+    /// error if `price_` is less than `minPrice_`.
+    /// @return shares_ Amount of shares to mint for this deposit.
     function _calculateDeposit(
         uint256 assets_,
         uint256 price_,
@@ -115,7 +177,11 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// Calculate how many assets_ are needed to mint shares_.
-    /// @return assets_
+    /// @param shares_ Amount of shares desired to be minted.
+    /// @param price_ The oracle price to mint against.
+    /// @param minPrice_ The minimum price required by the minter. Will error if
+    /// `price_` is less than `minPrice_`.
+    /// @return assets_ Amount of assets that must be deposited for this mint.
     function _calculateMint(
         uint256 shares_,
         uint256 price_,
@@ -130,7 +196,9 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// Calculate how many shares_ to burn to withdraw assets_.
-    /// @return shares_
+    /// @param assets_ Amount of assets being withdrawn.
+    /// @param price_ Oracle price to withdraw against.
+    /// @return shares_ Amount of shares to burn for this withdrawal.
     function _calculateWithdraw(uint256 assets_, uint256 price_)
         internal
         pure
@@ -143,7 +211,10 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
     }
 
     /// Calculate how many assets_ to withdraw for burning shares_.
-    /// @return assets_
+    /// @param shares_ Amount of shares being burned for redemption.
+    /// @param price_ Oracle price being redeemed against.
+    /// @return assets_ Amount of assets that will be redeemed for the given
+    /// shares.
     function _calculateRedeem(uint256 shares_, uint256 price_)
         internal
         pure
@@ -156,38 +227,110 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         assets_ = shares_.fixedPointDiv(price_);
     }
 
+    /// Any address can set their own minimum price.
+    /// This is optional as the non-standard 4626 equivalent functions accept
+    /// a minimum price parameter. This facilitates the 4626 interface by adding
+    /// one additional initial transaction for the user.
+    /// @param minPrice_ The new minimum price for the `msg.sender` to be used
+    /// in subsequent deposit calls.
     function setMinPrice(uint256 minPrice_) external {
         minPrices[msg.sender] = minPrice_;
     }
 
-    function setPrice(uint256 price_) external {
-        prices[msg.sender] = price_;
+    /// Any address can set their own price for withdrawals.
+    /// This is optional as the non-standard 4626 equivalent functions accept
+    /// a withdrawal price parameter. This facilitates the 4626 interface by
+    /// adding one initial transaction for the user.
+    /// @param price_ The new withdrawal price for the `msg.sender` to be used
+    /// in subsequent withdrawal calls. If the price does NOT match the ID of
+    /// a receipt held by sender then these subsequent withdrawals will fail.
+    /// It is the responsibility of the caller to set the correct price.
+    function setWithdrawPrice(uint256 price_) external {
+        withdrawPrices[msg.sender] = price_;
     }
 
     /// @inheritdoc IERC4626
-    function totalAssets() external view returns (uint256) {
-        // There are NO fees so the managed assets are the balance.
-        return IERC20(asset).balanceOf(address(this));
+    function totalAssets() external view returns (uint256 assets_) {
+        // There are NO fees so the managed assets are the asset balance of the
+        // vault.
+        try IERC20(asset).balanceOf(address(this)) returns (uint256 balance_) {
+            assets_ = balance_;
+        } catch {
+            // It's not clear what the balance should be if querying it is
+            // throwing an error. The conservative error in most cases should
+            // be 0.
+            assets_ = 0;
+        }
     }
 
     /// @inheritdoc IERC4626
-    function convertToShares(uint256 assets_) external view returns (uint256) {
-        return _calculateDeposit(assets_, priceOracle.price(), 0);
+    function convertToShares(uint256 assets_)
+        external
+        view
+        returns (uint256 shares_)
+    {
+        // The oracle CAN error so we wrap in a try block to meet spec
+        // requirement that calls MUST NOT revert.
+        try priceOracle.price() returns (uint256 price_) {
+            // minPrice of 0 ensures `_calculateDeposit` does NOT revert also.
+            shares_ = _calculateDeposit(assets_, price_, 0);
+        } catch {
+            // Depositing assets while the price oracle is erroring will give 0
+            // shares.
+            shares_ = 0;
+        }
+    }
+
+    /// This function is a bit weird because in reality everyone converts their
+    /// shares to assets at the price they minted at, NOT the current price. But
+    /// the spec demands that this function ignores per-user concerns.
+    /// @inheritdoc IERC4626
+    function convertToAssets(uint256 shares_)
+        external
+        view
+        returns (uint256 assets_)
+    {
+        // The oracle CAN error so we wrap in a try block to meet spec
+        // requirement that calls MUST NOT revert.
+        try priceOracle.price() returns (uint256 price_) {
+            assets_ = _calculateRedeem(shares_, price_);
+        } catch {
+            // If we have no price from the oracle then we cannot say that
+            // shares are worth any amount of assets.
+            assets_ = 0;
+        }
     }
 
     /// @inheritdoc IERC4626
-    function convertToAssets(uint256 shares_) external view returns (uint256) {
-        return _calculateRedeem(shares_, priceOracle.price());
-    }
-
-    /// @inheritdoc IERC4626
-    function maxDeposit(address) external pure returns (uint256) {
-        return type(uint256).max;
+    function maxDeposit(address) external pure returns (uint256 maxAssets_) {
+        // The spec states to return this if there is no deposit limit.
+        // Technically a deposit this large would almost certainly overflow
+        // somewhere in the process, but it isn't a limit imposed by the vault
+        // per-se, it's more that the ERC20 tokens themselves won't handle such
+        // large entries on their internal balances. Given typical token
+        // total supplies are smaller than this number, this would be a
+        // theoretical point only.
+        maxAssets_ = type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
     function previewDeposit(uint256 assets_) external view returns (uint256) {
-        return _calculateDeposit(assets_, priceOracle.price(), 0);
+        return
+            _calculateDeposit(
+                assets_,
+                priceOracle.price(),
+                // IERC4626:
+                // > MUST NOT revert due to vault specific user/global limits.
+                // > MAY revert due to other conditions that would also cause
+                // > deposit to revert.
+                // Unclear if the min price set by the user for themselves is a
+                // "vault specific user limit" or "other conditions that would
+                // also cause deposit to revert".
+                // The conservative interpretation is that the user will WANT
+                // the preview calculation to revert according to their own
+                // preferences they set for themselves onchain.
+                minPrices[msg.sender]
+            );
     }
 
     /// If the sender wants to use the ERC4626 `deposit` function and set a
@@ -275,7 +418,7 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner_) external view returns (uint256) {
-        return maxWithdraw(owner_, prices[owner_]);
+        return maxWithdraw(owner_, withdrawPrices[owner_]);
     }
 
     /// Overloaded `maxWithdraw` that allows setting a price directly. The
@@ -293,7 +436,7 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
 
     /// @inheritdoc IERC4626
     function previewWithdraw(uint256 assets_) external view returns (uint256) {
-        return previewWithdraw(assets_, prices[msg.sender]);
+        return previewWithdraw(assets_, withdrawPrices[msg.sender]);
     }
 
     function previewWithdraw(uint256 assets_, uint256 price_)
@@ -310,7 +453,7 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         address receiver_,
         address owner_
     ) external returns (uint256) {
-        return withdraw(assets_, receiver_, owner_, prices[owner_]);
+        return withdraw(assets_, receiver_, owner_, withdrawPrices[owner_]);
     }
 
     function withdraw(
@@ -352,7 +495,7 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner_) external view returns (uint256) {
-        return maxRedeem(owner_, prices[owner_]);
+        return maxRedeem(owner_, withdrawPrices[owner_]);
     }
 
     function maxRedeem(address owner_, uint256 price_)
@@ -365,7 +508,7 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
 
     /// @inheritdoc IERC4626
     function previewRedeem(uint256 shares_) external view returns (uint256) {
-        return _calculateRedeem(shares_, prices[msg.sender]);
+        return _calculateRedeem(shares_, withdrawPrices[msg.sender]);
     }
 
     function previewRedeem(uint256 shares_, uint256 price_)
@@ -382,7 +525,7 @@ contract ERC20PriceOracleVault is ERC20, ERC1155, IERC4626, ReentrancyGuard {
         address receiver_,
         address owner_
     ) external returns (uint256) {
-        return redeem(shares_, receiver_, owner_, prices[owner_]);
+        return redeem(shares_, receiver_, owner_, withdrawPrices[owner_]);
     }
 
     function redeem(

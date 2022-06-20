@@ -117,7 +117,13 @@ async function main() {
   const twoPriceOracle = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
-        (await getEventArgs(txTwoPriceOracle, "NewChild", twoPriceOracleFactory)).child
+        (
+          await getEventArgs(
+            txTwoPriceOracle,
+            "NewChild",
+            twoPriceOracleFactory
+          )
+        ).child
       ),
       20
     ),

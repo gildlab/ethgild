@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.10;
+pragma solidity ^0.8.0;
 
 /// @title IERC4626
 /// https://eips.ethereum.org/EIPS/eip-4626
@@ -157,10 +157,14 @@ pragma solidity =0.8.10;
 /// 4626, December 2021. [Online serial].
 /// Available: https://eips.ethereum.org/EIPS/eip-4626.
 interface IERC4626 {
-    /// caller has exchanged assets for shares, and transferred those shares to
+    /// Caller has exchanged assets for shares, and transferred those shares to
     /// owner.
     /// MUST be emitted when tokens are deposited into the Vault via the mint
     /// and deposit methods.
+    /// @param caller `msg.sender` depositing assets for shares.
+    /// @param owner recipient of the newly minted shares.
+    /// @param assets amount of assets deposited.
+    /// @param shares amount of shares minted and sent to owner.
     event Deposit(
         address indexed caller,
         address indexed owner,
@@ -168,10 +172,15 @@ interface IERC4626 {
         uint256 shares
     );
 
-    /// caller has exchanged shares, owned by owner, for assets, and
+    /// Caller has exchanged shares, owned by owner, for assets, and
     /// transferred those assets to receiver.
     /// MUST be emitted when shares are withdrawn from the Vault in
     /// ERC4626.redeem or ERC4626.withdraw methods.
+    /// @param caller `msg.sender` initiating the withdraw.
+    /// @param receiver recipient of withdrawn assets.
+    /// @param owner owner of shares burned to withdraw assets.
+    /// @param assets amount of assets withdrawn and sent to receiver.
+    /// @param shares amount of shares burned from owner.
     event Withdraw(
         address indexed caller,
         address indexed receiver,
@@ -184,6 +193,7 @@ interface IERC4626 {
     /// depositing, and withdrawing.
     /// MUST be an ERC-20 token contract.
     /// MUST NOT revert.
+    /// @return assetTokenAddress address of the asset token.
     function asset() external view returns (address assetTokenAddress);
 
     /// Total amount of the underlying asset that is “managed” by Vault.
@@ -191,6 +201,9 @@ interface IERC4626 {
     /// MUST be inclusive of any fees that are charged against assets in the
     /// Vault.
     /// MUST NOT revert.
+    /// @return totalManagedAssets all assets in the vault including those that
+    /// cannot be withdrawn with shares due to fees or were never deposited,
+    /// perhaps due to fee accruals, etc.
     function totalAssets() external view returns (uint256 totalManagedAssets);
 
     /// The amount of shares that the Vault would exchange for the amount of
@@ -206,6 +219,10 @@ interface IERC4626 {
     /// This calculation MAY NOT reflect the “per-user” price-per-share, and
     /// instead should reflect the “average-user’s” price-per-share, meaning
     /// what the average user should expect to see when exchanging to and from.
+    /// @param assets amount of assets that would hypothetically be converted
+    /// to shares (minting) upon deposit.
+    /// @return shares amount of shares that hypothetically would be minted upon
+    /// deposit of given amount of assets.
     function convertToShares(uint256 assets)
         external
         view
@@ -224,6 +241,10 @@ interface IERC4626 {
     /// This calculation MAY NOT reflect the “per-user” price-per-share, and
     /// instead should reflect the “average-user’s” price-per-share, meaning
     /// what the average user should expect to see when exchanging to and from.
+    /// @param shares amount of shares that would hypothetically be converted
+    /// (burned) to assets upon withdrawal.
+    /// @return assets amount of assets that would hypothetically be released
+    /// from the vault when given amount of shares were burned.
     function convertToAssets(uint256 shares)
         external
         view
@@ -241,6 +262,10 @@ interface IERC4626 {
     /// MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of
     /// assets that may be deposited.
     /// MUST NOT revert.
+    /// @param receiver the receiver of hypothetical newly minted shares, were
+    /// a deposit to be processed.
+    /// @return maxAssets the maximum assets the receiver could deposit and
+    /// successfully receive shares.
     function maxDeposit(address receiver)
         external
         view
@@ -263,6 +288,11 @@ interface IERC4626 {
     /// previewDeposit SHOULD be considered slippage in share price or some
     /// other type of condition, meaning the depositor will lose assets by
     /// depositing.
+    /// @param assets amount of assets the `msg.sender` would hypothetically
+    /// deposit for shares.
+    /// @return shares amount of shares that would hypothetically be minted for
+    /// the `msg.sender`. MAY differ from `convertToShares` as
+    /// "the average user" could receive different shares to any specific user.
     function previewDeposit(uint256 assets)
         external
         view
@@ -280,6 +310,9 @@ interface IERC4626 {
     /// tokens to the Vault contract, etc).
     /// Note that most implementations will require pre-approval of the Vault
     /// with the Vault’s underlying asset token.
+    /// @param assets amount of assets the `msg.sender` is depositing.
+    /// @param receiver recipient of the newly minted shares.
+    /// @return shares amount of newly minted shares for recipient.
     function deposit(uint256 assets, address receiver)
         external
         returns (uint256 shares);
@@ -296,6 +329,10 @@ interface IERC4626 {
     /// MUST return 2 ** 256 - 1 if there is no limit on the maximum amount of
     /// shares that may be minted.
     /// MUST NOT revert.
+    /// @param receiver hypothetical receiver of newly minted shares for
+    /// depositing assets.
+    /// @return maxShares maximum shares hypothetically mintable for the
+    /// receiver for a successful deposit.
     function maxMint(address receiver)
         external
         view
@@ -317,6 +354,11 @@ interface IERC4626 {
     /// Note that any unfavorable discrepancy between convertToAssets and
     /// previewMint SHOULD be considered slippage in share price or some other
     /// type of condition, meaning the depositor will lose assets by minting.
+    /// @param shares amount of shares to hypothetically mint for `msg.sender`.
+    /// MAY differ from `convertToShares` as "the average user" may differ from
+    /// any specific user.
+    /// @return assets amount of assets that would hypothetically be desposited
+    /// for receiver to receive the given amount of shares.
     function previewMint(uint256 shares) external view returns (uint256 assets);
 
     /// Mints exactly shares Vault shares to receiver by depositing amount of
@@ -331,6 +373,9 @@ interface IERC4626 {
     /// tokens to the Vault contract, etc).
     /// Note that most implementations will require pre-approval of the Vault
     /// with the Vault’s underlying asset token.
+    /// @param shares amount of shares to mint for receiver.
+    /// @param receiver address that will receive newly minted shares.
+    /// @return assets amount of assets that were deposited to mint shares.
     function mint(uint256 shares, address receiver)
         external
         returns (uint256 assets);
@@ -344,6 +389,10 @@ interface IERC4626 {
     /// MUST factor in both global and user-specific limits, like if
     /// withdrawals are entirely disabled (even temporarily) it MUST return 0.
     /// MUST NOT revert.
+    /// @param owner the owner of the shares that would hypothetically be
+    /// burned to process a withdrawal.
+    /// @return maxAssets the maximum amount of assets that could
+    /// hypothetically be withdrawn by burning the owner's shares.
     function maxWithdraw(address owner)
         external
         view
@@ -366,6 +415,10 @@ interface IERC4626 {
     /// previewWithdraw SHOULD be considered slippage in share price or some
     /// other type of condition, meaning the depositor will lose assets by
     /// depositing.
+    /// @param assets amount of assets hypothetically being withdrawn by
+    /// `msg.sender` by burning their shares.
+    /// @return shares amount of shares that would be burned to withdraw the
+    /// given amount of assets.
     function previewWithdraw(uint256 assets)
         external
         view
@@ -385,6 +438,11 @@ interface IERC4626 {
     /// Note that some implementations will require pre-requesting to the Vault
     /// before a withdrawal may be performed. Those methods should be performed
     /// separately.
+    /// @param assets amount of assets to withdraw by burning owner's shares.
+    /// @param receiver withdrawn assets will be sent to receiver.
+    /// @param owner shares will be burned from owner to withdraw assets.
+    /// @return shares amount of shares that were burned from owner to process
+    /// the withdrawal.
     function withdraw(
         uint256 assets,
         address receiver,
@@ -400,6 +458,10 @@ interface IERC4626 {
     /// MUST factor in both global and user-specific limits, like if redemption
     /// is entirely disabled (even temporarily) it MUST return 0.
     /// MUST NOT revert.
+    /// @param owner hypothetical share owner who is redeeming (burning) shares
+    /// for asset withdrawal.
+    /// @return maxShares maximum hypothetical shares that could be burned by
+    /// the owner to withdraw assets.
     function maxRedeem(address owner) external view returns (uint256 maxShares);
 
     /// Allows an on-chain or off-chain user to simulate the effects of their
@@ -419,6 +481,10 @@ interface IERC4626 {
     /// previewRedeem SHOULD be considered slippage in share price or some
     /// other type of condition, meaning the depositor will lose assets by
     /// redeeming.
+    /// @param shares amount of shares that would hypothetically be burned by
+    /// `msg.sender` to withdraw assets.
+    /// @return assets amount of assets that would hypothetically be withdrawn
+    /// for recipient when burning given amount of owner's shares.
     function previewRedeem(uint256 shares)
         external
         view
@@ -438,6 +504,12 @@ interface IERC4626 {
     /// Note that some implementations will require pre-requesting to the Vault
     /// before a withdrawal may be performed. Those methods should be performed
     /// separately.
+    /// @param shares amount of owner's shares to redeem (burn) to withdraw
+    /// assets for receiver.
+    /// @param receiver withdrawn assets will be sent to receiver.
+    /// @param owner owner's shares will be burned to process the withdrawal
+    /// of assets sent to receiver.
+    /// @return assets amount of assets withdrawn and sent to receiver.
     function redeem(
         uint256 shares,
         address receiver,
