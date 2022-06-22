@@ -162,20 +162,6 @@ describe("deposit", async function () {
       `wrong bob erc1155 balance ${bobErc1155Balance} 0`
     );
 
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
-            erc1155Balance,
-            alice.address,
-            asset.address,
-            price
-          ),
-      "burn amount exceeds balance",
-      "failed to apply fee to ungild"
-    );
-
     totalTokenSupply = await asset.totalSupply();
 
     const bobEthAmount = totalTokenSupply.div(3);
@@ -205,21 +191,6 @@ describe("deposit", async function () {
       erc1155BobBalance.eq(expectedBobBalance),
       `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`
     );
-
-    // const bobToAliceEthg = ethgAliceBalance
-    //   .mul(1001)
-    //   .div(1000)
-    //   .sub(ethgAliceBalance)
-    //   .sub(1);
-    // await ethGild.connect(bob).transfer(alice.address, bobToAliceEthg);
-
-    // // alice cannot withdraw with less than the overburn erc20
-    // await assertError(
-    //   //3
-    //   async () => await aliceEthGild.redeem([]),
-    //   "burn amount exceeds balance",
-    //   "failed to overburn"
-    // );
 
     await vault
       .connect(alice)

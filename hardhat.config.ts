@@ -18,7 +18,7 @@ export const config = {
     rinkeby: {
       url: RINKEBY_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-      gasPrice: 11000000000
+      gasPrice: 11000000000,
     },
     matic: {
       url: POLYGON_URL || "",
