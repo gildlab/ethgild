@@ -84,7 +84,13 @@ struct ConstructionConfig {
 /// paused. The impact of this is specific to the configuration of the feed
 /// which is NOT visible onchain, for example at the time of writing ETH/USD
 /// feed updates every block, which the XAU/USD feed has a 24 hour heartbeat.
-/// These values were discovered offchain by the author.
+/// Even if we read the current values that may be defined in the code of the
+/// oracle contract (but are not exposed via the interface to be read from other
+/// contracts) and set the same values in our contract, the upstream values can
+/// be changed at any time through a contract upgrade. As Chainlink admins are
+/// a company acting on instruction from clients (how the example UST price
+/// pausing came into being) it's relatively easy for someone to request a
+/// pause threshold to be added, changed or removed at any time.
 ///
 /// Oracles are owned and can be modified:
 /// The underlying aggregator for an oracle can be changed by the owner. A new
