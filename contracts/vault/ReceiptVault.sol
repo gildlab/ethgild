@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 struct ConstructionConfig {
     address asset;
@@ -16,7 +17,7 @@ struct ConstructionConfig {
     string uri;
 }
 
-contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard {
+contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Multicall {
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -195,10 +196,8 @@ contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard {
         shareRatio_ = _shareRatio();
     }
 
+    // solhint-disable-next-line no-empty-blocks
     function _nextId() internal virtual returns (uint256) {
-        // There is no default logic for ids.
-        // MUST be implemented by inheriting contract.
-        revert("NOT_IMPLEMENTED");
     }
 
     /// @inheritdoc IERC4626

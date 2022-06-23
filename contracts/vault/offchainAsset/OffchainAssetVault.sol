@@ -19,45 +19,37 @@ struct ConstructionConfig {
     ReceiptVaultConstructionConfig receiptVaultConfig;
 }
 
-/// Report of all assets successfully confiscated. MAY be a subset of what was
-/// requested for confiscation as multiple confiscations could be included in
-/// a single block, and will clear in order.
-/// @param sharesAmount Total shares confiscated.
-struct ConfiscationReport {
-    uint256 sharesAmount;
-    uint256[2][] erc1155Amounts;
-}
-
 contract OffchainAssetVault is ReceiptVault, AccessControl {
     event Construction(address sender, ConstructionConfig config);
     event Certify(address sender, uint256 until, bytes data);
-    event Confiscate(address sender, ConfiscationReport report);
+    event ConfiscateShares(address sender, address confiscatee, uint confiscated);
+    event ConfiscateReceipt(address sender, address confiscatee, uint id, uint confiscated);
 
-    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
-    bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
+    bytes32 private constant DEPOSITOR = keccak256("DEPOSITOR");
+    bytes32 private constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
-    bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
-    bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
+    bytes32 private constant WITHDRAWER = keccak256("WITHDRAWER");
+    bytes32 private constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
-    bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
-    bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
+    bytes32 private constant CERTIFIER = keccak256("CERTIFIER");
+    bytes32 private constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
 
-    bytes32 public constant HANDLER = keccak256("HANDLER");
-    bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+    bytes32 private constant HANDLER = keccak256("HANDLER");
+    bytes32 private constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
 
-    bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
-    bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+    bytes32 private constant ERC20TIERER = keccak256("ERC20TIERER");
+    bytes32 private constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
 
-    bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
-    bytes32 public constant ERC1155TIERER_ADMIN =
+    bytes32 private constant ERC1155TIERER = keccak256("ERC1155TIERER");
+    bytes32 private constant ERC1155TIERER_ADMIN =
         keccak256("ERC1155TIERER_ADMIN");
 
-    bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
-    bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
+    bytes32 private constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
+    bytes32 private constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
-    bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
-    bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
+    bytes32 private constant CONFISCATOR = keccak256("CONFISCATOR");
+    bytes32 private constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
     uint256 private highwaterId;
 
@@ -209,6 +201,8 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         shares_ = assets_;
     }
 
+    /// Needed here to fix Open Zeppelin implementing `supportsInterface` on
+    /// multiple base contracts.
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -329,65 +323,32 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
     }
 
-    // If there is no tier address then we always allow confiscations.
-    // This means significant additional trust is placed on the
-    // confiscators.
-    // If there is a tier address we only allow confiscations from
-    // addresses that are NOT currently holding the minimum tier.
-    function confiscate(address confiscatee_, uint256[] calldata erc1155Ids_)
-        external
-        nonReentrant
-        onlyRole(CONFISCATOR)
-        returns (ConfiscationReport memory)
-    {
-        uint256 confiscatedERC20Amount_ = 0;
-        if (
-            address(erc20Tier) == address(0) ||
-            block.number <
-            TierReport.tierBlock(
-                erc20Tier.report(confiscatee_),
-                erc20MinimumTier
-            )
-        ) {
-            confiscatedERC20Amount_ = balanceOf(confiscatee_);
-            if (confiscatedERC20Amount_ > 0) {
-                _transfer(confiscatee_, msg.sender, confiscatedERC20Amount_);
+    function confiscate(address confiscatee_) external nonReentrant onlyRole(CONFISCATOR) returns (uint confiscated_) {
+        if (address(erc20Tier) == address(0) ||
+        block.number < TierReport.tierBlock(
+            erc20Tier.report(confiscatee_),
+            erc20MinimumTier
+        )) {
+            confiscated_ = balanceOf(confiscatee_);
+            if (confiscated_ > 0) {
+                _transfer(confiscatee_, msg.sender, confiscated_);
             }
         }
+        emit ConfiscateShares(msg.sender, confiscatee_, confiscated_);
+    }
 
-        uint256[2][] memory confiscatedERC1155Amounts_ = new uint256[2][](
-            erc1155Ids_.length
-        );
-        if (
-            address(erc1155Tier) == address(0) ||
-            block.number <
-            TierReport.tierBlock(
-                erc1155Tier.report(confiscatee_),
-                erc1155MinimumTier
-            )
-        ) {
-            for (uint256 i_ = 0; i_ < erc1155Ids_.length; i_++) {
-                confiscatedERC1155Amounts_[i_] = [
-                    erc1155Ids_[i_],
-                    balanceOf(confiscatee_, erc1155Ids_[i_])
-                ];
-                if (confiscatedERC1155Amounts_[i_][1] > 0) {
-                    _safeTransferFrom(
-                        confiscatee_,
-                        msg.sender,
-                        confiscatedERC1155Amounts_[i_][0],
-                        confiscatedERC1155Amounts_[i_][1],
-                        ""
-                    );
-                }
+    function confiscate(address confiscatee_, uint id_) external nonReentrant onlyRole(CONFISCATOR) returns (uint confiscated_) {
+        if (address(erc1155Tier) == address(0) ||
+        block.number <
+        TierReport.tierBlock(
+            erc1155Tier.report(confiscatee_),
+            erc1155MinimumTier
+        )) {
+            confiscated_ = balanceOf(confiscatee_, id_);
+            if (confiscated_ > 0) {
+                _safeTransferFrom(confiscatee_, msg.sender, id_, confiscated_, "");
             }
         }
-
-        ConfiscationReport memory report_ = ConfiscationReport(
-            confiscatedERC20Amount_,
-            confiscatedERC1155Amounts_
-        );
-        emit Confiscate(msg.sender, report_);
-        return report_;
+        emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);
     }
 }
