@@ -278,7 +278,7 @@ contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Mult
 
     /// @inheritdoc IERC4626
     function previewMint(uint256 shares_)
-        external
+        public
         view
         virtual
         returns (uint256 assets_)
@@ -496,6 +496,7 @@ contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Mult
     function previewWithdraw(uint256 assets_, uint256 id_)
         public
         view
+        virtual
         returns (uint256 shares_)
     {
         shares_ = _calculateWithdraw(assets_, _shareRatioForId(id_));
@@ -636,13 +637,14 @@ contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Mult
     /// Overloaded previewRedeem that allows price to redeem for to be passed
     /// directly.
     /// @param shares_ As per IERC4626.
-    /// @param price_ The price to calculate redemption against.
-    function previewRedeem(uint256 shares_, uint256 price_)
+    /// @param id_ The receipt id_ to calculate redemption against.
+    function previewRedeem(uint256 shares_, uint256 id_)
         public
-        pure
+        view
+        virtual
         returns (uint256 assets_)
     {
-        assets_ = _calculateRedeem(shares_, price_);
+        assets_ = _calculateRedeem(shares_, id_);
     }
 
     /// Redeems at the currently set withdraw price for the owner. The

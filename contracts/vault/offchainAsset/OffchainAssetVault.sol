@@ -156,6 +156,30 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         shares_ = hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
     }
 
+    function previewWithdraw(uint256 assets_, uint256 id_)
+        public
+        view
+        override
+        returns (uint256 shares_) {
+            shares_ = hasRole(WITHDRAWER, msg.sender) ? super.previewWithdraw(assets_, id_) : 0;
+        }
+
+    function previewMint(uint256 shares_)
+        public
+        view
+        override
+        returns (uint256 assets_) {
+            assets_ = hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
+        }
+
+        function previewRedeem(uint256 shares_, uint id_)
+        public
+        view
+        override
+        returns (uint256 assets_) {
+            assets_ = hasRole(WITHDRAWER, msg.sender) ? super.previewRedeem(shares_, id_) : 0;
+        }
+
     function _nextId() internal override returns (uint256 id_) {
         id_ = highwaterId + 1;
         highwaterId = id_;
