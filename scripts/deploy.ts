@@ -1,11 +1,11 @@
 // scripts/deploy.js
 import { ethers, artifacts } from "hardhat";
-import type { ChainlinkFeedPriceOracleFactory } from "../typechain/ChainlinkFeedPriceOracleFactory";
-import type { ChainlinkFeedPriceOracle } from "../typechain/ChainlinkFeedPriceOracle";
-import type { TwoPriceOracle } from "../typechain/TwoPriceOracle";
-import type { TwoPriceOracleFactory } from "../typechain/TwoPriceOracleFactory";
-import type { ERC20PriceOracleVaultFactory } from "../typechain/ERC20PriceOracleVaultFactory";
-import type { ERC20PriceOracleVault } from "../typechain/ERC20PriceOracleVault";
+import type { ChainlinkFeedPriceOracleFactory } from "../typechain";
+import type { ChainlinkFeedPriceOracle } from "../typechain";
+import type { TwoPriceOracle } from "../typechain";
+import type { TwoPriceOracleFactory } from "../typechain";
+import type { ERC20PriceOracleVaultFactory } from "../typechain";
+import type { ERC20PriceOracleVault } from "../typechain";
 
 import type { Contract } from "ethers";
 import { getEventArgs } from "../test/util";
@@ -27,6 +27,7 @@ async function main() {
       quote: rinkebyXauUsd,
       // 48 hours
       quoteStaleAfter: 48 * 60 * 60,
+      erc20ContractAddress : "0xc778417E063141139Fce010982780140Aa0cD5Ab"
     },
     polygon: {
       base: polygonMaticUsd,
@@ -35,6 +36,7 @@ async function main() {
       quote: polygonXauUsd,
       // 48 hours
       quoteStaleAfter: 48 * 60 * 60,
+      erc20ContractAddress : "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
     },
   };
 
@@ -132,10 +134,8 @@ async function main() {
     deployer
   ) as ChainlinkFeedPriceOracle & Contract;
 
-  const erc20ContractAddress = "0xc778417E063141139Fce010982780140Aa0cD5Ab";
-
   let erc20PriceOracleVaultConfig = {
-    asset: erc20ContractAddress,
+    asset: chainlinkFeedPriceOracleConfig.polygon.erc20ContractAddress,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
