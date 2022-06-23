@@ -1,47 +1,43 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.10;
 
-// Open Zeppelin imports.
-// solhint-ignore-next-line max-line-length
-import {ERC20, ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
+import {ConstructionConfig as ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITier.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/libraries/TierReport.sol";
 
-struct CertifiedAssetConnectConfig {
+/// All data required to construct `CertifiedAssetConnect`.
+/// @param admin The initial admin has ALL ROLES. It is up to the admin to
+/// appropriately delegate and renounce roles or to be a smart contract with
+/// formal governance processes. In general a single EOA holding all admin roles
+/// is completely insecure and counterproductive as it allows a single address
+/// to both mint and audit assets (and many other things).
+/// @param receiptConstructionConfig Forwarded to construction ReceiptVault.
+struct ConstructionConfig {
     address admin;
-    string name;
-    string symbol;
-    string uri;
+    ReceiptVaultConstructionConfig receiptVaultConfig;
 }
 
+/// Report of all assets successfully confiscated. MAY be a subset of what was
+/// requested for confiscation as multiple confiscations could be included in
+/// a single block, and will clear in order.
+/// @param sharesAmount Total shares confiscated.
 struct ConfiscationReport {
-    uint256 erc20Amount;
+    uint256 sharesAmount;
     uint256[2][] erc1155Amounts;
 }
 
-contract CertifiedAssetConnect is
-    ERC20Snapshot,
-    ERC1155,
-    ReentrancyGuard,
-    AccessControl
-{
-    event Construction(address sender, CertifiedAssetConnectConfig config);
+contract OffchainAssetVault is ReceiptVault, AccessControl {
+    event Construction(address sender, ConstructionConfig config);
     event Certify(address sender, uint256 until, bytes data);
-    event Connect(address sender, uint256 id, uint256 amount, bytes data);
-    event Disconnect(address sender, uint256 id, uint256 amount, bytes data);
     event Confiscate(address sender, ConfiscationReport report);
 
-    bytes32 public constant CONNECTOR = keccak256("CONNECTOR");
-    bytes32 public constant CONNECTOR_ADMIN = keccak256("CONNECTOR_ADMIN");
+    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
+    bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
-    bytes32 public constant DISCONNECTOR = keccak256("DISCONNECTOR");
-    bytes32 public constant DISCONNECTOR_ADMIN =
-        keccak256("DISCONNECTOR_ADMIN");
+    bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
+    bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
     bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
     bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
@@ -63,21 +59,28 @@ contract CertifiedAssetConnect is
     bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
     bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
+    uint256 private highwaterId;
+
     uint256 private certifiedUntil;
     ITier private erc20Tier;
     uint256 private erc20MinimumTier;
     ITier private erc1155Tier;
     uint256 private erc1155MinimumTier;
 
-    constructor(CertifiedAssetConnectConfig memory config_)
-        ERC20(config_.name, config_.symbol)
-        ERC1155(config_.uri)
+    constructor(ConstructionConfig memory config_)
+        ReceiptVault(config_.receiptVaultConfig)
     {
-        _setRoleAdmin(CONNECTOR_ADMIN, CONNECTOR_ADMIN);
-        _setRoleAdmin(CONNECTOR, CONNECTOR_ADMIN);
+        // There is no asset, the asset is offchain.
+        require(
+            config_.receiptVaultConfig.asset == address(0),
+            "NONZERO_ASSET"
+        );
 
-        _setRoleAdmin(DISCONNECTOR_ADMIN, DISCONNECTOR_ADMIN);
-        _setRoleAdmin(DISCONNECTOR, DISCONNECTOR_ADMIN);
+        _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
+        _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);
+
+        _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
+        _setRoleAdmin(WITHDRAWER, WITHDRAWER_ADMIN);
 
         _setRoleAdmin(CERTIFIER_ADMIN, CERTIFIER_ADMIN);
         _setRoleAdmin(CERTIFIER, CERTIFIER_ADMIN);
@@ -97,8 +100,8 @@ contract CertifiedAssetConnect is
         _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
         _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
 
-        _grantRole(CONNECTOR_ADMIN, config_.admin);
-        _grantRole(DISCONNECTOR_ADMIN, config_.admin);
+        _grantRole(DEPOSITOR_ADMIN, config_.admin);
+        _grantRole(WITHDRAWER_ADMIN, config_.admin);
         _grantRole(CERTIFIER_ADMIN, config_.admin);
         _grantRole(HANDLER_ADMIN, config_.admin);
         _grantRole(ERC20TIERER_ADMIN, config_.admin);
@@ -107,6 +110,103 @@ contract CertifiedAssetConnect is
         _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
         emit Construction(msg.sender, config_);
+    }
+
+    function _beforeDeposit(
+        uint256,
+        address,
+        uint256,
+        uint256
+    ) internal view override {
+        require(hasRole(DEPOSITOR, msg.sender), "NOT_DEPOSITOR");
+    }
+
+    function _afterWithdraw(
+        uint256,
+        address,
+        address owner_,
+        uint256,
+        uint256
+    ) internal view override {
+        require(hasRole(WITHDRAWER, owner_), "NOT_WITHDRAWER");
+    }
+
+    /// Shares total supply is 1:1 with offchain assets.
+    /// Assets aren't real so only way to report this is to return the total
+    /// supply of shares.
+    /// @inheritdoc ReceiptVault
+    function totalAssets()
+        external
+        view
+        override
+        returns (uint256 totalManagedAssets_)
+    {
+        totalManagedAssets_ = totalSupply();
+    }
+
+    function _shareRatio(address depositor_, address)
+        internal
+        view
+        override
+        returns (uint256 shareRatio_)
+    {
+        shareRatio_ = hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
+    }
+
+    /// Offchain assets are always deposited 1:1 with shares.
+    /// @inheritdoc ReceiptVault
+    function previewDeposit(uint256 assets_)
+        external
+        view
+        override
+        returns (uint256 shares_)
+    {
+        shares_ = hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
+    }
+
+    function _nextId() internal override returns (uint256 id_) {
+        id_ = highwaterId + 1;
+        highwaterId = id_;
+    }
+
+    function _beforeReceiptInformation(uint256 id_, bytes memory)
+        internal
+        view
+        override
+    {
+        // Only receipt holders and certifiers can assert things about offchain
+        // assets.
+        require(
+            balanceOf(msg.sender, id_) > 0 || hasRole(CERTIFIER, msg.sender),
+            "ASSET_INFORMATION_AUTH"
+        );
+    }
+
+    /// Receipt holders who are also depositors can increase the deposit amount
+    /// for the existing id of this receipt. It is STRONGLY RECOMMENDED the
+    /// redepositor also provides data to be forwarded to asset information to
+    /// justify the additional deposit. New offchain assets MUST NOT redeposit
+    /// under existing IDs, deposit under a new id instead.
+    /// @param assets_ As per IERC4626 `deposit`.
+    /// @param receiver_ As per IERC4626 `deposit`.
+    /// @param id_ The existing receipt to despoit additional assets under. Will
+    /// mint new ERC20 shares and also increase the held receipt amount 1:1.
+    /// @param data_ Forwarded to receipt mint and `assetInformation`.
+    function redeposit(
+        uint256 assets_,
+        address receiver_,
+        uint256 id_,
+        bytes calldata data_
+    ) external returns (uint256 shares_) {
+        require(balanceOf(msg.sender, id_) > 0, "NOT_RECEIPT_HOLDER");
+        _deposit(
+            assets_,
+            receiver_,
+            _shareRatio(msg.sender, receiver_),
+            id_,
+            data_
+        );
+        shares_ = assets_;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -227,40 +327,6 @@ contract CertifiedAssetConnect is
         bytes memory
     ) internal view override {
         enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
-    }
-
-    function connect(uint256 amount_, bytes calldata data_)
-        external
-        nonReentrant
-        onlyRole(CONNECTOR)
-        returns (uint256)
-    {
-        // Hashing the `amount_` and `data_` together to produce the internal
-        // `id_` effectively disallows partial burns on disconnect.
-        uint256 id_ = uint256(keccak256(abi.encodePacked(amount_, data_)));
-        emit Connect(msg.sender, id_, amount_, data_);
-        // erc20 mint.
-        _mint(msg.sender, amount_);
-
-        // erc1155 mint.
-        // Receiving contracts MUST implement `IERC1155Receiver`.
-        _mint(msg.sender, id_, amount_, data_);
-        return id_;
-    }
-
-    function disconnect(uint256 amount_, bytes calldata data_)
-        external
-        nonReentrant
-        onlyRole(DISCONNECTOR)
-        returns (uint256)
-    {
-        uint256 id_ = uint256(keccak256(abi.encodePacked(amount_, data_)));
-        emit Disconnect(msg.sender, id_, amount_, data_);
-        // erc20 burn.
-        _burn(msg.sender, amount_);
-        // erc1155 burn.
-        _burn(msg.sender, id_, amount_);
-        return id_;
     }
 
     // If there is no tier address then we always allow confiscations.
