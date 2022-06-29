@@ -1,29 +1,29 @@
 // scripts/deploy.js
 import {ethers, artifacts} from "hardhat";
-import type {ChainlinkFeedPriceOracleFactory} from "../typechain";
-import type {ChainlinkFeedPriceOracle} from "../typechain";
-import type {TwoPriceOracle} from "../typechain";
-import type {TwoPriceOracleFactory} from "../typechain";
-import type {ERC20PriceOracleVaultFactory} from "../typechain";
-import type {ERC20PriceOracleVault} from "../typechain";
+import type {ChainlinkFeedPriceOracleFactory} from "../../typechain";
+import type {ChainlinkFeedPriceOracle} from "../../typechain";
+import type {TwoPriceOracle} from "../../typechain";
+import type {TwoPriceOracleFactory} from "../../typechain";
+import type {ERC20PriceOracleVaultFactory} from "../../typechain";
+import type {ERC20PriceOracleVault} from "../../typechain";
 
 import type {Contract} from "ethers";
-import {getEventArgs} from "../test/util";
+import {getEventArgs} from "../../test/util";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
 
-  const xauUsd = "0x0C466540B2ee1a31b441671eac0ca886e051E410";
-  const maticUsd = "0xab594600376ec9fd91f8e885dadf0ce036862de0";
+  const xauUsd = "0x81570059A0cb83888f1459Ec66Aad1Ac16730243";
+  const ethUsd = "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e";
 
   const chainlinkFeedPriceOracleConfig = {
-    base: maticUsd,
+    base: ethUsd,
     // 1 hour
     baseStaleAfter: 60 * 60,
     quote: xauUsd,
     // 48 hours
     quoteStaleAfter: 48 * 60 * 60,
-    erc20ContractAddress: "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270"
+    erc20ContractAddress: "0xc778417E063141139Fce010982780140Aa0cD5Ab"
   };
 
   const chainlinkFeedPriceOracleFactoryFactory =
