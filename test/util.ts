@@ -24,12 +24,18 @@ export const sixZeros = "000000";
 export const xauOne = "100000000";
 
 export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
+export const ONE = priceOne
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
 const quoteAnswer = "191832000000"
 const baseAnswer = "106045000000"
+
+export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
+  a.mul(b).div(ONE);
+export const fixedPointDiv = (a: BigNumber, b: BigNumber): BigNumber =>
+  a.mul(ONE).div(b);
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 

@@ -35,13 +35,19 @@ describe("erc20 usage", async function () {
 
     const alice = signers[0];
 
-    await erc20Token.connect(alice).increaseAllowance(vault.address, 1000);
-    await vault.connect(alice)["deposit(uint256,address)"](1000, alice.address);
+    const assetAmount = 1000
 
-    const expectedErc20Balance = ethers.BigNumber.from("583");
+    await erc20Token.connect(alice).increaseAllowance(vault.address, assetAmount);
+    await vault.connect(alice)["deposit(uint256,address)"](assetAmount, alice.address);
+
+    const expectedErc20Balance = fixedPointMul(
+      fixedPointDiv(basePrice, quotePrice),
+      assetAmount
+    )
+
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
-    const expectedErc1155Balance = ethers.BigNumber.from("583");
-    const expectedErc1155BalanceAfter = ethers.BigNumber.from("583");
+    const expectedErc1155Balance = expectedErc20Balance;
+    const expectedErc1155BalanceAfter = expectedErc1155Balance;
     const expected1155ID = await priceOracle.price();
 
     const erc20Balance = await vault["balanceOf(address)"](signers[0].address);
