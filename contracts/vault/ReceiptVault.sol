@@ -303,8 +303,8 @@ contract ReceiptVault is
             // The conservative interpretation is that the user will WANT
             // the preview calculation to revert according to their own
             // preferences they set for themselves onchain.
-            // If the user did not set a min price it will fallback to 0
-            // and never revert.
+            // If the user did not set a min price the min price will be 0 and
+            // never revert.
             minShareRatios[msg.sender]
         );
     }
