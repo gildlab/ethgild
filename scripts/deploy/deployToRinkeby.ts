@@ -1,14 +1,14 @@
 // scripts/deploy.js
-import {ethers, artifacts} from "hardhat";
-import type {ChainlinkFeedPriceOracleFactory} from "../../typechain";
-import type {ChainlinkFeedPriceOracle} from "../../typechain";
-import type {TwoPriceOracle} from "../../typechain";
-import type {TwoPriceOracleFactory} from "../../typechain";
-import type {ERC20PriceOracleVaultFactory} from "../../typechain";
-import type {ERC20PriceOracleVault} from "../../typechain";
+import { ethers, artifacts } from "hardhat";
+import type { ChainlinkFeedPriceOracleFactory } from "../../typechain";
+import type { ChainlinkFeedPriceOracle } from "../../typechain";
+import type { TwoPriceOracle } from "../../typechain";
+import type { TwoPriceOracleFactory } from "../../typechain";
+import type { ERC20PriceOracleVaultFactory } from "../../typechain";
+import type { ERC20PriceOracleVault } from "../../typechain";
 
-import type {Contract} from "ethers";
-import {getEventArgs} from "../../test/util";
+import type { Contract } from "ethers";
+import { getEventArgs } from "../../test/util";
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -23,7 +23,7 @@ async function main() {
     quote: xauUsd,
     // 48 hours
     quoteStaleAfter: 48 * 60 * 60,
-    erc20ContractAddress: "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+    erc20ContractAddress: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
   };
 
   const chainlinkFeedPriceOracleFactoryFactory =
@@ -62,7 +62,7 @@ async function main() {
   ) as ChainlinkFeedPriceOracle & Contract;
   await basePriceOracle.deployed();
 
-  console.log("basePriceOracle deployed to: ", basePriceOracle.address)
+  console.log("basePriceOracle deployed to: ", basePriceOracle.address);
 
   // Deploy chainlink oracle adapter for quote.
   const txQuote = await chainlinkFeedPriceOracleFactory.createChildTyped({
@@ -88,7 +88,7 @@ async function main() {
   ) as ChainlinkFeedPriceOracle & Contract;
   await quotePriceOracle.deployed();
 
-  console.log("quotePriceOracle deployed to: ", quotePriceOracle.address)
+  console.log("quotePriceOracle deployed to: ", quotePriceOracle.address);
 
   const twoPriceOracleFactoryFactory = await ethers.getContractFactory(
     "TwoPriceOracleFactory"

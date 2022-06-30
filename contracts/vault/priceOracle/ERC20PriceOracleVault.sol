@@ -136,6 +136,11 @@ contract ERC20PriceOracleVault is ReceiptVault {
         emit Construction(msg.sender, config_);
     }
 
+    /// @inheritdoc ReceiptVault
+    function _nextId() view internal override returns (uint256 id_) {
+        id_ = priceOracle.price();
+    }
+
     function _shareRatio()
         internal
         view

@@ -1,10 +1,15 @@
 import chai from "chai";
-import {solidity} from "ethereum-waffle";
-import {BigNumber} from "ethers";
-import {expectedReferencePrice, deployERC20PriceOracleVault, basePrice, quotePrice} from "../util";
+import { solidity } from "ethereum-waffle";
+import { BigNumber } from "ethers";
+import {
+  expectedReferencePrice,
+  deployERC20PriceOracleVault,
+  basePrice,
+  quotePrice,
+} from "../util";
 
 chai.use(solidity);
-const {assert} = chai;
+const { assert } = chai;
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;

@@ -1,6 +1,6 @@
 import chai from "chai";
-import {solidity} from "ethereum-waffle";
-import {ethers} from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
   expectedName,
@@ -8,11 +8,11 @@ import {
   fixedPointMul,
   fixedPointDiv,
   quotePrice,
-  basePrice
+  basePrice,
 } from "../util";
 
 chai.use(solidity);
-const {expect, assert} = chai;
+const { expect, assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
@@ -39,15 +39,22 @@ describe("erc20 usage", async function () {
 
     const alice = signers[0];
 
-    const assetAmount = 1000
+    const assetAmount = 1000;
 
-    await erc20Token.connect(alice).increaseAllowance(vault.address, assetAmount);
-    await vault.connect(alice)["deposit(uint256,address)"](assetAmount, alice.address);
+    await erc20Token
+      .connect(alice)
+      .increaseAllowance(vault.address, assetAmount);
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address)"](assetAmount, alice.address);
 
     const expectedErc20Balance = fixedPointMul(
-      fixedPointDiv(ethers.BigNumber.from(basePrice), ethers.BigNumber.from(quotePrice)),
+      fixedPointDiv(
+        ethers.BigNumber.from(basePrice),
+        ethers.BigNumber.from(quotePrice)
+      ),
       ethers.BigNumber.from(assetAmount)
-    )
+    );
 
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
     const expectedErc1155Balance = expectedErc20Balance;

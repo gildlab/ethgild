@@ -38,7 +38,8 @@ describe("erc1155 usage", async function () {
       .connect(alice)
       .increaseAllowance(vault.address, gildAmount);
     await vault
-      .connect(alice)["deposit(uint256,address)"](gildAmount, alice.address);
+      .connect(alice)
+      ["deposit(uint256,address)"](gildAmount, alice.address);
 
     const expectedErc20Balance = gildAmount
       .mul(expectedReferencePrice)
@@ -48,9 +49,7 @@ describe("erc1155 usage", async function () {
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);
     const expected1155ID = await priceOracle.price();
 
-    const erc20Balance = await vault["balanceOf(address)"](
-      signers[0].address
-    );
+    const erc20Balance = await vault["balanceOf(address)"](signers[0].address);
     assert(
       erc20Balance.eq(expectedErc20Balance),
       `wrong erc20 balance ${expectedErc20Balance} ${erc20Balance}`

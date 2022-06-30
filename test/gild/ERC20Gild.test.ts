@@ -1,6 +1,6 @@
 import chai from "chai";
-import {solidity} from "ethereum-waffle";
-import {ethers} from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
   expectedReferencePrice,
@@ -11,7 +11,7 @@ import {
 
 chai.use(solidity);
 
-const {expect, assert} = chai;
+const { expect, assert } = chai;
 
 describe("deposit", async function () {
   it("should not zero deposit", async function () {
@@ -81,22 +81,22 @@ describe("deposit", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](
-          aliceDepositAmount,
-          alice.address,
-          oraclePrice.add(1),
-          []
-        ),
+            aliceDepositAmount,
+            alice.address,
+            oraclePrice.add(1),
+            []
+          ),
       "MIN_SHARE_RATIO",
       "failed to respect min price"
     );
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      aliceDepositAmount,
-      alice.address,
-      oraclePrice,
-      []
-    );
+        aliceDepositAmount,
+        alice.address,
+        oraclePrice,
+        []
+      );
 
     const expectedShares = oraclePrice.mul(aliceDepositAmount).div(priceOne);
     const aliceShares = await vault["balanceOf(address)"](alice.address);
@@ -197,11 +197,11 @@ describe("deposit", async function () {
     await vault
       .connect(alice)
       ["redeem(uint256,address,address,uint256)"](
-      erc1155Balance,
-      alice.address,
-      alice.address,
-      price
-    );
+        erc1155Balance,
+        alice.address,
+        alice.address,
+        price
+      );
     const erc20AliceBalanceWithdraw = await vault["balanceOf(address)"](
       alice.address
     );
@@ -217,11 +217,11 @@ describe("deposit", async function () {
         await vault
           .connect(alice)
           ["redeem(uint256,address,address,uint256)"](
-          erc1155Balance.sub(1),
-          alice.address,
-          alice.address,
-          price
-        ),
+            erc1155Balance.sub(1),
+            alice.address,
+            alice.address,
+            price
+          ),
       "burn amount exceeds balance",
       "failed to prevent gild referencePrice manipulation"
     );
@@ -330,7 +330,7 @@ describe("deposit", async function () {
 
     const bobUngildTx = await bobEthGild[
       "redeem(uint256,address,address,uint256)"
-      ](erc1155BobBalance, bob.address, bob.address, price);
+    ](erc1155BobBalance, bob.address, bob.address, price);
     await bobUngildTx.wait();
     const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
       bob.address,

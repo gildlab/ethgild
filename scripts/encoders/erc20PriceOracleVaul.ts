@@ -4,10 +4,9 @@ import { ethers, artifacts } from "hardhat";
 import type { ERC20PriceOracleVault } from "../../typechain";
 
 async function main() {
-
   //constants of rinkeby network
-  const erc20ContractAddress = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
-  const priceOracleAddress = "0x6Bc5906f69883DAc8C58296282BcAB26e780fc4D"
+  const erc20ContractAddress = "0xc778417E063141139Fce010982780140Aa0cD5Ab";
+  const priceOracleAddress = "0x6Bc5906f69883DAc8C58296282BcAB26e780fc4D";
 
   let erc20PriceOracleVaultConfig = {
     asset: erc20ContractAddress,
@@ -17,12 +16,11 @@ async function main() {
     priceOracle: priceOracleAddress,
   };
 
-  const abi = (await artifacts.readArtifact("ERC20PriceOracleVault")).abi
-  const iface = new ethers.utils.Interface( abi )
-  const constructorArgs = iface.encodeDeploy([erc20PriceOracleVaultConfig])
+  const abi = (await artifacts.readArtifact("ERC20PriceOracleVault")).abi;
+  const iface = new ethers.utils.Interface(abi);
+  const constructorArgs = iface.encodeDeploy([erc20PriceOracleVaultConfig]);
 
-  console.log(constructorArgs)
-
+  console.log(constructorArgs);
 }
 
 main()
