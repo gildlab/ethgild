@@ -275,7 +275,7 @@ contract ReceiptVault is
             // The conservative interpretation is that the user will WANT
             // the preview calculation to revert according to their own
             // preferences they set for themselves onchain.
-            // If the user did not set a min price it will fallback to 0
+            // If the user did not set a min price then the min price will be 0
             // and never revert.
             minShareRatios[msg.sender]
         );
@@ -327,20 +327,20 @@ contract ReceiptVault is
     /// @param receiver_ As per IERC4626 `deposit`.
     /// @param minShareRatio_ Caller can set the minimum share ratio they'll
     /// accept from the oracle, otherwise the transaction is rolled back.
-    /// @param assetInformation_ Forwarded to `assetInformation` to optionally
-    /// emit offchain context about this deposit.
+    /// @param receiptInformation_ Forwarded to `receiptInformation` to
+    /// optionally emit offchain context about this deposit.
     /// @return shares_ As per IERC4626 `deposit`.
     function deposit(
         uint256 assets_,
         address receiver_,
         uint256 minShareRatio_,
-        bytes memory assetInformation_
+        bytes memory receiptInformation_
     ) public returns (uint256 shares_) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
         require(minShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
         shares_ = _calculateDeposit(assets_, shareRatio_, minShareRatio_);
 
-        _deposit(assets_, receiver_, shares_, _nextId(), assetInformation_);
+        _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
     }
 
     /// Handles minting and emitting events according to spec.
@@ -359,7 +359,7 @@ contract ReceiptVault is
         address receiver_,
         uint256 shares_,
         uint256 id_,
-        bytes memory assetInformation_
+        bytes memory receiptInformation_
     ) internal nonReentrant {
         require(assets_ > 0, "0_ASSETS");
         require(receiver_ != address(0), "0_RECEIVER");
@@ -374,9 +374,9 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        _mint(receiver_, id_, shares_, assetInformation_);
+        _mint(receiver_, id_, shares_, receiptInformation_);
 
-        receiptInformation(id_, assetInformation_);
+        receiptInformation(id_, receiptInformation_);
     }
 
     function _beforeDeposit(
@@ -423,19 +423,19 @@ contract ReceiptVault is
     /// @param receiver_ As per IERC4626 `mint`.
     /// @param minShareRatio_ Caller can set the minimum price they'll accept
     /// from the oracle, otherwise the transaction is rolled back.
-    /// @param assetInformation_ Forwarded to `assetInformation` to optionally
-    /// emit offchain context about this deposit.
+    /// @param receiptInformation_ Forwarded to `receiptInformation` to
+    /// optionally emit offchain context about this deposit.
     /// @return assets_ As per IERC4626 `mint`.
     function mint(
         uint256 shares_,
         address receiver_,
         uint256 minShareRatio_,
-        bytes memory assetInformation_
+        bytes memory receiptInformation_
     ) public returns (uint256 assets_) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
         require(minShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
         assets_ = _calculateMint(shares_, shareRatio_, minShareRatio_);
-        _deposit(assets_, receiver_, shares_, _nextId(), assetInformation_);
+        _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
     }
 
     /// As withdrawal requires a price the vault deposits are non fungible. This

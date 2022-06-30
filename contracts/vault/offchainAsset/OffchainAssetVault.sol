@@ -225,12 +225,13 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// @param receiver_ As per IERC4626 `deposit`.
     /// @param id_ The existing receipt to despoit additional assets under. Will
     /// mint new ERC20 shares and also increase the held receipt amount 1:1.
-    /// @param data_ Forwarded to receipt mint and `assetInformation`.
+    /// @param receiptInformation_ Forwarded to receipt mint and
+    /// `receiptInformation`.
     function redeposit(
         uint256 assets_,
         address receiver_,
         uint256 id_,
-        bytes calldata data_
+        bytes calldata receiptInformation_
     ) external returns (uint256 shares_) {
         require(balanceOf(msg.sender, id_) > 0, "NOT_RECEIPT_HOLDER");
         _deposit(
@@ -238,7 +239,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
             receiver_,
             _shareRatio(msg.sender, receiver_),
             id_,
-            data_
+            receiptInformation_
         );
         shares_ = assets_;
     }
