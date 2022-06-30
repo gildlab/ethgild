@@ -9,6 +9,7 @@ import type {ChainlinkFeedPriceOracle} from "../typechain/ChainlinkFeedPriceOrac
 import type {TwoPriceOracle} from "../typechain/TwoPriceOracle";
 import type {TestErc20} from "../typechain/TestErc20";
 import type {TestChainlinkDataFeed} from "../typechain/TestChainlinkDataFeed";
+import type {ReceiptVault} from "../typechain/ReceiptVault";
 
 export const ethMainnetFeedRegistry =
   "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
@@ -102,16 +103,23 @@ export const deployERC20PriceOracleVault = async (): Promise<[
     quote: chainlinkFeedPriceOracleQuote.address,
   });
 
-  const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleVault"
-  );
-  const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy({
+  const constructionConfig = {
     asset: testErc20Contract.address,
     name: "EthGild",
     symbol: "ETHg",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-    priceOracle: twoPriceOracle.address,
-  })) as ERC20PriceOracleVault;
+  }
+
+  const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleVault"
+  );
+
+  const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy({
+        priceOracle: twoPriceOracle.address,
+        receiptVaultConfig: constructionConfig
+      }
+    )
+  ) as ERC20PriceOracleVault;
   await erc20PriceOracleVault.deployed();
 
   return [
