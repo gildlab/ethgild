@@ -28,7 +28,7 @@ export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-const quoteAnswer = "181832000000"
+const quoteAnswer = "191832000000"
 const baseAnswer = "106045000000"
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
