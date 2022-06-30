@@ -20,7 +20,7 @@ struct ConstructionConfig {
 }
 
 contract OffchainAssetVault is ReceiptVault, AccessControl {
-    event Construction(address sender, ConstructionConfig config);
+    event OffchainAssetVaultConstruction(address sender, ConstructionConfig config);
     event Certify(address sender, uint256 until, bytes data);
     event ConfiscateShares(
         address sender,
@@ -110,7 +110,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
         _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
-        emit Construction(msg.sender, config_);
+        emit OffchainAssetVaultConstruction(msg.sender, config_);
     }
 
     function _beforeDeposit(
