@@ -38,10 +38,10 @@ describe("erc20 usage", async function () {
     await erc20Token.connect(alice).increaseAllowance(vault.address, 1000);
     await vault.connect(alice)["deposit(uint256,address)"](1000, alice.address);
 
-    const expectedErc20Balance = ethers.BigNumber.from("1656");
+    const expectedErc20Balance = ethers.BigNumber.from("583");
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
-    const expectedErc1155Balance = ethers.BigNumber.from("1656");
-    const expectedErc1155BalanceAfter = ethers.BigNumber.from("1656");
+    const expectedErc1155Balance = ethers.BigNumber.from("583");
+    const expectedErc1155BalanceAfter = ethers.BigNumber.from("583");
     const expected1155ID = await priceOracle.price();
 
     const erc20Balance = await vault["balanceOf(address)"](signers[0].address);

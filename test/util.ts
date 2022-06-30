@@ -28,6 +28,9 @@ export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
+const quoteAnswer = "181832000000"
+const baseAnswer = "106045000000"
+
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
 export const deployERC20PriceOracleVault = async (): Promise<
@@ -45,23 +48,24 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const basePriceOracle = await oracleFactory.deploy();
   await basePriceOracle.deployed();
   const signers = await ethers.getSigners();
-  // ETHUSD as of 2022-02-06
+  // ETHUSD as of 2022-06-30
+
   await basePriceOracle.setDecimals(usdDecimals);
   await basePriceOracle.setRoundData(1, {
     startedAt: BigNumber.from(Date.now()).div(1000),
     updatedAt: BigNumber.from(Date.now()).div(1000),
-    answer: "299438264211",
+    answer: baseAnswer,
     answeredInRound: 1,
   });
 
   const quotePriceOracle = await oracleFactory.deploy();
   await quotePriceOracle.deployed();
-  // XAUUSD as of 2022-02-06
+  // XAUUSD as of 2022-06-30
   await quotePriceOracle.setDecimals(xauDecimals);
   await quotePriceOracle.setRoundData(1, {
     startedAt: BigNumber.from(Date.now()).div(1000),
     updatedAt: BigNumber.from(Date.now()).div(1000),
-    answer: "180799500000",
+    answer: quoteAnswer,
     answeredInRound: 1,
   });
 
@@ -114,9 +118,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   ];
 };
 
-export const expectedReferencePrice = ethers.BigNumber.from(
-  "1656189669833157724"
-);
+export const expectedReferencePrice = ethers.BigNumber.from(baseAnswer).mul(priceOne).div(ethers.BigNumber.from(quoteAnswer))
 
 export const assertError = async (f: Function, s: string, e: string) => {
   let didError = false;
