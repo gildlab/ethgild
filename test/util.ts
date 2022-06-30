@@ -1,13 +1,14 @@
 import chai from "chai";
-import { ethers } from "hardhat";
-import { ContractTransaction, Contract, BigNumber } from "ethers";
-const { assert } = chai;
-import { Result } from "ethers/lib/utils";
-import type { ERC20PriceOracleVault } from "../typechain/ERC20PriceOracleVault";
-import type { ChainlinkFeedPriceOracle } from "../typechain/ChainlinkFeedPriceOracle";
-import type { TwoPriceOracle } from "../typechain/TwoPriceOracle";
-import type { TestErc20 } from "../typechain/TestErc20";
-import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
+import {ethers} from "hardhat";
+import {ContractTransaction, Contract, BigNumber} from "ethers";
+
+const {assert} = chai;
+import {Result} from "ethers/lib/utils";
+import type {ERC20PriceOracleVault} from "../typechain/ERC20PriceOracleVault";
+import type {ChainlinkFeedPriceOracle} from "../typechain/ChainlinkFeedPriceOracle";
+import type {TwoPriceOracle} from "../typechain/TwoPriceOracle";
+import type {TestErc20} from "../typechain/TestErc20";
+import type {TestChainlinkDataFeed} from "../typechain/TestChainlinkDataFeed";
 
 export const ethMainnetFeedRegistry =
   "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
@@ -29,8 +30,8 @@ export const ONE = priceOne
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-const quoteAnswer = "191832000000"
-const baseAnswer = "106045000000"
+export const quotePrice = "191832000000"
+export const basePrice = "106045000000"
 
 export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
@@ -39,15 +40,13 @@ export const fixedPointDiv = (a: BigNumber, b: BigNumber): BigNumber =>
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
-export const deployERC20PriceOracleVault = async (): Promise<
-  [
-    ERC20PriceOracleVault,
-    TestErc20,
-    TwoPriceOracle,
-    TestChainlinkDataFeed,
-    TestChainlinkDataFeed
-  ]
-> => {
+export const deployERC20PriceOracleVault = async (): Promise<[
+  ERC20PriceOracleVault,
+  TestErc20,
+  TwoPriceOracle,
+  TestChainlinkDataFeed,
+  TestChainlinkDataFeed
+]> => {
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
@@ -60,7 +59,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   await basePriceOracle.setRoundData(1, {
     startedAt: BigNumber.from(Date.now()).div(1000),
     updatedAt: BigNumber.from(Date.now()).div(1000),
-    answer: baseAnswer,
+    answer: basePrice,
     answeredInRound: 1,
   });
 
@@ -71,7 +70,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   await quotePriceOracle.setRoundData(1, {
     startedAt: BigNumber.from(Date.now()).div(1000),
     updatedAt: BigNumber.from(Date.now()).div(1000),
-    answer: quoteAnswer,
+    answer: quotePrice,
     answeredInRound: 1,
   });
 
@@ -124,7 +123,10 @@ export const deployERC20PriceOracleVault = async (): Promise<
   ];
 };
 
-export const expectedReferencePrice = ethers.BigNumber.from(baseAnswer).mul(priceOne).div(ethers.BigNumber.from(quoteAnswer))
+export const expectedReferencePrice = ethers.BigNumber
+  .from(basePrice)
+  .mul(priceOne)
+  .div(ethers.BigNumber.from(quotePrice))
 
 export const assertError = async (f: Function, s: string, e: string) => {
   let didError = false;

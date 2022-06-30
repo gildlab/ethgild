@@ -1,14 +1,18 @@
 import chai from "chai";
-import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
+import {solidity} from "ethereum-waffle";
+import {ethers} from "hardhat";
 import {
   deployERC20PriceOracleVault,
   expectedName,
   expectedSymbol,
+  fixedPointMul,
+  fixedPointDiv,
+  quotePrice,
+  basePrice
 } from "../util";
 
 chai.use(solidity);
-const { expect, assert } = chai;
+const {expect, assert} = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
@@ -41,8 +45,8 @@ describe("erc20 usage", async function () {
     await vault.connect(alice)["deposit(uint256,address)"](assetAmount, alice.address);
 
     const expectedErc20Balance = fixedPointMul(
-      fixedPointDiv(basePrice, quotePrice),
-      assetAmount
+      fixedPointDiv(ethers.BigNumber.from(basePrice), ethers.BigNumber.from(quotePrice)),
+      ethers.BigNumber.from(assetAmount)
     )
 
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);

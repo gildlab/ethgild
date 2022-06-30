@@ -1,11 +1,10 @@
 import chai from "chai";
-import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
-import { BigNumber } from "ethers";
-import { expectedReferencePrice, deployERC20PriceOracleVault } from "../util";
+import {solidity} from "ethereum-waffle";
+import {BigNumber} from "ethers";
+import {expectedReferencePrice, deployERC20PriceOracleVault, basePrice, quotePrice} from "../util";
 
 chai.use(solidity);
-const { assert } = chai;
+const {assert} = chai;
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;
@@ -20,7 +19,7 @@ describe("oracle construction", async function () {
     await basePriceOracle.setRoundData(1, {
       startedAt: BigNumber.from(Date.now()).div(1000),
       updatedAt: BigNumber.from(Date.now()).div(1000),
-      answer: "106045000000",
+      answer: basePrice,
       answeredInRound: 1,
     });
 
@@ -29,7 +28,7 @@ describe("oracle construction", async function () {
     await quotePriceOracle.setRoundData(1, {
       startedAt: BigNumber.from(Date.now()).div(1000),
       updatedAt: BigNumber.from(Date.now()).div(1000),
-      answer: "181832000000",
+      answer: quotePrice,
       answeredInRound: 1,
     });
 
