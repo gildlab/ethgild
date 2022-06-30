@@ -22,8 +22,17 @@ struct ConstructionConfig {
 contract OffchainAssetVault is ReceiptVault, AccessControl {
     event Construction(address sender, ConstructionConfig config);
     event Certify(address sender, uint256 until, bytes data);
-    event ConfiscateShares(address sender, address confiscatee, uint confiscated);
-    event ConfiscateReceipt(address sender, address confiscatee, uint id, uint confiscated);
+    event ConfiscateShares(
+        address sender,
+        address confiscatee,
+        uint256 confiscated
+    );
+    event ConfiscateReceipt(
+        address sender,
+        address confiscatee,
+        uint256 id,
+        uint256 confiscated
+    );
 
     bytes32 private constant DEPOSITOR = keccak256("DEPOSITOR");
     bytes32 private constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
@@ -160,25 +169,34 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         public
         view
         override
-        returns (uint256 shares_) {
-            shares_ = hasRole(WITHDRAWER, msg.sender) ? super.previewWithdraw(assets_, id_) : 0;
-        }
+        returns (uint256 shares_)
+    {
+        shares_ = hasRole(WITHDRAWER, msg.sender)
+            ? super.previewWithdraw(assets_, id_)
+            : 0;
+    }
 
     function previewMint(uint256 shares_)
         public
         view
         override
-        returns (uint256 assets_) {
-            assets_ = hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
-        }
+        returns (uint256 assets_)
+    {
+        assets_ = hasRole(DEPOSITOR, msg.sender)
+            ? super.previewMint(shares_)
+            : 0;
+    }
 
-        function previewRedeem(uint256 shares_, uint id_)
+    function previewRedeem(uint256 shares_, uint256 id_)
         public
         view
         override
-        returns (uint256 assets_) {
-            assets_ = hasRole(WITHDRAWER, msg.sender) ? super.previewRedeem(shares_, id_) : 0;
-        }
+        returns (uint256 assets_)
+    {
+        assets_ = hasRole(WITHDRAWER, msg.sender)
+            ? super.previewRedeem(shares_, id_)
+            : 0;
+    }
 
     function _nextId() internal override returns (uint256 id_) {
         id_ = highwaterId + 1;
@@ -347,12 +365,20 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
     }
 
-    function confiscate(address confiscatee_) external nonReentrant onlyRole(CONFISCATOR) returns (uint confiscated_) {
-        if (address(erc20Tier) == address(0) ||
-        block.number < TierReport.tierBlock(
-            erc20Tier.report(confiscatee_),
-            erc20MinimumTier
-        )) {
+    function confiscate(address confiscatee_)
+        external
+        nonReentrant
+        onlyRole(CONFISCATOR)
+        returns (uint256 confiscated_)
+    {
+        if (
+            address(erc20Tier) == address(0) ||
+            block.number <
+            TierReport.tierBlock(
+                erc20Tier.report(confiscatee_),
+                erc20MinimumTier
+            )
+        ) {
             confiscated_ = balanceOf(confiscatee_);
             if (confiscated_ > 0) {
                 _transfer(confiscatee_, msg.sender, confiscated_);
@@ -361,16 +387,29 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         emit ConfiscateShares(msg.sender, confiscatee_, confiscated_);
     }
 
-    function confiscate(address confiscatee_, uint id_) external nonReentrant onlyRole(CONFISCATOR) returns (uint confiscated_) {
-        if (address(erc1155Tier) == address(0) ||
-        block.number <
-        TierReport.tierBlock(
-            erc1155Tier.report(confiscatee_),
-            erc1155MinimumTier
-        )) {
+    function confiscate(address confiscatee_, uint256 id_)
+        external
+        nonReentrant
+        onlyRole(CONFISCATOR)
+        returns (uint256 confiscated_)
+    {
+        if (
+            address(erc1155Tier) == address(0) ||
+            block.number <
+            TierReport.tierBlock(
+                erc1155Tier.report(confiscatee_),
+                erc1155MinimumTier
+            )
+        ) {
             confiscated_ = balanceOf(confiscatee_, id_);
             if (confiscated_ > 0) {
-                _safeTransferFrom(confiscatee_, msg.sender, id_, confiscated_, "");
+                _safeTransferFrom(
+                    confiscatee_,
+                    msg.sender,
+                    id_,
+                    confiscated_,
+                    ""
+                );
             }
         }
         emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);

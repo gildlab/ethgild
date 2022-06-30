@@ -17,7 +17,13 @@ struct ConstructionConfig {
     string uri;
 }
 
-contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Multicall {
+contract ReceiptVault is
+    ERC20Snapshot,
+    ERC1155,
+    IERC4626,
+    ReentrancyGuard,
+    Multicall
+{
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -197,8 +203,7 @@ contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Mult
     }
 
     // solhint-disable-next-line no-empty-blocks
-    function _nextId() internal virtual returns (uint256) {
-    }
+    function _nextId() internal virtual returns (uint256) {}
 
     /// @inheritdoc IERC4626
     function convertToShares(uint256 assets_)
@@ -392,11 +397,13 @@ contract ReceiptVault is ERC20Snapshot, ERC1155, IERC4626, ReentrancyGuard, Mult
         }
     }
 
+    /// Default is no restrictions on who can add information for a receipt.
     function _beforeReceiptInformation(uint256 id_, bytes memory data_)
         internal
         virtual
+    // solhint-disable-next-line no-empty-blocks
     {
-        // Default is no restrictions on who can add information for a receipt.
+
     }
 
     /// If the sender wants to use the ERC4626 `mint` function and set a
