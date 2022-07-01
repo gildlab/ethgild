@@ -38,7 +38,7 @@ describe("oracle construction", async function () {
     });
 
     const actualPrice = await priceOracle.price();
-    //5832031765585816 //583203176558581547
+
     assert(
       actualPrice.eq(expectedReferencePrice),
       `wrong price ${expectedReferencePrice} ${actualPrice}`

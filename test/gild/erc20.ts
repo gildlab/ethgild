@@ -12,7 +12,7 @@ import {
 } from "../util";
 
 chai.use(solidity);
-const { expect, assert } = chai;
+const { assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
@@ -38,6 +38,7 @@ describe("erc20 usage", async function () {
       await deployERC20PriceOracleVault();
 
     const alice = signers[0];
+    const price = await priceOracle.price()
 
     const assetAmount = 1000;
 
@@ -46,7 +47,12 @@ describe("erc20 usage", async function () {
       .increaseAllowance(vault.address, assetAmount);
     await vault
       .connect(alice)
-      ["deposit(uint256,address)"](assetAmount, alice.address);
+      ["deposit(uint256,address,uint256,bytes)"](
+      assetAmount,
+      alice.address,
+      price,
+      []
+    )
 
     const expectedErc20Balance = fixedPointMul(
       fixedPointDiv(

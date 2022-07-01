@@ -4,12 +4,11 @@ import { ContractTransaction, Contract, BigNumber } from "ethers";
 
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
-import type { ERC20PriceOracleVault } from "../typechain/ERC20PriceOracleVault";
-import type { ChainlinkFeedPriceOracle } from "../typechain/ChainlinkFeedPriceOracle";
-import type { TwoPriceOracle } from "../typechain/TwoPriceOracle";
-import type { TestErc20 } from "../typechain/TestErc20";
-import type { TestChainlinkDataFeed } from "../typechain/TestChainlinkDataFeed";
-import type { ReceiptVault } from "../typechain/ReceiptVault";
+import type { ERC20PriceOracleVault } from "../typechain";
+import type { ChainlinkFeedPriceOracle } from "../typechain";
+import type { TwoPriceOracle } from "../typechain";
+import type { TestErc20 } from "../typechain";
+import type { TestChainlinkDataFeed } from "../typechain";
 
 export const ethMainnetFeedRegistry =
   "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
@@ -31,8 +30,8 @@ export const ONE = priceOne;
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const quotePrice = "191832000000";
-export const basePrice = "106045000000";
+export const quotePrice = "180662000000";
+export const basePrice = "107491910716";
 
 export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
@@ -55,7 +54,6 @@ export const deployERC20PriceOracleVault = async (): Promise<
   );
   const basePriceOracle = await oracleFactory.deploy();
   await basePriceOracle.deployed();
-  const signers = await ethers.getSigners();
   // ETHUSD as of 2022-06-30
 
   await basePriceOracle.setDecimals(usdDecimals);
