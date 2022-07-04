@@ -24,6 +24,18 @@ describe("config", async function () {
       vaultAsset === asset.address,
       "Wrong asset address"
     );
-  })
+  }),
+    it("Sets the correct min Share Ratio", async function () {
+      [owner] = await ethers.getSigners()
+      const expectedMinShareRatio = 100
 
+      const [vault, asset] = await deployERC20PriceOracleVault();
+      await vault.setMinShareRatio(100)
+      let minShareRatio = await vault.minShareRatios(owner.address)
+
+      assert(
+        minShareRatio.toNumber() === expectedMinShareRatio,
+        "Wrong min Share Ratio"
+      );
+    })
 })
