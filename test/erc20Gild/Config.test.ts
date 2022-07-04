@@ -3,6 +3,9 @@ import {solidity} from "ethereum-waffle";
 import {ethers} from "hardhat";
 import {
   deployERC20PriceOracleVault,
+  expectedName,
+  expectedSymbol,
+  expectedUri
 } from "../util";
 import {ERC20PriceOracleVaultConstructionEvent} from "../../typechain/ERC20PriceOracleVault";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
@@ -29,9 +32,9 @@ describe("config", async function () {
 
     assert(caller === owner.address, "wrong deploy sender");
     assert(config.receiptVaultConfig.asset === asset.address, "wrong asset address");
-    assert(config.receiptVaultConfig.name === "EthGild", "wrong deploy name");
-    assert(config.receiptVaultConfig.symbol === "ETHg", "wrong deploy symbol");
-    assert(config.receiptVaultConfig.uri === "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4", "wrong deploy uri");
+    assert(config.receiptVaultConfig.name === expectedName, "wrong deploy name");
+    assert(config.receiptVaultConfig.symbol === expectedSymbol, "wrong deploy symbol");
+    assert(config.receiptVaultConfig.uri === expectedUri);
     assert(config.priceOracle === priceOracle.address, "wrong deploy priceOracle address");
   })
 })
