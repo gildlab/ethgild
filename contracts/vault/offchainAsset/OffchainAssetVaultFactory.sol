@@ -2,11 +2,11 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import {CertifiedAssetConnect, CertifiedAssetConnectConfig} from "./CertifiedAssetConnect.sol";
+import {OffchainAssetVault, ConstructionConfig} from "./OffchainAssetVault.sol";
 
-/// @title CertifiedAssetConnectFactory
-/// @notice Factory for creating and deploying `CertifiedAssetConnect`.
-contract CertifiedAssetConnectFactory is Factory {
+/// @title OffchainAssetVaultFactory
+/// @notice Factory for creating and deploying `OffchainAssetVault`.
+contract OffchainAssetVaultFactory is Factory {
     /// @inheritdoc Factory
     function _createChild(bytes calldata data_)
         internal
@@ -19,9 +19,7 @@ contract CertifiedAssetConnectFactory is Factory {
         // and ERC1155Upgradeable at the same time.
         return
             address(
-                new CertifiedAssetConnect(
-                    abi.decode(data_, (CertifiedAssetConnectConfig))
-                )
+                new OffchainAssetVault(abi.decode(data_, (ConstructionConfig)))
             );
     }
 
@@ -29,12 +27,12 @@ contract CertifiedAssetConnectFactory is Factory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param config_ `CertifiedAssetConnectConfig` of the `CertifiedAssetConnect` logic.
-    /// @return New `CertifiedAssetConnect` child contract address.
-    function createChildTyped(CertifiedAssetConnectConfig calldata config_)
+    /// @param config_ Construction config for the vault.
+    /// @return New `OffchainAssetVault` child contract address.
+    function createChildTyped(ConstructionConfig calldata config_)
         external
-        returns (CertifiedAssetConnect)
+        returns (OffchainAssetVault)
     {
-        return CertifiedAssetConnect(this.createChild(abi.encode(config_)));
+        return OffchainAssetVault(this.createChild(abi.encode(config_)));
     }
 }

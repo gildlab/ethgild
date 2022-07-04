@@ -5,10 +5,14 @@ import {
   deployERC20PriceOracleVault,
   expectedName,
   expectedSymbol,
+  fixedPointMul,
+  fixedPointDiv,
+  quotePrice,
+  basePrice,
 } from "../util";
 
 chai.use(solidity);
-const { expect, assert } = chai;
+const { assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
@@ -34,14 +38,33 @@ describe("erc20 usage", async function () {
       await deployERC20PriceOracleVault();
 
     const alice = signers[0];
+    const price = await priceOracle.price()
 
-    await erc20Token.connect(alice).increaseAllowance(vault.address, 1000);
-    await vault.connect(alice)["deposit(uint256,address)"](1000, alice.address);
+    const assetAmount = 1000;
 
-    const expectedErc20Balance = ethers.BigNumber.from("1656");
+    await erc20Token
+      .connect(alice)
+      .increaseAllowance(vault.address, assetAmount);
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+      assetAmount,
+      alice.address,
+      price,
+      []
+    )
+
+    const expectedErc20Balance = fixedPointMul(
+      fixedPointDiv(
+        ethers.BigNumber.from(basePrice),
+        ethers.BigNumber.from(quotePrice)
+      ),
+      ethers.BigNumber.from(assetAmount)
+    );
+
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
-    const expectedErc1155Balance = ethers.BigNumber.from("1656");
-    const expectedErc1155BalanceAfter = ethers.BigNumber.from("1656");
+    const expectedErc1155Balance = expectedErc20Balance;
+    const expectedErc1155BalanceAfter = expectedErc1155Balance;
     const expected1155ID = await priceOracle.price();
 
     const erc20Balance = await vault["balanceOf(address)"](signers[0].address);

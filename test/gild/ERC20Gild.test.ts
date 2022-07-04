@@ -1,17 +1,11 @@
 import chai from "chai";
-import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
-import {
-  deployERC20PriceOracleVault,
-  expectedReferencePrice,
-  assertError,
-  priceOne,
-  RESERVE_ONE,
-} from "../util";
+import {solidity} from "ethereum-waffle";
+import {ethers} from "hardhat";
+import {assertError, deployERC20PriceOracleVault, expectedReferencePrice, priceOne,} from "../util";
 
 chai.use(solidity);
 
-const { expect, assert } = chai;
+const { assert} = chai;
 
 describe("deposit", async function () {
   it("should not zero deposit", async function () {
@@ -20,14 +14,11 @@ describe("deposit", async function () {
 
     const [vault, asset] = await deployERC20PriceOracleVault();
 
-    const totalTokenSupply = ethers.BigNumber.from("2000").mul(priceOne);
-    const staticPrice = ethers.BigNumber.from("75").mul(RESERVE_ONE);
-
-    const desiredUnitsAlice = totalTokenSupply;
-    const costAlice = staticPrice.mul(desiredUnitsAlice).div(priceOne);
+    const totalTokenSupply = await asset.totalSupply();
+    const aliceDepositAmount = totalTokenSupply.div(2);
 
     // give alice reserve to cover cost
-    await asset.transfer(alice.address, costAlice);
+    await asset.transfer(alice.address, aliceDepositAmount);
 
     const aliceReserveBalance = await asset.balanceOf(alice.address);
 
@@ -80,21 +71,23 @@ describe("deposit", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["deposit(uint256,address,uint256)"](
-            aliceDepositAmount,
-            alice.address,
-            oraclePrice.add(1)
-          ),
-      "MIN_PRICE",
+          ["deposit(uint256,address,uint256,bytes)"](
+          aliceDepositAmount,
+          alice.address,
+          oraclePrice.add(1),
+          []
+        ),
+      "MIN_SHARE_RATIO",
       "failed to respect min price"
     );
     await vault
       .connect(alice)
-      ["deposit(uint256,address,uint256)"](
-        aliceDepositAmount,
-        alice.address,
-        oraclePrice
-      );
+      ["deposit(uint256,address,uint256,bytes)"](
+      aliceDepositAmount,
+      alice.address,
+      oraclePrice,
+      []
+    );
 
     const expectedShares = oraclePrice.mul(aliceDepositAmount).div(priceOne);
     const aliceShares = await vault["balanceOf(address)"](alice.address);
@@ -127,7 +120,12 @@ describe("deposit", async function () {
 
     await vault
       .connect(alice)
-      ["deposit(uint256,address)"](aliceEthAmount, alice.address);
+      ["deposit(uint256,address,uint256,bytes)"](
+      aliceEthAmount,
+      alice.address,
+      price,
+      []
+    )
 
     const expectedAliceBalance = expectedReferencePrice
       .mul(aliceEthAmount)
@@ -172,7 +170,12 @@ describe("deposit", async function () {
 
     await vault
       .connect(bob)
-      ["deposit(uint256,address)"](bobEthAmount, bob.address);
+      ["deposit(uint256,address,uint256,bytes)"](
+      bobEthAmount,
+      bob.address,
+      price,
+      []
+    )
 
     const expectedBobBalance = expectedReferencePrice
       .mul(bobEthAmount)
@@ -195,11 +198,11 @@ describe("deposit", async function () {
     await vault
       .connect(alice)
       ["redeem(uint256,address,address,uint256)"](
-        erc1155Balance,
-        alice.address,
-        alice.address,
-        price
-      );
+      erc1155Balance,
+      alice.address,
+      alice.address,
+      price
+    );
     const erc20AliceBalanceWithdraw = await vault["balanceOf(address)"](
       alice.address
     );
@@ -215,11 +218,11 @@ describe("deposit", async function () {
         await vault
           .connect(alice)
           ["redeem(uint256,address,address,uint256)"](
-            erc1155Balance.sub(1),
-            alice.address,
-            alice.address,
-            price
-          ),
+          erc1155Balance.sub(1),
+          alice.address,
+          alice.address,
+          price
+        ),
       "burn amount exceeds balance",
       "failed to prevent gild referencePrice manipulation"
     );
@@ -328,7 +331,7 @@ describe("deposit", async function () {
 
     const bobUngildTx = await bobEthGild[
       "redeem(uint256,address,address,uint256)"
-    ](erc1155BobBalance, bob.address, bob.address, price);
+      ](erc1155BobBalance, bob.address, bob.address, price);
     await bobUngildTx.wait();
     const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
       bob.address,
