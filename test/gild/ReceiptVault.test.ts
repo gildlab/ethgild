@@ -82,5 +82,29 @@ describe("Receipt vault", async function () {
         assets.eq(expectedAsset),
         `Wrong asset ${expectedAsset} ${assets}`
       );
+    }),
+
+    it("shows no variations based on caller", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+      const bob = signers[1];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const aliceEthGild = vault.connect(alice);
+      const bobEthGild = vault.connect(bob);
+
+      const price = await priceOracle.price()
+
+      const share = ethers.BigNumber.from("10").pow(20)
+      const expectedAsset = fixedPointDiv(share, price)
+
+      const assetsAlice = await aliceEthGild.convertToAssets(share)
+      const assetsBob = await bobEthGild.convertToAssets(share)
+
+      assert(
+        assetsAlice.eq(assetsBob),
+        `Wrong asset ${assetsAlice} ${assetsBob}`
+      );
     })
 })
