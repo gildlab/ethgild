@@ -30,28 +30,28 @@ describe("Receipt vault", async function () {
   }),
     it("Sets the correct min Share Ratio", async function () {
       [owner] = await ethers.getSigners()
-      const expectedMinShareRatio = 100
+      const expectedMinShareRatio = ethers.BigNumber.from("100")
 
       const [vault] = await deployERC20PriceOracleVault();
       await vault.setMinShareRatio(100)
       let minShareRatio = await vault.minShareRatios(owner.address)
 
       assert(
-        minShareRatio.toNumber() === expectedMinShareRatio,
-        `Wrong min Share Ratio ${expectedMinShareRatio} ${minShareRatio.toNumber()}`
+        minShareRatio.eq(expectedMinShareRatio),
+        `Wrong min Share Ratio ${expectedMinShareRatio} ${minShareRatio}`
       );
     }),
     it("Sets the correct withdraw Id", async function () {
       [owner] = await ethers.getSigners()
-      const expectedWithdrawId = 100
+      const expectedWithdrawId = ethers.BigNumber.from("100")
 
       const [vault] = await deployERC20PriceOracleVault();
       await vault.setWithdrawId(100)
       let withdrawId = await vault.withdrawIds(owner.address)
 
       assert(
-        withdrawId.toNumber() === expectedWithdrawId,
-        `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
+        withdrawId.eq(expectedWithdrawId),
+        `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId}`
       );
     }),
     it("Checks total asset is same as balance", async function () {
@@ -66,26 +66,21 @@ describe("Receipt vault", async function () {
       //   `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
       // );
     }),
-    it.only("calculates correct assets", async function () {
+    it("Calculates correct assets", async function () {
       [owner] = await ethers.getSigners()
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
       const price = await priceOracle.price()
 
-      console.log(price)
-
       const share = ethers.BigNumber.from("10").pow(20)
       const expectedAsset = fixedPointDiv(share, price)
 
-      console.log(expectedAsset)
+      const assets = await vault.convertToAssets(share)
 
-      // const assets = await vault.convertToAssets(share)
-      // console.log(assets)
-
-      // assert(
-      // withdrawId.toNumber() === expectedWithdrawId,
-      // `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
-      // );
+      assert(
+        assets.eq(expectedAsset),
+        `Wrong asset ${expectedAsset} ${assets}`
+      );
     })
 })
