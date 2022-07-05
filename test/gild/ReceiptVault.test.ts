@@ -3,6 +3,7 @@ import {solidity} from "ethereum-waffle";
 import {ethers} from "hardhat";
 import {
   deployERC20PriceOracleVault,
+  fixedPointDiv
 } from "../util";
 import {ERC20PriceOracleVaultConstructionEvent} from "../../typechain/ERC20PriceOracleVault";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
@@ -65,21 +66,22 @@ describe("Receipt vault", async function () {
       //   `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
       // );
     }),
-    it("calculates correct assets", async function () {
+    it.only("calculates correct assets", async function () {
       [owner] = await ethers.getSigners()
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
       const price = await priceOracle.price()
 
-      const share = 100
+      console.log(price)
 
-      const expectedAsset = share / price.toNumber()
+      const share = ethers.BigNumber.from("10").pow(20)
+      const expectedAsset = fixedPointDiv(share, price)
 
       console.log(expectedAsset)
 
-      const assets = await vault.convertToAssets(share)
-      console.log(assets)
+      // const assets = await vault.convertToAssets(share)
+      // console.log(assets)
 
       // assert(
       // withdrawId.toNumber() === expectedWithdrawId,
