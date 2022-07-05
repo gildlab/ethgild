@@ -125,5 +125,18 @@ describe("Receipt vault", async function () {
         `Wrong share ${expectedShares} ${shares}`
       );
 
+    }),
+    it("Sets correct max deposit value", async function () {
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const expectedMaxDeposit = ethers.BigNumber.from(2).pow(256)
+        //up to 2**256 so should substruct 1
+        .sub(1)
+      const maxDeposit = await vault.maxDeposit(owner.address)
+
+      assert(
+        maxDeposit.eq(expectedMaxDeposit),
+        `Wrong max deposit ${expectedMaxDeposit} ${maxDeposit}`
+      );
     })
 })
