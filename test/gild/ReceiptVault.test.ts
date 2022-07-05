@@ -6,6 +6,8 @@ import {
 } from "../util";
 import {ERC20PriceOracleVaultConstructionEvent} from "../../typechain/ERC20PriceOracleVault";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import {TestErc20} from "../../typechain";
+
 
 import {getEventArgs} from "../util";
 
@@ -50,5 +52,38 @@ describe("Receipt vault", async function () {
         withdrawId.toNumber() === expectedWithdrawId,
         `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
       );
+    }),
+    it("Checks total asset is same as balance", async function () {
+      // [owner] = await ethers.getSigners()
+      //
+      // const [vault, asset] = await deployERC20PriceOracleVault();
+      //
+      // console.log(await asset.balanceOf(vault.address), await vault.totalAssets())
+
+      // assert(
+      //   withdrawId.toNumber() === expectedWithdrawId,
+      //   `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
+      // );
+    }),
+    it("calculates correct assets", async function () {
+      [owner] = await ethers.getSigners()
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price()
+
+      const share = 100
+
+      const expectedAsset = share / price.toNumber()
+
+      console.log(expectedAsset)
+
+      const assets = await vault.convertToAssets(share)
+      console.log(assets)
+
+      // assert(
+      // withdrawId.toNumber() === expectedWithdrawId,
+      // `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
+      // );
     })
 })
