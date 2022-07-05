@@ -3,7 +3,8 @@ import {solidity} from "ethereum-waffle";
 import {ethers} from "hardhat";
 import {
   deployERC20PriceOracleVault,
-  fixedPointDiv
+  fixedPointDiv,
+  fixedPointMul
 } from "../util";
 import {ERC20PriceOracleVaultConstructionEvent} from "../../typechain/ERC20PriceOracleVault";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
@@ -106,5 +107,23 @@ describe("Receipt vault", async function () {
         assetsAlice.eq(assetsBob),
         `Wrong asset ${assetsAlice} ${assetsBob}`
       );
+    }),
+    it("Calculates correct shares", async function () {
+      [owner] = await ethers.getSigners()
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price()
+
+      const assets = ethers.BigNumber.from("10").pow(20)
+      const expectedShares = fixedPointMul(assets, price)
+
+      const shares = await vault.convertToShares(assets)
+
+      assert(
+        shares.eq(expectedShares),
+        `Wrong share ${expectedShares} ${shares}`
+      );
+
     })
 })
