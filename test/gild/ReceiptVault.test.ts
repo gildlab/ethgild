@@ -2,6 +2,7 @@ import chai from "chai";
 import {solidity} from "ethereum-waffle";
 import {ethers} from "hardhat";
 import {
+  assertError,
   deployERC20PriceOracleVault,
   fixedPointDiv,
   fixedPointMul
@@ -167,6 +168,25 @@ describe("Receipt vault", async function () {
       assert(
         maxDeposit.eq(expectedMaxDeposit),
         `Wrong max deposit ${expectedMaxDeposit} ${maxDeposit}`
+      );
+    }),
+    it("Respects min price in case of previewDeposit", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const assets = ethers.BigNumber.from("10").pow(20)
+      const price = await priceOracle.price()
+
+      await vault.setMinShareRatio(price.add(1))
+
+      await assertError(
+        async () =>
+          await vault
+            .connect(alice).previewDeposit(assets),
+        "MIN_PRICE",
+        "failed to respect min price"
       );
     })
 })
