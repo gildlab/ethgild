@@ -253,7 +253,37 @@ describe("Receipt vault", async function () {
 
         await vault.connect(alice)['deposit(uint256,address)'](assets, alice.address)
         const shares = await vault["balanceOf(address)"](alice.address);
-        console.log(expectedShares, shares)
+
+        assert(
+          shares.eq(expectedShares),
+          `wrong alice ETHg ${expectedShares} ${shares}`
+        );
+      }),
+      it("Calculates shares correctly with NO min price set", async function () {
+        const signers = await ethers.getSigners();
+
+        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+        const alice = signers[1];
+
+        const totalTokenSupply = await asset.totalSupply();
+
+        const assets = totalTokenSupply.div(2);
+
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, assets)
+
+        // Min gild price MUST be respected
+        const price = await priceOracle.price();
+
+        await asset
+          .connect(alice)
+          .increaseAllowance(vault.address, assets);
+
+        const expectedShares = fixedPointMul(assets, price)
+
+        await vault.connect(alice)['deposit(uint256,address)'](assets, alice.address)
+        const shares = await vault["balanceOf(address)"](alice.address);
 
         assert(
           shares.eq(expectedShares),
