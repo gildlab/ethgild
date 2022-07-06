@@ -85,7 +85,6 @@ describe("Receipt vault", async function () {
         `Wrong asset ${expectedAsset} ${assets}`
       );
     }),
-
     it("Shows no variations based on caller", async function () {
       const signers = await ethers.getSigners();
       const alice = signers[0];
@@ -204,4 +203,62 @@ describe("Receipt vault", async function () {
         `Wrong shares ${expectedshares} ${share}`
       );
     })
-})
+}),
+  describe("Deposit", async () => {
+    it("Must respect min Price", async function () {
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const price = await priceOracle.price()
+
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+      const bob = signers[1];
+
+      const assets = ethers.BigNumber.from("10").pow(20)
+      const expectedShares = fixedPointMul(assets, price)
+
+      await vault.connect(alice).setMinShareRatio(price.add(1))
+
+      await assertError(
+        async () =>
+          await vault
+            .connect(alice)['deposit(uint256,address)'](assets, bob.address),
+        "MIN_SHARE_RATIO",
+        "failed to respect min price"
+      );
+    }),
+      it("Calculates shares correctly with min price set", async function () {
+        const signers = await ethers.getSigners();
+
+        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+        const alice = signers[1];
+
+        const totalTokenSupply = await asset.totalSupply();
+
+        const assets = totalTokenSupply.div(2);
+
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, assets)
+
+        // Min gild price MUST be respected
+        const price = await priceOracle.price();
+
+        await asset
+          .connect(alice)
+          .increaseAllowance(vault.address, assets);
+
+        const expectedShares = fixedPointMul(assets, price)
+
+        await vault.connect(alice).setMinShareRatio(price.sub(1))
+
+        await vault.connect(alice)['deposit(uint256,address)'](assets, alice.address)
+        const shares = await vault["balanceOf(address)"](alice.address);
+        console.log(expectedShares, shares)
+
+        assert(
+          shares.eq(expectedShares),
+          `wrong alice ETHg ${expectedShares} ${shares}`
+        );
+      })
+  })
+
