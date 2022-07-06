@@ -85,7 +85,7 @@ describe("Receipt vault", async function () {
       );
     }),
 
-    it("shows no variations based on caller", async function () {
+    it("Shows no variations based on caller", async function () {
       const signers = await ethers.getSigners();
       const alice = signers[0];
       const bob = signers[1];
@@ -125,6 +125,29 @@ describe("Receipt vault", async function () {
         `Wrong share ${expectedShares} ${shares}`
       );
 
+    }),
+    it("Shows no variations based on caller for convertToShares", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+      const bob = signers[1];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const aliceEthGild = vault.connect(alice);
+      const bobEthGild = vault.connect(bob);
+
+      const price = await priceOracle.price()
+
+      const assets = ethers.BigNumber.from("10").pow(20)
+      const expectedShares = fixedPointMul(assets, price)
+
+      const sharesAlice = await aliceEthGild.convertToShares(assets)
+      const sharesBob = await bobEthGild.convertToShares(assets)
+
+      assert(
+        sharesAlice.eq(sharesBob),
+        `Wrong shares ${sharesAlice} ${sharesBob}`
+      );
     }),
     it("Sets correct max deposit value", async function () {
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
