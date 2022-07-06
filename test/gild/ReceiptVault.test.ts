@@ -115,6 +115,13 @@ describe("Receipt vault", async function () {
 
       const price = await priceOracle.price()
 
+      const minPrice = ethers.BigNumber.from(0)
+
+      assert(
+        price >= minPrice,
+        `price is less then minPrice ${price} ${minPrice}`
+      );
+
       const assets = ethers.BigNumber.from("10").pow(20)
       const expectedShares = fixedPointMul(assets, price)
 
