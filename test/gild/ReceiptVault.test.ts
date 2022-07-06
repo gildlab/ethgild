@@ -188,5 +188,20 @@ describe("Receipt vault", async function () {
         "MIN_PRICE",
         "failed to respect min price"
       );
+    }),
+    it("Sets correct shares by previewDeposit", async function () {
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const assets = ethers.BigNumber.from("10").pow(20)
+
+
+      const price = await priceOracle.price()
+      const expectedshares = fixedPointMul(assets, price)
+      const share = await vault.previewDeposit(assets)
+
+      assert(
+        share.eq(expectedshares),
+        `Wrong shares ${expectedshares} ${share}`
+      );
     })
 })
