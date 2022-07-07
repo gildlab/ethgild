@@ -441,6 +441,29 @@ describe("Receipt vault", async function () {
           "not enough assets",
           "failed to revert"
         );
+      }),
+      it("MUST NOT successfully deposit if the vault is not approved for the depositor's assets", async function () {
+        const signers = await ethers.getSigners();
+        const alice = signers[0];
+
+        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+        const price = await priceOracle.price();
+
+        const totalTokenSupply = await asset.totalSupply();
+        const assets = totalTokenSupply.div(2);
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, assets)
+
+        const aliceAssets = await asset.connect(alice).balanceOf(alice.address)
+
+        //try to deposit without approve
+        await assertError(
+          async () =>
+            await vault
+              .connect(alice)['deposit(uint256,address)'](assets, alice.address),
+          "ERC20: insufficient allowance'",
+          "failed to revert"
+        );
       })
   })
 
