@@ -1,7 +1,7 @@
 import chai from "chai";
 import {solidity} from "ethereum-waffle";
 import {ethers} from "hardhat";
-import {assertError, deployERC20PriceOracleVault, expectedReferencePrice, priceOne,} from "../util";
+import {assertError, deployERC20PriceOracleVault, expectedReferencePrice, priceOne, fixedPointMul, fixedPointDiv} from "../util";
 
 chai.use(solidity);
 
@@ -237,43 +237,45 @@ describe("deposit", async function () {
     );
   });
 
-  it("should trade erc1155", async function () {
+  it.only("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [ethGild, erc20Token, priceOracle] =
+    const [vault, asset, priceOracle] =
       await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
 
-    const aliceEthGild = ethGild.connect(alice);
-    const bobEthGild = ethGild.connect(bob);
+    const aliceVault = vault.connect(alice);
+    const bobVault = vault.connect(bob);
 
     const price = await priceOracle.price();
     const id1155 = price;
 
-    let totalTokenSupply = await erc20Token.totalSupply();
+    let totalTokenSupply = await asset.totalSupply();
 
     const aliceAssetBalanceAmount = totalTokenSupply.div(2);
 
-    await erc20Token.transfer(alice.address, aliceAssetBalanceAmount);
+    await asset.transfer(alice.address, aliceAssetBalanceAmount);
 
-    await erc20Token
+    await asset
       .connect(alice)
-      .increaseAllowance(ethGild.address, aliceAssetBalanceAmount);
+      .increaseAllowance(vault.address, aliceAssetBalanceAmount);
 
-    // const bobEthAmount = ethers.BigNumber.from("9" + eighteenZeros);
-
-    await aliceEthGild["deposit(uint256,address)"](
+    await aliceVault["deposit(uint256,address)"](
       aliceAssetBalanceAmount,
       alice.address
     );
 
-    const aliceShareBalance = await ethGild["balanceOf(address)"](
+    const aliceShareBalance = await vault["balanceOf(address)"](
       alice.address
     );
-    // erc1155 transfer.
-    await aliceEthGild.safeTransferFrom(
+
+    const expectedAliceShareBalance = fixedPointMul(price, aliceAssetBalanceAmount)
+    assert(expectedAliceShareBalance.eq(aliceShareBalance), `wrong alice share balance`)
+
+    // transfer all receipt from alice to bob.
+    await aliceVault.safeTransferFrom(
       alice.address,
       bob.address,
       id1155,
@@ -284,7 +286,7 @@ describe("deposit", async function () {
     // alice cannot withdraw after sending to bob.
     await assertError(
       async () =>
-        await aliceEthGild["redeem(uint256,address,address,uint256)"](
+        await aliceVault["redeem(uint256,address,address,uint256)"](
           1000,
           alice.address,
           alice.address,
@@ -297,7 +299,7 @@ describe("deposit", async function () {
     // bob cannot withdraw without erc20
     await assertError(
       async () =>
-        await bobEthGild["redeem(uint256,address,address,uint256)"](
+        await bobVault["redeem(uint256,address,address,uint256)"](
           1000,
           bob.address,
           bob.address,
@@ -307,12 +309,12 @@ describe("deposit", async function () {
       "failed to prevent bob withdrawing without receiving erc20"
     );
 
-    // // erc20 transfer.
-    await aliceEthGild.transfer(bob.address, aliceShareBalance);
+    // erc20 transfer all of alice's shares to bob.
+    await aliceVault.transfer(bob.address, aliceShareBalance);
 
     await assertError(
       async () =>
-        await aliceEthGild["redeem(uint256,address,address,uint256)"](
+        await aliceVault["redeem(uint256,address,address,uint256)"](
           1000,
           alice.address,
           alice.address,
@@ -322,31 +324,30 @@ describe("deposit", async function () {
       "failed to prevent alice withdrawing after sending erc1155 and erc20"
     );
 
-    // bob can withdraw now
-    const bobBalanceBefore = await erc20Token.balanceOf(bob.address);
-    const erc1155BobBalance = await ethGild["balanceOf(address,uint256)"](
+    // bob can redeem now
+    const bobAssetBalanceBefore = await asset.balanceOf(bob.address);
+    const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
 
-    const bobUngildTx = await bobEthGild[
+    const bobRedeemTx = await bobVault[
       "redeem(uint256,address,address,uint256)"
-      ](erc1155BobBalance, bob.address, bob.address, price);
-    await bobUngildTx.wait();
-    const erc1155BobBalanceAfter = await ethGild["balanceOf(address,uint256)"](
+      ](bobReceiptBalance, bob.address, bob.address, price);
+    await bobRedeemTx.wait();
+    const bobReceiptBalanceAfter = await vault["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
-    const bobBalanceAfter = await erc20Token.balanceOf(bob.address);
-    const bobBalanceDiff = bobBalanceAfter.sub(bobBalanceBefore);
-    //   // Bob withdraw alice's gilded eth
-    const bobBalanceDiffExpected = aliceAssetBalanceAmount
-      // redeem rounds down so bob loses 1 token in the round trip
-      .sub(1);
+    const bobAssetBalanceAfter = await asset.balanceOf(bob.address);
+    assert(bobReceiptBalanceAfter.eq(0), `bob did not redeem all 1155 receipt amounts`);
+
+    const bobAssetBalanceDiff = bobAssetBalanceAfter.sub(bobAssetBalanceBefore);
+    // Bob should be able to withdraw what alice deposited.
+    const bobAssetBalanceDiffExpected = fixedPointDiv(aliceShareBalance, price);
     assert(
-      bobBalanceDiff.eq(bobBalanceDiffExpected),
-      `wrong bob diff ${bobBalanceDiffExpected} ${bobBalanceDiff}`
+      bobAssetBalanceDiff.eq(bobAssetBalanceDiffExpected),
+      `wrong bob asset diff ${bobAssetBalanceDiffExpected} ${bobAssetBalanceDiff}`
     );
-    assert(erc1155BobBalanceAfter.eq(0), `bob did not redeem all shares`);
   });
 });
