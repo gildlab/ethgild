@@ -397,12 +397,12 @@ describe("Receipt vault", async function () {
 
         assert(
           aliceErc1155Balance.eq(0),
-          `wrong bob erc20 balance ${aliceErc1155Balance} 0`
+          `wrong alice erc20 balance ${aliceErc1155Balance} 0`
         );
 
         assert(
           aliceErc20Balance.eq(0),
-          `wrong bob erc20 balance ${aliceErc20Balance} 0`
+          `wrong alice erc20 balance ${aliceErc20Balance} 0`
         );
 
         //Depositor MUST transfer assets
@@ -412,6 +412,34 @@ describe("Receipt vault", async function () {
         assert(
           aliceAssetAft.eq(aliceAssetBefore.sub(assets)),
           `wrong alice assets ${aliceAssetAft} ${aliceAssetBefore.sub(assets)}`
+        );
+      }),
+      it("MUST revert if the vault can't take enough assets from the depositor", async function () {
+        const signers = await ethers.getSigners();
+        const alice = signers[0];
+
+        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+        const price = await priceOracle.price();
+
+        const totalTokenSupply = await asset.totalSupply();
+        const assets = totalTokenSupply.div(2);
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, assets)
+
+        const aliceAssets = await asset.connect(alice).balanceOf(alice.address)
+
+        //alice has assets of totalsuply/2
+        await asset
+          .connect(alice)
+          .increaseAllowance(vault.address, assets.add(1));
+
+        //try to deposit more assets then alice owns
+        await assertError(
+          async () =>
+            await vault
+              .connect(alice)['deposit(uint256,address)'](assets.add(1), alice.address),
+          "not enough assets",
+          "failed to revert"
         );
       })
   })
