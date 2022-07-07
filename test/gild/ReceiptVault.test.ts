@@ -314,6 +314,32 @@ describe("Receipt vault", async function () {
           "ERC20: transfer amount exceeds balance",
           "failed to respect min price"
         );
+      }),
+      it("Receiver MAY be different user to depositor", async function () {
+        const signers = await ethers.getSigners();
+        const alice = signers[0];
+        const bob = signers[1];
+
+        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+        const price = await priceOracle.price();
+
+        const totalTokenSupply = await asset.totalSupply();
+        const assets = totalTokenSupply.div(2);
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, assets)
+
+        await asset
+          .connect(alice)
+          .increaseAllowance(vault.address, assets);
+
+        await vault.connect(alice)['deposit(uint256,address)'](assets, bob.address)
+        const shares = await vault["balanceOf(address)"](bob.address);
+        const expectedShares = fixedPointMul(assets, price)
+
+        assert(
+          shares.eq(expectedShares),
+          `wrong alice ETHg ${expectedShares} ${shares}`
+        );
       })
   })
 
