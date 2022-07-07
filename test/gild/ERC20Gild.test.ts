@@ -237,7 +237,7 @@ describe("deposit", async function () {
     );
   });
 
-  it.only("should trade erc1155", async function () {
+  it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
     const [vault, asset, priceOracle] =
