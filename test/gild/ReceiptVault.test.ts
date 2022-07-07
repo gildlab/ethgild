@@ -340,6 +340,79 @@ describe("Receipt vault", async function () {
           shares.eq(expectedShares),
           `wrong alice ETHg ${expectedShares} ${shares}`
         );
+      }),
+      it("Receiver receives BOTH erc20 and erc1155, depositor gets nothing but MUST transfer assets", async function () {
+        const signers = await ethers.getSigners();
+        const alice = signers[0];
+        const bob = signers[1];
+
+        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+        const price = await priceOracle.price();
+
+        const totalTokenSupply = await asset.totalSupply();
+        const assets = totalTokenSupply.div(2);
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, assets)
+
+        await asset
+          .connect(alice)
+          .increaseAllowance(vault.address, assets);
+
+        const bobErc20BalanceBef = await vault["balanceOf(address)"](bob.address);
+        const aliceErc20BalanceBef = await vault["balanceOf(address)"](alice.address);
+
+        //Alice assets before deposit
+        const aliceAssetBefore = await asset
+          .connect(alice).balanceOf(alice.address)
+
+        await vault.connect(alice)['deposit(uint256,address)'](assets, bob.address)
+
+        const expectedBobBalance = fixedPointMul(assets, price)
+
+        //Receiver gets both Erc20 and Erc1155
+        const erc1155Balance = await vault["balanceOf(address,uint256)"](
+          bob.address,
+          price
+        );
+
+        const bobErc20Balance = await vault["balanceOf(address)"](bob.address);
+
+        assert(
+          erc1155Balance.eq(expectedBobBalance),
+          `wrong bob erc1155 balance ${expectedBobBalance} ${erc1155Balance}`
+        );
+
+        assert(
+          bobErc20Balance.eq(expectedBobBalance),
+          `wrong bob erc1155 balance ${expectedBobBalance} ${bobErc20Balance}`
+        );
+
+        //Depositor Gets nothing
+        const aliceErc20Balance = await vault["balanceOf(address)"](alice.address);
+
+        const aliceErc1155Balance = await vault["balanceOf(address,uint256)"](
+          alice.address,
+          price
+        );
+
+        assert(
+          aliceErc1155Balance.eq(0),
+          `wrong bob erc20 balance ${aliceErc1155Balance} 0`
+        );
+
+        assert(
+          aliceErc20Balance.eq(0),
+          `wrong bob erc20 balance ${aliceErc20Balance} 0`
+        );
+
+        //Depositor MUST transfer assets
+        const aliceAssetAft = await asset
+          .connect(alice).balanceOf(alice.address)
+
+        assert(
+          aliceAssetAft.eq(aliceAssetBefore.sub(assets)),
+          `wrong alice assets ${aliceAssetAft} ${aliceAssetBefore.sub(assets)}`
+        );
       })
   })
 
