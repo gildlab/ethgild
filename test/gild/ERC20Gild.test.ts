@@ -93,7 +93,7 @@ describe("deposit", async function () {
     const aliceShares = await vault["balanceOf(address)"](alice.address);
     assert(
       aliceShares.eq(expectedShares),
-      `wrong alice ETHg ${expectedShares} ${aliceShares}`
+      `wrong alice shares ${expectedShares} ${aliceShares}`
     );
   });
 
@@ -130,10 +130,10 @@ describe("deposit", async function () {
     const expectedAliceBalance = expectedReferencePrice
       .mul(aliceEthAmount)
       .div(priceOne);
-    const ethgAliceBalance = await vault["balanceOf(address)"](alice.address);
+    const aliceBalance = await vault["balanceOf(address)"](alice.address);
     assert(
-      ethgAliceBalance.eq(expectedAliceBalance),
-      `wrong ERC20 balance ${ethgAliceBalance} ${expectedAliceBalance}`
+      aliceBalance.eq(expectedAliceBalance),
+      `wrong ERC20 balance ${aliceBalance} ${expectedAliceBalance}`
     );
 
     const bobErc20Balance = await vault["balanceOf(address)"](bob.address);
@@ -180,10 +180,10 @@ describe("deposit", async function () {
     const expectedBobBalance = expectedReferencePrice
       .mul(bobEthAmount)
       .div(priceOne);
-    const ethgBobBalance = await vault["balanceOf(address)"](bob.address);
+    const bobBalance = await vault["balanceOf(address)"](bob.address);
     assert(
-      ethgBobBalance.eq(expectedBobBalance),
-      `wrong bob erc20 balance ${ethgBobBalance} ${expectedBobBalance}`
+      bobBalance.eq(expectedBobBalance),
+      `wrong bob erc20 balance ${bobBalance} ${expectedBobBalance}`
     );
 
     const erc1155BobBalance = await vault["balanceOf(address,uint256)"](
