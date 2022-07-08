@@ -5,7 +5,8 @@ import {
   assertError,
   deployERC20PriceOracleVault,
   fixedPointDiv,
-  fixedPointMul
+  fixedPointMul,
+  ADDRESS_ZERO
 } from "../util";
 import {ERC20PriceOracleVaultConstructionEvent} from "../../typechain/ERC20PriceOracleVault";
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
@@ -465,6 +466,32 @@ describe("Receipt vault", async function () {
           "ERC20: insufficient allowance'",
           "failed to revert"
         );
-      })
+      }),
+      it("should not deposit to zero address", async function () {
+        const signers = await ethers.getSigners();
+        const alice = signers[1];
+
+        const [vault, asset] = await deployERC20PriceOracleVault();
+
+        const totalTokenSupply = await asset.totalSupply();
+        const aliceDepositAmount = totalTokenSupply.div(2);
+
+        // give alice reserve to cover cost
+        await asset.transfer(alice.address, aliceDepositAmount);
+
+        const aliceReserveBalance = await asset.balanceOf(alice.address);
+
+        await asset.connect(alice).approve(vault.address, aliceReserveBalance);
+
+        await assertError(
+          async () =>
+            await vault["deposit(uint256,address)"](
+              aliceReserveBalance,
+              ADDRESS_ZERO
+            ),
+          "0_RECEIVER",
+          "failed to prevent deposit to zero address"
+        );
+      });
   })
 

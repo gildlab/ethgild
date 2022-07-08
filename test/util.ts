@@ -15,6 +15,7 @@ export const feedRegistryDenominationEth =
   "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 export const feedRegistryDenominationXau =
   "0x0000000000000000000000000000000000000959";
+export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
 export const chainlinkXauUsd = "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6";
 export const chainlinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
