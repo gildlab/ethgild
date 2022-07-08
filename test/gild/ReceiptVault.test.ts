@@ -527,38 +527,38 @@ describe("Receipt vault", async function () {
     });
   }),
   describe("Overloaded `deposit`", async () => {
-    // it("Must respect min Price", async function () {
-    //   const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-    //   const price = await priceOracle.price()
-    //
-    //   const signers = await ethers.getSigners();
-    //   const alice = signers[0];
-    //   const bob = signers[1];
-    //
-    //   const totalTokenSupply = await asset.totalSupply();
-    //
-    //   const assets = totalTokenSupply.div(2);
-    //
-    //   const expectedShares = fixedPointMul(assets, price)
-    //
-    //   await vault.connect(alice).setMinShareRatio(price.add(1))
-    //
-    //   await asset
-    //     .connect(alice)
-    //     .increaseAllowance(vault.address, assets);
-    //
-    //   await assertError(
-    //     async () =>
-    //       await vault
-    //         .connect(alice)["deposit(uint256,address,uint256,bytes)"](
-    //         assets,
-    //         alice.address,
-    //         price,
-    //         []),
-    //     "MIN_SHARE_RATIO",
-    //     "failed to respect min price"
-    //   );
-    // }),
+    it("Must respect min Price", async function () {
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const price = await priceOracle.price()
+
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+      const bob = signers[1];
+
+      const totalTokenSupply = await asset.totalSupply();
+
+      const assets = totalTokenSupply.div(2);
+
+      const expectedShares = fixedPointMul(assets, price)
+
+      await vault.connect(alice).setMinShareRatio(price.add(1))
+
+      await asset
+        .connect(alice)
+        .increaseAllowance(vault.address, assets);
+
+      await assertError(
+        async () =>
+          await vault
+            .connect(alice)["deposit(uint256,address,uint256,bytes)"](
+            assets,
+            alice.address,
+            price.add(1),
+            []),
+        "MIN_SHARE_RATIO",
+        "failed to respect min price"
+      );
+    }),
       it("Calculates shares correctly with min price set", async function () {
         const signers = await ethers.getSigners();
 
