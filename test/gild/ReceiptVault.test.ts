@@ -416,7 +416,7 @@ describe("Receipt vault", async function () {
       }),
       it("MUST revert if the vault can't take enough assets from the depositor", async function () {
         const signers = await ethers.getSigners();
-        const alice = signers[0];
+        const alice = signers[1];
 
         const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
         const price = await priceOracle.price();
@@ -432,6 +432,8 @@ describe("Receipt vault", async function () {
         await asset
           .connect(alice)
           .increaseAllowance(vault.address, assets.add(1));
+
+        console.log(aliceAssets, assets)
 
         //try to deposit more assets then alice owns
         await assertError(
