@@ -433,14 +433,13 @@ describe("Receipt vault", async function () {
           .connect(alice)
           .increaseAllowance(vault.address, assets.add(1));
 
-        console.log(aliceAssets, assets)
 
         //try to deposit more assets then alice owns
         await assertError(
           async () =>
             await vault
               .connect(alice)['deposit(uint256,address)'](assets.add(1), alice.address),
-          "not enough assets",
+          "ERC20: transfer amount exceeds balance",
           "failed to revert"
         );
       }),
