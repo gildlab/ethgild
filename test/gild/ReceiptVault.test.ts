@@ -883,8 +883,12 @@ describe("Receipt vault", async function () {
         vault
       )) as DepositEvent["args"]
 
+      console.log(caller, owner)
+
       assert(assets.eq(aliceAmount), `wrong assets expected ${aliceAmount} got ${assets}`);
       assert(shares.eq(expectedShares), `wrong shares expected ${shares} got ${expectedShares}`);
+      assert(caller === alice.address, `wrong caller expected ${alice.address} got ${caller}`);
+      assert(owner === alice.address, `wrong owner expected ${alice.address} got ${owner}`);
     });
   })
 
