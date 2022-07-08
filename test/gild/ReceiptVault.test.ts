@@ -9,6 +9,7 @@ import {
   ADDRESS_ZERO
 } from "../util";
 import {ERC20PriceOracleVaultConstructionEvent} from "../../typechain/ERC20PriceOracleVault";
+import {DepositEvent} from "../../typechain/IERC4626"
 import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
 import {TestErc20} from "../../typechain";
 
@@ -493,5 +494,32 @@ describe("Receipt vault", async function () {
           "failed to prevent deposit to zero address"
         );
       });
+    it("Check deposit event is emitted", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price();
+
+      const aliceAmount = ethers.BigNumber.from(5000)
+      await asset.transfer(alice.address, aliceAmount)
+
+      await asset
+        .connect(alice)
+        .increaseAllowance(vault.address, aliceAmount);
+
+      const expectedShares = fixedPointMul(aliceAmount, price)
+
+      const {caller, owner, assets, shares} = (await getEventArgs(
+        await vault
+          .connect(alice)['deposit(uint256,address)'](aliceAmount, alice.address),
+        "Deposit",
+        vault
+      )) as DepositEvent["args"]
+
+      assert(assets.eq(aliceAmount), `wrong assets expected ${aliceAmount} got ${assets}`);
+      assert(shares.eq(expectedShares), `wrong shares expected ${shares} got ${expectedShares}`);
+    });
   })
 
