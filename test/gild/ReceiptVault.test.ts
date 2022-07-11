@@ -89,15 +89,12 @@ describe("Receipt vault", async function () {
       const alice = signers[0];
       const bob = signers[1];
 
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const [vault] = await deployERC20PriceOracleVault();
 
       const aliceEthGild = vault.connect(alice);
       const bobEthGild = vault.connect(bob);
 
-      const price = await priceOracle.price();
-
       const share = ethers.BigNumber.from("10").pow(20);
-      const expectedAsset = fixedPointDiv(share, price);
 
       const assetsAlice = await aliceEthGild.convertToAssets(share);
       const assetsBob = await bobEthGild.convertToAssets(share);
@@ -136,15 +133,12 @@ describe("Receipt vault", async function () {
       const alice = signers[0];
       const bob = signers[1];
 
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const [vault] = await deployERC20PriceOracleVault();
 
       const aliceEthGild = vault.connect(alice);
       const bobEthGild = vault.connect(bob);
 
-      const price = await priceOracle.price();
-
       const assets = ethers.BigNumber.from("10").pow(20);
-      const expectedShares = fixedPointMul(assets, price);
 
       const sharesAlice = await aliceEthGild.convertToShares(assets);
       const sharesBob = await bobEthGild.convertToShares(assets);
@@ -155,7 +149,7 @@ describe("Receipt vault", async function () {
       );
     }),
     it("Sets correct max deposit value", async function () {
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const [vault] = await deployERC20PriceOracleVault();
 
       const expectedMaxDeposit = ethers.BigNumber.from(2)
         .pow(256)
@@ -210,7 +204,6 @@ describe("Receipt vault", async function () {
       const bob = signers[1];
 
       const assets = ethers.BigNumber.from("10").pow(20);
-      const expectedShares = fixedPointMul(assets, price);
 
       await vault.connect(alice).setMinShareRatio(price.add(1));
 
@@ -292,15 +285,13 @@ describe("Receipt vault", async function () {
       it("Reverts if not enough assets to be transfered", async function () {
         const signers = await ethers.getSigners();
 
-        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+        const [vault, asset] = await deployERC20PriceOracleVault();
 
         const alice = signers[1];
 
         const totalTokenSupply = await asset.totalSupply();
 
         const assets = totalTokenSupply.div(2);
-
-        const price = await priceOracle.price();
 
         await asset.connect(alice).increaseAllowance(vault.address, assets);
 
@@ -353,13 +344,6 @@ describe("Receipt vault", async function () {
         await asset.transfer(alice.address, assets);
 
         await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-        const bobErc20BalanceBef = await vault["balanceOf(address)"](
-          bob.address
-        );
-        const aliceErc20BalanceBef = await vault["balanceOf(address)"](
-          alice.address
-        );
 
         //Alice assets before deposit
         const aliceAssetBefore = await asset
@@ -424,15 +408,12 @@ describe("Receipt vault", async function () {
         const signers = await ethers.getSigners();
         const alice = signers[1];
 
-        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-        const price = await priceOracle.price();
+        const [vault, asset] = await deployERC20PriceOracleVault();
 
         const totalTokenSupply = await asset.totalSupply();
         const assets = totalTokenSupply.div(2);
         // give alice reserve to cover cost
         await asset.transfer(alice.address, assets);
-
-        const aliceAssets = await asset.connect(alice).balanceOf(alice.address);
 
         //alice has assets of totalsuply/2
         await asset
@@ -453,15 +434,12 @@ describe("Receipt vault", async function () {
         const signers = await ethers.getSigners();
         const alice = signers[0];
 
-        const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-        const price = await priceOracle.price();
+        const [vault, asset] = await deployERC20PriceOracleVault();
 
         const totalTokenSupply = await asset.totalSupply();
         const assets = totalTokenSupply.div(2);
         // give alice reserve to cover cost
         await asset.transfer(alice.address, assets);
-
-        const aliceAssets = await asset.connect(alice).balanceOf(alice.address);
 
         //try to deposit without approve
         await assertError(
@@ -514,7 +492,7 @@ describe("Receipt vault", async function () {
 
       const expectedShares = fixedPointMul(aliceAmount, price);
 
-      const { caller, owner, assets, shares } = (await getEventArgs(
+      const { assets, shares } = (await getEventArgs(
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](aliceAmount, alice.address),
@@ -539,13 +517,10 @@ describe("Receipt vault", async function () {
 
       const signers = await ethers.getSigners();
       const alice = signers[0];
-      const bob = signers[1];
 
       const totalTokenSupply = await asset.totalSupply();
 
       const assets = totalTokenSupply.div(2);
-
-      const expectedShares = fixedPointMul(assets, price);
 
       await vault.connect(alice).setMinShareRatio(price.add(1));
 
@@ -714,13 +689,6 @@ describe("Receipt vault", async function () {
 
         await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-        const bobErc20BalanceBef = await vault["balanceOf(address)"](
-          bob.address
-        );
-        const aliceErc20BalanceBef = await vault["balanceOf(address)"](
-          alice.address
-        );
-
         //Alice assets before deposit
         const aliceAssetBefore = await asset
           .connect(alice)
@@ -797,8 +765,6 @@ describe("Receipt vault", async function () {
         // give alice reserve to cover cost
         await asset.transfer(alice.address, assets);
 
-        const aliceAssets = await asset.connect(alice).balanceOf(alice.address);
-
         //alice has assets of totalsuply/2
         await asset
           .connect(alice)
@@ -830,8 +796,6 @@ describe("Receipt vault", async function () {
         const assets = totalTokenSupply.div(2);
         // give alice reserve to cover cost
         await asset.transfer(alice.address, assets);
-
-        const aliceAssets = await asset.connect(alice).balanceOf(alice.address);
 
         //try to deposit without approve
         await assertError(
@@ -926,47 +890,50 @@ describe("Receipt vault", async function () {
       //   `wrong owner expected ${alice.address} got ${owner}`
       // );
     });
+    it("Check ReceiptInformation event is emitted", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price();
+
+      const aliceAmount = ethers.BigNumber.from(5000);
+      await asset.transfer(alice.address, aliceAmount);
+
+      await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
+
+      const expectedId = price;
+      const expectedInformation = ethers.utils.randomBytes(5);
+
+      const { caller, id } = (await getEventArgs(
+        await vault["deposit(uint256,address,uint256,bytes)"](
+          aliceAmount,
+          alice.address,
+          price,
+          expectedInformation
+        ),
+        "ReceiptInformation",
+        vault
+      )) as ReceiptInformationEvent["args"];
+
+      assert(
+        caller === alice.address,
+        `wrong assets expected ${alice.address} got ${caller}`
+      );
+      assert(
+        id.eq(expectedId),
+        `wrong shares expected ${id} got ${expectedId}`
+      );
+
+      //todo
+      // assert(
+      //   information === expectedInformation,
+      //   `wrong shares expected ${information} got ${expectedInformation}`
+      // );
+    });
   });
 describe("Mint", async function () {
-  it("Check ReceiptInformation event is emitted", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const price = await priceOracle.price();
-
-    const aliceAmount = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAmount);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
-
-    const expectedId = price;
-    const expectedInformation = ethers.utils.randomBytes(5);
-
-    const { caller, id, information } = (await getEventArgs(
-      await vault["deposit(uint256,address,uint256,bytes)"](
-        aliceAmount,
-        alice.address,
-        price,
-        expectedInformation
-      ),
-      "ReceiptInformation",
-      vault
-    )) as ReceiptInformationEvent["args"];
-
-    assert(
-      caller === alice.address,
-      `wrong assets expected ${alice.address} got ${caller}`
-    );
-    assert(id.eq(expectedId), `wrong shares expected ${id} got ${expectedId}`);
-
-    //todo
-    // assert(
-    //   information === expectedInformation,
-    //   `wrong shares expected ${information} got ${expectedInformation}`
-    // );
-  });
   it("Sets maxShares correctly", async function () {
     const [vault] = await deployERC20PriceOracleVault();
 
