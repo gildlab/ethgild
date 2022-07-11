@@ -960,5 +960,17 @@ describe("Mint", async function () {
         "MIN_SHARE_RATIO",
         "failed to respect min price"
       );
-    })
+    }),
+    it("Calculates assets correctly with round up", async function () {
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const price = await priceOracle.price();
+
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const shares = ethers.BigNumber.from("10").pow(20);
+      const expectedAssets = fixedPointDiv(shares, price).add(1);
+
+      const assets = await vault.previewMint(shares);
+    });
 });
