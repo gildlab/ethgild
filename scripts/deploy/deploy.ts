@@ -1,22 +1,28 @@
 // scripts/deploy.js
-import {ethers, artifacts} from "hardhat";
-import type {ChainlinkFeedPriceOracleFactory} from "../../typechain";
-import type {ChainlinkFeedPriceOracle} from "../../typechain";
-import type {TwoPriceOracle} from "../../typechain";
-import type {TwoPriceOracleFactory} from "../../typechain";
-import type {ERC20PriceOracleVaultFactory} from "../../typechain";
-import type {ERC20PriceOracleVault} from "../../typechain";
+import { ethers, artifacts } from "hardhat";
+import type { ChainlinkFeedPriceOracleFactory } from "../../typechain";
+import type { ChainlinkFeedPriceOracle } from "../../typechain";
+import type { TwoPriceOracle } from "../../typechain";
+import type { TwoPriceOracleFactory } from "../../typechain";
+import type { ERC20PriceOracleVaultFactory } from "../../typechain";
+import type { ERC20PriceOracleVault } from "../../typechain";
 
-import type {Contract} from "ethers";
-import {getEventArgs} from "../../test/util";
+import type { Contract } from "ethers";
+import { getEventArgs } from "../../test/util";
 
 type Config = {
   name: string;
-  symbol : string
-  uri: string
+  symbol: string;
+  uri: string;
 };
 
-export const deployERC20PriceOracleVault = async (base: string, quote: string, network: string, erc20ContractAddress: string, config: Config) => {
+export const deployERC20PriceOracleVault = async (
+  base: string,
+  quote: string,
+  network: string,
+  erc20ContractAddress: string,
+  config: Config
+) => {
   console.log(network);
   const [deployer] = await ethers.getSigners();
   // 1 hour
@@ -151,11 +157,13 @@ export const deployERC20PriceOracleVault = async (base: string, quote: string, n
       name: config.name,
       symbol: config.symbol,
       uri: config.uri,
-    }
+    },
   };
 
   const erc20PriceOracleVaultTx =
-    await erc20PriceOracleVaultFactory.createChildTyped(erc20PriceOracleVaultConfig);
+    await erc20PriceOracleVaultFactory.createChildTyped(
+      erc20PriceOracleVaultConfig
+    );
   const erc20PriceOracleVault = new ethers.Contract(
     ethers.utils.hexZeroPad(
       ethers.utils.hexStripZeros(
@@ -178,4 +186,4 @@ export const deployERC20PriceOracleVault = async (base: string, quote: string, n
     "ERC20PriceOracleVault deployed to:",
     erc20PriceOracleVault.address
   );
-}
+};
