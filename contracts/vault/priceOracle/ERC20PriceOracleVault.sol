@@ -122,7 +122,10 @@ contract ERC20PriceOracleVault is ReceiptVault {
     /// Emitted when deployed and constructed.
     /// @param caller `msg.sender` that deployed the contract.
     /// @param config All construction config.
-    event ERC20PriceOracleVaultConstruction(address caller, ConstructionConfig config);
+    event ERC20PriceOracleVaultConstruction(
+        address caller,
+        ConstructionConfig config
+    );
 
     /// The price oracle used for all minting calculations.
     IPriceOracle public immutable priceOracle;
@@ -137,7 +140,7 @@ contract ERC20PriceOracleVault is ReceiptVault {
     }
 
     /// @inheritdoc ReceiptVault
-    function _nextId() view internal override returns (uint256 id_) {
+    function _nextId() internal view override returns (uint256 id_) {
         id_ = priceOracle.price();
     }
 

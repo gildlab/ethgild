@@ -20,7 +20,10 @@ struct ConstructionConfig {
 }
 
 contract OffchainAssetVault is ReceiptVault, AccessControl {
-    event OffchainAssetVaultConstruction(address sender, ConstructionConfig config);
+    event OffchainAssetVaultConstruction(
+        address sender,
+        ConstructionConfig config
+    );
     event Certify(address sender, uint256 until, bytes data);
     event ConfiscateShares(
         address sender,

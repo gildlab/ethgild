@@ -38,7 +38,7 @@ describe("erc20 usage", async function () {
       await deployERC20PriceOracleVault();
 
     const alice = signers[0];
-    const price = await priceOracle.price()
+    const price = await priceOracle.price();
 
     const assetAmount = 1000;
 
@@ -48,11 +48,11 @@ describe("erc20 usage", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assetAmount,
-      alice.address,
-      price,
-      []
-    )
+        assetAmount,
+        alice.address,
+        price,
+        []
+      );
 
     const expectedErc20Balance = fixedPointMul(
       fixedPointDiv(
