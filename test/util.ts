@@ -5,7 +5,6 @@ import { ContractTransaction, Contract, BigNumber } from "ethers";
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
 import type { ERC20PriceOracleVault } from "../typechain";
-import type { ChainlinkFeedPriceOracle } from "../typechain";
 import type { TwoPriceOracle } from "../typechain";
 import type { TestErc20 } from "../typechain";
 import type { TestChainlinkDataFeed } from "../typechain";
@@ -16,6 +15,7 @@ export const feedRegistryDenominationEth =
   "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 export const feedRegistryDenominationXau =
   "0x0000000000000000000000000000000000000959";
+export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
 export const chainlinkXauUsd = "0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6";
 export const chainlinkEthUsd = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
@@ -30,8 +30,8 @@ export const ONE = priceOne;
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const quotePrice = "180662000000";
-export const basePrice = "107491910716";
+export const quotePrice = "180795999600";
+export const basePrice = "115744652549";
 
 export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
