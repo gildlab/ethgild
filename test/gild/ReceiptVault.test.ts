@@ -890,18 +890,38 @@ describe("Receipt vault", async function () {
       assert(caller === alice.address, `wrong caller expected ${alice.address} got ${caller}`);
       assert(owner === alice.address, `wrong owner expected ${alice.address} got ${owner}`);
     });
-    it("Sets maxShares correctly", async function () {
+  })
+describe("Mint", async function () {
+  it("Sets maxShares correctly", async function () {
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const expectedMaxShares = ethers.BigNumber.from(2).pow(256)
+      //up to 2**256 so should substruct 1
+      .sub(1)
+    const maxShares = await vault.maxMint(owner.address)
+
+    assert(
+      maxShares.eq(expectedMaxShares),
+      `Wrong max deposit ${expectedMaxShares} ${maxShares}`
+    );
+  }),
+    it("Checks min share ratio is less than share ratio", async function () {
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+      const price = await priceOracle.price()
 
-      const expectedMaxShares = ethers.BigNumber.from(2).pow(256)
-        //up to 2**256 so should substruct 1
-        .sub(1)
-      const maxShares = await vault.maxMint(owner.address)
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
 
-      assert(
-        maxShares.eq(expectedMaxShares),
-        `Wrong max deposit ${expectedMaxShares} ${maxShares}`
+      const shares = ethers.BigNumber.from("10").pow(20);
+      const expectedAssets = fixedPointDiv(shares, price)
+
+      await vault.connect(alice).setMinShareRatio(price.add(1))
+
+      await assertError(
+        async () =>
+          await vault.previewMint(shares),
+        "MIN_SHARE_RATIO",
+        "failed to respect min price"
       );
     })
-  })
-
+})
