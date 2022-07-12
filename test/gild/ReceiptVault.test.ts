@@ -907,14 +907,18 @@ describe("Receipt vault", async function () {
       await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
 
       const expectedId = price;
-      const expectedInformation = ethers.utils.randomBytes(5);
 
-      const { caller, id } = (await getEventArgs(
+      const informationBytes = [125, 126];
+      //generate hex string
+      const expectedInformation =
+        "0x" + informationBytes.map((num) => num.toString(16)).join("");
+
+      const { caller, id, information } = (await getEventArgs(
         await vault["deposit(uint256,address,uint256,bytes)"](
           aliceAmount,
           alice.address,
           price,
-          expectedInformation
+          informationBytes
         ),
         "ReceiptInformation",
         vault
@@ -929,11 +933,10 @@ describe("Receipt vault", async function () {
         `wrong shares expected ${id} got ${expectedId}`
       );
 
-      //todo
-      // assert(
-      //   information === expectedInformation,
-      //   `wrong shares expected ${information} got ${expectedInformation}`
-      // );
+      assert(
+        information === expectedInformation,
+        `wrong shares expected ${information} got ${expectedInformation}`
+      );
     });
     it("Check DepositWithReceipt event is emitted", async function () {
       const signers = await ethers.getSigners();
