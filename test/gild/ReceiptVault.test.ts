@@ -10,7 +10,10 @@ import {
 } from "../util";
 import { DepositEvent } from "../../typechain/IERC4626";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { ReceiptInformationEvent } from "../../typechain/ReceiptVault";
+import {
+  ReceiptInformationEvent,
+  DepositWithReceiptEvent,
+} from "../../typechain/ReceiptVault";
 
 import { getEventArgs } from "../util";
 
@@ -930,6 +933,66 @@ describe("Receipt vault", async function () {
       // assert(
       //   information === expectedInformation,
       //   `wrong shares expected ${information} got ${expectedInformation}`
+      // );
+    });
+    it("Check DepositWithReceipt event is emitted", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price();
+
+      const aliceAmount = ethers.BigNumber.from(5000);
+      await asset.transfer(alice.address, aliceAmount);
+
+      await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
+
+      const expectedId = price;
+      const information = [12, 1, 7];
+
+      const expectedShares = fixedPointMul(aliceAmount, price);
+
+      const { caller, receiver, assets, shares, id, receiptInformation } =
+        (await getEventArgs(
+          await vault["deposit(uint256,address,uint256,bytes)"](
+            aliceAmount,
+            alice.address,
+            price,
+            information
+          ),
+          "DepositWithReceipt",
+          vault
+        )) as DepositWithReceiptEvent["args"];
+
+      assert(
+        caller === alice.address,
+        `wrong assets expected ${alice.address} got ${caller}`
+      );
+      assert(
+        id.eq(expectedId),
+        `wrong shares expected ${id} got ${expectedId}`
+      );
+
+      assert(
+        receiver === alice.address,
+        `wrong assets expected ${alice.address} got ${receiver}`
+      );
+      assert(
+        assets.eq(aliceAmount),
+        `wrong assets expected ${aliceAmount} got ${assets}`
+      );
+      assert(
+        shares.eq(expectedShares),
+        `wrong assets expected ${expectedShares} got ${shares}`
+      );
+
+      console.log(receiptInformation);
+
+      //todo
+      // assert(
+      //   receiptInformation === expectedInformation,
+      //   `wrong shares expected ${receiptInformation} got ${expectedInformation}`
       // );
     });
   });
