@@ -7,6 +7,7 @@ import {
   fixedPointDiv,
   fixedPointMul,
   ADDRESS_ZERO,
+  expectedReferencePrice
 } from "../util";
 import { DepositEvent } from "../../typechain/IERC4626";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -77,6 +78,11 @@ describe("Receipt vault", async function () {
 
       const price = await priceOracle.price();
 
+      assert(
+        price.eq(expectedReferencePrice),
+        `Incorrect referencePrice ${price} ${expectedReferencePrice}`
+      );
+
       const share = ethers.BigNumber.from("10").pow(20);
       const expectedAsset = fixedPointDiv(share, price);
 
@@ -119,6 +125,11 @@ describe("Receipt vault", async function () {
       assert(
         price >= minPrice,
         `price is less then minPrice ${price} ${minPrice}`
+      );
+
+      assert(
+        price.eq(expectedReferencePrice),
+        `Incorrect referencePrice ${price} ${expectedReferencePrice}`
       );
 
       const assets = ethers.BigNumber.from("10").pow(20);
@@ -188,6 +199,13 @@ describe("Receipt vault", async function () {
       const assets = ethers.BigNumber.from("10").pow(20);
 
       const price = await priceOracle.price();
+
+      assert(
+        price.eq(expectedReferencePrice),
+        `Incorrect referencePrice ${price} ${expectedReferencePrice}`
+      );
+
+
       const expectedshares = fixedPointMul(assets, price);
       const share = await vault.previewDeposit(assets);
 
@@ -1032,7 +1050,7 @@ describe("Mint", async function () {
         "failed to respect min price"
       );
     }),
-    it("Calculates assets correctly with round up", async function () {
+    it("PreviewMint - Calculates assets correctly with round up", async function () {
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
       const price = await priceOracle.price();
 
