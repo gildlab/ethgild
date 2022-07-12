@@ -949,7 +949,11 @@ describe("Receipt vault", async function () {
       await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
 
       const expectedId = price;
-      const information = [12, 1, 7];
+      //take random bytes for information
+      const information = [125, 126];
+      //generate hex string
+      const expectedInformation =
+        "0x" + information.map((num) => num.toString(16)).join("");
 
       const expectedShares = fixedPointMul(aliceAmount, price);
 
@@ -987,13 +991,10 @@ describe("Receipt vault", async function () {
         `wrong assets expected ${expectedShares} got ${shares}`
       );
 
-      console.log(receiptInformation);
-
-      //todo
-      // assert(
-      //   receiptInformation === expectedInformation,
-      //   `wrong shares expected ${receiptInformation} got ${expectedInformation}`
-      // );
+      assert(
+        receiptInformation === expectedInformation,
+        `wrong shares expected ${receiptInformation} got ${expectedInformation}`
+      );
     });
   });
 describe("Mint", async function () {
