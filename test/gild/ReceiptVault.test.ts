@@ -8,10 +8,9 @@ import {
   fixedPointMul,
   ADDRESS_ZERO,
 } from "../util";
-import { ERC20PriceOracleVaultConstructionEvent } from "../../typechain/ERC20PriceOracleVault";
 import { DepositEvent } from "../../typechain/IERC4626";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { TestErc20 } from "../../typechain";
+import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
 
 import { getEventArgs } from "../util";
 
@@ -918,13 +917,74 @@ describe("Receipt vault", async function () {
         shares.eq(expectedShares),
         `wrong shares expected ${shares} got ${expectedShares}`
       );
+      // assert(
+      //   caller === alice.address,
+      //   `wrong caller expected ${alice.address} got ${caller}`
+      // );
+      // assert(
+      //   owner === alice.address,
+      //   `wrong owner expected ${alice.address} got ${owner}`
+      // );
+    });
+    it("Check DepositWithReceipt event is emitted", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price();
+
+      const aliceAmount = ethers.BigNumber.from(5000);
+      await asset.transfer(alice.address, aliceAmount);
+
+      await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
+
+      const expectedId = price;
+      //take random bytes for information
+      const information = [125, 126];
+      //generate hex string
+      const expectedInformation =
+        "0x" + information.map((num) => num.toString(16)).join("");
+
+      const expectedShares = fixedPointMul(aliceAmount, price);
+
+      const { caller, receiver, assets, shares, id, receiptInformation } =
+        (await getEventArgs(
+          await vault["deposit(uint256,address,uint256,bytes)"](
+            aliceAmount,
+            alice.address,
+            price,
+            information
+          ),
+          "DepositWithReceipt",
+          vault
+        )) as DepositWithReceiptEvent["args"];
+
       assert(
         caller === alice.address,
-        `wrong caller expected ${alice.address} got ${caller}`
+        `wrong assets expected ${alice.address} got ${caller}`
       );
       assert(
-        owner === alice.address,
-        `wrong owner expected ${alice.address} got ${owner}`
+        id.eq(expectedId),
+        `wrong shares expected ${id} got ${expectedId}`
+      );
+
+      assert(
+        receiver === alice.address,
+        `wrong assets expected ${alice.address} got ${receiver}`
+      );
+      assert(
+        assets.eq(aliceAmount),
+        `wrong assets expected ${aliceAmount} got ${assets}`
+      );
+      assert(
+        shares.eq(expectedShares),
+        `wrong assets expected ${expectedShares} got ${shares}`
+      );
+
+      assert(
+        receiptInformation === expectedInformation,
+        `wrong shares expected ${receiptInformation} got ${expectedInformation}`
       );
     });
   });
