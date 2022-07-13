@@ -1126,24 +1126,28 @@ describe("Mint", async function () {
 
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
-    const alice = signers[1];
+    const alice = signers[0];
 
     const assets = ethers.BigNumber.from(5000);
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
+    const aliceBalanceBefore = await asset.balanceOf(alice.address);
+
     const price = await priceOracle.price();
 
     const shares = fixedPointMul(assets, price);
 
-    const ble = await vault
-      .connect(alice)
-      ["mint(uint256,address)"](shares, alice.address);
+    await vault.connect(alice)["mint(uint256,address)"](shares, alice.address);
 
-    //
-    // assert(
-    //   assets.eq(expectedAssets),
-    //   `wrong alice ETHg ${expectedAssets} ${assets}`
-    // );
+    const expectedAssets = fixedPointDiv(shares, price).add(1);
+
+    const aliceBalanceAfter = await asset.balanceOf(alice.address);
+    const aliceBalanceDiff = aliceBalanceBefore.sub(aliceBalanceAfter);
+
+    assert(
+      aliceBalanceDiff.eq(expectedAssets),
+      `wrong alice assets ${expectedAssets} ${aliceBalanceDiff}`
+    );
   });
 });
