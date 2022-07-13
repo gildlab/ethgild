@@ -10,7 +10,10 @@ import {
 } from "../util";
 import { DepositEvent } from "../../typechain/IERC4626";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
+import {
+  DepositWithReceiptEvent,
+  WithdrawWithReceiptEvent,
+} from "../../typechain/ReceiptVault";
 
 import { getEventArgs } from "../util";
 
@@ -962,16 +965,13 @@ describe("Receipt vault", async function () {
 
       assert(
         caller === alice.address,
-        `wrong assets expected ${alice.address} got ${caller}`
+        `wrong caller expected ${alice.address} got ${caller}`
       );
-      assert(
-        id.eq(expectedId),
-        `wrong shares expected ${id} got ${expectedId}`
-      );
+      assert(id.eq(expectedId), `wrong id expected ${id} got ${expectedId}`);
 
       assert(
         receiver === alice.address,
-        `wrong assets expected ${alice.address} got ${receiver}`
+        `wrong receiver expected ${alice.address} got ${receiver}`
       );
       assert(
         assets.eq(aliceAmount),
@@ -979,13 +979,84 @@ describe("Receipt vault", async function () {
       );
       assert(
         shares.eq(expectedShares),
-        `wrong assets expected ${expectedShares} got ${shares}`
+        `wrong shares expected ${expectedShares} got ${shares}`
       );
 
       assert(
         receiptInformation === expectedInformation,
-        `wrong shares expected ${receiptInformation} got ${expectedInformation}`
+        `wrong receiptInformation expected ${receiptInformation} got ${expectedInformation}`
       );
+    });
+    it("Check WithdrawWithReceipt event is emitted", async function () {
+      const signers = await ethers.getSigners();
+      const alice = signers[0];
+
+      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+      const price = await priceOracle.price();
+
+      const aliceAmount = ethers.BigNumber.from(5000);
+      await asset.transfer(alice.address, aliceAmount);
+
+      await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
+
+      const expectedId = price;
+      //take random bytes for information
+      const information = [125, 126];
+
+      const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
+        aliceAmount,
+        alice.address,
+        price,
+        information
+      );
+
+      depositTx.wait();
+
+      const erc1155Balance = await vault["balanceOf(address,uint256)"](
+        alice.address,
+        price
+      );
+
+      const { caller, receiver, owner, assets, shares, id } =
+        (await getEventArgs(
+          await vault["withdraw(uint256,address,address,uint256)"](
+            erc1155Balance,
+            alice.address,
+            alice.address,
+            price
+          ),
+          "WithdrawWithReceipt",
+          vault
+        )) as WithdrawWithReceiptEvent["args"];
+
+      const expectedShares = fixedPointMul(assets, price).add(1);
+
+      assert(
+        caller === alice.address,
+        `wrong caller expected ${alice.address} got ${caller}`
+      );
+
+      assert(
+        receiver === alice.address,
+        `wrong receiver expected ${alice.address} got ${receiver}`
+      );
+
+      assert(
+        owner === alice.address,
+        `wrong owner expected ${alice.address} got ${owner}`
+      );
+
+      assert(
+        assets.eq(erc1155Balance),
+        `wrong assets expected ${erc1155Balance} got ${assets}`
+      );
+      assert(
+        shares.eq(expectedShares),
+        `wrong shares expected ${expectedShares} got ${shares}`
+      );
+
+      assert(id.eq(expectedId), `wrong id expected ${id} got ${expectedId}`);
     });
   });
 describe("Mint", async function () {
