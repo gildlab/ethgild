@@ -1,28 +1,28 @@
 import chai from "chai";
-import {solidity} from "ethereum-waffle";
-import {ethers} from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
 import {
   assertError,
   deployERC20PriceOracleVault,
   fixedPointDiv,
   fixedPointMul,
   ADDRESS_ZERO,
-  expectedReferencePrice
+  expectedReferencePrice,
 } from "../util";
-import {DepositEvent} from "../../typechain/IERC4626";
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
+import { DepositEvent } from "../../typechain/IERC4626";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   ReceiptInformationEvent,
   DepositWithReceiptEvent,
 } from "../../typechain/ReceiptVault";
 
-import {getEventArgs} from "../util";
+import { getEventArgs } from "../util";
 
 let owner: SignerWithAddress;
 
 chai.use(solidity);
 
-const {assert} = chai;
+const { assert } = chai;
 
 describe("Receipt vault", async function () {
   it("Returns the address of the underlying asset that is deposited", async function () {
@@ -204,7 +204,6 @@ describe("Receipt vault", async function () {
         price.eq(expectedReferencePrice),
         `Incorrect referencePrice ${price} ${expectedReferencePrice}`
       );
-
 
       const expectedshares = fixedPointMul(assets, price);
       const share = await vault.previewDeposit(assets);
@@ -513,7 +512,7 @@ describe("Receipt vault", async function () {
 
       const expectedShares = fixedPointMul(aliceAmount, price);
 
-      const {assets, shares} = (await getEventArgs(
+      const { assets, shares } = (await getEventArgs(
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](aliceAmount, alice.address),
@@ -552,11 +551,11 @@ describe("Receipt vault", async function () {
           await vault
             .connect(alice)
             ["deposit(uint256,address,uint256,bytes)"](
-            assets,
-            alice.address,
-            price.add(1),
-            []
-          ),
+              assets,
+              alice.address,
+              price.add(1),
+              []
+            ),
         "MIN_SHARE_RATIO",
         "failed to respect min price"
       );
@@ -587,11 +586,11 @@ describe("Receipt vault", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](
-          assets,
-          alice.address,
-          price,
-          []
-        );
+            assets,
+            alice.address,
+            price,
+            []
+          );
         const shares = await vault["balanceOf(address)"](alice.address);
 
         assert(
@@ -623,11 +622,11 @@ describe("Receipt vault", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](
-          assets,
-          alice.address,
-          price,
-          []
-        );
+            assets,
+            alice.address,
+            price,
+            []
+          );
         const shares = await vault["balanceOf(address)"](alice.address);
 
         assert(
@@ -655,11 +654,11 @@ describe("Receipt vault", async function () {
             await vault
               .connect(alice)
               ["deposit(uint256,address,uint256,bytes)"](
-              assets,
-              alice.address,
-              price,
-              []
-            ),
+                assets,
+                alice.address,
+                price,
+                []
+              ),
           "ERC20: transfer amount exceeds balance",
           "failed to respect min price"
         );
@@ -682,11 +681,11 @@ describe("Receipt vault", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](
-          assets,
-          bob.address,
-          price,
-          []
-        );
+            assets,
+            bob.address,
+            price,
+            []
+          );
         const shares = await vault["balanceOf(address)"](bob.address);
         const expectedShares = fixedPointMul(assets, price);
 
@@ -718,11 +717,11 @@ describe("Receipt vault", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](
-          assets,
-          bob.address,
-          price,
-          []
-        );
+            assets,
+            bob.address,
+            price,
+            []
+          );
 
         const expectedBobBalance = fixedPointMul(assets, price);
 
@@ -797,11 +796,11 @@ describe("Receipt vault", async function () {
             await vault
               .connect(alice)
               ["deposit(uint256,address,uint256,bytes)"](
-              assets.add(1),
-              alice.address,
-              price,
-              []
-            ),
+                assets.add(1),
+                alice.address,
+                price,
+                []
+              ),
           "ERC20: transfer amount exceeds balance",
           "failed to revert"
         );
@@ -824,11 +823,11 @@ describe("Receipt vault", async function () {
             await vault
               .connect(alice)
               ["deposit(uint256,address,uint256,bytes)"](
-              assets,
-              alice.address,
-              price,
-              []
-            ),
+                assets,
+                alice.address,
+                price,
+                []
+              ),
           "ERC20: insufficient allowance'",
           "failed to revert"
         );
@@ -855,11 +854,11 @@ describe("Receipt vault", async function () {
             await vault
               .connect(alice)
               ["deposit(uint256,address,uint256,bytes)"](
-              aliceReserveBalance,
-              ADDRESS_ZERO,
-              price,
-              []
-            ),
+                aliceReserveBalance,
+                ADDRESS_ZERO,
+                price,
+                []
+              ),
           "0_RECEIVER",
           "failed to prevent deposit to zero address"
         );
@@ -879,7 +878,7 @@ describe("Receipt vault", async function () {
 
       const expectedShares = fixedPointMul(aliceAmount, price);
 
-      const {caller, owner, assets, shares} = (await getEventArgs(
+      const { caller, owner, assets, shares } = (await getEventArgs(
         await vault["deposit(uint256,address,uint256,bytes)"](
           aliceAmount,
           alice.address,
@@ -931,7 +930,7 @@ describe("Receipt vault", async function () {
       const expectedInformation =
         "0x" + informationBytes.map((num) => num.toString(16)).join("");
 
-      const {caller, id, information} = (await getEventArgs(
+      const { caller, id, information } = (await getEventArgs(
         await vault["deposit(uint256,address,uint256,bytes)"](
           aliceAmount,
           alice.address,
@@ -978,7 +977,7 @@ describe("Receipt vault", async function () {
 
       const expectedShares = fixedPointMul(aliceAmount, price);
 
-      const {caller, receiver, assets, shares, id, receiptInformation} =
+      const { caller, receiver, assets, shares, id, receiptInformation } =
         (await getEventArgs(
           await vault["deposit(uint256,address,uint256,bytes)"](
             aliceAmount,
@@ -1082,7 +1081,7 @@ describe("Mint", async function () {
 
     const price = await priceOracle.price();
 
-    const shares = fixedPointMul(assets, price)
+    const shares = fixedPointMul(assets, price);
 
     const ble = await vault
       .connect(alice)
@@ -1093,6 +1092,5 @@ describe("Mint", async function () {
     //   assets.eq(expectedAssets),
     //   `wrong alice ETHg ${expectedAssets} ${assets}`
     // );
-  })
-
+  });
 });
