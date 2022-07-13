@@ -27,11 +27,49 @@ contract ReceiptVault is
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
+    /// Similar to IERC4626 deposit but with receipt ID and information.
+    /// @param caller As per `IERC4626.Deposit`.
+    /// @param receiver As per `IERC4626.Deposit`.
+    /// @param assets As per `IERC4626.Deposit`.
+    /// @param shares As per `IERC4626.Deposit`.
+    /// @param id As per `IERC1155.TransferSingle`.
+    /// @param receiptInformation As per `ReceiptInformation`.
+    event DepositWithReceipt(
+        address caller,
+        address receiver,
+        uint256 assets,
+        uint256 shares,
+        uint256 id,
+        bytes receiptInformation
+    );
+
+    /// Similar to IERC4626 withdraw but with receipt ID.
+    /// @param caller As per `IERC4626.Withdraw`.
+    /// @param receiver As per `IERC4626.Withdraw`.
+    /// @param owner As per `IERC4626.Withdraw`.
+    /// @param assets As per `IERC4626.Withdraw`.
+    /// @param shares As per `IERC4626.Withdraw`.
+    /// @param id As per `IERC1155.TransferSingle`.
+    event WithdrawWithReceipt(
+        address caller,
+        address receiver,
+        address owner,
+        uint256 assets,
+        uint256 shares,
+        uint256 id
+    );
+
     /// Emitted when deployed and constructed.
-    /// @param sender `msg.sender` that deployed the contract.
+    /// @param caller `msg.sender` that deployed the contract.
     /// @param config All construction config.
-    event Construction(address sender, ConstructionConfig config);
-    event ReceiptInformation(address sender, uint256 id, bytes data);
+    event Construction(address caller, ConstructionConfig config);
+
+    /// Emitted when new information is provided for a receipt.
+    /// @param caller `msg.sender` emitting the information for the receipt.
+    /// @param id Receipt the information is for.
+    /// @param information Information for the receipt. MAY reference offchain
+    /// data where the payload is large.
+    event ReceiptInformation(address caller, uint256 id, bytes information);
 
     address private immutable _asset;
 
@@ -366,7 +404,14 @@ contract ReceiptVault is
         require(shares_ > 0, "0_SHARES");
         require(id_ > 0, "0_ID");
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
-
+        emit DepositWithReceipt(
+            msg.sender,
+            receiver_,
+            assets_,
+            shares_,
+            id_,
+            receiptInformation_
+        );
         _beforeDeposit(assets_, receiver_, shares_, id_);
 
         // erc20 mint.
@@ -569,6 +614,14 @@ contract ReceiptVault is
         require(shares_ > 0, "0_SHARES");
 
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
+        emit WithdrawWithReceipt(
+            msg.sender,
+            receiver_,
+            owner_,
+            assets_,
+            shares_,
+            id_
+        );
 
         // IERC4626:
         // > MUST support a withdraw flow where the shares are burned from owner

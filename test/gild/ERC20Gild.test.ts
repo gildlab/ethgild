@@ -1,11 +1,18 @@
 import chai from "chai";
-import {solidity} from "ethereum-waffle";
-import {ethers} from "hardhat";
-import {assertError, deployERC20PriceOracleVault, expectedReferencePrice, priceOne, fixedPointMul, fixedPointDiv} from "../util";
+import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
+import {
+  assertError,
+  deployERC20PriceOracleVault,
+  expectedReferencePrice,
+  priceOne,
+  fixedPointMul,
+  fixedPointDiv,
+} from "../util";
 
 chai.use(solidity);
 
-const { assert} = chai;
+const { assert } = chai;
 
 describe("deposit", async function () {
   it("should not zero deposit", async function () {
@@ -72,22 +79,22 @@ describe("deposit", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](
-          aliceDepositAmount,
-          alice.address,
-          oraclePrice.add(1),
-          []
-        ),
+            aliceDepositAmount,
+            alice.address,
+            oraclePrice.add(1),
+            []
+          ),
       "MIN_SHARE_RATIO",
       "failed to respect min price"
     );
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      aliceDepositAmount,
-      alice.address,
-      oraclePrice,
-      []
-    );
+        aliceDepositAmount,
+        alice.address,
+        oraclePrice,
+        []
+      );
 
     const expectedShares = oraclePrice.mul(aliceDepositAmount).div(priceOne);
     const aliceShares = await vault["balanceOf(address)"](alice.address);
@@ -121,11 +128,11 @@ describe("deposit", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      aliceEthAmount,
-      alice.address,
-      price,
-      []
-    )
+        aliceEthAmount,
+        alice.address,
+        price,
+        []
+      );
 
     const expectedAliceBalance = expectedReferencePrice
       .mul(aliceEthAmount)
@@ -171,11 +178,11 @@ describe("deposit", async function () {
     await vault
       .connect(bob)
       ["deposit(uint256,address,uint256,bytes)"](
-      bobEthAmount,
-      bob.address,
-      price,
-      []
-    )
+        bobEthAmount,
+        bob.address,
+        price,
+        []
+      );
 
     const expectedBobBalance = expectedReferencePrice
       .mul(bobEthAmount)
@@ -198,11 +205,11 @@ describe("deposit", async function () {
     await vault
       .connect(alice)
       ["redeem(uint256,address,address,uint256)"](
-      erc1155Balance,
-      alice.address,
-      alice.address,
-      price
-    );
+        erc1155Balance,
+        alice.address,
+        alice.address,
+        price
+      );
     const erc20AliceBalanceWithdraw = await vault["balanceOf(address)"](
       alice.address
     );
@@ -218,11 +225,11 @@ describe("deposit", async function () {
         await vault
           .connect(alice)
           ["redeem(uint256,address,address,uint256)"](
-          erc1155Balance.sub(1),
-          alice.address,
-          alice.address,
-          price
-        ),
+            erc1155Balance.sub(1),
+            alice.address,
+            alice.address,
+            price
+          ),
       "burn amount exceeds balance",
       "failed to prevent gild referencePrice manipulation"
     );
@@ -240,8 +247,7 @@ describe("deposit", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [vault, asset, priceOracle] =
-      await deployERC20PriceOracleVault();
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -267,12 +273,16 @@ describe("deposit", async function () {
       alice.address
     );
 
-    const aliceShareBalance = await vault["balanceOf(address)"](
-      alice.address
-    );
+    const aliceShareBalance = await vault["balanceOf(address)"](alice.address);
 
-    const expectedAliceShareBalance = fixedPointMul(price, aliceAssetBalanceAmount)
-    assert(expectedAliceShareBalance.eq(aliceShareBalance), `wrong alice share balance`)
+    const expectedAliceShareBalance = fixedPointMul(
+      price,
+      aliceAssetBalanceAmount
+    );
+    assert(
+      expectedAliceShareBalance.eq(aliceShareBalance),
+      `wrong alice share balance`
+    );
 
     // transfer all receipt from alice to bob.
     await aliceVault.safeTransferFrom(
@@ -333,14 +343,17 @@ describe("deposit", async function () {
 
     const bobRedeemTx = await bobVault[
       "redeem(uint256,address,address,uint256)"
-      ](bobReceiptBalance, bob.address, bob.address, price);
+    ](bobReceiptBalance, bob.address, bob.address, price);
     await bobRedeemTx.wait();
     const bobReceiptBalanceAfter = await vault["balanceOf(address,uint256)"](
       bob.address,
       id1155
     );
     const bobAssetBalanceAfter = await asset.balanceOf(bob.address);
-    assert(bobReceiptBalanceAfter.eq(0), `bob did not redeem all 1155 receipt amounts`);
+    assert(
+      bobReceiptBalanceAfter.eq(0),
+      `bob did not redeem all 1155 receipt amounts`
+    );
 
     const bobAssetBalanceDiff = bobAssetBalanceAfter.sub(bobAssetBalanceBefore);
     // Bob should be able to withdraw what alice deposited.
