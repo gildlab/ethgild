@@ -19,23 +19,101 @@ struct ConstructionConfig {
     ReceiptVaultConstructionConfig receiptVaultConfig;
 }
 
+/// @title OffchainAssetVault
+/// @notice Enables curators of offchain assets to create a token that they can
+/// arbitrage offchain assets against onchain assets. This allows them to
+/// maintain a peg between offchain and onchain markets.
+///
+/// At a high level this works because the custodian can always profitably trade
+/// the peg against offchain markets in both directions.
+///
+/// Price is higher onchain: Custodian can buy/produce assets offchain and mint
+/// tokens then sell the tokens for more than the assets would sell for offchain
+/// thus making a profit. The sale of the tokens brings the onchain price down.
+/// Price is higher offchain: Custodian can sell assets offchain and
+/// buyback+burn tokens onchain for less than the offchain sale, thus making a
+/// profit. The token purchase brings the onchain price up.
+///
+/// In contrast to pure algorithmic tokens and sentiment based stablecoins, a
+/// competent custodian can profit "infinitely" to maintain the peg no matter
+/// how badly the peg breaks. As long as every token is fully collateralised by
+/// liquid offchain assets tokens can be profitably bought and burned by the
+/// custodian all the way to 0 token supply.
+///
+/// This model is contingent on existing onchain and offchain liquidity
+/// and the custodian being competent. These requirements are non-trivial. There
+/// are far more incompetent and malicious custodians than competent ones. Only
+/// so many bars of gold can fit in a vault, and only so many trees that can
+/// live in a forest.
+///
+/// This contract does not attempt to solve for liquidity and trustworthyness,
+/// it only seeks to provide baseline functionality that a competent custodian
+/// will need to tackle the problem. The implementation provides:
+///
+/// - ReceiptVault base that allows a transparent onchain/offchain audit history
+/// - Certifier role that allows for audits of offchain assets that can fail
+/// - KYC/membership lists that can restrict who can hold/transfer assets
+/// - Ability to comply with sanctions/regulators by confiscating assets
+/// - ERC20 shares in the vault that can be traded minted/burned to track a peg
+/// - ERC4626 compliant vault interface (inherited from ReceiptVault)
+/// - Fine grained standard Open Zeppelin access control for all system roles
 contract OffchainAssetVault is ReceiptVault, AccessControl {
+    /// Contract has constructed.
+    /// @param caller The `msg.sender` constructing the contract.
+    /// @param config All construction config.
     event OffchainAssetVaultConstruction(
-        address sender,
+        address caller,
         ConstructionConfig config
     );
-    event Certify(address sender, uint256 until, bytes data);
+
+    /// A new certification time has been set.
+    /// @param caller The certifier setting the new time.
+    /// @param until The time the system is certified until. Normally this will
+    /// be a future time but certifiers MAY set it to a time in the past which
+    /// will immediately freeze all transfers.
+    /// @param data The certifier MAY provide additional supporting data such
+    /// as an auditor's report/comments etc.
+    event Certify(address caller, uint256 until, bytes data);
+
+    /// Shares have been confiscated from a user who is not currently meeting
+    /// the ERC20 tier contract minimum requirements.
+    /// @param caller The confiscator who is confiscating the shares.
+    /// @param confiscatee The user who had their shares confiscated.
+    /// @param confiscated The amount of shares that were confiscated.
     event ConfiscateShares(
-        address sender,
+        address caller,
         address confiscatee,
         uint256 confiscated
     );
+
+    /// A receipt has been confiscated from a user who is not currently meeting
+    /// the ERC1155 tier contract minimum requirements.
+    /// @param caller The confiscator who is confiscating the receipt.
+    /// @param confiscatee The user who had their receipt confiscated.
+    /// @param id The receipt ID that was confiscated.
+    /// @param confiscated The amount of the receipt that was confiscated.
     event ConfiscateReceipt(
-        address sender,
+        address caller,
         address confiscatee,
         uint256 id,
         uint256 confiscated
     );
+
+    /// A new ERC20 tier contract has been set.
+    /// @param caller The `msg.sender` who set the new tier contract.
+    /// @param tier The new tier contract used for all ERC20 transfers and
+    /// confiscations.
+    /// @param minimumTier The minimum tier that a user must hold to be eligible
+    /// to send/receive/hold shares and be immune to share confiscations.
+    event SetERC20Tier(address caller, address tier, uint minimumTier);
+
+    /// A new ERC1155 tier contract has been set.
+    /// @param caller The `msg.sender` who set the new tier contract.
+    /// @param tier The new tier contract used for all ERC1155 transfers and
+    /// confiscations.
+    /// @param minimumTier The minimum tier that a user must hold to be eligible
+    /// to send/receive/hold receipts and be immune to receipt confiscations.
+    event SetERC1155Tier(address caller, address tier, uint minimumTier);
 
     bytes32 private constant DEPOSITOR = keccak256("DEPOSITOR");
     bytes32 private constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
@@ -272,6 +350,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     {
         erc20Tier = ITier(tier_);
         erc20MinimumTier = minimumTier_;
+        emit SetERC20Tier(msg.sender, tier_, minimumTier_);
     }
 
     /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
@@ -283,6 +362,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     {
         erc1155Tier = ITier(tier_);
         erc1155MinimumTier = minimumTier_;
+        emit SetERC1155Tier(msg.sender, tier_, minimumTier_);
     }
 
     function certify(
