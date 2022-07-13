@@ -54,9 +54,9 @@ contract ReceiptVault is
         address caller,
         address receiver,
         address owner,
-        uint assets,
-        uint shares,
-        uint id
+        uint256 assets,
+        uint256 shares,
+        uint256 id
     );
 
     /// Emitted when deployed and constructed.
