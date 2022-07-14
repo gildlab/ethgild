@@ -54,4 +54,36 @@ describe("OffChainAssetVault", async function () {
       `wrong caller expected ${alice.address} got ${caller}`
     );
   });
+  it("Checks SetERC20Tier event is emitted", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const TierV2Test = await ethers.getContractFactory("TierV2Test");
+    const TierV2TestContract = await TierV2Test.deploy();
+    await TierV2TestContract.deployed();
+
+    await vault.grantRole(await vault.ERC20TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(10);
+
+    const { caller, tier, minimumTier } = (await getEventArgs(
+      await vault.setERC20Tier(TierV2TestContract.address, minTier),
+      "SetERC20Tier",
+      vault
+    )) as SetERC20TierEvent["args"];
+
+    assert(
+      caller === alice.address,
+      `wrong name expected ${alice.address} got ${caller}`
+    );
+    assert(
+      tier === TierV2TestContract.address,
+      `wrong asset expected ${TierV2TestContract.address} got ${tier}`
+    );
+    assert(
+      minimumTier.eq(minTier),
+      `wrong uri expected ${minTier} got ${minimumTier}`
+    );
+  });
 });
