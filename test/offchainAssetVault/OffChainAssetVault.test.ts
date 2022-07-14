@@ -94,15 +94,15 @@ describe("OffChainAssetVault", async function () {
 
     assert(
       caller === alice.address,
-      `wrong name expected ${alice.address} got ${caller}`
+      `wrong caller expected ${alice.address} got ${caller}`
     );
     assert(
       tier === TierV2TestContract.address,
-      `wrong asset expected ${TierV2TestContract.address} got ${tier}`
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
       minimumTier.eq(minTier),
-      `wrong uri expected ${minTier} got ${minimumTier}`
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
   it("Checks setERC1155Tier role", async function () {
@@ -145,15 +145,15 @@ describe("OffChainAssetVault", async function () {
 
     assert(
       caller === alice.address,
-      `wrong name expected ${alice.address} got ${caller}`
+      `wrong caller expected ${alice.address} got ${caller}`
     );
     assert(
       tier === TierV2TestContract.address,
-      `wrong asset expected ${TierV2TestContract.address} got ${tier}`
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
       minimumTier.eq(minTier),
-      `wrong uri expected ${minTier} got ${minimumTier}`
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
 });
