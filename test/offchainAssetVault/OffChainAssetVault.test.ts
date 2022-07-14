@@ -24,42 +24,42 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     const signers = await ethers.getSigners();
-    const alice = signers[ 0 ];
+    const alice = signers[0];
 
-    const { caller, config } = ( await getEventArgs(
-        await vault.deployTransaction,
-        "OffchainAssetVaultConstruction",
-        vault
-    ) ) as OffchainAssetVaultConstructionEvent["args"];
-
-    assert(
-        config.receiptVaultConfig.name === expectedName,
-        `wrong name expected ${ expectedName } got ${ config.receiptVaultConfig.name }`
-    );
-    assert(
-        config.receiptVaultConfig.asset === ADDRESS_ZERO,
-        `wrong asset expected ${ ADDRESS_ZERO } got ${ config.receiptVaultConfig.asset }`
-    );
-    assert(
-        config.receiptVaultConfig.uri === expectedUri,
-        `wrong uri expected ${ expectedUri } got ${ config.receiptVaultConfig.uri }`
-    );
+    const { caller, config } = (await getEventArgs(
+      await vault.deployTransaction,
+      "OffchainAssetVaultConstruction",
+      vault
+    )) as OffchainAssetVaultConstructionEvent["args"];
 
     assert(
-        config.receiptVaultConfig.symbol === expectedSymbol,
-        `wrong symbol expected ${ expectedSymbol } got ${ config.receiptVaultConfig.symbol }`
+      config.receiptVaultConfig.name === expectedName,
+      `wrong name expected ${expectedName} got ${config.receiptVaultConfig.name}`
+    );
+    assert(
+      config.receiptVaultConfig.asset === ADDRESS_ZERO,
+      `wrong asset expected ${ADDRESS_ZERO} got ${config.receiptVaultConfig.asset}`
+    );
+    assert(
+      config.receiptVaultConfig.uri === expectedUri,
+      `wrong uri expected ${expectedUri} got ${config.receiptVaultConfig.uri}`
     );
 
     assert(
-        caller === alice.address,
-        `wrong caller expected ${ alice.address } got ${ caller }`
+      config.receiptVaultConfig.symbol === expectedSymbol,
+      `wrong symbol expected ${expectedSymbol} got ${config.receiptVaultConfig.symbol}`
+    );
+
+    assert(
+      caller === alice.address,
+      `wrong caller expected ${alice.address} got ${caller}`
     );
   });
   it("Checks SetERC20Tier role", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     const signers = await ethers.getSigners();
-    const alice = signers[ 0 ];
+    const alice = signers[0];
 
     const TierV2Test = await ethers.getContractFactory("TierV2Test");
     const TierV2TestContract = await TierV2Test.deploy();
@@ -68,16 +68,16 @@ describe("OffChainAssetVault", async function () {
     const minTier = ethers.BigNumber.from(10);
 
     await assertError(
-        async () => await vault.setERC20Tier(TierV2TestContract.address, minTier),
-        `AccessControl: account ${ alice.address.toLowerCase() } is missing role ${ await vault.ERC20TIERER() }`,
-        "Failed to set erc20tier"
+      async () => await vault.setERC20Tier(TierV2TestContract.address, minTier),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20TIERER()}`,
+      "Failed to set erc20tier"
     );
   });
   it("Checks SetERC20Tier event is emitted", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     const signers = await ethers.getSigners();
-    const alice = signers[ 0 ];
+    const alice = signers[0];
 
     const TierV2Test = await ethers.getContractFactory("TierV2Test");
     const TierV2TestContract = await TierV2Test.deploy();
@@ -86,23 +86,74 @@ describe("OffChainAssetVault", async function () {
     await vault.grantRole(await vault.ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
-    const { caller, tier, minimumTier } = ( await getEventArgs(
-        await vault.setERC20Tier(TierV2TestContract.address, minTier),
-        "SetERC20Tier",
-        vault
-    ) ) as SetERC20TierEvent["args"];
+    const { caller, tier, minimumTier } = (await getEventArgs(
+      await vault.setERC20Tier(TierV2TestContract.address, minTier),
+      "SetERC20Tier",
+      vault
+    )) as SetERC20TierEvent["args"];
 
     assert(
-        caller === alice.address,
-        `wrong name expected ${ alice.address } got ${ caller }`
+      caller === alice.address,
+      `wrong name expected ${alice.address} got ${caller}`
     );
     assert(
-        tier === TierV2TestContract.address,
-        `wrong asset expected ${ TierV2TestContract.address } got ${ tier }`
+      tier === TierV2TestContract.address,
+      `wrong asset expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
-        minimumTier.eq(minTier),
-        `wrong uri expected ${ minTier } got ${ minimumTier }`
+      minimumTier.eq(minTier),
+      `wrong uri expected ${minTier} got ${minimumTier}`
+    );
+  });
+  it("Checks setERC1155Tier role", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const TierV2Test = await ethers.getContractFactory("TierV2Test");
+    const TierV2TestContract = await TierV2Test.deploy();
+    await TierV2TestContract.deployed();
+
+    const minTier = ethers.BigNumber.from(10);
+
+    await assertError(
+      async () =>
+        await vault.setERC1155Tier(TierV2TestContract.address, minTier),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC1155TIERER()}`,
+      "Failed to set erc1155tier"
+    );
+  });
+  it("Checks setERC1155Tier event is emitted", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const TierV2Test = await ethers.getContractFactory("TierV2Test");
+    const TierV2TestContract = await TierV2Test.deploy();
+    await TierV2TestContract.deployed();
+
+    await vault.grantRole(await vault.ERC1155TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(100);
+
+    const { caller, tier, minimumTier } = (await getEventArgs(
+      await vault.setERC1155Tier(TierV2TestContract.address, minTier),
+      "SetERC1155Tier",
+      vault
+    )) as SetERC20TierEvent["args"];
+
+    assert(
+      caller === alice.address,
+      `wrong name expected ${alice.address} got ${caller}`
+    );
+    assert(
+      tier === TierV2TestContract.address,
+      `wrong asset expected ${TierV2TestContract.address} got ${tier}`
+    );
+    assert(
+      minimumTier.eq(minTier),
+      `wrong uri expected ${minTier} got ${minimumTier}`
     );
   });
 });
