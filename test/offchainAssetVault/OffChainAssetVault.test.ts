@@ -84,10 +84,6 @@ describe("OffChainAssetVault", async function () {
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
-    //
-    // const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    // const TierV2TestContract = await TierV2Test.deploy();
-    // await TierV2TestContract.deployed();
 
     await vault.grantRole(await vault.ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
@@ -117,10 +113,6 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    // const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    // const TierV2TestContract = await TierV2Test.deploy();
-    // await TierV2TestContract.deployed();
-
     const minTier = ethers.BigNumber.from(10);
 
     await assertError(
@@ -135,10 +127,6 @@ describe("OffChainAssetVault", async function () {
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
-
-    // const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    // const TierV2TestContract = await TierV2Test.deploy();
-    // await TierV2TestContract.deployed();
 
     await vault.grantRole(await vault.ERC1155TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(100);
