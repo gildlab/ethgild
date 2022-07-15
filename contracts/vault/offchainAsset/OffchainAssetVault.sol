@@ -105,7 +105,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// confiscations.
     /// @param minimumTier The minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
-    event SetERC20Tier(address caller, address tier, uint minimumTier);
+    event SetERC20Tier(address caller, address tier, uint256 minimumTier);
 
     /// A new ERC1155 tier contract has been set.
     /// @param caller The `msg.sender` who set the new tier contract.
@@ -113,7 +113,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// confiscations.
     /// @param minimumTier The minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
-    event SetERC1155Tier(address caller, address tier, uint minimumTier);
+    event SetERC1155Tier(address caller, address tier, uint256 minimumTier);
 
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
     bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
