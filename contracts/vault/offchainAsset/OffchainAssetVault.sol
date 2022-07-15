@@ -105,7 +105,12 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
-    event SetERC20Tier(address caller, address tier, uint256 minimumTier, uint[] context);
+    event SetERC20Tier(
+        address caller,
+        address tier,
+        uint256 minimumTier,
+        uint256[] context
+    );
 
     /// A new ERC1155 tier contract has been set.
     /// @param caller `msg.sender` who set the new tier contract.
@@ -114,7 +119,12 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
-    event SetERC1155Tier(address caller, address tier, uint256 minimumTier, uint[] context);
+    event SetERC1155Tier(
+        address caller,
+        address tier,
+        uint256 minimumTier,
+        uint256[] context
+    );
 
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
     bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
@@ -444,7 +454,13 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         address to_,
         uint256
     ) internal view override {
-        enforceValidTransfer(erc20Tier, erc20MinimumTier, erc20TierContext, from_, to_);
+        enforceValidTransfer(
+            erc20Tier,
+            erc20MinimumTier,
+            erc20TierContext,
+            from_,
+            to_
+        );
     }
 
     // @inheritdoc ERC1155
@@ -456,7 +472,13 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         uint256[] memory,
         bytes memory
     ) internal view override {
-        enforceValidTransfer(erc1155Tier, erc1155MinimumTier, erc1155TierContext, from_, to_);
+        enforceValidTransfer(
+            erc1155Tier,
+            erc1155MinimumTier,
+            erc1155TierContext,
+            from_,
+            to_
+        );
     }
 
     function confiscate(address confiscatee_)
