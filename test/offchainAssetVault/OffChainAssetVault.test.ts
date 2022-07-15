@@ -1,6 +1,8 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
+import "@beehiveinnovation/rain-protocol/contracts/test/ReadWriteTier.sol";
+import { ReadWriteTier } from "../../typechain";
 import {
   getEventArgs,
   expectedName,
@@ -19,7 +21,15 @@ import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 chai.use(solidity);
 const { assert } = chai;
 
+let TierV2TestContract: ReadWriteTier;
+
 describe("OffChainAssetVault", async function () {
+  beforeEach(async () => {
+    const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    TierV2TestContract = await TierV2Test.deploy();
+    await TierV2TestContract.deployed();
+  });
+
   it("Constructs well", async function () {
     const [vault] = await deployOffChainAssetVault();
 
@@ -61,14 +71,11 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const TierV2Test = await ethers.getContractFactory("TierV2Test");
-    const TierV2TestContract = await TierV2Test.deploy();
-    await TierV2TestContract.deployed();
-
     const minTier = ethers.BigNumber.from(10);
 
     await assertError(
-      async () => await vault.setERC20Tier(TierV2TestContract.address, minTier),
+      async () =>
+        await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20TIERER()}`,
       "Failed to set erc20tier"
     );
@@ -78,16 +85,16 @@ describe("OffChainAssetVault", async function () {
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
-
-    const TierV2Test = await ethers.getContractFactory("TierV2Test");
-    const TierV2TestContract = await TierV2Test.deploy();
-    await TierV2TestContract.deployed();
+    //
+    // const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    // const TierV2TestContract = await TierV2Test.deploy();
+    // await TierV2TestContract.deployed();
 
     await vault.grantRole(await vault.ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
     const { caller, tier, minimumTier } = (await getEventArgs(
-      await vault.setERC20Tier(TierV2TestContract.address, minTier),
+      await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
       "SetERC20Tier",
       vault
     )) as SetERC20TierEvent["args"];
@@ -111,15 +118,15 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const TierV2Test = await ethers.getContractFactory("TierV2Test");
-    const TierV2TestContract = await TierV2Test.deploy();
-    await TierV2TestContract.deployed();
+    // const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    // const TierV2TestContract = await TierV2Test.deploy();
+    // await TierV2TestContract.deployed();
 
     const minTier = ethers.BigNumber.from(10);
 
     await assertError(
       async () =>
-        await vault.setERC1155Tier(TierV2TestContract.address, minTier),
+        await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC1155TIERER()}`,
       "Failed to set erc1155tier"
     );
@@ -130,15 +137,15 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const TierV2Test = await ethers.getContractFactory("TierV2Test");
-    const TierV2TestContract = await TierV2Test.deploy();
-    await TierV2TestContract.deployed();
+    // const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    // const TierV2TestContract = await TierV2Test.deploy();
+    // await TierV2TestContract.deployed();
 
     await vault.grantRole(await vault.ERC1155TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(100);
 
     const { caller, tier, minimumTier } = (await getEventArgs(
-      await vault.setERC1155Tier(TierV2TestContract.address, minTier),
+      await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
       "SetERC1155Tier",
       vault
     )) as SetERC20TierEvent["args"];
