@@ -3,7 +3,7 @@ pragma solidity =0.8.10;
 
 import {ERC20, ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "../erc4626/IERC4626.sol";
+import "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

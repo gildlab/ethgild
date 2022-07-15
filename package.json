@@ -7,6 +7,7 @@
     "@typechain/hardhat": "^2.0.2",
     "@types/mocha": "^8.2.2",
     "chai": "^4.3.4",
+    "dotenv": "^16.0.1",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.3.1",
     "hardhat": "^2.8.3",
@@ -23,9 +24,7 @@
     "yargs-parser": ">=13.1.2"
   },
   "dependencies": {
-    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#e590ce7ef673224afba04c43384a278a9500500d",
-    "@chainlink/contracts": "^0.3.1",
-    "@openzeppelin/contracts": "^4.1.0",
-    "@openzeppelin/contracts-upgradeable": "^4.5.1"
+    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#549e05d50d9a49b42fdfa63215ddbead00322157",
+    "@chainlink/contracts": "^0.3.1"
   }
 }
