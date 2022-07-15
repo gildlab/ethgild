@@ -4,8 +4,7 @@ pragma solidity =0.8.10;
 import {ConstructionConfig as ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-import "@beehiveinnovation/rain-protocol/contracts/tier/ITier.sol";
-import "@beehiveinnovation/rain-protocol/contracts/tier/libraries/TierReport.sol";
+import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 
 /// All data required to construct `CertifiedAssetConnect`.
 /// @param admin The initial admin has ALL ROLES. It is up to the admin to
@@ -100,20 +99,22 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     );
 
     /// A new ERC20 tier contract has been set.
-    /// @param caller The `msg.sender` who set the new tier contract.
-    /// @param tier The new tier contract used for all ERC20 transfers and
+    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param tier New tier contract used for all ERC20 transfers and
     /// confiscations.
-    /// @param minimumTier The minimum tier that a user must hold to be eligible
+    /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
-    event SetERC20Tier(address caller, address tier, uint256 minimumTier);
+    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    event SetERC20Tier(address caller, address tier, uint256 minimumTier, uint[] context);
 
     /// A new ERC1155 tier contract has been set.
-    /// @param caller The `msg.sender` who set the new tier contract.
-    /// @param tier The new tier contract used for all ERC1155 transfers and
+    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param tier New tier contract used for all ERC1155 transfers and
     /// confiscations.
-    /// @param minimumTier The minimum tier that a user must hold to be eligible
+    /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
-    event SetERC1155Tier(address caller, address tier, uint256 minimumTier);
+    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    event SetERC1155Tier(address caller, address tier, uint256 minimumTier, uint[] context);
 
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
     bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
@@ -143,11 +144,15 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
 
     uint256 private highwaterId;
 
-    uint256 private certifiedUntil;
-    ITier private erc20Tier;
-    uint256 private erc20MinimumTier;
-    ITier private erc1155Tier;
-    uint256 private erc1155MinimumTier;
+    uint32 private certifiedUntil;
+
+    uint8 private erc20MinimumTier;
+    ITierV2 private erc20Tier;
+    uint256[] private erc20TierContext;
+
+    uint8 private erc1155MinimumTier;
+    ITierV2 private erc1155Tier;
+    uint256[] private erc1155TierContext;
 
     constructor(ConstructionConfig memory config_)
         ReceiptVault(config_.receiptVaultConfig)
@@ -344,29 +349,33 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
     /// disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
-    function setERC20Tier(address tier_, uint256 minimumTier_)
-        external
-        onlyRole(ERC20TIERER)
-    {
-        erc20Tier = ITier(tier_);
+    function setERC20Tier(
+        address tier_,
+        uint8 minimumTier_,
+        uint256[] calldata context_
+    ) external onlyRole(ERC20TIERER) {
+        erc20Tier = ITierV2(tier_);
         erc20MinimumTier = minimumTier_;
-        emit SetERC20Tier(msg.sender, tier_, minimumTier_);
+        erc20TierContext = context_;
+        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
     /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
     /// disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
-    function setERC1155Tier(address tier_, uint256 minimumTier_)
-        external
-        onlyRole(ERC1155TIERER)
-    {
-        erc1155Tier = ITier(tier_);
+    function setERC1155Tier(
+        address tier_,
+        uint8 minimumTier_,
+        uint256[] calldata context_
+    ) external onlyRole(ERC1155TIERER) {
+        erc1155Tier = ITierV2(tier_);
         erc1155MinimumTier = minimumTier_;
-        emit SetERC1155Tier(msg.sender, tier_, minimumTier_);
+        erc1155TierContext = context_;
+        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
     function certify(
-        uint256 until_,
+        uint32 until_,
         bytes calldata data_,
         bool forceUntil_
     ) external onlyRole(CERTIFIER) {
@@ -380,8 +389,9 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     }
 
     function enforceValidTransfer(
-        ITier tier_,
+        ITierV2 tier_,
         uint256 minimumTier_,
+        uint256[] memory tierContext_,
         address from_,
         address to_
     ) internal view {
@@ -415,14 +425,14 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             // The sender must have a valid tier.
             require(
-                block.number >=
-                    TierReport.tierBlock(tier_.report(from_), minimumTier_),
+                block.timestamp >=
+                    tier_.reportTimeForTier(from_, minimumTier_, tierContext_),
                 "SENDER_TIER"
             );
             // The recipient must have a valid tier.
             require(
-                block.number >=
-                    TierReport.tierBlock(tier_.report(to_), minimumTier_),
+                block.timestamp >=
+                    tier_.reportTimeForTier(to_, minimumTier_, tierContext_),
                 "RECIPIENT_TIER"
             );
         }
@@ -434,7 +444,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         address to_,
         uint256
     ) internal view override {
-        enforceValidTransfer(erc20Tier, erc20MinimumTier, from_, to_);
+        enforceValidTransfer(erc20Tier, erc20MinimumTier, erc20TierContext, from_, to_);
     }
 
     // @inheritdoc ERC1155
@@ -446,7 +456,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         uint256[] memory,
         bytes memory
     ) internal view override {
-        enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
+        enforceValidTransfer(erc1155Tier, erc1155MinimumTier, erc1155TierContext, from_, to_);
     }
 
     function confiscate(address confiscatee_)
@@ -457,10 +467,11 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     {
         if (
             address(erc20Tier) == address(0) ||
-            block.number <
-            TierReport.tierBlock(
-                erc20Tier.report(confiscatee_),
-                erc20MinimumTier
+            block.timestamp <
+            erc20Tier.reportTimeForTier(
+                confiscatee_,
+                erc20MinimumTier,
+                erc20TierContext
             )
         ) {
             confiscated_ = balanceOf(confiscatee_);
@@ -479,10 +490,11 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     {
         if (
             address(erc1155Tier) == address(0) ||
-            block.number <
-            TierReport.tierBlock(
-                erc1155Tier.report(confiscatee_),
-                erc1155MinimumTier
+            block.timestamp <
+            erc1155Tier.reportTimeForTier(
+                confiscatee_,
+                erc1155MinimumTier,
+                erc1155TierContext
             )
         ) {
             confiscated_ = balanceOf(confiscatee_, id_);
