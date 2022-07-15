@@ -1,7 +1,6 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import "@beehiveinnovation/rain-protocol/contracts/test/ReadWriteTier.sol";
 import { ReadWriteTier } from "../../typechain";
 import {
   getEventArgs,
