@@ -4,8 +4,7 @@ pragma solidity =0.8.10;
 import {ConstructionConfig as ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-import "@beehiveinnovation/rain-protocol/contracts/tier/ITier.sol";
-import "@beehiveinnovation/rain-protocol/contracts/tier/libraries/TierReport.sol";
+import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 
 /// All data required to construct `CertifiedAssetConnect`.
 /// @param admin The initial admin has ALL ROLES. It is up to the admin to
@@ -19,57 +18,151 @@ struct ConstructionConfig {
     ReceiptVaultConstructionConfig receiptVaultConfig;
 }
 
+/// @title OffchainAssetVault
+/// @notice Enables curators of offchain assets to create a token that they can
+/// arbitrage offchain assets against onchain assets. This allows them to
+/// maintain a peg between offchain and onchain markets.
+///
+/// At a high level this works because the custodian can always profitably trade
+/// the peg against offchain markets in both directions.
+///
+/// Price is higher onchain: Custodian can buy/produce assets offchain and mint
+/// tokens then sell the tokens for more than the assets would sell for offchain
+/// thus making a profit. The sale of the tokens brings the onchain price down.
+/// Price is higher offchain: Custodian can sell assets offchain and
+/// buyback+burn tokens onchain for less than the offchain sale, thus making a
+/// profit. The token purchase brings the onchain price up.
+///
+/// In contrast to pure algorithmic tokens and sentiment based stablecoins, a
+/// competent custodian can profit "infinitely" to maintain the peg no matter
+/// how badly the peg breaks. As long as every token is fully collateralised by
+/// liquid offchain assets tokens can be profitably bought and burned by the
+/// custodian all the way to 0 token supply.
+///
+/// This model is contingent on existing onchain and offchain liquidity
+/// and the custodian being competent. These requirements are non-trivial. There
+/// are far more incompetent and malicious custodians than competent ones. Only
+/// so many bars of gold can fit in a vault, and only so many trees that can
+/// live in a forest.
+///
+/// This contract does not attempt to solve for liquidity and trustworthyness,
+/// it only seeks to provide baseline functionality that a competent custodian
+/// will need to tackle the problem. The implementation provides:
+///
+/// - ReceiptVault base that allows a transparent onchain/offchain audit history
+/// - Certifier role that allows for audits of offchain assets that can fail
+/// - KYC/membership lists that can restrict who can hold/transfer assets
+/// - Ability to comply with sanctions/regulators by confiscating assets
+/// - ERC20 shares in the vault that can be traded minted/burned to track a peg
+/// - ERC4626 compliant vault interface (inherited from ReceiptVault)
+/// - Fine grained standard Open Zeppelin access control for all system roles
 contract OffchainAssetVault is ReceiptVault, AccessControl {
+    /// Contract has constructed.
+    /// @param caller The `msg.sender` constructing the contract.
+    /// @param config All construction config.
     event OffchainAssetVaultConstruction(
-        address sender,
+        address caller,
         ConstructionConfig config
     );
-    event Certify(address sender, uint256 until, bytes data);
+
+    /// A new certification time has been set.
+    /// @param caller The certifier setting the new time.
+    /// @param until The time the system is certified until. Normally this will
+    /// be a future time but certifiers MAY set it to a time in the past which
+    /// will immediately freeze all transfers.
+    /// @param data The certifier MAY provide additional supporting data such
+    /// as an auditor's report/comments etc.
+    event Certify(address caller, uint256 until, bytes data);
+
+    /// Shares have been confiscated from a user who is not currently meeting
+    /// the ERC20 tier contract minimum requirements.
+    /// @param caller The confiscator who is confiscating the shares.
+    /// @param confiscatee The user who had their shares confiscated.
+    /// @param confiscated The amount of shares that were confiscated.
     event ConfiscateShares(
-        address sender,
+        address caller,
         address confiscatee,
         uint256 confiscated
     );
+
+    /// A receipt has been confiscated from a user who is not currently meeting
+    /// the ERC1155 tier contract minimum requirements.
+    /// @param caller The confiscator who is confiscating the receipt.
+    /// @param confiscatee The user who had their receipt confiscated.
+    /// @param id The receipt ID that was confiscated.
+    /// @param confiscated The amount of the receipt that was confiscated.
     event ConfiscateReceipt(
-        address sender,
+        address caller,
         address confiscatee,
         uint256 id,
         uint256 confiscated
     );
 
-    bytes32 private constant DEPOSITOR = keccak256("DEPOSITOR");
-    bytes32 private constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
+    /// A new ERC20 tier contract has been set.
+    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param tier New tier contract used for all ERC20 transfers and
+    /// confiscations.
+    /// @param minimumTier Minimum tier that a user must hold to be eligible
+    /// to send/receive/hold shares and be immune to share confiscations.
+    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    event SetERC20Tier(
+        address caller,
+        address tier,
+        uint256 minimumTier,
+        uint256[] context
+    );
 
-    bytes32 private constant WITHDRAWER = keccak256("WITHDRAWER");
-    bytes32 private constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
+    /// A new ERC1155 tier contract has been set.
+    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param tier New tier contract used for all ERC1155 transfers and
+    /// confiscations.
+    /// @param minimumTier Minimum tier that a user must hold to be eligible
+    /// to send/receive/hold receipts and be immune to receipt confiscations.
+    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    event SetERC1155Tier(
+        address caller,
+        address tier,
+        uint256 minimumTier,
+        uint256[] context
+    );
 
-    bytes32 private constant CERTIFIER = keccak256("CERTIFIER");
-    bytes32 private constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
+    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
+    bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
-    bytes32 private constant HANDLER = keccak256("HANDLER");
-    bytes32 private constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+    bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
+    bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
-    bytes32 private constant ERC20TIERER = keccak256("ERC20TIERER");
-    bytes32 private constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+    bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
+    bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
 
-    bytes32 private constant ERC1155TIERER = keccak256("ERC1155TIERER");
-    bytes32 private constant ERC1155TIERER_ADMIN =
+    bytes32 public constant HANDLER = keccak256("HANDLER");
+    bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+
+    bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
+    bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+
+    bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
+    bytes32 public constant ERC1155TIERER_ADMIN =
         keccak256("ERC1155TIERER_ADMIN");
 
-    bytes32 private constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
-    bytes32 private constant ERC20SNAPSHOTTER_ADMIN =
+    bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
+    bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
-    bytes32 private constant CONFISCATOR = keccak256("CONFISCATOR");
-    bytes32 private constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
+    bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
+    bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
     uint256 private highwaterId;
 
-    uint256 private certifiedUntil;
-    ITier private erc20Tier;
-    uint256 private erc20MinimumTier;
-    ITier private erc1155Tier;
-    uint256 private erc1155MinimumTier;
+    uint32 private certifiedUntil;
+
+    uint8 private erc20MinimumTier;
+    ITierV2 private erc20Tier;
+    uint256[] private erc20TierContext;
+
+    uint8 private erc1155MinimumTier;
+    ITierV2 private erc1155Tier;
+    uint256[] private erc1155TierContext;
 
     constructor(ConstructionConfig memory config_)
         ReceiptVault(config_.receiptVaultConfig)
@@ -266,27 +359,33 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
     /// disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
-    function setERC20Tier(address tier_, uint256 minimumTier_)
-        external
-        onlyRole(ERC20TIERER)
-    {
-        erc20Tier = ITier(tier_);
+    function setERC20Tier(
+        address tier_,
+        uint8 minimumTier_,
+        uint256[] calldata context_
+    ) external onlyRole(ERC20TIERER) {
+        erc20Tier = ITierV2(tier_);
         erc20MinimumTier = minimumTier_;
+        erc20TierContext = context_;
+        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
     /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
     /// disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
-    function setERC1155Tier(address tier_, uint256 minimumTier_)
-        external
-        onlyRole(ERC1155TIERER)
-    {
-        erc1155Tier = ITier(tier_);
+    function setERC1155Tier(
+        address tier_,
+        uint8 minimumTier_,
+        uint256[] calldata context_
+    ) external onlyRole(ERC1155TIERER) {
+        erc1155Tier = ITierV2(tier_);
         erc1155MinimumTier = minimumTier_;
+        erc1155TierContext = context_;
+        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
     function certify(
-        uint256 until_,
+        uint32 until_,
         bytes calldata data_,
         bool forceUntil_
     ) external onlyRole(CERTIFIER) {
@@ -300,8 +399,9 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     }
 
     function enforceValidTransfer(
-        ITier tier_,
+        ITierV2 tier_,
         uint256 minimumTier_,
+        uint256[] memory tierContext_,
         address from_,
         address to_
     ) internal view {
@@ -335,14 +435,14 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             // The sender must have a valid tier.
             require(
-                block.number >=
-                    TierReport.tierBlock(tier_.report(from_), minimumTier_),
+                block.timestamp >=
+                    tier_.reportTimeForTier(from_, minimumTier_, tierContext_),
                 "SENDER_TIER"
             );
             // The recipient must have a valid tier.
             require(
-                block.number >=
-                    TierReport.tierBlock(tier_.report(to_), minimumTier_),
+                block.timestamp >=
+                    tier_.reportTimeForTier(to_, minimumTier_, tierContext_),
                 "RECIPIENT_TIER"
             );
         }
@@ -354,7 +454,13 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         address to_,
         uint256
     ) internal view override {
-        enforceValidTransfer(erc20Tier, erc20MinimumTier, from_, to_);
+        enforceValidTransfer(
+            erc20Tier,
+            erc20MinimumTier,
+            erc20TierContext,
+            from_,
+            to_
+        );
     }
 
     // @inheritdoc ERC1155
@@ -366,7 +472,13 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         uint256[] memory,
         bytes memory
     ) internal view override {
-        enforceValidTransfer(erc1155Tier, erc1155MinimumTier, from_, to_);
+        enforceValidTransfer(
+            erc1155Tier,
+            erc1155MinimumTier,
+            erc1155TierContext,
+            from_,
+            to_
+        );
     }
 
     function confiscate(address confiscatee_)
@@ -377,10 +489,11 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     {
         if (
             address(erc20Tier) == address(0) ||
-            block.number <
-            TierReport.tierBlock(
-                erc20Tier.report(confiscatee_),
-                erc20MinimumTier
+            block.timestamp <
+            erc20Tier.reportTimeForTier(
+                confiscatee_,
+                erc20MinimumTier,
+                erc20TierContext
             )
         ) {
             confiscated_ = balanceOf(confiscatee_);
@@ -399,10 +512,11 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     {
         if (
             address(erc1155Tier) == address(0) ||
-            block.number <
-            TierReport.tierBlock(
-                erc1155Tier.report(confiscatee_),
-                erc1155MinimumTier
+            block.timestamp <
+            erc1155Tier.reportTimeForTier(
+                confiscatee_,
+                erc1155MinimumTier,
+                erc1155TierContext
             )
         ) {
             confiscated_ = balanceOf(confiscatee_, id_);
