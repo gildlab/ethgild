@@ -127,4 +127,20 @@ describe("Mint", async function () {
       `wrong alice assets ${expectedAssets} ${aliceBalanceDiff}`
     );
   });
+  it("Should not mint to 0 shares", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault] = await deployERC20PriceOracleVault();
+    const shares = ethers.BigNumber.from(0);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["mint(uint256,address)"](shares, alice.address),
+      "0_SHARES",
+      "failed to prevent a zero share mint"
+    );
+  });
 });
