@@ -7,6 +7,7 @@ import {
   fixedPointDiv,
   fixedPointMul,
   expectedReferencePrice,
+  ADDRESS_ZERO,
 } from "../util";
 
 chai.use(solidity);
@@ -141,6 +142,29 @@ describe("Mint", async function () {
           ["mint(uint256,address)"](shares, alice.address),
       "0_SHARES",
       "failed to prevent a zero share mint"
+    );
+  });
+  it("Should not mint to 0 address", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const price = await priceOracle.price();
+
+    const shares = fixedPointMul(assets, price);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["mint(uint256,address)"](shares, ADDRESS_ZERO),
+      "0_RECEIVER",
+      "failed to prevent mint to zero address"
     );
   });
 });
