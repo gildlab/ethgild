@@ -254,4 +254,20 @@ describe("Mint", async function () {
       "failed to prevent mint to zero address"
     );
   });
+  it("Mint Overloaded - Should not mint to 0 shares", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const price = await priceOracle.price();
+
+    await assertError(
+        async () =>
+            await vault
+                .connect(alice)["mint(uint256,address,uint256,bytes)"](ethers.BigNumber.from(0), alice.address, price, []),
+        "0_SHARES",
+        "failed to prevent a zero share mint"
+    );
+  });
 });
