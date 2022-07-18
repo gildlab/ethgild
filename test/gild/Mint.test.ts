@@ -167,4 +167,34 @@ describe("Mint", async function () {
       "failed to prevent mint to zero address"
     );
   });
+  it("Mint Overloaded - Calculates assets correctly", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const aliceBalanceBefore = await asset.balanceOf(alice.address);
+
+    const price = await priceOracle.price();
+
+    const shares = fixedPointMul(assets, price);
+
+    await vault
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, price, []);
+
+    const expectedAssets = fixedPointDiv(shares, price).add(1);
+
+    const aliceBalanceAfter = await asset.balanceOf(alice.address);
+    const aliceBalanceDiff = aliceBalanceBefore.sub(aliceBalanceAfter);
+
+    assert(
+      aliceBalanceDiff.eq(expectedAssets),
+      `wrong alice assets ${expectedAssets} ${aliceBalanceDiff}`
+    );
+  });
 });
