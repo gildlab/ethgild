@@ -32,7 +32,7 @@ describe("Mint", async function () {
     );
   });
   it("Checks min share ratio is less than share ratio", async function () {
-    const [vault, _, priceOracle] = await deployERC20PriceOracleVault();
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const price = await priceOracle.price();
 
     const signers = await ethers.getSigners();
@@ -49,7 +49,7 @@ describe("Mint", async function () {
     );
   });
   it("PreviewMint - Calculates assets correctly with round up", async function () {
-    const [vault, _, priceOracle] = await deployERC20PriceOracleVault();
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const price = await priceOracle.price();
 
     assert(
@@ -65,6 +65,37 @@ describe("Mint", async function () {
     assert(
       assets.eq(expectedAssets),
       `Wrong max deposit ${expectedAssets} ${assets}`
+    );
+  });
+  it("Mint - Calculates assets correctly while minShareRation is set", async function () {
+    const signers = await ethers.getSigners();
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const alice = signers[0];
+
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const aliceBalanceBefore = await asset.balanceOf(alice.address);
+
+    const price = await priceOracle.price();
+
+    const shares = fixedPointMul(assets, price);
+    //set minShareRatio
+    await vault.setMinShareRatio(price.sub(1));
+
+    await vault.connect(alice)["mint(uint256,address)"](shares, alice.address);
+
+    const expectedAssets = fixedPointDiv(shares, price).add(1);
+
+    const aliceBalanceAfter = await asset.balanceOf(alice.address);
+    const aliceBalanceDiff = aliceBalanceBefore.sub(aliceBalanceAfter);
+
+    assert(
+      aliceBalanceDiff.eq(expectedAssets),
+      `wrong alice assets ${expectedAssets} ${aliceBalanceDiff}`
     );
   });
   it("Mint - Calculates assets correctly", async function () {
