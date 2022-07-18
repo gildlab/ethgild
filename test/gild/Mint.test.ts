@@ -263,11 +263,17 @@ describe("Mint", async function () {
     const price = await priceOracle.price();
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)["mint(uint256,address,uint256,bytes)"](ethers.BigNumber.from(0), alice.address, price, []),
-        "0_SHARES",
-        "failed to prevent a zero share mint"
+      async () =>
+        await vault
+          .connect(alice)
+          ["mint(uint256,address,uint256,bytes)"](
+            ethers.BigNumber.from(0),
+            alice.address,
+            price,
+            []
+          ),
+      "0_SHARES",
+      "failed to prevent a zero share mint"
     );
   });
 });
