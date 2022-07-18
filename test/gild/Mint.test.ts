@@ -39,7 +39,11 @@ describe("Mint", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const shares = ethers.BigNumber.from("10").pow(20);
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const shares = fixedPointMul(assets, price);
 
     await vault.connect(alice).setMinShareRatio(price.add(1));
 
@@ -195,6 +199,31 @@ describe("Mint", async function () {
     assert(
       aliceBalanceDiff.eq(expectedAssets),
       `wrong alice assets ${expectedAssets} ${aliceBalanceDiff}`
+    );
+  });
+  it("Mint Overloaded - Checks min share ratio is less than share ratio", async function () {
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const price = await priceOracle.price();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const shares = fixedPointMul(assets, price);
+
+    await assertError(
+      async () =>
+        await vault["mint(uint256,address,uint256,bytes)"](
+          shares,
+          alice.address,
+          price.add(1),
+          []
+        ),
+      "MIN_SHARE_RATIO",
+      "failed to respect min price"
     );
   });
 });
