@@ -171,4 +171,25 @@ describe("Withdraw", async function () {
       "failed to prevent a zero address receiver withdraw"
     );
   });
+  it("Should not withdraw with zero address owner", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    await vault.setWithdrawId(price);
+
+    await assertError(
+        async () =>
+            await vault["withdraw(uint256,address,address)"](
+                withdrawBalance,
+                aliceAddress,
+                ADDRESS_ZERO
+            ),
+        "0_OWNER",
+        "failed to prevent a zero address owner withdraw"
+    );
+  });
 });
