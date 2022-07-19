@@ -6,6 +6,7 @@ import {
   deployERC20PriceOracleVault,
   fixedPointDiv,
   fixedPointMul,
+  ADDRESS_ZERO
 } from "../util";
 import { ERC20, ERC20PriceOracleVault } from "../../typechain";
 import { BigNumber } from "ethers";
@@ -147,6 +148,27 @@ describe("Withdraw", async function () {
         ),
       "0_ASSETS",
       "failed to prevent a zero asset withdraw"
+    );
+  });
+  it("Should not withdraw on zero address receiver", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    await vault.setWithdrawId(price);
+
+    await assertError(
+      async () =>
+        await vault["withdraw(uint256,address,address)"](
+            withdrawBalance,
+          ADDRESS_ZERO,
+          aliceAddress
+        ),
+      "0_RECEIVER",
+      "failed to prevent a zero address receiver withdraw"
     );
   });
 });
