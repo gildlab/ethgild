@@ -79,7 +79,7 @@ describe("Withdraw", async function () {
 
     assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
   });
-  it("previewWithdraw - calculates correct shares", async function () {
+  it("PreviewWithdraw - calculates correct shares", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -110,6 +110,43 @@ describe("Withdraw", async function () {
     );
     const previewWithdraw = await vault["previewWithdraw(uint256)"](
       withdrawBalance
+    );
+
+    assert(
+      previewWithdraw.eq(expectedPreviewWithdraw),
+      `Wrong preview withdraw amount`
+    );
+  });
+  it("Overloaded PreviewWithdraw - calculates correct shares", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const price = await priceOracle.price();
+
+    const aliceAssets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
+      aliceAssets,
+      alice.address,
+      price,
+      []
+    );
+
+    await depositTx.wait();
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(aliceAssets, price);
+
+    const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, price).add(
+      1
+    );
+    const previewWithdraw = await vault["previewWithdraw(uint256,uint256)"](
+      withdrawBalance,
+      price
     );
 
     assert(
