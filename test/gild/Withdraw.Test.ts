@@ -7,99 +7,74 @@ import {
   fixedPointDiv,
   fixedPointMul,
 } from "../util";
+import { ERC20, ERC20PriceOracleVault } from "../../typechain";
+import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
 const { assert } = chai;
+
+let vault: ERC20PriceOracleVault,
+  asset: ERC20,
+  price: BigNumber,
+  aliceAddress: string,
+  aliceAssets: BigNumber;
+
 describe("Withdraw", async function () {
-  it("Calculates correct maxWithdraw", async function () {
+  beforeEach(async () => {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [ERC20PriceOracleVault, Erc20Asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
-    const price = await priceOracle.price();
+    vault = await ERC20PriceOracleVault;
+    asset = await Erc20Asset;
+    price = await priceOracle.price();
+    aliceAddress = alice.address;
 
-    const aliceAssets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAssets);
+    aliceAssets = ethers.BigNumber.from(5000);
+    await asset.transfer(aliceAddress, aliceAssets);
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
       aliceAssets,
-      alice.address,
+      aliceAddress,
       price,
       []
     );
 
     await depositTx.wait();
+  });
+  it("Calculates correct maxWithdraw", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-      alice.address,
+      aliceAddress,
       price
     );
 
     const expectedMaxWithdraw = fixedPointDiv(receiptBalance, price);
     await vault.setWithdrawId(price);
 
-    const maxWithdraw = await vault["maxWithdraw(address)"](alice.address);
+    const maxWithdraw = await vault["maxWithdraw(address)"](aliceAddress);
 
     assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
   });
   it("Overloaded MaxWithdraw - Calculates correct maxWithdraw", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const price = await priceOracle.price();
-
-    const aliceAssets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      alice.address,
-      price,
-      []
-    );
-
-    await depositTx.wait();
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-      alice.address,
+      aliceAddress,
       price
     );
 
     const expectedMaxWithdraw = fixedPointDiv(receiptBalance, price);
     const maxWithdraw = await vault["maxWithdraw(address,uint256)"](
-      alice.address,
+      aliceAddress,
       price
     );
 
     assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
   });
   it("PreviewWithdraw - calculates correct shares", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const price = await priceOracle.price();
-
-    const aliceAssets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      alice.address,
-      price,
-      []
-    );
-
-    await depositTx.wait();
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(aliceAssets, price);
 
@@ -118,26 +93,6 @@ describe("Withdraw", async function () {
     );
   });
   it("Overloaded PreviewWithdraw - calculates correct shares", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const price = await priceOracle.price();
-
-    const aliceAssets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      alice.address,
-      price,
-      []
-    );
-
-    await depositTx.wait();
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(aliceAssets, price);
 
@@ -155,28 +110,8 @@ describe("Withdraw", async function () {
     );
   });
   it("Withdraws", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const price = await priceOracle.price();
-
-    const aliceAssets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      alice.address,
-      price,
-      []
-    );
-
-    await depositTx.wait();
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-      alice.address,
+      aliceAddress,
       price
     );
 
@@ -186,12 +121,12 @@ describe("Withdraw", async function () {
     await vault.setWithdrawId(price);
     await vault["withdraw(uint256,address,address)"](
       withdrawBalance,
-      alice.address,
-      alice.address
+      aliceAddress,
+      aliceAddress
     );
 
     const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
-      alice.address,
+      aliceAddress,
       price
     );
 
@@ -201,38 +136,17 @@ describe("Withdraw", async function () {
     );
   });
   it("Should not withdraw on zero assets", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const price = await priceOracle.price();
-
-    const aliceAssets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      alice.address,
-      price,
-      []
-    );
-
-    await depositTx.wait();
-
     await vault.setWithdrawId(price);
 
     await assertError(
-        async () =>
-            await vault["withdraw(uint256,address,address)"](
-                ethers.BigNumber.from(0),
-                alice.address,
-                alice.address
-            ),
-        "0_ASSETS",
-        "failed to prevent a zero asset withdraw"
+      async () =>
+        await vault["withdraw(uint256,address,address)"](
+          ethers.BigNumber.from(0),
+          aliceAddress,
+          aliceAddress
+        ),
+      "0_ASSETS",
+      "failed to prevent a zero asset withdraw"
     );
   });
 });
