@@ -88,23 +88,23 @@ describe("Redeem", async function () {
         `Wrong asset amount expected ${ expectedPreviewRedeem } got ${ assets }`
     );
   });
-  // it("Overloaded PreviewWithdraw - calculates correct shares", async function () {
-  //   //calculate max assets available for withdraw
-  //   const withdrawBalance = fixedPointDiv(aliceAssets, price);
-  //
-  //   const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, price).add(
-  //       1
-  //   );
-  //   const previewWithdraw = await vault["previewWithdraw(uint256,uint256)"](
-  //       withdrawBalance,
-  //       price
-  //   );
-  //
-  //   assert(
-  //       previewWithdraw.eq(expectedPreviewWithdraw),
-  //       `Wrong preview withdraw amount`
-  //   );
-  // });
+  it("Overloaded previewRedeem - calculates correct assets", async function () {
+    const aliceReceiptBalance = await vault[ "balanceOf(address,uint256)" ](
+        aliceAddress,
+        price
+    );
+
+    const expectedAssets = fixedPointDiv(aliceReceiptBalance, price)
+
+    const assets = await vault[ "previewRedeem(uint256,uint256)" ](
+        aliceReceiptBalance,
+        price
+    );
+    assert(
+        assets.eq(expectedAssets),
+        `Wrong asset amount expected ${ expectedAssets } got ${ assets }`
+    );
+  });
   // it("Withdraws", async function () {
   //   const receiptBalance = await vault["balanceOf(address,uint256)"](
   //       aliceAddress,
