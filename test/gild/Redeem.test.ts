@@ -146,27 +146,25 @@ describe("Redeem", async function () {
         "failed to prevent a zero shares redeem"
     );
   });
-  // it("Should not withdraw on zero address receiver", async function () {
-  //   const receiptBalance = await vault["balanceOf(address,uint256)"](
-  //       aliceAddress,
-  //       price
-  //   );
-  //
-  //   //calculate max assets available for withdraw
-  //   const withdrawBalance = fixedPointDiv(receiptBalance, price);
-  //   await vault.setWithdrawId(price);
-  //
-  //   await assertError(
-  //       async () =>
-  //           await vault["withdraw(uint256,address,address)"](
-  //               withdrawBalance,
-  //               ADDRESS_ZERO,
-  //               aliceAddress
-  //           ),
-  //       "0_RECEIVER",
-  //       "failed to prevent a zero address receiver withdraw"
-  //   );
-  // });
+  it("Should not redeem on zero address receiver", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
+
+    await vault.setWithdrawId(price);
+
+    await assertError(
+        async () =>
+            await vault["redeem(uint256,address,address)"](
+                receiptBalance,
+                ADDRESS_ZERO,
+                aliceAddress
+            ),
+        "0_RECEIVER",
+        "failed to prevent a zero address receiver redeem"
+    );
+  });
   // it("Should not withdraw with zero address owner", async function () {
   //   const receiptBalance = await vault["balanceOf(address,uint256)"](
   //       aliceAddress,
