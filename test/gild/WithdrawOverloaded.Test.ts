@@ -130,5 +130,48 @@ describe("Overloaded Withdraw", async function () {
         "failed to prevent a zero address owner withdraw"
     );
   });
+  it("Should emit withdraw event", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
 
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+
+    const {caller, receiver, owner, assets, shares} = (await getEventArgs(
+        await vault["withdraw(uint256,address,address,uint256)"](
+            withdrawBalance,
+            aliceAddress,
+            aliceAddress,
+            price
+        ),
+        "Withdraw",
+        vault
+    )) as WithdrawEvent["args"];
+
+    const expectedShares = fixedPointMul(withdrawBalance, price).add(1)
+
+    assert(
+        assets.eq(withdrawBalance),
+        `wrong assets expected ${withdrawBalance} got ${assets}`
+    );
+    assert(
+        caller === aliceAddress,
+        `wrong caller expected ${aliceAddress} got ${caller}`
+    );
+    assert(
+        owner === aliceAddress,
+        `wrong owner expected ${aliceAddress} got ${owner}`
+    );
+    console.log(caller,owner,receiver)
+    assert(
+        receiver === aliceAddress,
+        `wrong receiver expected ${aliceAddress} got ${receiver}`
+    );
+    assert(
+        shares.eq(expectedShares),
+        `wrong shares expected ${expectedShares} got ${shares}`
+    );
+  });
 });
