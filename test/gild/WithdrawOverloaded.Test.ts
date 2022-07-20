@@ -75,4 +75,38 @@ describe("Overloaded Withdraw", async function () {
         `alice did not withdraw all 1155 receipt amounts`
     );
   });
+  it("Should not withdraw on zero assets", async function () {
+    await assertError(
+        async () =>
+            await vault["withdraw(uint256,address,address,uint256)"](
+                ethers.BigNumber.from(0),
+                aliceAddress,
+                aliceAddress,
+                price
+            ),
+        "0_ASSETS",
+        "failed to prevent a zero asset withdraw"
+    );
+  });
+  it("Should not withdraw on zero address receiver", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+
+    await assertError(
+        async () =>
+            await vault["withdraw(uint256,address,address,uint256)"](
+                withdrawBalance,
+                ADDRESS_ZERO,
+                aliceAddress,
+                price
+            ),
+        "0_RECEIVER",
+        "failed to prevent a zero address receiver withdraw"
+    );
+  });
 });
