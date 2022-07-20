@@ -132,20 +132,20 @@ describe("Redeem", async function () {
         `alice did not redeem all 1155 receipt amounts`
     );
   });
-  // it("Should not withdraw on zero assets", async function () {
-  //   await vault.setWithdrawId(price);
-  //
-  //   await assertError(
-  //       async () =>
-  //           await vault["withdraw(uint256,address,address)"](
-  //               ethers.BigNumber.from(0),
-  //               aliceAddress,
-  //               aliceAddress
-  //           ),
-  //       "0_ASSETS",
-  //       "failed to prevent a zero asset withdraw"
-  //   );
-  // });
+  it("Should not redeem on zero shares", async function () {
+    await vault.setWithdrawId(price);
+
+    await assertError(
+        async () =>
+            await vault["redeem(uint256,address,address)"](
+                ethers.BigNumber.from(0),
+                aliceAddress,
+                aliceAddress
+            ),
+        "0_ASSETS",
+        "failed to prevent a zero shares redeem"
+    );
+  });
   // it("Should not withdraw on zero address receiver", async function () {
   //   const receiptBalance = await vault["balanceOf(address,uint256)"](
   //       aliceAddress,
