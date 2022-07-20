@@ -6,7 +6,8 @@ import {
   deployERC20PriceOracleVault,
   fixedPointDiv,
   fixedPointMul,
-  ADDRESS_ZERO, getEventArgs
+  ADDRESS_ZERO,
+  getEventArgs,
 } from "../util";
 import { ERC20, ERC20PriceOracleVault } from "../../typechain";
 import { BigNumber } from "ethers";
@@ -153,8 +154,8 @@ describe("Withdraw", async function () {
   });
   it("Should not withdraw on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
 
     //calculate max assets available for withdraw
@@ -164,7 +165,7 @@ describe("Withdraw", async function () {
     await assertError(
       async () =>
         await vault["withdraw(uint256,address,address)"](
-            withdrawBalance,
+          withdrawBalance,
           ADDRESS_ZERO,
           aliceAddress
         ),
@@ -174,8 +175,8 @@ describe("Withdraw", async function () {
   });
   it("Should not withdraw with zero address owner", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
 
     //calculate max assets available for withdraw
@@ -183,59 +184,58 @@ describe("Withdraw", async function () {
     await vault.setWithdrawId(price);
 
     await assertError(
-        async () =>
-            await vault["withdraw(uint256,address,address)"](
-                withdrawBalance,
-                aliceAddress,
-                ADDRESS_ZERO
-            ),
-        "0_OWNER",
-        "failed to prevent a zero address owner withdraw"
+      async () =>
+        await vault["withdraw(uint256,address,address)"](
+          withdrawBalance,
+          aliceAddress,
+          ADDRESS_ZERO
+        ),
+      "0_OWNER",
+      "failed to prevent a zero address owner withdraw"
     );
   });
   it("Should emit withdraw event", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
 
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(receiptBalance, price);
     await vault.setWithdrawId(price);
 
-
-    const {caller, receiver, owner, assets, shares} = (await getEventArgs(
-        await vault["withdraw(uint256,address,address)"](
-            withdrawBalance,
-            aliceAddress,
-            aliceAddress
-        ),
-        "Withdraw",
-        vault
+    const { caller, receiver, owner, assets, shares } = (await getEventArgs(
+      await vault["withdraw(uint256,address,address)"](
+        withdrawBalance,
+        aliceAddress,
+        aliceAddress
+      ),
+      "Withdraw",
+      vault
     )) as WithdrawEvent["args"];
 
-    const expectedShares = fixedPointMul(withdrawBalance, price).add(1)
+    const expectedShares = fixedPointMul(withdrawBalance, price).add(1);
 
     assert(
-        assets.eq(withdrawBalance),
-        `wrong assets expected ${withdrawBalance} got ${assets}`
+      assets.eq(withdrawBalance),
+      `wrong assets expected ${withdrawBalance} got ${assets}`
     );
     assert(
-        caller === aliceAddress,
-        `wrong caller expected ${aliceAddress} got ${caller}`
+      caller === aliceAddress,
+      `wrong caller expected ${aliceAddress} got ${caller}`
     );
     assert(
-        owner === aliceAddress,
-        `wrong owner expected ${aliceAddress} got ${owner}`
+      owner === aliceAddress,
+      `wrong owner expected ${aliceAddress} got ${owner}`
     );
-    console.log(caller,owner,receiver)
+    console.log(caller, owner, receiver);
     assert(
-        receiver === aliceAddress,
-        `wrong receiver expected ${aliceAddress} got ${receiver}`
+      receiver === aliceAddress,
+      `wrong receiver expected ${aliceAddress} got ${receiver}`
     );
     assert(
-        shares.eq(expectedShares),
-        `wrong shares expected ${expectedShares} got ${shares}`
+      shares.eq(expectedShares),
+      `wrong shares expected ${expectedShares} got ${shares}`
     );
   });
 });
