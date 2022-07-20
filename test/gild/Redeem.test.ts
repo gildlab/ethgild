@@ -6,7 +6,8 @@ import {
   deployERC20PriceOracleVault,
   fixedPointDiv,
   fixedPointMul,
-  ADDRESS_ZERO, getEventArgs
+  ADDRESS_ZERO,
+  getEventArgs,
 } from "../util";
 import { ERC20, ERC20PriceOracleVault } from "../../typechain";
 import { BigNumber } from "ethers";
@@ -17,18 +18,18 @@ chai.use(solidity);
 const { assert } = chai;
 
 let vault: ERC20PriceOracleVault,
-    asset: ERC20,
-    price: BigNumber,
-    aliceAddress: string,
-    aliceAssets: BigNumber;
+  asset: ERC20,
+  price: BigNumber,
+  aliceAddress: string,
+  aliceAssets: BigNumber;
 
 describe("Redeem", async function () {
   beforeEach(async () => {
     const signers = await ethers.getSigners();
-    const alice = signers[ 0 ];
+    const alice = signers[0];
 
     const [ERC20PriceOracleVault, Erc20Asset, priceOracle] =
-        await deployERC20PriceOracleVault();
+      await deployERC20PriceOracleVault();
 
     vault = await ERC20PriceOracleVault;
     asset = await Erc20Asset;
@@ -40,69 +41,73 @@ describe("Redeem", async function () {
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
-    const depositTx = await vault[ "deposit(uint256,address,uint256,bytes)" ](
-        aliceAssets,
-        aliceAddress,
-        price,
-        []
+    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
+      aliceAssets,
+      aliceAddress,
+      price,
+      []
     );
 
     await depositTx.wait();
   });
   it("Calculates correct maxRedeem", async function () {
-    const expectedMaxRedeem = await vault[ "balanceOf(address,uint256)" ](
-        aliceAddress,
-        price
+    const expectedMaxRedeem = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
     );
     await vault.setWithdrawId(price);
-    const maxRedeem = await vault[ "maxRedeem(address)" ](aliceAddress);
-    assert(maxRedeem.eq(expectedMaxRedeem), `Wrong max withdraw amount expected ${ expectedMaxRedeem } got ${ maxRedeem }`);
+    const maxRedeem = await vault["maxRedeem(address)"](aliceAddress);
+    assert(
+      maxRedeem.eq(expectedMaxRedeem),
+      `Wrong max withdraw amount expected ${expectedMaxRedeem} got ${maxRedeem}`
+    );
   });
   it("Overloaded maxRedeem - Calculates correct maxRedeem", async function () {
-    const expectedMaxRedeem = await vault[ "balanceOf(address,uint256)" ](
-        aliceAddress,
-        price
+    const expectedMaxRedeem = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
     );
 
-    const maxRedeem = await vault[ "maxRedeem(address,uint256)" ](
-        aliceAddress,
-        price
+    const maxRedeem = await vault["maxRedeem(address,uint256)"](
+      aliceAddress,
+      price
     );
 
-    assert(maxRedeem.eq(expectedMaxRedeem), `Wrong max withdraw amount expected ${ expectedMaxRedeem } got ${ maxRedeem }`);
+    assert(
+      maxRedeem.eq(expectedMaxRedeem),
+      `Wrong max withdraw amount expected ${expectedMaxRedeem} got ${maxRedeem}`
+    );
   });
   it("previewRedeem - calculates correct assets", async function () {
-    const aliceReceiptBalance = await vault[ "balanceOf(address,uint256)" ](
-        aliceAddress,
-        price
+    const aliceReceiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
     );
 
     await vault.setWithdrawId(price);
-    const expectedPreviewRedeem = fixedPointDiv(aliceReceiptBalance, price)
+    const expectedPreviewRedeem = fixedPointDiv(aliceReceiptBalance, price);
 
-    const assets = await vault[ "previewRedeem(uint256)" ](
-        aliceReceiptBalance
-    );
+    const assets = await vault["previewRedeem(uint256)"](aliceReceiptBalance);
     assert(
-        assets.eq(expectedPreviewRedeem),
-        `Wrong asset amount expected ${ expectedPreviewRedeem } got ${ assets }`
+      assets.eq(expectedPreviewRedeem),
+      `Wrong asset amount expected ${expectedPreviewRedeem} got ${assets}`
     );
   });
   it("Overloaded previewRedeem - calculates correct assets", async function () {
-    const aliceReceiptBalance = await vault[ "balanceOf(address,uint256)" ](
-        aliceAddress,
-        price
+    const aliceReceiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
     );
 
-    const expectedAssets = fixedPointDiv(aliceReceiptBalance, price)
+    const expectedAssets = fixedPointDiv(aliceReceiptBalance, price);
 
-    const assets = await vault[ "previewRedeem(uint256,uint256)" ](
-        aliceReceiptBalance,
-        price
+    const assets = await vault["previewRedeem(uint256,uint256)"](
+      aliceReceiptBalance,
+      price
     );
     assert(
-        assets.eq(expectedAssets),
-        `Wrong asset amount expected ${ expectedAssets } got ${ assets }`
+      assets.eq(expectedAssets),
+      `Wrong asset amount expected ${expectedAssets} got ${assets}`
     );
   });
   // it("Withdraws", async function () {
