@@ -207,7 +207,7 @@ describe("Withdraw", async function () {
       withdrawBalance,
       aliceAddress,
       aliceAddress
-    )
+    );
 
     const withdrawEvent = (await getEvent(
       withdrawTx,
@@ -215,30 +215,27 @@ describe("Withdraw", async function () {
       vault
     )) as WithdrawEvent;
 
-    console.log(withdrawEvent);
+    const expectedShares = fixedPointMul(withdrawBalance, price).add(1);
 
-    // const expectedShares = fixedPointMul(withdrawBalance, price).add(1);
-
-    // assert(
-    //   assets.eq(withdrawBalance),
-    //   `wrong assets expected ${withdrawBalance} got ${assets}`
-    // );
-    // assert(
-    //   caller === aliceAddress,
-    //   `wrong caller expected ${aliceAddress} got ${caller}`
-    // );
-    // assert(
-    //   owner === aliceAddress,
-    //   `wrong owner expected ${aliceAddress} got ${owner}`
-    // );
-    // console.log(caller, owner, receiver);
-    // assert(
-    //   receiver === aliceAddress,
-    //   `wrong receiver expected ${aliceAddress} got ${receiver}`
-    // );
-    // assert(
-    //   shares.eq(expectedShares),
-    //   `wrong shares expected ${expectedShares} got ${shares}`
-    // );
+    assert(
+      withdrawEvent.args.assets.eq(withdrawBalance),
+      `wrong assets expected ${withdrawBalance} got ${withdrawEvent.args.assets}`
+    );
+    assert(
+      withdrawEvent.args.caller === aliceAddress,
+      `wrong caller expected ${aliceAddress} got ${withdrawEvent.args.caller}`
+    );
+    assert(
+      withdrawEvent.args.owner === aliceAddress,
+      `wrong owner expected ${aliceAddress} got ${withdrawEvent.args.owner}`
+    );
+    assert(
+      withdrawEvent.args.receiver === aliceAddress,
+      `wrong receiver expected ${aliceAddress} got ${withdrawEvent.args.receiver}`
+    );
+    assert(
+      withdrawEvent.args.shares.eq(expectedShares),
+      `wrong shares expected ${expectedShares} got ${withdrawEvent.args.shares}`
+    );
   });
 });

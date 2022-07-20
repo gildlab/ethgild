@@ -163,15 +163,20 @@ export const expectedUri =
 export const getEventArgs = async (
   tx: ContractTransaction,
   eventName: string,
-  contract: Contract,
+  contract: Contract
 ): Promise<Result> => {
-  return await contract.interface.decodeEventLog(eventName, (await getEvent(tx, eventName, contract)).data);
+  return await contract.interface.decodeEventLog(
+    eventName,
+    (
+      await getEvent(tx, eventName, contract)
+    ).data
+  );
 };
 
 export const getEvent = async (
   tx: ContractTransaction,
   eventName: string,
-  contract: Contract,
+  contract: Contract
 ): Promise<Event> => {
   const events = (await tx.wait()).events || [];
   const filter = (contract.filters[eventName]().topics || [])[0];
@@ -183,5 +188,5 @@ export const getEvent = async (
     throw new Error(`Could not find event with name ${eventName}`);
   }
 
-  return eventObj
+  return eventObj;
 };
