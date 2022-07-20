@@ -40,7 +40,7 @@ describe("erc20 usage", async function () {
     const alice = signers[0];
     const price = await priceOracle.price();
 
-    const assetAmount = 1000;
+    const assetAmount = ethers.BigNumber.from(1000);
 
     await erc20Token
       .connect(alice)
@@ -54,13 +54,7 @@ describe("erc20 usage", async function () {
         []
       );
 
-    const expectedErc20Balance = fixedPointMul(
-      fixedPointDiv(
-        ethers.BigNumber.from(basePrice),
-        ethers.BigNumber.from(quotePrice)
-      ),
-      ethers.BigNumber.from(assetAmount)
-    );
+    const expectedErc20Balance = fixedPointMul(assetAmount, price);
 
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
     const expectedErc1155Balance = expectedErc20Balance;

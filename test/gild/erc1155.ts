@@ -6,6 +6,7 @@ import {
   expectedReferencePrice,
   expectedUri,
   priceOne,
+  fixedPointMul,
 } from "../util";
 
 chai.use(solidity);
@@ -30,7 +31,7 @@ describe("erc1155 usage", async function () {
 
     const [vault, erc20Token, priceOracle] =
       await deployERC20PriceOracleVault();
-
+    const price = await priceOracle.price();
     const alice = signers[0];
     const gildAmount = ethers.BigNumber.from(1000);
 
@@ -39,11 +40,14 @@ describe("erc1155 usage", async function () {
       .increaseAllowance(vault.address, gildAmount);
     await vault
       .connect(alice)
-      ["deposit(uint256,address)"](gildAmount, alice.address);
+      ["deposit(uint256,address,uint256,bytes)"](
+        gildAmount,
+        alice.address,
+        price,
+        []
+      );
 
-    const expectedErc20Balance = gildAmount
-      .mul(expectedReferencePrice)
-      .div(priceOne);
+    const expectedErc20Balance = fixedPointMul(gildAmount, price);
     const expectedErc20BalanceAfter = expectedErc20Balance;
     const expectedErc1155Balance = expectedErc20Balance;
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);
