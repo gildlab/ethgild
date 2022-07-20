@@ -58,38 +58,36 @@ describe("Redeem", async function () {
     const maxRedeem = await vault[ "maxRedeem(address)" ](aliceAddress);
     assert(maxRedeem.eq(expectedMaxRedeem), `Wrong max withdraw amount expected ${ expectedMaxRedeem } got ${ maxRedeem }`);
   });
-  // it("Overloaded MaxWithdraw - Calculates correct maxWithdraw", async function () {
-  //   const receiptBalance = await vault["balanceOf(address,uint256)"](
-  //       aliceAddress,
-  //       price
-  //   );
-  //
-  //   const expectedMaxWithdraw = fixedPointDiv(receiptBalance, price);
-  //   const maxWithdraw = await vault["maxWithdraw(address,uint256)"](
-  //       aliceAddress,
-  //       price
-  //   );
-  //
-  //   assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
-  // });
-  // it("PreviewWithdraw - calculates correct shares", async function () {
-  //   //calculate max assets available for withdraw
-  //   const withdrawBalance = fixedPointDiv(aliceAssets, price);
-  //
-  //   await vault.setWithdrawId(price);
-  //
-  //   const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, price).add(
-  //       1
-  //   );
-  //   const previewWithdraw = await vault["previewWithdraw(uint256)"](
-  //       withdrawBalance
-  //   );
-  //
-  //   assert(
-  //       previewWithdraw.eq(expectedPreviewWithdraw),
-  //       `Wrong preview withdraw amount`
-  //   );
-  // });
+  it("Overloaded maxRedeem - Calculates correct maxRedeem", async function () {
+    const expectedMaxRedeem = await vault[ "balanceOf(address,uint256)" ](
+        aliceAddress,
+        price
+    );
+
+    const maxRedeem = await vault[ "maxRedeem(address,uint256)" ](
+        aliceAddress,
+        price
+    );
+
+    assert(maxRedeem.eq(expectedMaxRedeem), `Wrong max withdraw amount expected ${ expectedMaxRedeem } got ${ maxRedeem }`);
+  });
+  it("previewRedeem - calculates correct assets", async function () {
+    const aliceReceiptBalance = await vault[ "balanceOf(address,uint256)" ](
+        aliceAddress,
+        price
+    );
+
+    await vault.setWithdrawId(price);
+    const expectedPreviewRedeem = fixedPointDiv(aliceReceiptBalance, price)
+
+    const assets = await vault[ "previewRedeem(uint256)" ](
+        aliceReceiptBalance
+    );
+    assert(
+        assets.eq(expectedPreviewRedeem),
+        `Wrong asset amount expected ${ expectedPreviewRedeem } got ${ assets }`
+    );
+  });
   // it("Overloaded PreviewWithdraw - calculates correct shares", async function () {
   //   //calculate max assets available for withdraw
   //   const withdrawBalance = fixedPointDiv(aliceAssets, price);
