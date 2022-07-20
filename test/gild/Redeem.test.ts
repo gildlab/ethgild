@@ -110,32 +110,28 @@ describe("Redeem", async function () {
       `Wrong asset amount expected ${expectedAssets} got ${assets}`
     );
   });
-  // it("Withdraws", async function () {
-  //   const receiptBalance = await vault["balanceOf(address,uint256)"](
-  //       aliceAddress,
-  //       price
-  //   );
-  //
-  //   //calculate max assets available for withdraw
-  //   const withdrawBalance = fixedPointDiv(receiptBalance, price);
-  //
-  //   await vault.setWithdrawId(price);
-  //   await vault["withdraw(uint256,address,address)"](
-  //       withdrawBalance,
-  //       aliceAddress,
-  //       aliceAddress
-  //   );
-  //
-  //   const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
-  //       aliceAddress,
-  //       price
-  //   );
-  //
-  //   assert(
-  //       receiptBalanceAfter.eq(0),
-  //       `alice did not withdraw all 1155 receipt amounts`
-  //   );
-  // });
+  it("Redeems", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
+
+    await vault.setWithdrawId(price);
+    await vault["redeem(uint256,address,address)"](
+        receiptBalance,
+        aliceAddress,
+        aliceAddress
+    );
+
+    const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
+        aliceAddress,
+        price
+    );
+    assert(
+        receiptBalanceAfter.eq(0),
+        `alice did not redeem all 1155 receipt amounts`
+    );
+  });
   // it("Should not withdraw on zero assets", async function () {
   //   await vault.setWithdrawId(price);
   //
