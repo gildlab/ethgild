@@ -1,6 +1,6 @@
 import chai from "chai";
 import { ethers } from "hardhat";
-import { ContractTransaction, Contract, BigNumber } from "ethers";
+import { ContractTransaction, Contract, BigNumber, Event } from "ethers";
 
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
@@ -165,6 +165,19 @@ export const getEventArgs = async (
   eventName: string,
   contract: Contract
 ): Promise<Result> => {
+  return await contract.interface.decodeEventLog(
+    eventName,
+    (
+      await getEvent(tx, eventName, contract)
+    ).data
+  );
+};
+
+export const getEvent = async (
+  tx: ContractTransaction,
+  eventName: string,
+  contract: Contract
+): Promise<Event> => {
   const events = (await tx.wait()).events || [];
   const filter = (contract.filters[eventName]().topics || [])[0];
   const eventObj = events.find(
@@ -175,5 +188,5 @@ export const getEventArgs = async (
     throw new Error(`Could not find event with name ${eventName}`);
   }
 
-  return contract.interface.decodeEventLog(eventName, eventObj.data);
+  return eventObj;
 };
