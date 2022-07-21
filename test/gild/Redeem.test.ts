@@ -112,96 +112,96 @@ describe("Redeem", async function () {
   });
   it("Redeems", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
 
     await vault.setWithdrawId(price);
     await vault["redeem(uint256,address,address)"](
-        receiptBalance,
-        aliceAddress,
-        aliceAddress
+      receiptBalance,
+      aliceAddress,
+      aliceAddress
     );
 
     const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
     assert(
-        receiptBalanceAfter.eq(0),
-        `alice did not redeem all 1155 receipt amounts`
+      receiptBalanceAfter.eq(0),
+      `alice did not redeem all 1155 receipt amounts`
     );
   });
   it("Should not redeem on zero shares", async function () {
     await vault.setWithdrawId(price);
 
     await assertError(
-        async () =>
-            await vault["redeem(uint256,address,address)"](
-                ethers.BigNumber.from(0),
-                aliceAddress,
-                aliceAddress
-            ),
-        "0_ASSETS",
-        "failed to prevent a zero shares redeem"
+      async () =>
+        await vault["redeem(uint256,address,address)"](
+          ethers.BigNumber.from(0),
+          aliceAddress,
+          aliceAddress
+        ),
+      "0_ASSETS",
+      "failed to prevent a zero shares redeem"
     );
   });
   it("Should not redeem on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
 
     await vault.setWithdrawId(price);
 
     await assertError(
-        async () =>
-            await vault["redeem(uint256,address,address)"](
-                receiptBalance,
-                ADDRESS_ZERO,
-                aliceAddress
-            ),
-        "0_RECEIVER",
-        "failed to prevent a zero address receiver redeem"
+      async () =>
+        await vault["redeem(uint256,address,address)"](
+          receiptBalance,
+          ADDRESS_ZERO,
+          aliceAddress
+        ),
+      "0_RECEIVER",
+      "failed to prevent a zero address receiver redeem"
     );
   });
   it("Should emit withdraw event", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
-        aliceAddress,
-        price
+      aliceAddress,
+      price
     );
     await vault.setWithdrawId(price);
-    const {caller, receiver, owner, assets, shares} = (await getEventArgs(
-        await vault["redeem(uint256,address,address)"](
-            receiptBalance,
-            aliceAddress,
-            aliceAddress
-        ),
-        "Withdraw",
-        vault
+    const { caller, receiver, owner, assets, shares } = (await getEventArgs(
+      await vault["redeem(uint256,address,address)"](
+        receiptBalance,
+        aliceAddress,
+        aliceAddress
+      ),
+      "Withdraw",
+      vault
     )) as WithdrawEvent["args"];
 
-    const expectedAssets = fixedPointDiv(receiptBalance, price)
+    const expectedAssets = fixedPointDiv(receiptBalance, price);
 
     assert(
-        assets.eq(expectedAssets),
-        `wrong assets expected ${expectedAssets} got ${assets}`
+      assets.eq(expectedAssets),
+      `wrong assets expected ${expectedAssets} got ${assets}`
     );
     assert(
-        caller === aliceAddress,
-        `wrong caller expected ${aliceAddress} got ${caller}`
+      caller === aliceAddress,
+      `wrong caller expected ${aliceAddress} got ${caller}`
     );
     assert(
-        owner === aliceAddress,
-        `wrong owner expected ${aliceAddress} got ${owner}`
+      owner === aliceAddress,
+      `wrong owner expected ${aliceAddress} got ${owner}`
     );
     assert(
-        receiver === aliceAddress,
-        `wrong receiver expected ${aliceAddress} got ${receiver}`
+      receiver === aliceAddress,
+      `wrong receiver expected ${aliceAddress} got ${receiver}`
     );
     assert(
-        shares.eq(receiptBalance),
-        `wrong shares expected ${receiptBalance} got ${shares}`
+      shares.eq(receiptBalance),
+      `wrong shares expected ${receiptBalance} got ${shares}`
     );
   });
 });
