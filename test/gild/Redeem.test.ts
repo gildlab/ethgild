@@ -147,20 +147,20 @@ describe("Redeem", async function () {
       "failed to prevent a zero shares redeem"
     );
   });
-  // it("Should not redeem on zero owner", async function () {
-  //   await vault.setWithdrawId(price);
-  //
-  //   await assertError(
-  //       async () =>
-  //           await vault["redeem(uint256,address,address)"](
-  //               ethers.BigNumber.from(10),
-  //               aliceAddress,
-  //               ADDRESS_ZERO
-  //           ),
-  //       "0_OWNER",
-  //       "failed to prevent a zero owner redeem"
-  //   );
-  // });
+  it("Should not redeem on zero owner", async function () {
+    // await vault.setWithdrawId(price);
+
+    await assertError(
+        async () =>
+            await vault["redeem(uint256,address,address)"](
+                ethers.BigNumber.from(10),
+                aliceAddress,
+                ADDRESS_ZERO
+            ),
+        "0_OWNER",
+        "failed to prevent a zero owner redeem"
+    );
+  });
   it("Should not redeem on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
