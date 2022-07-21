@@ -194,8 +194,8 @@ describe("Receipt vault", async function () {
 
     await assertError(
       async () => await vault.connect(alice).previewDeposit(assets),
-      "MIN_PRICE",
-      "failed to respect min price"
+      "MIN_SHARE_RATIO",
+      "failed to respect min share ratio"
     );
   });
   it("Sets correct shares by previewDeposit", async function () {
