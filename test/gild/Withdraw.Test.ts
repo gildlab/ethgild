@@ -1,88 +1,241 @@
-// import chai from "chai";
-// import {solidity} from "ethereum-waffle";
-// import {ethers} from "hardhat";
-// import {
-//   assertError,
-//   deployERC20PriceOracleVault,
-//   fixedPointDiv,
-//   fixedPointMul,
-//   ADDRESS_ZERO,
-// } from "../util";
-// import {DepositEvent} from "../../typechain/IERC4626";
-// import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers";
-// import {
-//   ReceiptInformationEvent,
-//   DepositWithReceiptEvent,
-// } from "../../typechain/ReceiptVault";
-//
-// import {getEventArgs} from "../util";
-//
-// let owner: SignerWithAddress;
-//
-// chai.use(solidity);
-//
-// const {assert} = chai;
-//
-// describe("Withdraw", async function () {
-//   it("Withdraws", async function () {
-//     const signers = await ethers.getSigners();
-//     const alice = signers[0];
-//     const bob = signers[1];
-//
-//     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-//
-//     const totalTokenSupply = await asset.totalSupply();
-//
-//     const transferAmount = ethers.BigNumber.from(100)//totalTokenSupply.div(2);
-//
-//     await asset.connect(alice).increaseAllowance(vault.address, transferAmount);
-//
-//     // give alice reserve to cover cost
-//     await asset.transfer(bob.address, transferAmount);
-//
-//     // Min gild price MUST be respected
-//     const price = await priceOracle.price();
-//     const id1155 = price
-//
-//
-//     const depositTx = await vault
-//       .connect(alice)["deposit(uint256,address,uint256,bytes)"](
-//       transferAmount,
-//       bob.address,
-//       price,
-//       []
-//     );
-//     const bobBalance = await vault["balanceOf(address)"](bob.address);
-//     console.log("bobBalance",bobBalance)
-//     const shares = bobBalance
-//
-//     depositTx.wait()
-//
-//     const erc1155Balance = await vault["balanceOf(address,uint256)"](
-//       bob.address,
-//       id1155
-//     );
-//
-//     console.log(1, erc1155Balance, shares)
-//
-//     const expectedShares = fixedPointMul(transferAmount, price).add(1)
-//
-//     await asset.connect(bob).increaseAllowance(vault.address, shares);
-//
-//     // give alice reserve to cover cost
-//     await asset.transfer(bob.address, transferAmount);
-//
-//     await vault
-//       .connect(alice)
-//       ["withdraw(uint256,address,address,uint256)"](shares, bob.address, bob.address, price);
-//     const sharesaft = await vault["balanceOf(address)"](bob.address);
-//     console.log(2, erc1155Balance, shares)
-//
-//     console.log(expectedShares, sharesaft)
-//
-//     // assert(
-//     //   vaultAsset === asset.address,
-//     //   `Wrong asset address ${asset.address} ${vaultAsset}`
-//     // );
-//   })
-// })
+import chai from "chai";
+import { solidity } from "ethereum-waffle";
+import { ethers } from "hardhat";
+import {
+  assertError,
+  deployERC20PriceOracleVault,
+  fixedPointDiv,
+  fixedPointMul,
+  ADDRESS_ZERO,
+  getEvent,
+} from "../util";
+import { ERC20, ERC20PriceOracleVault } from "../../typechain";
+import { BigNumber } from "ethers";
+import { WithdrawEvent } from "../../typechain/IERC4626";
+
+chai.use(solidity);
+
+const { assert } = chai;
+
+let vault: ERC20PriceOracleVault,
+  asset: ERC20,
+  price: BigNumber,
+  aliceAddress: string,
+  aliceAssets: BigNumber;
+
+describe("Withdraw", async function () {
+  beforeEach(async () => {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [ERC20PriceOracleVault, Erc20Asset, priceOracle] =
+      await deployERC20PriceOracleVault();
+
+    vault = await ERC20PriceOracleVault;
+    asset = await Erc20Asset;
+    price = await priceOracle.price();
+    aliceAddress = alice.address;
+
+    aliceAssets = ethers.BigNumber.from(5000);
+    await asset.transfer(aliceAddress, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
+      aliceAssets,
+      aliceAddress,
+      price,
+      []
+    );
+
+    await depositTx.wait();
+  });
+  it("Calculates correct maxWithdraw", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    const expectedMaxWithdraw = fixedPointDiv(receiptBalance, price);
+    await vault.setWithdrawId(price);
+
+    const maxWithdraw = await vault["maxWithdraw(address)"](aliceAddress);
+
+    assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
+  });
+  it("Overloaded MaxWithdraw - Calculates correct maxWithdraw", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    const expectedMaxWithdraw = fixedPointDiv(receiptBalance, price);
+    const maxWithdraw = await vault["maxWithdraw(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
+  });
+  it("PreviewWithdraw - calculates correct shares", async function () {
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(aliceAssets, price);
+
+    await vault.setWithdrawId(price);
+
+    const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, price).add(
+      1
+    );
+    const previewWithdraw = await vault["previewWithdraw(uint256)"](
+      withdrawBalance
+    );
+
+    assert(
+      previewWithdraw.eq(expectedPreviewWithdraw),
+      `Wrong preview withdraw amount`
+    );
+  });
+  it("Overloaded PreviewWithdraw - calculates correct shares", async function () {
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(aliceAssets, price);
+
+    const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, price).add(
+      1
+    );
+    const previewWithdraw = await vault["previewWithdraw(uint256,uint256)"](
+      withdrawBalance,
+      price
+    );
+
+    assert(
+      previewWithdraw.eq(expectedPreviewWithdraw),
+      `Wrong preview withdraw amount`
+    );
+  });
+  it("Withdraws", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+
+    await vault.setWithdrawId(price);
+    await vault["withdraw(uint256,address,address)"](
+      withdrawBalance,
+      aliceAddress,
+      aliceAddress
+    );
+
+    const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    assert(
+      receiptBalanceAfter.eq(0),
+      `alice did not withdraw all 1155 receipt amounts`
+    );
+  });
+  it("Should not withdraw on zero assets", async function () {
+    await vault.setWithdrawId(price);
+
+    await assertError(
+      async () =>
+        await vault["withdraw(uint256,address,address)"](
+          ethers.BigNumber.from(0),
+          aliceAddress,
+          aliceAddress
+        ),
+      "0_ASSETS",
+      "failed to prevent a zero asset withdraw"
+    );
+  });
+  it("Should not withdraw on zero address receiver", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    await vault.setWithdrawId(price);
+
+    await assertError(
+      async () =>
+        await vault["withdraw(uint256,address,address)"](
+          withdrawBalance,
+          ADDRESS_ZERO,
+          aliceAddress
+        ),
+      "0_RECEIVER",
+      "failed to prevent a zero address receiver withdraw"
+    );
+  });
+  it("Should not withdraw with zero address owner", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    await vault.setWithdrawId(price);
+
+    await assertError(
+      async () =>
+        await vault["withdraw(uint256,address,address)"](
+          withdrawBalance,
+          aliceAddress,
+          ADDRESS_ZERO
+        ),
+      "0_OWNER",
+      "failed to prevent a zero address owner withdraw"
+    );
+  });
+  it("Should emit withdraw event", async function () {
+    const receiptBalance = await vault["balanceOf(address,uint256)"](
+      aliceAddress,
+      price
+    );
+
+    //calculate max assets available for withdraw
+    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    await vault.setWithdrawId(price);
+    const withdrawTx = await vault["withdraw(uint256,address,address)"](
+      withdrawBalance,
+      aliceAddress,
+      aliceAddress
+    );
+
+    const withdrawEvent = (await getEvent(
+      withdrawTx,
+      "Withdraw",
+      vault
+    )) as WithdrawEvent;
+
+    const expectedShares = fixedPointMul(withdrawBalance, price).add(1);
+
+    assert(
+      withdrawEvent.args.assets.eq(withdrawBalance),
+      `wrong assets expected ${withdrawBalance} got ${withdrawEvent.args.assets}`
+    );
+    assert(
+      withdrawEvent.args.caller === aliceAddress,
+      `wrong caller expected ${aliceAddress} got ${withdrawEvent.args.caller}`
+    );
+    assert(
+      withdrawEvent.args.owner === aliceAddress,
+      `wrong owner expected ${aliceAddress} got ${withdrawEvent.args.owner}`
+    );
+    assert(
+      withdrawEvent.args.receiver === aliceAddress,
+      `wrong receiver expected ${aliceAddress} got ${withdrawEvent.args.receiver}`
+    );
+    assert(
+      withdrawEvent.args.shares.eq(expectedShares),
+      `wrong shares expected ${expectedShares} got ${withdrawEvent.args.shares}`
+    );
+  });
+});
