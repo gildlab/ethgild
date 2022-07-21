@@ -8,6 +8,7 @@ import {
   fixedPointMul,
   ADDRESS_ZERO,
   getEventArgs,
+  getEvent,
 } from "../util";
 import { ERC20, ERC20PriceOracleVault } from "../../typechain";
 import { BigNumber } from "ethers";
@@ -126,38 +127,42 @@ describe("Overloaded Redeem", async function () {
       aliceAddress,
       price
     );
-    const { caller, receiver, owner, assets, shares } = (await getEventArgs(
-      await vault["redeem(uint256,address,address,uint256)"](
-        receiptBalance,
-        aliceAddress,
-        aliceAddress,
-        price
-      ),
-      "Withdraw",
-      vault
-    )) as WithdrawEvent["args"];
+    await vault.setWithdrawId(price);
 
     const expectedAssets = fixedPointDiv(receiptBalance, price);
 
+    const redwwmTx = await vault["redeem(uint256,address,address,uint256)"](
+      receiptBalance,
+      aliceAddress,
+      aliceAddress,
+      price
+    );
+
+    const withdrawEvent = (await getEvent(
+      redwwmTx,
+      "Withdraw",
+      vault
+    )) as WithdrawEvent;
+
     assert(
-      assets.eq(expectedAssets),
-      `wrong assets expected ${expectedAssets} got ${assets}`
+      withdrawEvent.args.assets.eq(expectedAssets),
+      `wrong assets expected ${expectedAssets} got ${withdrawEvent.args.assets}`
     );
     assert(
-      caller === aliceAddress,
-      `wrong caller expected ${aliceAddress} got ${caller}`
+      withdrawEvent.args.caller === aliceAddress,
+      `wrong caller expected ${aliceAddress} got ${withdrawEvent.args.caller}`
     );
     assert(
-      owner === aliceAddress,
-      `wrong owner expected ${aliceAddress} got ${owner}`
+      withdrawEvent.args.owner === aliceAddress,
+      `wrong owner expected ${aliceAddress} got ${withdrawEvent.args.owner}`
     );
     assert(
-      receiver === aliceAddress,
-      `wrong receiver expected ${aliceAddress} got ${receiver}`
+      withdrawEvent.args.receiver === aliceAddress,
+      `wrong receiver expected ${aliceAddress} got ${withdrawEvent.args.receiver}`
     );
     assert(
-      shares.eq(receiptBalance),
-      `wrong shares expected ${receiptBalance} got ${shares}`
+      withdrawEvent.args.shares.eq(receiptBalance),
+      `wrong shares expected ${receiptBalance} got ${withdrawEvent.args.shares}`
     );
   });
 });
