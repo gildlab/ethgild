@@ -8,6 +8,7 @@ import {
   fixedPointMul,
   ADDRESS_ZERO,
   getEventArgs,
+  getEvent,
 } from "../util";
 import { ERC20, ERC20PriceOracleVault } from "../../typechain";
 import { BigNumber } from "ethers";
@@ -146,6 +147,20 @@ describe("Redeem", async function () {
       "failed to prevent a zero shares redeem"
     );
   });
+  // it("Should not redeem on zero owner", async function () {
+  //   await vault.setWithdrawId(price);
+  //
+  //   await assertError(
+  //       async () =>
+  //           await vault["redeem(uint256,address,address)"](
+  //               ethers.BigNumber.from(10),
+  //               aliceAddress,
+  //               ADDRESS_ZERO
+  //           ),
+  //       "0_OWNER",
+  //       "failed to prevent a zero owner redeem"
+  //   );
+  // });
   it("Should not redeem on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
@@ -171,37 +186,40 @@ describe("Redeem", async function () {
       price
     );
     await vault.setWithdrawId(price);
-    const { caller, receiver, owner, assets, shares } = (await getEventArgs(
-      await vault["redeem(uint256,address,address)"](
-        receiptBalance,
-        aliceAddress,
-        aliceAddress
-      ),
-      "Withdraw",
-      vault
-    )) as WithdrawEvent["args"];
 
     const expectedAssets = fixedPointDiv(receiptBalance, price);
 
+    const redwwmTx = await vault["redeem(uint256,address,address)"](
+      receiptBalance,
+      aliceAddress,
+      aliceAddress
+    );
+
+    const withdrawEvent = (await getEvent(
+      redwwmTx,
+      "Withdraw",
+      vault
+    )) as WithdrawEvent;
+
     assert(
-      assets.eq(expectedAssets),
-      `wrong assets expected ${expectedAssets} got ${assets}`
+      withdrawEvent.args.assets.eq(expectedAssets),
+      `wrong assets expected ${expectedAssets} got ${withdrawEvent.args.assets}`
     );
     assert(
-      caller === aliceAddress,
-      `wrong caller expected ${aliceAddress} got ${caller}`
+      withdrawEvent.args.caller === aliceAddress,
+      `wrong caller expected ${aliceAddress} got ${withdrawEvent.args.caller}`
     );
     assert(
-      owner === aliceAddress,
-      `wrong owner expected ${aliceAddress} got ${owner}`
+      withdrawEvent.args.owner === aliceAddress,
+      `wrong owner expected ${aliceAddress} got ${withdrawEvent.args.owner}`
     );
     assert(
-      receiver === aliceAddress,
-      `wrong receiver expected ${aliceAddress} got ${receiver}`
+      withdrawEvent.args.receiver === aliceAddress,
+      `wrong receiver expected ${aliceAddress} got ${withdrawEvent.args.receiver}`
     );
     assert(
-      shares.eq(receiptBalance),
-      `wrong shares expected ${receiptBalance} got ${shares}`
+      withdrawEvent.args.shares.eq(receiptBalance),
+      `wrong shares expected ${receiptBalance} got ${withdrawEvent.args.shares}`
     );
   });
 });
