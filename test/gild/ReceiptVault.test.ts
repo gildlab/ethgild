@@ -63,15 +63,21 @@ describe("Receipt vault", async function () {
     );
   });
   it("Checks total asset is same as balance", async function () {
-    // [owner] = await ethers.getSigners()
-    //
-    // const [vault, asset] = await deployERC20PriceOracleVault();
-    //
-    // console.log(await asset.balanceOf(vault.address), await vault.totalAssets())
-    // assert(
-    //   withdrawId.toNumber() === expectedWithdrawId,
-    //   `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
-    // );
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset] = await deployERC20PriceOracleVault();
+
+    await asset.transfer(vault.address, ethers.BigNumber.from(1000));
+
+    const assets = await asset.balanceOf(vault.address);
+
+    const totalAssets = await vault.totalAssets();
+
+    assert(
+      totalAssets.eq(assets),
+      `Wrong total assets ${assets} ${totalAssets}`
+    );
   });
   it("Calculates correct assets", async function () {
     [owner] = await ethers.getSigners();
