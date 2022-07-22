@@ -67,10 +67,7 @@ describe("OffChainAssetVault", async function () {
   it("Checks asset is zero", async function () {
     const [vault] = await deployOffChainAssetVault();
 
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const { caller, config } = (await getEventArgs(
+    const { config } = (await getEventArgs(
       await vault.deployTransaction,
       "OffchainAssetVaultConstruction",
       vault
