@@ -20,7 +20,7 @@ const { assert } = chai;
 
 let vault: ERC20PriceOracleVault,
   asset: ERC20,
-  price: BigNumber,
+  shareRatio: BigNumber,
   aliceAddress: string,
   aliceAssets: BigNumber;
 
@@ -34,7 +34,7 @@ describe("Overloaded Withdraw", async function () {
 
     vault = await ERC20PriceOracleVault;
     asset = await Erc20Asset;
-    price = await priceOracle.price();
+    shareRatio = await priceOracle.price();
     aliceAddress = alice.address;
 
     aliceAssets = ethers.BigNumber.from(5000);
@@ -45,7 +45,7 @@ describe("Overloaded Withdraw", async function () {
     const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
       aliceAssets,
       aliceAddress,
-      price,
+      shareRatio,
       []
     );
 
@@ -54,22 +54,22 @@ describe("Overloaded Withdraw", async function () {
   it("Withdraws", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
 
     await vault["withdraw(uint256,address,address,uint256)"](
       withdrawBalance,
       aliceAddress,
       aliceAddress,
-      price
+      shareRatio
     );
 
     const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     assert(
@@ -84,7 +84,7 @@ describe("Overloaded Withdraw", async function () {
           ethers.BigNumber.from(0),
           aliceAddress,
           aliceAddress,
-          price
+          shareRatio
         ),
       "0_ASSETS",
       "failed to prevent a zero asset withdraw"
@@ -93,11 +93,11 @@ describe("Overloaded Withdraw", async function () {
   it("Should not withdraw on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
 
     await assertError(
       async () =>
@@ -105,7 +105,7 @@ describe("Overloaded Withdraw", async function () {
           withdrawBalance,
           ADDRESS_ZERO,
           aliceAddress,
-          price
+          shareRatio
         ),
       "0_RECEIVER",
       "failed to prevent a zero address receiver withdraw"
@@ -114,11 +114,11 @@ describe("Overloaded Withdraw", async function () {
   it("Should not withdraw with zero address owner", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(receiptBalance, price);
+    const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
 
     await assertError(
       async () =>
@@ -126,7 +126,7 @@ describe("Overloaded Withdraw", async function () {
           withdrawBalance,
           aliceAddress,
           ADDRESS_ZERO,
-          price
+          shareRatio
         ),
       "0_OWNER",
       "failed to prevent a zero address owner withdraw"
@@ -136,17 +136,17 @@ describe("Overloaded Withdraw", async function () {
   it("Should emit withdraw event", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(receiptBalance, price);
-    await vault.setWithdrawId(price);
+    const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
+    await vault.setWithdrawId(shareRatio);
     const withdrawTx = await vault["withdraw(uint256,address,address,uint256)"](
       withdrawBalance,
       aliceAddress,
       aliceAddress,
-      price
+      shareRatio
     );
 
     const withdrawEvent = (await getEvent(
@@ -155,7 +155,7 @@ describe("Overloaded Withdraw", async function () {
       vault
     )) as WithdrawEvent;
 
-    const expectedShares = fixedPointMul(withdrawBalance, price).add(1);
+    const expectedShares = fixedPointMul(withdrawBalance, shareRatio).add(1);
 
     assert(
       withdrawEvent.args.assets.eq(withdrawBalance),
