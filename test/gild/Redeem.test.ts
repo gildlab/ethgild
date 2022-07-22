@@ -20,7 +20,7 @@ const { assert } = chai;
 
 let vault: ERC20PriceOracleVault,
   asset: ERC20,
-  price: BigNumber,
+  shareRatio: BigNumber,
   aliceAddress: string,
   aliceAssets: BigNumber;
 
@@ -34,7 +34,7 @@ describe("Redeem", async function () {
 
     vault = await ERC20PriceOracleVault;
     asset = await Erc20Asset;
-    price = await priceOracle.price();
+    shareRatio = await priceOracle.price();
     aliceAddress = alice.address;
 
     aliceAssets = ethers.BigNumber.from(5000);
@@ -45,7 +45,7 @@ describe("Redeem", async function () {
     const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
       aliceAssets,
       aliceAddress,
-      price,
+      shareRatio,
       []
     );
 
@@ -54,9 +54,9 @@ describe("Redeem", async function () {
   it("Calculates correct maxRedeem", async function () {
     const expectedMaxRedeem = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
-    await vault.setWithdrawId(price);
+    await vault.setWithdrawId(shareRatio);
     const maxRedeem = await vault["maxRedeem(address)"](aliceAddress);
     assert(
       maxRedeem.eq(expectedMaxRedeem),
@@ -66,12 +66,12 @@ describe("Redeem", async function () {
   it("Overloaded maxRedeem - Calculates correct maxRedeem", async function () {
     const expectedMaxRedeem = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     const maxRedeem = await vault["maxRedeem(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     assert(
@@ -82,11 +82,11 @@ describe("Redeem", async function () {
   it("previewRedeem - calculates correct assets", async function () {
     const aliceReceiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
-    await vault.setWithdrawId(price);
-    const expectedPreviewRedeem = fixedPointDiv(aliceReceiptBalance, price);
+    await vault.setWithdrawId(shareRatio);
+    const expectedPreviewRedeem = fixedPointDiv(aliceReceiptBalance, shareRatio);
 
     const assets = await vault["previewRedeem(uint256)"](aliceReceiptBalance);
     assert(
@@ -97,14 +97,14 @@ describe("Redeem", async function () {
   it("Overloaded previewRedeem - calculates correct assets", async function () {
     const aliceReceiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
-    const expectedAssets = fixedPointDiv(aliceReceiptBalance, price);
+    const expectedAssets = fixedPointDiv(aliceReceiptBalance, shareRatio);
 
     const assets = await vault["previewRedeem(uint256,uint256)"](
       aliceReceiptBalance,
-      price
+      shareRatio
     );
     assert(
       assets.eq(expectedAssets),
@@ -114,10 +114,10 @@ describe("Redeem", async function () {
   it("Redeems", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
-    await vault.setWithdrawId(price);
+    await vault.setWithdrawId(shareRatio);
     await vault["redeem(uint256,address,address)"](
       receiptBalance,
       aliceAddress,
@@ -126,7 +126,7 @@ describe("Redeem", async function () {
 
     const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
     assert(
       receiptBalanceAfter.eq(0),
@@ -134,7 +134,7 @@ describe("Redeem", async function () {
     );
   });
   it("Should not redeem on zero shares", async function () {
-    await vault.setWithdrawId(price);
+    await vault.setWithdrawId(shareRatio);
 
     await assertError(
       async () =>
@@ -164,10 +164,10 @@ describe("Redeem", async function () {
   it("Should not redeem on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
-    await vault.setWithdrawId(price);
+    await vault.setWithdrawId(shareRatio);
 
     await assertError(
       async () =>
@@ -183,11 +183,11 @@ describe("Redeem", async function () {
   it("Should emit withdraw event", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
-    await vault.setWithdrawId(price);
+    await vault.setWithdrawId(shareRatio);
 
-    const expectedAssets = fixedPointDiv(receiptBalance, price);
+    const expectedAssets = fixedPointDiv(receiptBalance, shareRatio);
 
     const redwwmTx = await vault["redeem(uint256,address,address)"](
       receiptBalance,
