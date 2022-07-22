@@ -8,6 +8,7 @@ import {
   fixedPointMul,
   ADDRESS_ZERO,
   expectedReferencePrice,
+  getEvent,
 } from "../util";
 import { DepositEvent } from "../../typechain/IERC4626";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -62,15 +63,21 @@ describe("Receipt vault", async function () {
     );
   });
   it("Checks total asset is same as balance", async function () {
-    // [owner] = await ethers.getSigners()
-    //
-    // const [vault, asset] = await deployERC20PriceOracleVault();
-    //
-    // console.log(await asset.balanceOf(vault.address), await vault.totalAssets())
-    // assert(
-    //   withdrawId.toNumber() === expectedWithdrawId,
-    //   `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId.toNumber()}`
-    // );
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset] = await deployERC20PriceOracleVault();
+
+    await asset.transfer(vault.address, ethers.BigNumber.from(1000));
+
+    const assets = await asset.balanceOf(vault.address);
+
+    const totalAssets = await vault.totalAssets();
+
+    assert(
+      totalAssets.eq(assets),
+      `Wrong total assets ${assets} ${totalAssets}`
+    );
   });
   it("Calculates correct assets", async function () {
     [owner] = await ethers.getSigners();
@@ -187,8 +194,8 @@ describe("Receipt vault", async function () {
 
     await assertError(
       async () => await vault.connect(alice).previewDeposit(assets),
-      "MIN_PRICE",
-      "failed to respect min price"
+      "MIN_SHARE_RATIO",
+      "failed to respect min share ratio"
     );
   });
   it("Sets correct shares by previewDeposit", async function () {
@@ -505,21 +512,31 @@ describe("Deposit", async () => {
 
     const expectedShares = fixedPointMul(aliceAmount, price);
 
-    const { assets, shares } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        ["deposit(uint256,address)"](aliceAmount, alice.address),
+    const depositTX = await vault["deposit(uint256,address)"](
+      aliceAmount,
+      alice.address
+    );
+    const depositEvent = (await getEvent(
+      depositTX,
       "Deposit",
       vault
-    )) as DepositEvent["args"];
+    )) as DepositEvent;
 
     assert(
-      assets.eq(aliceAmount),
-      `wrong assets expected ${aliceAmount} got ${assets}`
+      depositEvent.args.assets.eq(aliceAmount),
+      `wrong assets expected ${aliceAmount} got ${depositEvent.args.assets}`
     );
     assert(
-      shares.eq(expectedShares),
-      `wrong shares expected ${shares} got ${expectedShares}`
+      depositEvent.args.shares.eq(expectedShares),
+      `wrong shares expected ${depositEvent.args.shares} got ${expectedShares}`
+    );
+    assert(
+      depositEvent.args.caller === alice.address,
+      `wrong caller expected ${alice.address} got ${depositEvent.args.caller}`
+    );
+    assert(
+      depositEvent.args.owner === alice.address,
+      `wrong owner expected ${alice.address} got ${depositEvent.args.owner}`
     );
   });
 });
@@ -869,35 +886,34 @@ describe("Overloaded `deposit`", async () => {
 
     const expectedShares = fixedPointMul(aliceAmount, price);
 
-    const { caller, owner, assets, shares } = (await getEventArgs(
-      await vault["deposit(uint256,address,uint256,bytes)"](
-        aliceAmount,
-        alice.address,
-        price,
-        []
-      ),
+    const depositTX = await vault["deposit(uint256,address,uint256,bytes)"](
+      aliceAmount,
+      alice.address,
+      price,
+      []
+    );
+    const depositEvent = (await getEvent(
+      depositTX,
       "Deposit",
       vault
-    )) as DepositEvent["args"];
-
-    console.log(caller, owner);
+    )) as DepositEvent;
 
     assert(
-      assets.eq(aliceAmount),
-      `wrong assets expected ${aliceAmount} got ${assets}`
+      depositEvent.args.assets.eq(aliceAmount),
+      `wrong assets expected ${aliceAmount} got ${depositEvent.args.assets}`
     );
     assert(
-      shares.eq(expectedShares),
-      `wrong shares expected ${shares} got ${expectedShares}`
+      depositEvent.args.shares.eq(expectedShares),
+      `wrong shares expected ${depositEvent.args.shares} got ${expectedShares}`
     );
-    // assert(
-    //   caller === alice.address,
-    //   `wrong caller expected ${alice.address} got ${caller}`
-    // );
-    // assert(
-    //   owner === alice.address,
-    //   `wrong owner expected ${alice.address} got ${owner}`
-    // );
+    assert(
+      depositEvent.args.caller === alice.address,
+      `wrong caller expected ${alice.address} got ${depositEvent.args.caller}`
+    );
+    assert(
+      depositEvent.args.owner === alice.address,
+      `wrong owner expected ${alice.address} got ${depositEvent.args.owner}`
+    );
   });
   it("Check DepositWithReceipt event is emitted", async function () {
     const signers = await ethers.getSigners();
