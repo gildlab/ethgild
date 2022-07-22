@@ -64,6 +64,20 @@ describe("OffChainAssetVault", async function () {
       `wrong caller expected ${alice.address} got ${caller}`
     );
   });
+  it("Checks asset is zero", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const { caller, config } = (await getEventArgs(
+      await vault.deployTransaction,
+      "OffchainAssetVaultConstruction",
+      vault
+    )) as OffchainAssetVaultConstructionEvent["args"];
+
+    assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
+  });
   it("Checks SetERC20Tier role", async function () {
     const [vault] = await deployOffChainAssetVault();
 
