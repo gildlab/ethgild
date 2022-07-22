@@ -20,7 +20,7 @@ const { assert } = chai;
 
 let vault: ERC20PriceOracleVault,
   asset: ERC20,
-  price: BigNumber,
+  shareRatio: BigNumber,
   aliceAddress: string,
   aliceAssets: BigNumber;
 
@@ -34,7 +34,7 @@ describe("Overloaded Redeem", async function () {
 
     vault = await ERC20PriceOracleVault;
     asset = await Erc20Asset;
-    price = await priceOracle.price();
+    shareRatio = await priceOracle.price();
     aliceAddress = alice.address;
 
     aliceAssets = ethers.BigNumber.from(5000);
@@ -45,7 +45,7 @@ describe("Overloaded Redeem", async function () {
     const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
       aliceAssets,
       aliceAddress,
-      price,
+      shareRatio,
       []
     );
 
@@ -54,19 +54,19 @@ describe("Overloaded Redeem", async function () {
   it("Redeems", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     await vault["redeem(uint256,address,address,uint256)"](
       receiptBalance,
       aliceAddress,
       aliceAddress,
-      price
+      shareRatio
     );
 
     const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
     assert(
       receiptBalanceAfter.eq(0),
@@ -80,7 +80,7 @@ describe("Overloaded Redeem", async function () {
           ethers.BigNumber.from(0),
           aliceAddress,
           aliceAddress,
-          price
+          shareRatio
         ),
       "0_ASSETS",
       "failed to prevent a zero shares redeem"
@@ -89,7 +89,7 @@ describe("Overloaded Redeem", async function () {
   it("Should not redeem on zero address receiver", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     await assertError(
@@ -98,7 +98,7 @@ describe("Overloaded Redeem", async function () {
           receiptBalance,
           ADDRESS_ZERO,
           aliceAddress,
-          price
+          shareRatio
         ),
       "0_RECEIVER",
       "failed to prevent a zero address receiver redeem"
@@ -107,7 +107,7 @@ describe("Overloaded Redeem", async function () {
   it("Should not redeem on zero address owner", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
 
     await assertError(
@@ -116,7 +116,7 @@ describe("Overloaded Redeem", async function () {
           receiptBalance,
           aliceAddress,
           ADDRESS_ZERO,
-          price
+          shareRatio
         ),
       "0_OWNER",
       "failed to prevent a zero address owner redeem"
@@ -125,17 +125,17 @@ describe("Overloaded Redeem", async function () {
   it("Should emit withdraw event", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
-      price
+      shareRatio
     );
-    await vault.setWithdrawId(price);
+    await vault.setWithdrawId(shareRatio);
 
-    const expectedAssets = fixedPointDiv(receiptBalance, price);
+    const expectedAssets = fixedPointDiv(receiptBalance, shareRatio);
 
     const redwwmTx = await vault["redeem(uint256,address,address,uint256)"](
       receiptBalance,
       aliceAddress,
       aliceAddress,
-      price
+      shareRatio
     );
 
     const withdrawEvent = (await getEvent(
