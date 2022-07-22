@@ -34,7 +34,7 @@ describe("Mint", async function () {
   });
   it("Checks min share ratio is less than share ratio", async function () {
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -43,27 +43,27 @@ describe("Mint", async function () {
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
 
-    await vault.connect(alice).setMinShareRatio(price.add(1));
+    await vault.connect(alice).setMinShareRatio(shareRatio.add(1));
 
     await assertError(
       async () => await vault.previewMint(shares),
       "MIN_SHARE_RATIO",
-      "failed to respect min price"
+      "failed to respect min shareRatio"
     );
   });
   it("PreviewMint - Calculates assets correctly with round up", async function () {
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     assert(
-      price.eq(expectedReferencePrice),
-      `Incorrect referencePrice ${price} ${expectedReferencePrice}`
+      shareRatio.eq(expectedReferencePrice),
+      `Incorrect shareRatio ${shareRatio} ${expectedReferencePrice}`
     );
 
     const shares = ethers.BigNumber.from("10").pow(20);
-    const expectedAssets = fixedPointDiv(shares, price).add(1);
+    const expectedAssets = fixedPointDiv(shares, shareRatio).add(1);
 
     const assets = await vault.previewMint(shares);
 
@@ -85,15 +85,15 @@ describe("Mint", async function () {
 
     const aliceBalanceBefore = await asset.balanceOf(alice.address);
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
     //set minShareRatio
-    await vault.setMinShareRatio(price.sub(1));
+    await vault.setMinShareRatio(shareRatio.sub(1));
 
     await vault.connect(alice)["mint(uint256,address)"](shares, alice.address);
 
-    const expectedAssets = fixedPointDiv(shares, price).add(1);
+    const expectedAssets = fixedPointDiv(shares, shareRatio).add(1);
 
     const aliceBalanceAfter = await asset.balanceOf(alice.address);
     const aliceBalanceDiff = aliceBalanceBefore.sub(aliceBalanceAfter);
@@ -116,13 +116,13 @@ describe("Mint", async function () {
 
     const aliceBalanceBefore = await asset.balanceOf(alice.address);
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
 
     await vault.connect(alice)["mint(uint256,address)"](shares, alice.address);
 
-    const expectedAssets = fixedPointDiv(shares, price).add(1);
+    const expectedAssets = fixedPointDiv(shares, shareRatio).add(1);
 
     const aliceBalanceAfter = await asset.balanceOf(alice.address);
     const aliceBalanceDiff = aliceBalanceBefore.sub(aliceBalanceAfter);
@@ -158,9 +158,9 @@ describe("Mint", async function () {
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
 
     await assertError(
       async () =>
@@ -183,15 +183,15 @@ describe("Mint", async function () {
 
     const aliceBalanceBefore = await asset.balanceOf(alice.address);
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
 
     await vault
       .connect(alice)
-      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, price, []);
+      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, shareRatio, []);
 
-    const expectedAssets = fixedPointDiv(shares, price).add(1);
+    const expectedAssets = fixedPointDiv(shares, shareRatio).add(1);
 
     const aliceBalanceAfter = await asset.balanceOf(alice.address);
     const aliceBalanceDiff = aliceBalanceBefore.sub(aliceBalanceAfter);
@@ -203,7 +203,7 @@ describe("Mint", async function () {
   });
   it("Mint Overloaded - Checks min share ratio is less than share ratio", async function () {
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -212,18 +212,18 @@ describe("Mint", async function () {
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
 
     await assertError(
       async () =>
         await vault["mint(uint256,address,uint256,bytes)"](
           shares,
           alice.address,
-          price.add(1),
+          shareRatio.add(1),
           []
         ),
       "MIN_SHARE_RATIO",
-      "failed to respect min price"
+      "failed to respect min shareRatio"
     );
   });
   it("Mint Overloaded - Should not mint to 0 address", async function () {
@@ -236,9 +236,9 @@ describe("Mint", async function () {
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
-    const shares = fixedPointMul(assets, price);
+    const shares = fixedPointMul(assets, shareRatio);
 
     await assertError(
       async () =>
@@ -247,7 +247,7 @@ describe("Mint", async function () {
           ["mint(uint256,address,uint256,bytes)"](
             shares,
             ADDRESS_ZERO,
-            price,
+            shareRatio,
             []
           ),
       "0_RECEIVER",
@@ -260,7 +260,7 @@ describe("Mint", async function () {
 
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     await assertError(
       async () =>
@@ -269,7 +269,7 @@ describe("Mint", async function () {
           ["mint(uint256,address,uint256,bytes)"](
             ethers.BigNumber.from(0),
             alice.address,
-            price,
+            shareRatio,
             []
           ),
       "0_SHARES",
