@@ -161,4 +161,52 @@ describe("OffChainAssetVault", async function () {
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
+  it("Checks totalAssets", async function () {
+    // const [vault] = await deployOffChainAssetVault();
+    // const signers = await ethers.getSigners()
+    // const alice = signers[0]
+    //
+    // const blockNum = await ethers.provider.getBlockNumber();
+    // const block = await ethers.provider.getBlock(blockNum);
+    //
+    // console.log(11,block.timestamp)
+    //
+    //
+    // await vault.grantRole(await vault.CERTIFIER(), alice.address);
+    // await vault.certify(1758495063, [], false)
+    // await vault.transfer(signers[0].address, ethers.BigNumber.from(100));
+    //
+    //
+    // console.log(await vault.totalAssets())
+    // console.log(await vault.totalSupply())
+    // assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
+  });
+  it("PreviewDeposit sets correct shares", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const assets = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const hasRoleDepositor = await vault.hasRole(
+      await vault.DEPOSITOR(),
+      alice.address
+    );
+
+    //Alice doesnot have role of depositor so it should throw an error unless role is granted
+    assert(
+      !hasRoleDepositor,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
+    );
+
+    //grant depositor role to alice
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+
+    const shares = await vault.previewDeposit(assets);
+
+    assert(
+      shares.eq(assets),
+      `Wrong shares: expected ${assets} got ${shares} `
+    );
+  });
 });
