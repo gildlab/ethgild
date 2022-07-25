@@ -73,7 +73,7 @@ describe("Overloaded Redeem", async function () {
       `alice did not redeem all 1155 receipt amounts`
     );
   });
-  it("Should not redeem on zero shares", async function () {
+  it("Should not redeem on zero assets", async function () {
     await assertError(
       async () =>
         await vault["redeem(uint256,address,address,uint256)"](
@@ -83,7 +83,7 @@ describe("Overloaded Redeem", async function () {
           shareRatio
         ),
       "0_ASSETS",
-      "failed to prevent a zero shares redeem"
+      "failed to prevent a zero assets redeem"
     );
   });
   it("Should not redeem on zero address receiver", async function () {
