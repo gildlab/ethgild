@@ -147,7 +147,7 @@ describe("Redeem", async function () {
           aliceAddress
         ),
       "0_ASSETS",
-      "failed to prevent a zero assets redeem"
+      "failed to prevent a zero asset redeem"
     );
   });
   it("Should not redeem on zero address receiver", async function () {
@@ -178,14 +178,14 @@ describe("Redeem", async function () {
 
     const expectedAssets = fixedPointDiv(receiptBalance, shareRatio);
 
-    const redwwmTx = await vault["redeem(uint256,address,address)"](
+    const redeemTx = await vault["redeem(uint256,address,address)"](
       receiptBalance,
       aliceAddress,
       aliceAddress
     );
 
     const withdrawEvent = (await getEvent(
-      redwwmTx,
+      redeemTx,
       "Withdraw",
       vault
     )) as WithdrawEvent;
