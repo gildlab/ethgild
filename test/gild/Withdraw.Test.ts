@@ -83,9 +83,10 @@ describe("Withdraw", async function () {
 
     await vault.setWithdrawId(shareRatio);
 
-    const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, shareRatio).add(
-      1
-    );
+    const expectedPreviewWithdraw = fixedPointMul(
+      withdrawBalance,
+      shareRatio
+    ).add(1);
     const previewWithdraw = await vault["previewWithdraw(uint256)"](
       withdrawBalance
     );
@@ -99,9 +100,10 @@ describe("Withdraw", async function () {
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(aliceAssets, shareRatio);
 
-    const expectedPreviewWithdraw = fixedPointMul(withdrawBalance, shareRatio).add(
-      1
-    );
+    const expectedPreviewWithdraw = fixedPointMul(
+      withdrawBalance,
+      shareRatio
+    ).add(1);
     const previewWithdraw = await vault["previewWithdraw(uint256,uint256)"](
       withdrawBalance,
       shareRatio
