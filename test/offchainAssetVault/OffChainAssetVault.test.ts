@@ -209,4 +209,26 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${assets} got ${shares} `
     );
   });
+  it("previewWithdraw sets correct shares", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const assets = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const hasRoleDepositor = await vault.hasRole(
+      await vault.WITHDRAWER(),
+      alice.address
+    );
+
+    //Alice doesnot have role of withdrawer so it should throw an error unless role is granted
+    assert(
+      !hasRoleDepositor,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role WITHDRAWER`
+    );
+
+    //grant withdrawer role to alice
+    await vault.grantRole(await vault.WITHDRAWER(), alice.address);
+
+  });
 });
