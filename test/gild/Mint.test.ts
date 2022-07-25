@@ -189,7 +189,12 @@ describe("Mint", async function () {
 
     await vault
       .connect(alice)
-      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, shareRatio, []);
+      ["mint(uint256,address,uint256,bytes)"](
+        shares,
+        alice.address,
+        shareRatio,
+        []
+      );
 
     const expectedAssets = fixedPointDiv(shares, shareRatio).add(1);
 
