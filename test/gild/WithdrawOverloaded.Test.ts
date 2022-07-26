@@ -7,6 +7,7 @@ import {
   fixedPointDiv,
   fixedPointMul,
   ADDRESS_ZERO,
+  getEventArgs,
   getEvent,
 } from "../util";
 import { ERC20, ERC20PriceOracleVault } from "../../typechain";
@@ -23,7 +24,7 @@ let vault: ERC20PriceOracleVault,
   aliceAddress: string,
   aliceAssets: BigNumber;
 
-describe("Withdraw", async function () {
+describe("Overloaded Withdraw", async function () {
   beforeEach(async () => {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -50,70 +51,6 @@ describe("Withdraw", async function () {
 
     await depositTx.wait();
   });
-  it("Calculates correct maxWithdraw", async function () {
-    const receiptBalance = await vault["balanceOf(address,uint256)"](
-      aliceAddress,
-      shareRatio
-    );
-
-    const expectedMaxWithdraw = fixedPointDiv(receiptBalance, shareRatio);
-    await vault.setWithdrawId(shareRatio);
-
-    const maxWithdraw = await vault["maxWithdraw(address)"](aliceAddress);
-
-    assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
-  });
-  it("Overloaded MaxWithdraw - Calculates correct maxWithdraw", async function () {
-    const receiptBalance = await vault["balanceOf(address,uint256)"](
-      aliceAddress,
-      shareRatio
-    );
-
-    const expectedMaxWithdraw = fixedPointDiv(receiptBalance, shareRatio);
-    const maxWithdraw = await vault["maxWithdraw(address,uint256)"](
-      aliceAddress,
-      shareRatio
-    );
-
-    assert(maxWithdraw.eq(expectedMaxWithdraw), `Wrong max withdraw amount`);
-  });
-  it("PreviewWithdraw - calculates correct shares", async function () {
-    //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(aliceAssets, shareRatio);
-
-    await vault.setWithdrawId(shareRatio);
-
-    const expectedPreviewWithdraw = fixedPointMul(
-      withdrawBalance,
-      shareRatio
-    ).add(1);
-    const previewWithdraw = await vault["previewWithdraw(uint256)"](
-      withdrawBalance
-    );
-
-    assert(
-      previewWithdraw.eq(expectedPreviewWithdraw),
-      `Wrong preview withdraw amount`
-    );
-  });
-  it("Overloaded PreviewWithdraw - calculates correct shares", async function () {
-    //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(aliceAssets, shareRatio);
-
-    const expectedPreviewWithdraw = fixedPointMul(
-      withdrawBalance,
-      shareRatio
-    ).add(1);
-    const previewWithdraw = await vault["previewWithdraw(uint256,uint256)"](
-      withdrawBalance,
-      shareRatio
-    );
-
-    assert(
-      previewWithdraw.eq(expectedPreviewWithdraw),
-      `Wrong preview withdraw amount`
-    );
-  });
   it("Withdraws", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
@@ -123,11 +60,11 @@ describe("Withdraw", async function () {
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
 
-    await vault.setWithdrawId(shareRatio);
-    await vault["withdraw(uint256,address,address)"](
+    await vault["withdraw(uint256,address,address,uint256)"](
       withdrawBalance,
       aliceAddress,
-      aliceAddress
+      aliceAddress,
+      shareRatio
     );
 
     const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
@@ -141,14 +78,13 @@ describe("Withdraw", async function () {
     );
   });
   it("Should not withdraw on zero assets", async function () {
-    await vault.setWithdrawId(shareRatio);
-
     await assertError(
       async () =>
-        await vault["withdraw(uint256,address,address)"](
+        await vault["withdraw(uint256,address,address,uint256)"](
           ethers.BigNumber.from(0),
           aliceAddress,
-          aliceAddress
+          aliceAddress,
+          shareRatio
         ),
       "0_ASSETS",
       "failed to prevent a zero asset withdraw"
@@ -162,14 +98,14 @@ describe("Withdraw", async function () {
 
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
-    await vault.setWithdrawId(shareRatio);
 
     await assertError(
       async () =>
-        await vault["withdraw(uint256,address,address)"](
+        await vault["withdraw(uint256,address,address,uint256)"](
           withdrawBalance,
           ADDRESS_ZERO,
-          aliceAddress
+          aliceAddress,
+          shareRatio
         ),
       "0_RECEIVER",
       "failed to prevent a zero address receiver withdraw"
@@ -183,19 +119,20 @@ describe("Withdraw", async function () {
 
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
-    await vault.setWithdrawId(shareRatio);
 
     await assertError(
       async () =>
-        await vault["withdraw(uint256,address,address)"](
+        await vault["withdraw(uint256,address,address,uint256)"](
           withdrawBalance,
           aliceAddress,
-          ADDRESS_ZERO
+          ADDRESS_ZERO,
+          shareRatio
         ),
       "0_OWNER",
       "failed to prevent a zero address owner withdraw"
     );
   });
+
   it("Should emit withdraw event", async function () {
     const receiptBalance = await vault["balanceOf(address,uint256)"](
       aliceAddress,
@@ -205,10 +142,11 @@ describe("Withdraw", async function () {
     //calculate max assets available for withdraw
     const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
     await vault.setWithdrawId(shareRatio);
-    const withdrawTx = await vault["withdraw(uint256,address,address)"](
+    const withdrawTx = await vault["withdraw(uint256,address,address,uint256)"](
       withdrawBalance,
       aliceAddress,
-      aliceAddress
+      aliceAddress,
+      shareRatio
     );
 
     const withdrawEvent = (await getEvent(
