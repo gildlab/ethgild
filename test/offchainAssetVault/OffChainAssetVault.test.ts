@@ -237,7 +237,6 @@ describe("OffChainAssetVault", async function () {
     const assets = await vault.previewMint(shares);
     const expectedAssets = fixedPointDiv(shares, ONE).add(1);
 
-    console.log(assets, expectedAssets);
     assert(
         assets.eq(expectedAssets),
         `Wrong assets: expected ${expectedAssets} got ${assets} `
