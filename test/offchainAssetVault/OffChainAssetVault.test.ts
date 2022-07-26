@@ -220,30 +220,29 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
 
     const hasRoleDepositor = await vault.hasRole(
-        await vault.DEPOSITOR(),
-        alice.address
+      await vault.DEPOSITOR(),
+      alice.address
     );
 
     //Alice doesnot have role of depositor so it should throw an error unless role is granted
     assert(
-        !hasRoleDepositor,
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
+      !hasRoleDepositor,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
     );
 
     //grant depositor role to alice
     await vault.grantRole(await vault.DEPOSITOR(), alice.address);
 
     const assets = await vault.previewMint(shares);
-    const expectedAssets = fixedPointDiv(shares,ONE).add(1)
+    const expectedAssets = fixedPointDiv(shares, ONE).add(1);
 
-    console.log(assets, expectedAssets)
+    console.log(assets, expectedAssets);
     // assert(
     //     assets.eq(assets),
     //     `Wrong shares: expected ${assets} got ${shares} `
     // );
 
     //        assets_ = shares_.fixedPointDiv(shareRatio_) + 1;
-
   });
   // it("previewWithdraw sets correct shares", async function () {
   //   const [vault] = await deployOffChainAssetVault();
