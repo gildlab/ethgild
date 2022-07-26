@@ -284,4 +284,37 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
+  it("PreviewRedeem sets correct assets", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const shares = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const id = await priceOracle.price()
+
+    const hasRoleDepositor = await vault.hasRole(
+        await vault.WITHDRAWER(),
+        alice.address
+    );
+
+    //Alice does not have role of withdrawer, so it should throw an error unless role is granted
+    assert(
+        !hasRoleDepositor,
+        `AccessControl: account ${alice.address.toLowerCase()} is missing role WITHDRAWER`
+    );
+
+    //grant withdrawer role to alice
+    await vault.grantRole(await vault.WITHDRAWER(), alice.address);
+
+    const expectedAssets = fixedPointDiv(shares, id);
+    const assets = await vault["previewRedeem(uint256,uint256)"](shares, id);
+
+    assert(
+        assets.eq(expectedAssets),
+      `Wrong assets: expected ${expectedAssets} got ${assets} `
+    );
+  });
 });
