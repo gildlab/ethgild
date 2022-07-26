@@ -169,15 +169,15 @@ describe("OffChainAssetVault", async function () {
     // const signers = await ethers.getSigners()
     // const alice = signers[0]
     //
+    // //get block timestamp and subtract one to get _until
     // const blockNum = await ethers.provider.getBlockNumber();
     // const block = await ethers.provider.getBlock(blockNum);
-    //
-    // console.log(11,block.timestamp)
+    // const until = block.timestamp + 100
     //
     //
     // await vault.grantRole(await vault.CERTIFIER(), alice.address);
-    // await vault.certify(1758495063, [], false)
-    // await vault.transfer(signers[0].address, ethers.BigNumber.from(100));
+    // await vault.certify(until, [], false)
+    // await vault.transfer(alice.address, ethers.BigNumber.from(100));
     //
     //
     // console.log(await vault.totalAssets())
@@ -196,7 +196,7 @@ describe("OffChainAssetVault", async function () {
       alice.address
     );
 
-    //Alice doesnot have role of depositor so it should throw an error unless role is granted
+    //Alice does not have role of depositor, so it should throw an error unless role is granted
     assert(
       !hasRoleDepositor,
       `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
@@ -224,7 +224,7 @@ describe("OffChainAssetVault", async function () {
       alice.address
     );
 
-    //Alice doesnot have role of depositor so it should throw an error unless role is granted
+    //Alice does not have role of depositor, so it should throw an error unless role is granted
     assert(
       !hasRoleDepositor,
       `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
@@ -237,12 +237,10 @@ describe("OffChainAssetVault", async function () {
     const expectedAssets = fixedPointDiv(shares, ONE).add(1);
 
     console.log(assets, expectedAssets);
-    // assert(
-    //     assets.eq(assets),
-    //     `Wrong shares: expected ${assets} got ${shares} `
-    // );
-
-    //        assets_ = shares_.fixedPointDiv(shareRatio_) + 1;
+    assert(
+        assets.eq(expectedAssets),
+        `Wrong assets: expected ${expectedAssets} got ${assets} `
+    );
   });
   // it("previewWithdraw sets correct shares", async function () {
   //   const [vault] = await deployOffChainAssetVault();
