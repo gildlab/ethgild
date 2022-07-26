@@ -242,33 +242,33 @@ describe("OffChainAssetVault", async function () {
         `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
-  // it("previewWithdraw sets correct shares", async function () {
-  //   const [vault] = await deployOffChainAssetVault();
-  //   const assets = ethers.BigNumber.from(100);
-  //
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   const hasRoleDepositor = await vault.hasRole(
-  //     await vault.WITHDRAWER(),
-  //     alice.address
-  //   );
-  //
-  //   //Alice doesnot have role of withdrawer so it should throw an error unless role is granted
-  //   assert(
-  //     !hasRoleDepositor,
-  //     `AccessControl: account ${alice.address.toLowerCase()} is missing role WITHDRAWER`
-  //   );
-  //
-  //   //grant withdrawer role to alice
-  //   await vault.grantRole(await vault.WITHDRAWER(), alice.address);
-  //
-  //   const expectedShares = fixedPointMul(assets, ONE).add(1);
-  //   const shares = await vault["previewWithdraw(uint256)"](assets);
-  //
-  //   assert(
-  //     shares.eq(expectedShares),
-  //     `Wrong shares: expected ${expectedShares} got ${shares} `
-  //   );
-  // });
+  it("previewWithdraw sets correct shares", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const assets = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const hasRoleDepositor = await vault.hasRole(
+      await vault.WITHDRAWER(),
+      alice.address
+    );
+
+    //Alice does not have role of withdrawer, so it should throw an error unless role is granted
+    assert(
+      !hasRoleDepositor,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role WITHDRAWER`
+    );
+
+    //grant withdrawer role to alice
+    await vault.grantRole(await vault.WITHDRAWER(), alice.address);
+
+    const expectedShares = fixedPointMul(assets, ONE).add(1);
+    const shares = await vault["previewWithdraw(uint256)"](assets);
+
+    assert(
+      shares.eq(expectedShares),
+      `Wrong shares: expected ${expectedShares} got ${shares} `
+    );
+  });
 });
