@@ -338,4 +338,32 @@ describe("OffChainAssetVault", async function () {
     "failed to snapshot"
     );
   });
+  it("Sets correct erc20Tier and mintier", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    await vault.grantRole(await vault.ERC20TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(10);
+
+    const { tier, minimumTier } = (await getEventArgs(
+        await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
+        "SetERC20Tier",
+        vault
+    )) as SetERC20TierEvent["args"];
+
+    await vault.setERC20Tier(TierV2TestContract.address, minTier, [])
+
+    assert(
+        tier === TierV2TestContract.address,
+        `wrong tier expected ${TierV2TestContract.address} got ${tier}`
+    );
+    assert(
+        minimumTier === minTier,
+        `wrong minimumTier expected ${minTier} got ${minimumTier}`
+    );
+
+  });
+
 });
