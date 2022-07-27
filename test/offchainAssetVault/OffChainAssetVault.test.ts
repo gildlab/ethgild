@@ -18,7 +18,7 @@ import {
 import {
   SetERC20TierEvent,
   OffchainAssetVaultConstructionEvent,
-    CertifyEvent
+  CertifyEvent, SnapshotEvent
 } from "../../typechain/OffchainAssetVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 
@@ -338,6 +338,25 @@ describe("OffChainAssetVault", async function () {
         `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20SNAPSHOTTER()}`,
     "failed to snapshot"
     );
+  });
+  it("Snapshot event is emitted", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+    await vault.grantRole(await vault.ERC20SNAPSHOTTER(), alice.address);
+
+    const { id } = (await getEventArgs(
+        await vault.snapshot(),
+        "Snapshot",
+        vault
+    )) as SnapshotEvent["args"];
+
+    assert(
+        id.eq(ethers.BigNumber.from(1)),
+        `ID not set`
+    );
+
   });
   it("Sets correct erc20Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetVault();
