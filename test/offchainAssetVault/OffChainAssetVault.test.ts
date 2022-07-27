@@ -360,7 +360,7 @@ describe("OffChainAssetVault", async function () {
         `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
-        minimumTier === minTier,
+        minimumTier.eq(minTier),
         `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
 
