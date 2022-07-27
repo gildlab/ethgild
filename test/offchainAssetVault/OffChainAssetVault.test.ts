@@ -449,8 +449,6 @@ describe("OffChainAssetVault", async function () {
 
     await vault.grantRole(await vault.CERTIFIER(), alice.address);
 
-    await vault.certify(certifiedUntil, [], false);
-
     const { until } = (await getEventArgs(
         await vault.certify(certifiedUntil, [], false),
         "Certify",
