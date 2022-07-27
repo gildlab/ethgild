@@ -422,5 +422,21 @@ describe("OffChainAssetVault", async function () {
     );
 
   });
+  it("Checks role for certifier", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _until = block.timestamp + 100
+
+    await assertError(
+        async () => await vault.certify(_until, [], false),
+        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CERTIFIER()}`,
+        "failed to certify"
+    );
+  });
 
 });
