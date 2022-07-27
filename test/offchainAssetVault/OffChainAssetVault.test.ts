@@ -316,4 +316,15 @@ describe("OffChainAssetVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
+  it.only("Redeposit - should be receipt holder", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+    const aliceReceiptBalance = await vault[ "balanceOf(address)" ](alice.address);
+
+    assert(
+        aliceReceiptBalance.eq(0),
+      `NOT_RECEIPT_HOLDER`
+    );
+  });
 });
