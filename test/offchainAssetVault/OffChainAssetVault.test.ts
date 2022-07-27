@@ -316,7 +316,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
-  it.only("Redeposit - should be receipt holder", async function () {
+  it("Redeposit - should be receipt holder", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
@@ -325,6 +325,17 @@ describe("OffChainAssetVault", async function () {
     assert(
         aliceReceiptBalance.eq(0),
       `NOT_RECEIPT_HOLDER`
+    );
+  });
+  it("Checks role for snapshotter", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+    await assertError(
+        async () => await vault.snapshot(),
+        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20SNAPSHOTTER()}`,
+    "failed to snapshot"
     );
   });
 });
