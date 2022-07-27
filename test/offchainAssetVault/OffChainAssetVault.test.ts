@@ -365,5 +365,32 @@ describe("OffChainAssetVault", async function () {
     );
 
   });
+  it("Sets correct erc11Tier and mintier", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    await vault.grantRole(await vault.ERC1155TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(10);
+
+    const { tier, minimumTier } = (await getEventArgs(
+        await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
+        "SetERC1155Tier",
+        vault
+    )) as SetERC20TierEvent["args"];
+
+    await vault.setERC1155Tier(TierV2TestContract.address, minTier, [])
+
+    assert(
+        tier === TierV2TestContract.address,
+        `wrong tier expected ${TierV2TestContract.address} got ${tier}`
+    );
+    assert(
+        minimumTier.eq(minTier),
+        `wrong minimumTier expected ${minTier} got ${minimumTier}`
+    );
+
+  });
 
 });
