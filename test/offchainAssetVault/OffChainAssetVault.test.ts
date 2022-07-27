@@ -18,6 +18,7 @@ import {
 import {
   SetERC20TierEvent,
   OffchainAssetVaultConstructionEvent,
+    CertifyEvent
 } from "../../typechain/OffchainAssetVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 
@@ -389,6 +390,35 @@ describe("OffChainAssetVault", async function () {
     assert(
         minimumTier.eq(minTier),
         `wrong minimumTier expected ${minTier} got ${minimumTier}`
+    );
+
+  });
+  it("Checks Certify event is emitted", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    //get block timestamp and add 100 to get _until
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _until = block.timestamp + 100
+
+    await vault.grantRole(await vault.CERTIFIER(), alice.address);
+
+    const { caller, until } = (await getEventArgs(
+        await vault.certify(_until, [], false),
+        "Certify",
+        vault
+    )) as CertifyEvent["args"];
+
+    assert(
+        caller === alice.address,
+        `wrong caller expected ${alice.address} got ${caller}`
+    );
+    assert(
+        until.eq(_until),
+        `wrong until expected ${_until} got ${until}`
     );
 
   });
