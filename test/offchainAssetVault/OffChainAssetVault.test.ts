@@ -438,5 +438,30 @@ describe("OffChainAssetVault", async function () {
         "failed to certify"
     );
   });
+  it("Certifies", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const certifiedUntil = block.timestamp + 100
+
+    await vault.grantRole(await vault.CERTIFIER(), alice.address);
+
+    await vault.certify(certifiedUntil, [], false);
+
+    const { until } = (await getEventArgs(
+        await vault.certify(certifiedUntil, [], false),
+        "Certify",
+        vault
+    )) as CertifyEvent["args"];
+
+    assert (
+        until.eq(certifiedUntil),
+        `wrong until expected ${certifiedUntil} got ${until}`
+    );
+
+  });
 
 });
