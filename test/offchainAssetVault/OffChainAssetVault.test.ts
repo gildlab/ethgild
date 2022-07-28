@@ -480,5 +480,15 @@ describe("OffChainAssetVault", async function () {
     );
 
   });
+  it("Confiscate - Checks role CONFISCATOR", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
 
+    await assertError(
+        async () => await vault["confiscate(address)"](alice.address),
+        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CONFISCATOR()}`,
+        "failed to confiscate"
+    );
+  });
 });
