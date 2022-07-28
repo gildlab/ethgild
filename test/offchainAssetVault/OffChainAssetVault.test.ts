@@ -18,7 +18,7 @@ import {
 import {
   SetERC20TierEvent,
   OffchainAssetVaultConstructionEvent,
-  CertifyEvent, SnapshotEvent
+  CertifyEvent, SnapshotEvent, ConfiscateSharesEvent
 } from "../../typechain/OffchainAssetVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 
@@ -489,6 +489,28 @@ describe("OffChainAssetVault", async function () {
         async () => await vault["confiscate(address)"](alice.address),
         `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CONFISCATOR()}`,
         "failed to confiscate"
+    );
+  });
+  it("Confiscate - Checks ConfiscateShares is emitted", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+
+    const { caller, confiscatee } = (await getEventArgs(
+        await vault["confiscate(address)"](alice.address),
+        "ConfiscateShares",
+        vault
+    )) as ConfiscateSharesEvent["args"];
+
+    assert (
+        caller === alice.address,
+        `wrong caller expected ${alice.address} got ${caller}`
+    );
+    assert (
+        confiscatee === alice.address,
+        `wrong confiscatee expected ${alice.address} got ${confiscatee}`
     );
   });
 });
