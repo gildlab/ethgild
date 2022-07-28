@@ -214,23 +214,24 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${assets} got ${shares} `
     );
   });
+  it("PreviewMint sets 0 if not DEPOSITOR", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const shares = ethers.BigNumber.from(100);
+
+    const assets = await vault.previewMint(shares);
+    const expectedAssets = ethers.BigNumber.from(0);
+
+    assert(
+        assets.eq(expectedAssets),
+        `Wrong assets: expected ${expectedAssets} got ${assets} `
+    );
+  });
   it("PreviewMint sets correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
-
-    const hasRoleDepositor = await vault.hasRole(
-      await vault.DEPOSITOR(),
-      alice.address
-    );
-
-    //Alice does not have role of depositor, so it should throw an error unless role is granted
-    assert(
-      !hasRoleDepositor,
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
-    );
 
     //grant depositor role to alice
     await vault.grantRole(await vault.DEPOSITOR(), alice.address);
