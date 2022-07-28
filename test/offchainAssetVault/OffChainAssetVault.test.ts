@@ -264,35 +264,35 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
-  // it("PreviewWithdraw sets correct shares", async function () {
-  //   const [vault] = await deployOffChainAssetVault();
-  //   const assets = ethers.BigNumber.from(100);
-  //
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
-  //
-  //   const id = await priceOracle.price()
-  //
-  //   //grant withdrawer role to alice
-  //   await vault.grantRole(await vault.WITHDRAWER(), alice.address);
-  //
-  //   const expectedShares = fixedPointMul(
-  //       assets,
-  //       id
-  //   ).add(1);
-  //
-  //   const shares = await vault["previewWithdraw(uint256,uint256)"](
-  //       assets,
-  //       id
-  //   );
-  //
-  //   assert(
-  //       shares.eq(expectedShares),
-  //     `Wrong shares: expected ${expectedShares} got ${shares} `
-  //   );
-  // });
+  it("PreviewWithdraw sets correct shares", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const assets = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const id = await priceOracle.price()
+
+    //grant withdrawer role to alice
+    await vault.grantRole(await vault.WITHDRAWER(), alice.address);
+
+    const expectedShares = fixedPointMul(
+        assets,
+        id
+    ).add(1);
+
+    const shares = await vault["previewWithdraw(uint256,uint256)"](
+        assets,
+        id
+    );
+
+    assert(
+        shares.eq(expectedShares),
+      `Wrong shares: expected ${expectedShares} got ${shares} `
+    );
+  });
   it("PreviewRedeem sets correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
