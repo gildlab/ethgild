@@ -18,7 +18,7 @@ import {
 import {
   SetERC20TierEvent,
   OffchainAssetVaultConstructionEvent,
-  CertifyEvent, SnapshotEvent, ConfiscateSharesEvent
+  CertifyEvent, SnapshotEvent, ConfiscateSharesEvent, ConfiscateReceiptEvent
 } from "../../typechain/OffchainAssetVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 
@@ -511,6 +511,35 @@ describe("OffChainAssetVault", async function () {
     assert (
         confiscatee === alice.address,
         `wrong confiscatee expected ${alice.address} got ${confiscatee}`
+    );
+  });
+  it("Confiscate overloaded - Checks ConfiscateShares is emitted", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+    const [receiptVault, asset, priceOracle ] = await deployERC20PriceOracleVault();
+
+    const _id = await priceOracle.price()
+
+    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+
+    const { caller, confiscatee, id } = (await getEventArgs(
+        await vault["confiscate(address,uint256)"](alice.address, _id),
+        "ConfiscateReceipt",
+        vault
+    )) as ConfiscateReceiptEvent["args"];
+
+    assert (
+        caller === alice.address,
+        `wrong caller expected ${alice.address} got ${caller}`
+    );
+    assert (
+        confiscatee === alice.address,
+        `wrong confiscatee expected ${alice.address} got ${confiscatee}`
+    );
+    assert (
+        id.eq(_id),
+        `wrong id expected ${_id} got ${id}`
     );
   });
 });
