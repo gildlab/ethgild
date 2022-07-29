@@ -18,7 +18,10 @@ import {
 import {
   SetERC20TierEvent,
   OffchainAssetVaultConstructionEvent,
-  CertifyEvent, SnapshotEvent, ConfiscateSharesEvent, ConfiscateReceiptEvent
+  CertifyEvent,
+  SnapshotEvent,
+  ConfiscateSharesEvent,
+  ConfiscateReceiptEvent,
 } from "../../typechain/OffchainAssetVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 
@@ -222,8 +225,8 @@ describe("OffChainAssetVault", async function () {
     const expectedAssets = ethers.BigNumber.from(0);
 
     assert(
-        assets.eq(expectedAssets),
-        `Wrong assets: expected ${expectedAssets} got ${assets} `
+      assets.eq(expectedAssets),
+      `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
   it("PreviewMint sets correct assets", async function () {
@@ -240,27 +243,25 @@ describe("OffChainAssetVault", async function () {
     const expectedAssets = fixedPointDiv(shares, ONE).add(1);
 
     assert(
-        assets.eq(expectedAssets),
-        `Wrong assets: expected ${expectedAssets} got ${assets} `
+      assets.eq(expectedAssets),
+      `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
   it("PreviewWithdraw sets 0 shares if no withdrawer role", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(100);
 
-    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
-    const id = await priceOracle.price()
+    const id = await priceOracle.price();
 
     const expectedShares = ethers.BigNumber.from(0);
 
-    const shares = await vault["previewWithdraw(uint256,uint256)"](
-        assets,
-        id
-    );
+    const shares = await vault["previewWithdraw(uint256,uint256)"](assets, id);
 
     assert(
-        shares.eq(expectedShares),
+      shares.eq(expectedShares),
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
@@ -271,25 +272,20 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
-    const id = await priceOracle.price()
+    const id = await priceOracle.price();
 
     //grant withdrawer role to alice
     await vault.grantRole(await vault.WITHDRAWER(), alice.address);
 
-    const expectedShares = fixedPointMul(
-        assets,
-        id
-    ).add(1);
+    const expectedShares = fixedPointMul(assets, id).add(1);
 
-    const shares = await vault["previewWithdraw(uint256,uint256)"](
-        assets,
-        id
-    );
+    const shares = await vault["previewWithdraw(uint256,uint256)"](assets, id);
 
     assert(
-        shares.eq(expectedShares),
+      shares.eq(expectedShares),
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
@@ -300,19 +296,20 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
-    const id = await priceOracle.price()
+    const id = await priceOracle.price();
 
     const hasRoleDepositor = await vault.hasRole(
-        await vault.WITHDRAWER(),
-        alice.address
+      await vault.WITHDRAWER(),
+      alice.address
     );
 
     //Alice does not have role of withdrawer, so it should throw an error unless role is granted
     assert(
-        !hasRoleDepositor,
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role WITHDRAWER`
+      !hasRoleDepositor,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role WITHDRAWER`
     );
 
     //grant withdrawer role to alice
@@ -322,7 +319,7 @@ describe("OffChainAssetVault", async function () {
     const assets = await vault["previewRedeem(uint256,uint256)"](shares, id);
 
     assert(
-        assets.eq(expectedAssets),
+      assets.eq(expectedAssets),
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
@@ -330,12 +327,11 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
-    const aliceReceiptBalance = await vault[ "balanceOf(address)" ](alice.address);
-
-    assert(
-        aliceReceiptBalance.eq(0),
-      `NOT_RECEIPT_HOLDER`
+    const aliceReceiptBalance = await vault["balanceOf(address)"](
+      alice.address
     );
+
+    assert(aliceReceiptBalance.eq(0), `NOT_RECEIPT_HOLDER`);
   });
   it("Checks role for snapshotter", async function () {
     const signers = await ethers.getSigners();
@@ -343,9 +339,9 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-        async () => await vault.snapshot(),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20SNAPSHOTTER()}`,
-    "failed to snapshot"
+      async () => await vault.snapshot(),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20SNAPSHOTTER()}`,
+      "failed to snapshot"
     );
   });
   it("Snapshot event is emitted", async function () {
@@ -356,16 +352,12 @@ describe("OffChainAssetVault", async function () {
     await vault.grantRole(await vault.ERC20SNAPSHOTTER(), alice.address);
 
     const { id } = (await getEventArgs(
-        await vault.snapshot(),
-        "Snapshot",
-        vault
+      await vault.snapshot(),
+      "Snapshot",
+      vault
     )) as SnapshotEvent["args"];
 
-    assert(
-        id.eq(ethers.BigNumber.from(1)),
-        `ID not set`
-    );
-
+    assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
   });
   it("Sets correct erc20Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetVault();
@@ -377,22 +369,21 @@ describe("OffChainAssetVault", async function () {
     const minTier = ethers.BigNumber.from(10);
 
     const { tier, minimumTier } = (await getEventArgs(
-        await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
-        "SetERC20Tier",
-        vault
+      await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
+      "SetERC20Tier",
+      vault
     )) as SetERC20TierEvent["args"];
 
-    await vault.setERC20Tier(TierV2TestContract.address, minTier, [])
+    await vault.setERC20Tier(TierV2TestContract.address, minTier, []);
 
     assert(
-        tier === TierV2TestContract.address,
-        `wrong tier expected ${TierV2TestContract.address} got ${tier}`
+      tier === TierV2TestContract.address,
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
-        minimumTier.eq(minTier),
-        `wrong minimumTier expected ${minTier} got ${minimumTier}`
+      minimumTier.eq(minTier),
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
-
   });
   it("Sets correct erc11Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetVault();
@@ -404,22 +395,21 @@ describe("OffChainAssetVault", async function () {
     const minTier = ethers.BigNumber.from(10);
 
     const { tier, minimumTier } = (await getEventArgs(
-        await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
-        "SetERC1155Tier",
-        vault
+      await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
+      "SetERC1155Tier",
+      vault
     )) as SetERC20TierEvent["args"];
 
-    await vault.setERC1155Tier(TierV2TestContract.address, minTier, [])
+    await vault.setERC1155Tier(TierV2TestContract.address, minTier, []);
 
     assert(
-        tier === TierV2TestContract.address,
-        `wrong tier expected ${TierV2TestContract.address} got ${tier}`
+      tier === TierV2TestContract.address,
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
-        minimumTier.eq(minTier),
-        `wrong minimumTier expected ${minTier} got ${minimumTier}`
+      minimumTier.eq(minTier),
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
-
   });
   it("Checks Certify event is emitted", async function () {
     const [vault] = await deployOffChainAssetVault();
@@ -430,40 +420,35 @@ describe("OffChainAssetVault", async function () {
     //get block timestamp and add 100 to get _until
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100
+    const _until = block.timestamp + 100;
 
     await vault.grantRole(await vault.CERTIFIER(), alice.address);
 
     const { caller, until } = (await getEventArgs(
-        await vault.certify(_until, [], false),
-        "Certify",
-        vault
+      await vault.certify(_until, [], false),
+      "Certify",
+      vault
     )) as CertifyEvent["args"];
 
     assert(
-        caller === alice.address,
-        `wrong caller expected ${alice.address} got ${caller}`
+      caller === alice.address,
+      `wrong caller expected ${alice.address} got ${caller}`
     );
-    assert(
-        until.eq(_until),
-        `wrong until expected ${_until} got ${until}`
-    );
-
+    assert(until.eq(_until), `wrong until expected ${_until} got ${until}`);
   });
   it("Checks role for certifier", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
 
-
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100
+    const _until = block.timestamp + 100;
 
     await assertError(
-        async () => await vault.certify(_until, [], false),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CERTIFIER()}`,
-        "failed to certify"
+      async () => await vault.certify(_until, [], false),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CERTIFIER()}`,
+      "failed to certify"
     );
   });
   it("Certifies", async function () {
@@ -473,21 +458,20 @@ describe("OffChainAssetVault", async function () {
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const certifiedUntil = block.timestamp + 100
+    const certifiedUntil = block.timestamp + 100;
 
     await vault.grantRole(await vault.CERTIFIER(), alice.address);
 
     const { until } = (await getEventArgs(
-        await vault.certify(certifiedUntil, [], false),
-        "Certify",
-        vault
+      await vault.certify(certifiedUntil, [], false),
+      "Certify",
+      vault
     )) as CertifyEvent["args"];
 
-    assert (
-        until.eq(certifiedUntil),
-        `wrong until expected ${certifiedUntil} got ${until}`
+    assert(
+      until.eq(certifiedUntil),
+      `wrong until expected ${certifiedUntil} got ${until}`
     );
-
   });
   it("Confiscate - Checks role CONFISCATOR", async function () {
     const signers = await ethers.getSigners();
@@ -495,9 +479,9 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-        async () => await vault["confiscate(address)"](alice.address),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CONFISCATOR()}`,
-        "failed to confiscate"
+      async () => await vault["confiscate(address)"](alice.address),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CONFISCATOR()}`,
+      "failed to confiscate"
     );
   });
   it("Confiscate - Checks ConfiscateShares is emitted", async function () {
@@ -508,47 +492,45 @@ describe("OffChainAssetVault", async function () {
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
 
     const { caller, confiscatee } = (await getEventArgs(
-        await vault["confiscate(address)"](alice.address),
-        "ConfiscateShares",
-        vault
+      await vault["confiscate(address)"](alice.address),
+      "ConfiscateShares",
+      vault
     )) as ConfiscateSharesEvent["args"];
 
-    assert (
-        caller === alice.address,
-        `wrong caller expected ${alice.address} got ${caller}`
+    assert(
+      caller === alice.address,
+      `wrong caller expected ${alice.address} got ${caller}`
     );
-    assert (
-        confiscatee === alice.address,
-        `wrong confiscatee expected ${alice.address} got ${confiscatee}`
+    assert(
+      confiscatee === alice.address,
+      `wrong confiscatee expected ${alice.address} got ${confiscatee}`
     );
   });
   it("Confiscate overloaded - Checks ConfiscateShares is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
-    const [receiptVault, asset, priceOracle ] = await deployERC20PriceOracleVault();
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
-    const _id = await priceOracle.price()
+    const _id = await priceOracle.price();
 
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
 
     const { caller, confiscatee, id } = (await getEventArgs(
-        await vault["confiscate(address,uint256)"](alice.address, _id),
-        "ConfiscateReceipt",
-        vault
+      await vault["confiscate(address,uint256)"](alice.address, _id),
+      "ConfiscateReceipt",
+      vault
     )) as ConfiscateReceiptEvent["args"];
 
-    assert (
-        caller === alice.address,
-        `wrong caller expected ${alice.address} got ${caller}`
+    assert(
+      caller === alice.address,
+      `wrong caller expected ${alice.address} got ${caller}`
     );
-    assert (
-        confiscatee === alice.address,
-        `wrong confiscatee expected ${alice.address} got ${confiscatee}`
+    assert(
+      confiscatee === alice.address,
+      `wrong confiscatee expected ${alice.address} got ${confiscatee}`
     );
-    assert (
-        id.eq(_id),
-        `wrong id expected ${_id} got ${id}`
-    );
+    assert(id.eq(_id), `wrong id expected ${_id} got ${id}`);
   });
 });
