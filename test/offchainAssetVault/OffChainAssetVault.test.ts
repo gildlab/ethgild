@@ -170,24 +170,24 @@ describe("OffChainAssetVault", async function () {
     );
   });
   // it("Checks totalAssets", async function () {
-    // const [vault] = await deployOffChainAssetVault();
-    // const signers = await ethers.getSigners()
-    // const alice = signers[0]
-    //
-    // //get block timestamp and subtract one to get _until
-    // const blockNum = await ethers.provider.getBlockNumber();
-    // const block = await ethers.provider.getBlock(blockNum);
-    // const until = block.timestamp + 100
-    //
-    //
-    // await vault.grantRole(await vault.CERTIFIER(), alice.address);
-    // await vault.certify(until, [], false)
-    // await vault.transfer(alice.address, ethers.BigNumber.from(100));
-    //
-    //
-    // console.log(await vault.totalAssets())
-    // console.log(await vault.totalSupply())
-    // assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
+  // const [vault] = await deployOffChainAssetVault();
+  // const signers = await ethers.getSigners()
+  // const alice = signers[0]
+  //
+  // //get block timestamp and subtract one to get _until
+  // const blockNum = await ethers.provider.getBlockNumber();
+  // const block = await ethers.provider.getBlock(blockNum);
+  // const until = block.timestamp + 100
+  //
+  //
+  // await vault.grantRole(await vault.CERTIFIER(), alice.address);
+  // await vault.certify(until, [], false)
+  // await vault.transfer(alice.address, ethers.BigNumber.from(100));
+  //
+  //
+  // console.log(await vault.totalAssets())
+  // console.log(await vault.totalSupply())
+  // assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
   // });
   it("PreviewDeposit sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
