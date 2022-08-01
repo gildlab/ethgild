@@ -169,7 +169,7 @@ describe("OffChainAssetVault", async function () {
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
-  it("Checks totalAssets", async function () {
+  // it("Checks totalAssets", async function () {
     // const [vault] = await deployOffChainAssetVault();
     // const signers = await ethers.getSigners()
     // const alice = signers[0]
@@ -188,7 +188,7 @@ describe("OffChainAssetVault", async function () {
     // console.log(await vault.totalAssets())
     // console.log(await vault.totalSupply())
     // assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
-  });
+  // });
   it("PreviewDeposit sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(100);
