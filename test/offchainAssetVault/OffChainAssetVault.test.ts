@@ -533,4 +533,37 @@ describe("OffChainAssetVault", async function () {
     );
     assert(id.eq(_id), `wrong id expected ${_id} got ${id}`);
   });
+  it.only("Confiscates", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+    const [vault] = await deployOffChainAssetVault();
+    const [receiptVault, asset,priceOracle] = await deployERC20PriceOracleVault()
+
+    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+
+    const assets = ethers.BigNumber.from(100)
+
+    await asset.transfer(alice.address, assets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const shareRatio =await priceOracle.price()
+    await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+        assets,
+        bob.address,
+        shareRatio,
+        []
+    )
+
+    // await vault["confiscate(address)"](bob.address);
+
+    // assert(
+    //     caller === alice.address,
+    //     `wrong caller expected ${alice.address} got ${caller}`
+    // );
+
+  });
 });
