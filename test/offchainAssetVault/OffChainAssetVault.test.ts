@@ -573,4 +573,44 @@ describe("OffChainAssetVault", async function () {
         `wrong confiscated expected ${shares} got ${confiscated}`
     );
   });
+  it("Checks confiscated is transferred", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+    const [vault] = await deployOffChainAssetVault();
+    const [receiptVault, asset,priceOracle] = await deployERC20PriceOracleVault()
+
+    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+    await vault.grantRole(await vault.CONFISCATOR(), bob.address);
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+
+    const assets = ethers.BigNumber.from(100)
+
+    await asset.transfer(alice.address, assets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const shareRatio =await priceOracle.price()
+    await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+        assets,
+        bob.address,
+        shareRatio,
+        []
+    )
+    const aliceBalanceBef = await vault["balanceOf(address)"](alice.address)
+
+    const { confiscated } = (await getEventArgs(
+        await vault.connect(alice)["confiscate(address)"](bob.address),
+        "ConfiscateShares",
+        vault
+    )) as ConfiscateSharesEvent["args"];
+
+    const aliceBalanceAft = await vault["balanceOf(address)"](alice.address)
+    assert(
+        aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
+        `Shares has not been confiscated`
+    );
+  });
 });
