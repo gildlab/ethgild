@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import {ERC20PriceOracleVault, ConstructionConfig} from "./ERC20PriceOracleVault.sol";
@@ -8,7 +8,7 @@ import {ERC20PriceOracleVault, ConstructionConfig} from "./ERC20PriceOracleVault
 /// @notice Factory for creating and deploying `ERC20PriceOracleVault`.
 contract ERC20PriceOracleVaultFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(bytes calldata data_)
+    function _createChild(bytes memory data_)
         internal
         virtual
         override
@@ -35,6 +35,6 @@ contract ERC20PriceOracleVaultFactory is Factory {
         external
         returns (ERC20PriceOracleVault)
     {
-        return ERC20PriceOracleVault(this.createChild(abi.encode(config_)));
+        return ERC20PriceOracleVault(createChild(abi.encode(config_)));
     }
 }

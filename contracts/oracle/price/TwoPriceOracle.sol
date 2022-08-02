@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
 import "./IPriceOracle.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";

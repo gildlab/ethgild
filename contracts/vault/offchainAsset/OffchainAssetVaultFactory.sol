@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import {OffchainAssetVault, ConstructionConfig} from "./OffchainAssetVault.sol";
@@ -8,7 +8,7 @@ import {OffchainAssetVault, ConstructionConfig} from "./OffchainAssetVault.sol";
 /// @notice Factory for creating and deploying `OffchainAssetVault`.
 contract OffchainAssetVaultFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(bytes calldata data_)
+    function _createChild(bytes memory data_)
         internal
         virtual
         override
@@ -33,6 +33,6 @@ contract OffchainAssetVaultFactory is Factory {
         external
         returns (OffchainAssetVault)
     {
-        return OffchainAssetVault(this.createChild(abi.encode(config_)));
+        return OffchainAssetVault(createChild(abi.encode(config_)));
     }
 }

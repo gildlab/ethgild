@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import "./ChainlinkFeedPriceOracle.sol";
@@ -8,7 +8,7 @@ import "./ChainlinkFeedPriceOracle.sol";
 /// @notice Factory for creating and deploying `ChainlinkFeedPriceOracle`.
 contract ChainlinkFeedPriceOracleFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(bytes calldata data_)
+    function _createChild(bytes memory data_)
         internal
         virtual
         override
@@ -35,6 +35,6 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
         external
         returns (ChainlinkFeedPriceOracle)
     {
-        return ChainlinkFeedPriceOracle(this.createChild(abi.encode(config_)));
+        return ChainlinkFeedPriceOracle(createChild(abi.encode(config_)));
     }
 }
