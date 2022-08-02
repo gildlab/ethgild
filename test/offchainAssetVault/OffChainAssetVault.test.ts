@@ -533,7 +533,7 @@ describe("OffChainAssetVault", async function () {
     );
     assert(id.eq(_id), `wrong id expected ${_id} got ${id}`);
   });
-  it.only("Confiscates", async function () {
+  it("Checks confiscated is same as balance", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -541,6 +541,8 @@ describe("OffChainAssetVault", async function () {
     const [receiptVault, asset,priceOracle] = await deployERC20PriceOracleVault()
 
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+    await vault.grantRole(await vault.CONFISCATOR(), bob.address);
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
 
     const assets = ethers.BigNumber.from(100)
 
@@ -558,12 +560,17 @@ describe("OffChainAssetVault", async function () {
         []
     )
 
-    // await vault["confiscate(address)"](bob.address);
+    const shares = await vault["balanceOf(address)"](bob.address);
 
-    // assert(
-    //     caller === alice.address,
-    //     `wrong caller expected ${alice.address} got ${caller}`
-    // );
+    const { confiscated } = (await getEventArgs(
+        await vault.connect(alice)["confiscate(address)"](bob.address),
+        "ConfiscateShares",
+        vault
+    )) as ConfiscateSharesEvent["args"];
 
+    assert(
+        confiscated.eq(shares),
+        `wrong confiscated expected ${shares} got ${confiscated}`
+    );
   });
 });
