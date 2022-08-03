@@ -1,7 +1,11 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployERC20PriceOracleVault, getEventArgs, priceOne } from "../util";
+import {
+  deployERC20PriceOracleVault,
+  fixedPointDiv,
+  getEventArgs,
+} from "../util";
 
 chai.use(solidity);
 const { assert } = chai;
@@ -73,7 +77,7 @@ describe("events", async function () {
 
     const withdrawEventArgs = await getEventArgs(redeemTx, "Withdraw", vault);
     // withdrawAmount is always rounded down.
-    const withdrawAmount = ERC1155Amount.mul(priceOne).div(shareRatio);
+    const withdrawAmount = fixedPointDiv(ERC1155Amount, shareRatio);
     assert(
       withdrawEventArgs.assets.eq(withdrawAmount),
       `wrong assets amount. expected ${withdrawAmount} actual ${withdrawEventArgs.assets}`

@@ -5,7 +5,6 @@ import {
   assertError,
   deployERC20PriceOracleVault,
   expectedReferencePrice,
-  priceOne,
   fixedPointMul,
   fixedPointDiv,
 } from "../util";
@@ -68,7 +67,7 @@ describe("deposit", async function () {
     await asset.transfer(alice.address, aliceDepositAmount);
 
     // Min shareRatio MUST be respected
-    const oraclePrice = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     await asset
       .connect(alice)
@@ -81,7 +80,7 @@ describe("deposit", async function () {
           ["deposit(uint256,address,uint256,bytes)"](
             aliceDepositAmount,
             alice.address,
-            oraclePrice.add(1),
+            shareRatio.add(1),
             []
           ),
       "MIN_SHARE_RATIO",
@@ -92,11 +91,11 @@ describe("deposit", async function () {
       ["deposit(uint256,address,uint256,bytes)"](
         aliceDepositAmount,
         alice.address,
-        oraclePrice,
+        shareRatio,
         []
       );
 
-    const expectedShares = oraclePrice.mul(aliceDepositAmount).div(priceOne);
+    const expectedShares = fixedPointMul(shareRatio, aliceDepositAmount);
     const aliceShares = await vault["balanceOf(address)"](alice.address);
     assert(
       aliceShares.eq(expectedShares),
@@ -134,9 +133,10 @@ describe("deposit", async function () {
         []
       );
 
-    const expectedAliceBalance = expectedReferencePrice
-      .mul(aliceEthAmount)
-      .div(priceOne);
+    const expectedAliceBalance = fixedPointMul(
+      aliceEthAmount,
+      expectedReferencePrice
+    );
     const aliceBalance = await vault["balanceOf(address)"](alice.address);
     assert(
       aliceBalance.eq(expectedAliceBalance),
@@ -184,9 +184,10 @@ describe("deposit", async function () {
         []
       );
 
-    const expectedBobBalance = expectedReferencePrice
-      .mul(bobEthAmount)
-      .div(priceOne);
+    const expectedBobBalance = fixedPointMul(
+      expectedReferencePrice,
+      bobEthAmount
+    );
     const bobBalance = await vault["balanceOf(address)"](bob.address);
     assert(
       bobBalance.eq(expectedBobBalance),
