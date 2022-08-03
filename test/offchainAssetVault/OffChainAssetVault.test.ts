@@ -671,4 +671,62 @@ describe("OffChainAssetVault", async function () {
         `wrong confiscated expected ${bobReceiptBalance} got ${confiscated}`
     );
   });
+  it("Checks confiscated amount is transferred", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetVault();
+
+    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const shareRatio = await priceOracle.price();
+    const aliceAssets = ethers.BigNumber.from(1000);
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const certifiedUntil = block.timestamp + 100;
+    await vault.grantRole(await vault.CERTIFIER(), alice.address);
+    await vault.certify(certifiedUntil, [], false);
+
+    await asset.transfer(alice.address, aliceAssets);
+
+    await asset
+        .connect(alice)
+        .increaseAllowance(vault.address, aliceAssets);
+
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+
+    const { id } =
+        (await getEventArgs(
+            await vault["deposit(uint256,address,uint256,bytes)"](
+                aliceAssets,
+                bob.address,
+                shareRatio,
+                []
+            ),
+            "DepositWithReceipt",
+            vault
+        )) as DepositWithReceiptEvent["args"];
+
+    const aliceBalanceBef = await vault["balanceOf(address,uint256)"](alice.address,id)
+
+    const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
+        bob.address, id
+    );
+
+    const { confiscated } = (await getEventArgs(
+        await vault.connect(alice)["confiscate(address,uint256)"](bob.address,id),
+        "ConfiscateReceipt",
+        vault
+    )) as ConfiscateSharesEvent["args"];
+
+    const aliceBalanceAft = await vault["balanceOf(address,uint256)"](alice.address,id)
+
+    assert(
+        aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
+        `Shares has not been confiscated`
+    );
+  });
 });
