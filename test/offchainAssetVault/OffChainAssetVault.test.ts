@@ -328,12 +328,13 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
-    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
-    const shareRatio = await priceOracle.price()
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
+    const shareRatio = await priceOracle.price();
 
     const aliceReceiptBalance = await vault["balanceOf(address,uint256)"](
       alice.address,
-        shareRatio
+      shareRatio
     );
 
     assert(aliceReceiptBalance.eq(0), `NOT_RECEIPT_HOLDER`);
@@ -543,39 +544,40 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
     const bob = signers[1];
     const [vault] = await deployOffChainAssetVault();
-    const [receiptVault, asset,priceOracle] = await deployERC20PriceOracleVault()
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
     await vault.grantRole(await vault.CONFISCATOR(), bob.address);
     await vault.grantRole(await vault.DEPOSITOR(), alice.address);
 
-    const assets = ethers.BigNumber.from(100)
+    const assets = ethers.BigNumber.from(100);
 
     await asset.transfer(alice.address, assets);
 
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-    const shareRatio =await priceOracle.price()
+    const shareRatio = await priceOracle.price();
     await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
         assets,
         bob.address,
         shareRatio,
         []
-    )
+      );
 
     const shares = await vault["balanceOf(address)"](bob.address);
 
     const { confiscated } = (await getEventArgs(
-        await vault.connect(alice)["confiscate(address)"](bob.address),
-        "ConfiscateShares",
-        vault
+      await vault.connect(alice)["confiscate(address)"](bob.address),
+      "ConfiscateShares",
+      vault
     )) as ConfiscateSharesEvent["args"];
 
     assert(
-        confiscated.eq(shares),
-        `wrong confiscated expected ${shares} got ${confiscated}`
+      confiscated.eq(shares),
+      `wrong confiscated expected ${shares} got ${confiscated}`
     );
   });
   it("Checks confiscated is transferred", async function () {
@@ -583,45 +585,47 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
     const bob = signers[1];
     const [vault] = await deployOffChainAssetVault();
-    const [receiptVault, asset,priceOracle] = await deployERC20PriceOracleVault()
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
     await vault.grantRole(await vault.DEPOSITOR(), alice.address);
 
-    const assets = ethers.BigNumber.from(100)
+    const assets = ethers.BigNumber.from(100);
 
     await asset.transfer(alice.address, assets);
 
     await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-    const shareRatio =await priceOracle.price()
+    const shareRatio = await priceOracle.price();
     await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
         assets,
         bob.address,
         shareRatio,
         []
-    )
-    const aliceBalanceBef = await vault["balanceOf(address)"](alice.address)
+      );
+    const aliceBalanceBef = await vault["balanceOf(address)"](alice.address);
 
     const { confiscated } = (await getEventArgs(
-        await vault.connect(alice)["confiscate(address)"](bob.address),
-        "ConfiscateShares",
-        vault
+      await vault.connect(alice)["confiscate(address)"](bob.address),
+      "ConfiscateShares",
+      vault
     )) as ConfiscateSharesEvent["args"];
 
-    const aliceBalanceAft = await vault["balanceOf(address)"](alice.address)
+    const aliceBalanceAft = await vault["balanceOf(address)"](alice.address);
     assert(
-        aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
-        `Shares has not been confiscated`
+      aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
+      `Shares has not been confiscated`
     );
   });
   it("Checks confiscated is same as receipt balance", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetVault();
 
-    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -637,45 +641,46 @@ describe("OffChainAssetVault", async function () {
 
     await asset.transfer(alice.address, aliceAssets);
 
-    await asset
-        .connect(alice)
-        .increaseAllowance(vault.address, aliceAssets);
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await vault.grantRole(await vault.DEPOSITOR(), alice.address);
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
 
-    const { id } =
-        (await getEventArgs(
-            await vault["deposit(uint256,address,uint256,bytes)"](
-                aliceAssets,
-                bob.address,
-                shareRatio,
-                []
-            ),
-            "DepositWithReceipt",
-            vault
-        )) as DepositWithReceiptEvent["args"];
+    const { id } = (await getEventArgs(
+      await vault["deposit(uint256,address,uint256,bytes)"](
+        aliceAssets,
+        bob.address,
+        shareRatio,
+        []
+      ),
+      "DepositWithReceipt",
+      vault
+    )) as DepositWithReceiptEvent["args"];
 
     const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
-        bob.address, id
+      bob.address,
+      id
     );
 
     const { confiscated } = (await getEventArgs(
-        await vault.connect(alice)["confiscate(address,uint256)"](bob.address,id),
-        "ConfiscateReceipt",
-        vault
+      await vault
+        .connect(alice)
+        ["confiscate(address,uint256)"](bob.address, id),
+      "ConfiscateReceipt",
+      vault
     )) as ConfiscateSharesEvent["args"];
 
     assert(
-        confiscated.eq(bobReceiptBalance),
-        `wrong confiscated expected ${bobReceiptBalance} got ${confiscated}`
+      confiscated.eq(bobReceiptBalance),
+      `wrong confiscated expected ${bobReceiptBalance} got ${confiscated}`
     );
   });
   it("Checks confiscated amount is transferred", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetVault();
 
-    const [receiptVault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -691,42 +696,48 @@ describe("OffChainAssetVault", async function () {
 
     await asset.transfer(alice.address, aliceAssets);
 
-    await asset
-        .connect(alice)
-        .increaseAllowance(vault.address, aliceAssets);
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await vault.grantRole(await vault.DEPOSITOR(), alice.address);
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
 
-    const { id } =
-        (await getEventArgs(
-            await vault["deposit(uint256,address,uint256,bytes)"](
-                aliceAssets,
-                bob.address,
-                shareRatio,
-                []
-            ),
-            "DepositWithReceipt",
-            vault
-        )) as DepositWithReceiptEvent["args"];
+    const { id } = (await getEventArgs(
+      await vault["deposit(uint256,address,uint256,bytes)"](
+        aliceAssets,
+        bob.address,
+        shareRatio,
+        []
+      ),
+      "DepositWithReceipt",
+      vault
+    )) as DepositWithReceiptEvent["args"];
 
-    const aliceBalanceBef = await vault["balanceOf(address,uint256)"](alice.address,id)
+    const aliceBalanceBef = await vault["balanceOf(address,uint256)"](
+      alice.address,
+      id
+    );
 
     const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
-        bob.address, id
+      bob.address,
+      id
     );
 
     const { confiscated } = (await getEventArgs(
-        await vault.connect(alice)["confiscate(address,uint256)"](bob.address,id),
-        "ConfiscateReceipt",
-        vault
+      await vault
+        .connect(alice)
+        ["confiscate(address,uint256)"](bob.address, id),
+      "ConfiscateReceipt",
+      vault
     )) as ConfiscateSharesEvent["args"];
 
-    const aliceBalanceAft = await vault["balanceOf(address,uint256)"](alice.address,id)
+    const aliceBalanceAft = await vault["balanceOf(address,uint256)"](
+      alice.address,
+      id
+    );
 
     assert(
-        aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
-        `Shares has not been confiscated`
+      aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
+      `Shares has not been confiscated`
     );
   });
 });
