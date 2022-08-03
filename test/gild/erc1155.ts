@@ -3,9 +3,7 @@ import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
-  expectedReferencePrice,
   expectedUri,
-  priceOne,
   fixedPointMul,
 } from "../util";
 
@@ -33,21 +31,21 @@ describe("erc1155 usage", async function () {
       await deployERC20PriceOracleVault();
     const shareRatio = await priceOracle.price();
     const alice = signers[0];
-    const gildAmount = ethers.BigNumber.from(1000);
+    const depositAmount = ethers.BigNumber.from(1000);
 
     await erc20Token
       .connect(alice)
-      .increaseAllowance(vault.address, gildAmount);
+      .increaseAllowance(vault.address, depositAmount);
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-        gildAmount,
+        depositAmount,
         alice.address,
         shareRatio,
         []
       );
 
-    const expectedErc20Balance = fixedPointMul(gildAmount, shareRatio);
+    const expectedErc20Balance = fixedPointMul(depositAmount, shareRatio);
     const expectedErc20BalanceAfter = expectedErc20Balance;
     const expectedErc1155Balance = expectedErc20Balance;
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);

@@ -6,9 +6,6 @@ import {
   expectedName,
   expectedSymbol,
   fixedPointMul,
-  fixedPointDiv,
-  quotePrice,
-  basePrice,
 } from "../util";
 
 chai.use(solidity);
@@ -16,10 +13,10 @@ const { assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild] = await deployERC20PriceOracleVault();
+    const [vault] = await deployERC20PriceOracleVault();
 
-    const erc20Name = await ethGild.name();
-    const erc20Symbol = await ethGild.symbol();
+    const erc20Name = await vault.name();
+    const erc20Symbol = await vault.symbol();
 
     assert(
       erc20Name === expectedName,

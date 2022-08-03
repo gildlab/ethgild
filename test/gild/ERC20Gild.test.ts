@@ -67,7 +67,7 @@ describe("deposit", async function () {
     // give alice reserve to cover cost
     await asset.transfer(alice.address, aliceDepositAmount);
 
-    // Min gild price MUST be respected
+    // Min shareRatio MUST be respected
     const oraclePrice = await priceOracle.price();
 
     await asset
@@ -216,10 +216,10 @@ describe("deposit", async function () {
 
     assert(
       erc20AliceBalanceWithdraw.eq(0),
-      `wrong alice erc20 balance after ungild ${erc20AliceBalanceWithdraw} 0`
+      `wrong alice erc20 balance after redeem ${erc20AliceBalanceWithdraw} 0`
     );
 
-    // alice cannot withdraw a different referencePrice deposit.
+    // alice cannot withdraw a different shareRatio deposit.
     await assertError(
       async () =>
         await vault
@@ -231,16 +231,16 @@ describe("deposit", async function () {
             shareRatio
           ),
       "burn amount exceeds balance",
-      "failed to prevent gild referencePrice manipulation"
+      "failed to prevent shareRatio manipulation"
     );
 
-    const erc1155AliceBalanceUngild = await vault["balanceOf(address,uint256)"](
+    const erc1155AliceBalanceRedeem = await vault["balanceOf(address,uint256)"](
       alice.address,
       id1155
     );
     assert(
-      erc1155AliceBalanceUngild.eq(0),
-      `wrong alice erc1155 balance after ungild ${erc1155AliceBalanceUngild} 0`
+        erc1155AliceBalanceRedeem.eq(0),
+      `wrong alice erc1155 balance after redeem ${erc1155AliceBalanceRedeem} 0`
     );
   });
 

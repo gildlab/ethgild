@@ -7,13 +7,13 @@ const { expect, assert } = chai;
 
 describe("oracle", async function () {
   it("should have an oracle", async function () {
-    const [_ethGild, _erc20, priceOracle] = await deployERC20PriceOracleVault();
+    const [_vault, _erc20, priceOracle] = await deployERC20PriceOracleVault();
 
     const shareRatio = await priceOracle.price();
 
     assert(
       shareRatio.eq(expectedReferencePrice),
-      `wrong referencePrice. got ${shareRatio}. expected ${expectedReferencePrice}`
+      `wrong shareRatio. got ${shareRatio}. expected ${expectedReferencePrice}`
     );
   });
 });

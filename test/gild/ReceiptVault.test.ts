@@ -63,9 +63,6 @@ describe("Receipt vault", async function () {
     );
   });
   it("Checks total asset is same as balance", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
     const [vault, asset] = await deployERC20PriceOracleVault();
 
     await asset.transfer(vault.address, ethers.BigNumber.from(1000));
@@ -105,13 +102,13 @@ describe("Receipt vault", async function () {
 
     const [vault] = await deployERC20PriceOracleVault();
 
-    const aliceEthGild = vault.connect(alice);
-    const bobEthGild = vault.connect(bob);
+    const aliceVault = vault.connect(alice);
+    const bobVault = vault.connect(bob);
 
     const share = ethers.BigNumber.from("10").pow(20);
 
-    const assetsAlice = await aliceEthGild.convertToAssets(share);
-    const assetsBob = await bobEthGild.convertToAssets(share);
+    const assetsAlice = await aliceVault.convertToAssets(share);
+    const assetsBob = await bobVault.convertToAssets(share);
 
     assert(
       assetsAlice.eq(assetsBob),
@@ -129,12 +126,12 @@ describe("Receipt vault", async function () {
 
     assert(
       shareRatio >= minPrice,
-      `price is less then minPrice ${shareRatio} ${minPrice}`
+      `ShareRatio is less then minShareRatio ${shareRatio} ${minPrice}`
     );
 
     assert(
       shareRatio.eq(expectedReferencePrice),
-      `Incorrect referencePrice ${shareRatio} ${expectedReferencePrice}`
+      `Incorrect shareRatio ${shareRatio} ${expectedReferencePrice}`
     );
 
     const assets = ethers.BigNumber.from("10").pow(20);
@@ -154,13 +151,13 @@ describe("Receipt vault", async function () {
 
     const [vault] = await deployERC20PriceOracleVault();
 
-    const aliceEthGild = vault.connect(alice);
-    const bobEthGild = vault.connect(bob);
+    const aliceVault = vault.connect(alice);
+    const bobVault = vault.connect(bob);
 
     const assets = ethers.BigNumber.from("10").pow(20);
 
-    const sharesAlice = await aliceEthGild.convertToShares(assets);
-    const sharesBob = await bobEthGild.convertToShares(assets);
+    const sharesAlice = await aliceVault.convertToShares(assets);
+    const sharesBob = await bobVault.convertToShares(assets);
 
     assert(
       sharesAlice.eq(sharesBob),
@@ -181,7 +178,7 @@ describe("Receipt vault", async function () {
       `Wrong max deposit ${expectedMaxDeposit} ${maxDeposit}`
     );
   });
-  it("Respects min price in case of previewDeposit", async function () {
+  it("Respects min shareRatio in case of previewDeposit", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -240,7 +237,7 @@ describe("Deposit", async () => {
       "failed to respect min price"
     );
   }),
-    it("Calculates shares correctly with min price set", async function () {
+    it("Calculates shares correctly with min shareRatio set", async function () {
       const signers = await ethers.getSigners();
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
@@ -254,7 +251,7 @@ describe("Deposit", async () => {
       // give alice reserve to cover cost
       await asset.transfer(alice.address, assets);
 
-      // Min gild price MUST be respected
+      // Min shareRatio MUST be respected
       const shareRatio = await priceOracle.price();
 
       await asset.connect(alice).increaseAllowance(vault.address, assets);
@@ -270,10 +267,10 @@ describe("Deposit", async () => {
 
       assert(
         shares.eq(expectedShares),
-        `wrong alice shares ${expectedShares} ${shares}`
+        `Wrong alice shares ${expectedShares} ${shares}`
       );
     }),
-    it("Calculates shares correctly with NO min price set", async function () {
+    it("Calculates shares correctly with NO min shareRatio set", async function () {
       const signers = await ethers.getSigners();
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
@@ -287,7 +284,7 @@ describe("Deposit", async () => {
       // give alice reserve to cover cost
       await asset.transfer(alice.address, assets);
 
-      // Min gild price MUST be respected
+      // Min shareRatio MUST be respected
       const shareRatio = await priceOracle.price();
 
       await asset.connect(alice).increaseAllowance(vault.address, assets);
@@ -301,10 +298,10 @@ describe("Deposit", async () => {
 
       assert(
         shares.eq(expectedShares),
-        `wrong alice ETHg ${expectedShares} ${shares}`
+        `Wrong alice ETHg ${expectedShares} ${shares}`
       );
     }),
-    it("Reverts if not enough assets to be transfered", async function () {
+    it("Reverts if not enough assets to be transferred", async function () {
       const signers = await ethers.getSigners();
 
       const [vault, asset] = await deployERC20PriceOracleVault();
@@ -423,7 +420,7 @@ describe("Deposit", async () => {
         aliceAssetAft.eq(aliceAssetBefore.sub(assets)),
         `wrong alice assets ${aliceAssetAft} ${aliceAssetBefore.sub(assets)}`
       );
-    }),
+    })
     it("MUST revert if the vault can't take enough assets from the depositor", async function () {
       const signers = await ethers.getSigners();
       const alice = signers[1];
@@ -541,7 +538,7 @@ describe("Deposit", async () => {
   });
 });
 describe("Overloaded `deposit`", async () => {
-  it("Must respect min Price", async function () {
+  it("Must respect min shareRatio", async function () {
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const shareRatio = await priceOracle.price();
 
@@ -567,10 +564,10 @@ describe("Overloaded `deposit`", async () => {
             []
           ),
       "MIN_SHARE_RATIO",
-      "failed to respect min price"
+      "failed to respect min shareRatio"
     );
   }),
-    it("Calculates shares correctly with min price set", async function () {
+    it("Calculates shares correctly with min shareRatio set", async function () {
       const signers = await ethers.getSigners();
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
@@ -584,7 +581,7 @@ describe("Overloaded `deposit`", async () => {
       // give alice reserve to cover cost
       await asset.transfer(alice.address, assets);
 
-      // Min gild price MUST be respected
+      // Min shareRatio MUST be respected
       const shareRatio = await priceOracle.price();
 
       await asset.connect(alice).increaseAllowance(vault.address, assets);
@@ -608,7 +605,7 @@ describe("Overloaded `deposit`", async () => {
         `wrong alice shares ${expectedShares} ${shares}`
       );
     }),
-    it("Calculates shares correctly with NO min price set", async function () {
+    it("Calculates shares correctly with NO min shareRatio set", async function () {
       const signers = await ethers.getSigners();
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
@@ -622,7 +619,7 @@ describe("Overloaded `deposit`", async () => {
       // give alice reserve to cover cost
       await asset.transfer(alice.address, assets);
 
-      // Min gild price MUST be respected
+      // Min shareRatio price MUST be respected
       const shareRatio = await priceOracle.price();
 
       await asset.connect(alice).increaseAllowance(vault.address, assets);
@@ -644,7 +641,7 @@ describe("Overloaded `deposit`", async () => {
         `wrong alice ETHg ${expectedShares} ${shares}`
       );
     }),
-    it("Reverts if not enough assets to be transfered", async function () {
+    it("Reverts if not enough assets to be transferred", async function () {
       const signers = await ethers.getSigners();
 
       const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
@@ -670,7 +667,7 @@ describe("Overloaded `deposit`", async () => {
               []
             ),
         "ERC20: transfer amount exceeds balance",
-        "failed to respect min price"
+        "failed to deposit"
       );
     }),
     it("Receiver MAY be different user to depositor", async function () {
@@ -701,7 +698,7 @@ describe("Overloaded `deposit`", async () => {
 
       assert(
         shares.eq(expectedShares),
-        `wrong alice ETHg ${expectedShares} ${shares}`
+        `wrong alice shares ${expectedShares} ${shares}`
       );
     }),
     it("Receiver receives BOTH erc20 and erc1155, depositor gets nothing but MUST transfer assets", async function () {
@@ -780,7 +777,7 @@ describe("Overloaded `deposit`", async () => {
         aliceAssetAft.eq(aliceAssetBefore.sub(assets)),
         `wrong alice assets ${aliceAssetAft} ${aliceAssetBefore.sub(assets)}`
       );
-    }),
+    })
     it("MUST revert if the vault can't take enough assets from the depositor", async function () {
       const signers = await ethers.getSigners();
       const alice = signers[1];
@@ -798,7 +795,7 @@ describe("Overloaded `deposit`", async () => {
         .connect(alice)
         .increaseAllowance(vault.address, assets.add(1));
 
-      //try to deposit more assets then alice owns
+      //try to deposit more assets than alice owns
       await assertError(
         async () =>
           await vault
@@ -1039,7 +1036,7 @@ describe("Overloaded `deposit`", async () => {
       information
     );
 
-    depositTx.wait();
+    await depositTx.wait();
 
     const erc1155Balance = await vault["balanceOf(address,uint256)"](
       alice.address,
@@ -1115,7 +1112,7 @@ describe("Mint", async function () {
     await assertError(
       async () => await vault.previewMint(shares),
       "MIN_SHARE_RATIO",
-      "failed to respect min price"
+      "failed to respect min shareRatio"
     );
   });
   it("PreviewMint - Calculates assets correctly with round up", async function () {
@@ -1124,7 +1121,7 @@ describe("Mint", async function () {
 
     assert(
       shareRatio.eq(expectedReferencePrice),
-      `Incorrect referencePrice ${shareRatio} ${expectedReferencePrice}`
+      `Incorrect shareRatio ${shareRatio} ${expectedReferencePrice}`
     );
 
     const shares = ethers.BigNumber.from("10").pow(20);
