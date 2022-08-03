@@ -273,10 +273,8 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [receiptVault, asset, priceOracle] =
-      await deployERC20PriceOracleVault();
-
-    const id = await priceOracle.price();
+    //assets are always deposited 1:1 with shares
+    const id = ONE
 
     //grant withdrawer role to alice
     await vault.grantRole(await vault.WITHDRAWER(), alice.address);
