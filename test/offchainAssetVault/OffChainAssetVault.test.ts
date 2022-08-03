@@ -717,11 +717,6 @@ describe("OffChainAssetVault", async function () {
       id
     );
 
-    const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id
-    );
-
     const { confiscated } = (await getEventArgs(
       await vault
         .connect(alice)
