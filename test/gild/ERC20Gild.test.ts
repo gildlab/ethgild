@@ -239,7 +239,7 @@ describe("deposit", async function () {
       id1155
     );
     assert(
-        erc1155AliceBalanceRedeem.eq(0),
+      erc1155AliceBalanceRedeem.eq(0),
       `wrong alice erc1155 balance after redeem ${erc1155AliceBalanceRedeem} 0`
     );
   });

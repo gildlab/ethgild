@@ -348,7 +348,7 @@ describe("Deposit", async () => {
         shares.eq(expectedShares),
         `wrong alice ETHg ${expectedShares} ${shares}`
       );
-    }),
+    });
     it("Receiver receives BOTH erc20 and erc1155, depositor gets nothing but MUST transfer assets", async function () {
       const signers = await ethers.getSigners();
       const alice = signers[0];
@@ -420,33 +420,31 @@ describe("Deposit", async () => {
         aliceAssetAft.eq(aliceAssetBefore.sub(assets)),
         `wrong alice assets ${aliceAssetAft} ${aliceAssetBefore.sub(assets)}`
       );
-    })
-    it("MUST revert if the vault can't take enough assets from the depositor", async function () {
-      const signers = await ethers.getSigners();
-      const alice = signers[1];
-
-      const [vault, asset] = await deployERC20PriceOracleVault();
-
-      const totalTokenSupply = await asset.totalSupply();
-      const assets = totalTokenSupply.div(2);
-      // give alice reserve to cover cost
-      await asset.transfer(alice.address, assets);
-
-      //alice has assets of totalsuply/2
-      await asset
-        .connect(alice)
-        .increaseAllowance(vault.address, assets.add(1));
-
-      //try to deposit more assets then alice owns
-      await assertError(
-        async () =>
-          await vault
-            .connect(alice)
-            ["deposit(uint256,address)"](assets.add(1), alice.address),
-        "ERC20: transfer amount exceeds balance",
-        "failed to revert"
-      );
     });
+  it("MUST revert if the vault can't take enough assets from the depositor", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[1];
+
+    const [vault, asset] = await deployERC20PriceOracleVault();
+
+    const totalTokenSupply = await asset.totalSupply();
+    const assets = totalTokenSupply.div(2);
+    // give alice reserve to cover cost
+    await asset.transfer(alice.address, assets);
+
+    //alice has assets of totalsuply/2
+    await asset.connect(alice).increaseAllowance(vault.address, assets.add(1));
+
+    //try to deposit more assets then alice owns
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["deposit(uint256,address)"](assets.add(1), alice.address),
+      "ERC20: transfer amount exceeds balance",
+      "failed to revert"
+    );
+  });
   it("MUST NOT successfully deposit if the vault is not approved for the depositor's assets", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -700,7 +698,7 @@ describe("Overloaded `deposit`", async () => {
         shares.eq(expectedShares),
         `wrong alice shares ${expectedShares} ${shares}`
       );
-    }),
+    });
     it("Receiver receives BOTH erc20 and erc1155, depositor gets nothing but MUST transfer assets", async function () {
       const signers = await ethers.getSigners();
       const alice = signers[0];
@@ -777,39 +775,37 @@ describe("Overloaded `deposit`", async () => {
         aliceAssetAft.eq(aliceAssetBefore.sub(assets)),
         `wrong alice assets ${aliceAssetAft} ${aliceAssetBefore.sub(assets)}`
       );
-    })
-    it("MUST revert if the vault can't take enough assets from the depositor", async function () {
-      const signers = await ethers.getSigners();
-      const alice = signers[1];
-
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-      const shareRatio = await priceOracle.price();
-
-      const totalTokenSupply = await asset.totalSupply();
-      const assets = totalTokenSupply.div(2);
-      // give alice reserve to cover cost
-      await asset.transfer(alice.address, assets);
-
-      //alice has assets of totalsuply/2
-      await asset
-        .connect(alice)
-        .increaseAllowance(vault.address, assets.add(1));
-
-      //try to deposit more assets than alice owns
-      await assertError(
-        async () =>
-          await vault
-            .connect(alice)
-            ["deposit(uint256,address,uint256,bytes)"](
-              assets.add(1),
-              alice.address,
-              shareRatio,
-              []
-            ),
-        "ERC20: transfer amount exceeds balance",
-        "failed to revert"
-      );
     });
+  it("MUST revert if the vault can't take enough assets from the depositor", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[1];
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const shareRatio = await priceOracle.price();
+
+    const totalTokenSupply = await asset.totalSupply();
+    const assets = totalTokenSupply.div(2);
+    // give alice reserve to cover cost
+    await asset.transfer(alice.address, assets);
+
+    //alice has assets of totalsuply/2
+    await asset.connect(alice).increaseAllowance(vault.address, assets.add(1));
+
+    //try to deposit more assets than alice owns
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["deposit(uint256,address,uint256,bytes)"](
+            assets.add(1),
+            alice.address,
+            shareRatio,
+            []
+          ),
+      "ERC20: transfer amount exceeds balance",
+      "failed to revert"
+    );
+  });
   it("MUST NOT successfully deposit if the vault is not approved for the depositor's assets", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
