@@ -31,7 +31,7 @@ describe("erc1155 usage", async function () {
 
     const [vault, erc20Token, priceOracle] =
       await deployERC20PriceOracleVault();
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
     const alice = signers[0];
     const gildAmount = ethers.BigNumber.from(1000);
 
@@ -43,11 +43,11 @@ describe("erc1155 usage", async function () {
       ["deposit(uint256,address,uint256,bytes)"](
         gildAmount,
         alice.address,
-        price,
+        shareRatio,
         []
       );
 
-    const expectedErc20Balance = fixedPointMul(gildAmount, price);
+    const expectedErc20Balance = fixedPointMul(gildAmount, shareRatio);
     const expectedErc20BalanceAfter = expectedErc20Balance;
     const expectedErc1155Balance = expectedErc20Balance;
     const expectedErc1155BalanceAfter = expectedErc1155Balance.div(2);

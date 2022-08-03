@@ -14,11 +14,11 @@ describe("events", async function () {
 
     const alice = signers[0];
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     const ethAmount = 5000;
 
-    const id1155 = price;
+    const id1155 = shareRatio;
     await erc20Token
       .connect(alice)
       .increaseAllowance(ethGild.address, ethAmount);
@@ -74,12 +74,12 @@ describe("events", async function () {
       ungildERC1155Amount,
       alice.address,
       alice.address,
-      price
+      shareRatio
     );
 
     const ungildEventArgs = await getEventArgs(ungildTx, "Withdraw", ethGild);
     // Ungild ETH is always rounded down.
-    const ungildAmount = ungildERC1155Amount.mul(priceOne).div(price);
+    const ungildAmount = ungildERC1155Amount.mul(priceOne).div(shareRatio);
     assert(
       ungildEventArgs.assets.eq(ungildAmount),
       `wrong ungild amount. expected ${ungildAmount} actual ${ungildEventArgs.assets}`
