@@ -170,26 +170,40 @@ describe("OffChainAssetVault", async function () {
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
-  // it("Checks totalAssets", async function () {
-  // const [vault] = await deployOffChainAssetVault();
-  // const signers = await ethers.getSigners()
-  // const alice = signers[0]
-  //
-  // //get block timestamp and subtract one to get _until
-  // const blockNum = await ethers.provider.getBlockNumber();
-  // const block = await ethers.provider.getBlock(blockNum);
-  // const until = block.timestamp + 100
-  //
-  //
-  // await vault.grantRole(await vault.CERTIFIER(), alice.address);
-  // await vault.certify(until, [], false)
-  // await vault.transfer(alice.address, ethers.BigNumber.from(100));
-  //
-  //
-  // console.log(await vault.totalAssets())
-  // console.log(await vault.totalSupply())
-  // assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
-  // });
+  it("Checks totalAssets", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetVault();
+
+    const [receiptVault, asset, priceOracle] =
+      await deployERC20PriceOracleVault();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const shareRatio = await priceOracle.price();
+    const aliceAssets = ethers.BigNumber.from(1000);
+
+    await asset.transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+
+    await vault["deposit(uint256,address,uint256,bytes)"](
+      aliceAssets,
+      bob.address,
+      shareRatio,
+      []
+    );
+
+    const totalSupply = await vault.totalSupply();
+    const totalAssets = await vault.totalAssets();
+
+    assert(
+      totalSupply.eq(totalAssets),
+      `Wrong total assets. Expected ${totalSupply} got ${totalAssets}`
+    );
+  });
   it("PreviewDeposit sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(100);
@@ -274,7 +288,7 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
 
     //assets are always deposited 1:1 with shares
-    const id = ONE
+    const id = ONE;
 
     //grant withdrawer role to alice
     await vault.grantRole(await vault.WITHDRAWER(), alice.address);
