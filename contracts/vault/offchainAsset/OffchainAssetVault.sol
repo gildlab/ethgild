@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.15;
 
-import {ConstructionConfig as ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {InitializationConfig as ReceiptVaultInitializationConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
 
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 
@@ -60,9 +60,9 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// Contract has constructed.
     /// @param caller The `msg.sender` constructing the contract.
     /// @param config All construction config.
-    event OffchainAssetVaultConstruction(
+    event OffchainAssetVaultInitialization(
         address caller,
-        ConstructionConfig config
+        InitializationConfig config
     );
 
     /// A new certification time has been set.
@@ -164,8 +164,10 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    constructor(ConstructionConfig memory config_)
+    function initialize(InitializationConfig memory config_)
+        Initializer
         ReceiptVault(config_.receiptVaultConfig)
+        internal
     {
         // There is no asset, the asset is offchain.
         require(
