@@ -1,5 +1,6 @@
 {
   "description": "EthGild",
+  "version": "0.0.1",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
