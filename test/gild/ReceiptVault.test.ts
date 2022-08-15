@@ -323,32 +323,30 @@ describe("Deposit", async () => {
         "failed to respect min price"
       );
     });
-    it("Receiver MAY be different user to depositor", async function () {
-      const signers = await ethers.getSigners();
-      const alice = signers[0];
-      const bob = signers[1];
+  it("Receiver MAY be different user to depositor", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
 
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-      const shareRatio = await priceOracle.price();
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const shareRatio = await priceOracle.price();
 
-      const totalTokenSupply = await asset.totalSupply();
-      const assets = totalTokenSupply.div(2);
-      // give alice reserve to cover cost
-      await asset.transfer(alice.address, assets);
+    const totalTokenSupply = await asset.totalSupply();
+    const assets = totalTokenSupply.div(2);
+    // give alice reserve to cover cost
+    await asset.transfer(alice.address, assets);
 
-      await asset.connect(alice).increaseAllowance(vault.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-      await vault
-        .connect(alice)
-        ["deposit(uint256,address)"](assets, bob.address);
-      const shares = await vault["balanceOf(address)"](bob.address);
-      const expectedShares = fixedPointMul(assets, shareRatio);
+    await vault.connect(alice)["deposit(uint256,address)"](assets, bob.address);
+    const shares = await vault["balanceOf(address)"](bob.address);
+    const expectedShares = fixedPointMul(assets, shareRatio);
 
-      assert(
-        shares.eq(expectedShares),
-        `wrong alice ETHg ${expectedShares} ${shares}`
-      );
-    });
+    assert(
+      shares.eq(expectedShares),
+      `wrong alice ETHg ${expectedShares} ${shares}`
+    );
+  });
   it("Receiver receives BOTH erc20 and erc1155, depositor gets nothing but MUST transfer assets", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -664,37 +662,37 @@ describe("Overloaded `deposit`", async () => {
         "failed to deposit"
       );
     });
-    it("Receiver MAY be different user to depositor", async function () {
-      const signers = await ethers.getSigners();
-      const alice = signers[0];
-      const bob = signers[1];
+  it("Receiver MAY be different user to depositor", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
 
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-      const shareRatio = await priceOracle.price();
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const shareRatio = await priceOracle.price();
 
-      const totalTokenSupply = await asset.totalSupply();
-      const assets = totalTokenSupply.div(2);
-      // give alice reserve to cover cost
-      await asset.transfer(alice.address, assets);
+    const totalTokenSupply = await asset.totalSupply();
+    const assets = totalTokenSupply.div(2);
+    // give alice reserve to cover cost
+    await asset.transfer(alice.address, assets);
 
-      await asset.connect(alice).increaseAllowance(vault.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
 
-      await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
-          assets,
-          bob.address,
-          shareRatio,
-          []
-        );
-      const shares = await vault["balanceOf(address)"](bob.address);
-      const expectedShares = fixedPointMul(assets, shareRatio);
-
-      assert(
-        shares.eq(expectedShares),
-        `wrong alice shares ${expectedShares} ${shares}`
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+        assets,
+        bob.address,
+        shareRatio,
+        []
       );
-    });
+    const shares = await vault["balanceOf(address)"](bob.address);
+    const expectedShares = fixedPointMul(assets, shareRatio);
+
+    assert(
+      shares.eq(expectedShares),
+      `wrong alice shares ${expectedShares} ${shares}`
+    );
+  });
   it("Receiver receives BOTH erc20 and erc1155, depositor gets nothing but MUST transfer assets", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
