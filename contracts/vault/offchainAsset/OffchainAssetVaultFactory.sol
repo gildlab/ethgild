@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import {OffchainAssetVault, ConstructionConfig} from "./OffchainAssetVault.sol";
+import {OffchainAssetVault, ConstructionConfig} from "OffchainAssetVault.sol";
 
 /// @title OffchainAssetVaultFactory
 /// @notice Factory for creating and deploying `OffchainAssetVault`.

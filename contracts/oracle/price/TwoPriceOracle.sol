@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.10;
 
-import "./IPriceOracle.sol";
+import "IPriceOracle.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 
 /// All config required for construction.

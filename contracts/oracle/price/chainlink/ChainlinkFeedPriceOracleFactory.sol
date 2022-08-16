@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import "./ChainlinkFeedPriceOracle.sol";
+import "ChainlinkFeedPriceOracle.sol";
 
 /// @title ChainlinkFeedPriceOracleFactory
 /// @notice Factory for creating and deploying `ChainlinkFeedPriceOracle`.

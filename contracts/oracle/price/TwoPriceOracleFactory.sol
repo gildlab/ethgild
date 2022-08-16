@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import "./TwoPriceOracle.sol";
+import "TwoPriceOracle.sol";
 
 /// @title TwoPriceOracleFactory
 /// @notice Factory for creating and deploying `TwoPriceOracle`.

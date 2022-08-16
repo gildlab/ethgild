@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import {ERC20PriceOracleVault, ConstructionConfig} from "./ERC20PriceOracleVault.sol";
+import {ERC20PriceOracleVault, ConstructionConfig} from "ERC20PriceOracleVault.sol";
 
 /// @title ERC20PriceOracleVaultFactory
 /// @notice Factory for creating and deploying `ERC20PriceOracleVault`.
