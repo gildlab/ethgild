@@ -8,7 +8,7 @@ import {OffchainAssetVault, ConstructionConfig} from "./OffchainAssetVault.sol";
 /// @notice Factory for creating and deploying `OffchainAssetVault`.
 contract OffchainAssetVaultFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(bytes calldata data_)
+    function _createChild(bytes memory data_)
         internal
         virtual
         override
@@ -29,10 +29,10 @@ contract OffchainAssetVaultFactory is Factory {
     ///
     /// @param config_ Construction config for the vault.
     /// @return New `OffchainAssetVault` child contract address.
-    function createChildTyped(ConstructionConfig calldata config_)
+    function createChildTyped(ConstructionConfig memory config_)
         external
         returns (OffchainAssetVault)
     {
-        return OffchainAssetVault(this.createChild(abi.encode(config_)));
+        return OffchainAssetVault(createChild(abi.encode(config_)));
     }
 }
