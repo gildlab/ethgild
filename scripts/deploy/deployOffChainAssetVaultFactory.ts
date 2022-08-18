@@ -32,7 +32,7 @@ async function deployOffChainAssetVaultFactory (
   await offchainAssetVaultFactory.deployed();
 
   console.log(
-    "offchainAssetVault deployed to:",
+    "OffchainAssetVaultFactory deployed to:",
       offchainAssetVaultFactory.address
   );
 
