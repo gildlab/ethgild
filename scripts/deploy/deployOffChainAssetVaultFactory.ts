@@ -4,23 +4,17 @@ import { ethers } from "hardhat";
 import { OffchainAssetVaultFactory } from "../../typechain";
 
 async function main() {
-
-  await deployOffChainAssetVaultFactory(
-      "Mumbai",
-  );
+  await deployOffChainAssetVaultFactory("Mumbai");
 }
 
 main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 
-
-async function deployOffChainAssetVaultFactory (
-  network: string,
-) {
+async function deployOffChainAssetVaultFactory(network: string) {
   console.log(network);
 
   const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
@@ -33,7 +27,6 @@ async function deployOffChainAssetVaultFactory (
 
   console.log(
     "OffchainAssetVaultFactory deployed to:",
-      offchainAssetVaultFactory.address
+    offchainAssetVaultFactory.address
   );
-
 }
