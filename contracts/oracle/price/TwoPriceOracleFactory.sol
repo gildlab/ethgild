@@ -8,7 +8,7 @@ import "./TwoPriceOracle.sol";
 /// @notice Factory for creating and deploying `TwoPriceOracle`.
 contract TwoPriceOracleFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(bytes calldata data_)
+    function _createChild(bytes memory data_)
         internal
         virtual
         override
@@ -33,6 +33,6 @@ contract TwoPriceOracleFactory is Factory {
         external
         returns (TwoPriceOracle)
     {
-        return TwoPriceOracle(this.createChild(abi.encode(config_)));
+        return TwoPriceOracle(createChild(abi.encode(config_)));
     }
 }
