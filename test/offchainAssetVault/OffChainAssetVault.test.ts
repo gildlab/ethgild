@@ -1,7 +1,7 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { ReadWriteTier } from "../../typechain";
+import { OffchainAssetVaultFactory, ReadWriteTier } from "../../typechain";
 import {
   getEventArgs,
   expectedName,
@@ -745,6 +745,31 @@ describe("OffChainAssetVault", async function () {
     assert(
       aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
       `Shares has not been confiscated`
+    );
+  });
+  it("should deploy offchainAssetVault using factory", async () => {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
+      "OffchainAssetVaultFactory"
+    );
+
+    const offchainAssetVaultFactory =
+      (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
+    await offchainAssetVaultFactory.deployed();
+
+    const constructionConfig = {
+      admin: alice.address,
+      receiptVaultConfig: {
+        asset: ADDRESS_ZERO,
+        name: "EthGild",
+        symbol: "ETHg",
+        uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
+      },
+    };
+    const offchainAssetVault = await offchainAssetVaultFactory.createChildTyped(
+      constructionConfig
     );
   });
 });
