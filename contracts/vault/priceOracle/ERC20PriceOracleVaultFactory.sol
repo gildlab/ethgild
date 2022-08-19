@@ -8,7 +8,7 @@ import {ERC20PriceOracleVault, ConstructionConfig} from "./ERC20PriceOracleVault
 /// @notice Factory for creating and deploying `ERC20PriceOracleVault`.
 contract ERC20PriceOracleVaultFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(bytes calldata data_)
+    function _createChild(bytes memory data_)
         internal
         virtual
         override
@@ -31,10 +31,10 @@ contract ERC20PriceOracleVaultFactory is Factory {
     ///
     /// @param config_ construction config for the `ERC20PriceOracleVault`.
     /// @return New `ERC20PriceOracleVault` child contract address.
-    function createChildTyped(ConstructionConfig calldata config_)
+    function createChildTyped(ConstructionConfig memory config_)
         external
         returns (ERC20PriceOracleVault)
     {
-        return ERC20PriceOracleVault(this.createChild(abi.encode(config_)));
+        return ERC20PriceOracleVault(createChild(abi.encode(config_)));
     }
 }
