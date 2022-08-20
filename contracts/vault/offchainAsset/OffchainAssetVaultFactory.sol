@@ -19,7 +19,9 @@ contract OffchainAssetVaultFactory is Factory {
         // and ERC1155Upgradeable at the same time.
         return
             address(
-                new OffchainAssetVault(abi.decode(data_, (OffchainAssetVaultConstructionConfig)))
+                new OffchainAssetVault(
+                    abi.decode(data_, (OffchainAssetVaultConstructionConfig))
+                )
             );
     }
 
@@ -29,10 +31,9 @@ contract OffchainAssetVaultFactory is Factory {
     ///
     /// @param config_ Construction config for the vault.
     /// @return New `OffchainAssetVault` child contract address.
-    function createChildTyped(OffchainAssetVaultConstructionConfig memory config_)
-        external
-        returns (OffchainAssetVault)
-    {
+    function createChildTyped(
+        OffchainAssetVaultConstructionConfig memory config_
+    ) external returns (OffchainAssetVault) {
         return OffchainAssetVault(createChild(abi.encode(config_)));
     }
 }

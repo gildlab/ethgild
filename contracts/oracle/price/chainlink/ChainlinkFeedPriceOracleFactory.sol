@@ -20,7 +20,10 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
         return
             address(
                 new ChainlinkFeedPriceOracle(
-                    abi.decode(data_, (ChainlinkFeedPriceOracleConstructionConfig))
+                    abi.decode(
+                        data_,
+                        (ChainlinkFeedPriceOracleConstructionConfig)
+                    )
                 )
             );
     }
@@ -31,10 +34,9 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
     ///
     /// @param config_ construction configuration for the oracle.
     /// @return New `ChainlinkFeedPriceOracle` child contract address.
-    function createChildTyped(ChainlinkFeedPriceOracleConstructionConfig memory config_)
-        external
-        returns (ChainlinkFeedPriceOracle)
-    {
+    function createChildTyped(
+        ChainlinkFeedPriceOracleConstructionConfig memory config_
+    ) external returns (ChainlinkFeedPriceOracle) {
         return ChainlinkFeedPriceOracle(createChild(abi.encode(config_)));
     }
 }

@@ -19,7 +19,9 @@ contract TwoPriceOracleFactory is Factory {
         // deployments.
         return
             address(
-                new TwoPriceOracle(abi.decode(data_, (TwoPriceOracleConstructionConfig)))
+                new TwoPriceOracle(
+                    abi.decode(data_, (TwoPriceOracleConstructionConfig))
+                )
             );
     }
 

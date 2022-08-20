@@ -52,7 +52,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
-  const basePriceOracle = await oracleFactory.deploy() as TestChainlinkDataFeed;
+  const basePriceOracle =
+    (await oracleFactory.deploy()) as TestChainlinkDataFeed;
   await basePriceOracle.deployed();
   // ETHUSD as of 2022-06-30
 
@@ -64,7 +65,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
     answeredInRound: 1,
   });
 
-  const quotePriceOracle = await oracleFactory.deploy() as TestChainlinkDataFeed;
+  const quotePriceOracle =
+    (await oracleFactory.deploy()) as TestChainlinkDataFeed;
   await quotePriceOracle.deployed();
   // XAUUSD as of 2022-06-30
   await quotePriceOracle.setDecimals(xauDecimals);
@@ -81,7 +83,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const quoteStaleAfter = 48 * 60 * 60;
 
   const testErc20 = await ethers.getContractFactory("TestErc20");
-  const testErc20Contract = await testErc20.deploy() as TestErc20;
+  const testErc20Contract = (await testErc20.deploy()) as TestErc20;
   await testErc20Contract.deployed();
 
   const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
@@ -103,10 +105,10 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const twoPriceOracleFactory = await ethers.getContractFactory(
     "TwoPriceOracle"
   );
-  const twoPriceOracle = await twoPriceOracleFactory.deploy({
+  const twoPriceOracle = (await twoPriceOracleFactory.deploy({
     base: chainlinkFeedPriceOracleBase.address,
     quote: chainlinkFeedPriceOracleQuote.address,
-  }) as TwoPriceOracle;
+  })) as TwoPriceOracle;
 
   const constructionConfig = {
     asset: testErc20Contract.address,

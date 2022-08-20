@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.10;
 
-import { ReceiptVaultConstructionConfig, ReceiptVault, ERC1155 } from "../ReceiptVault.sol";
+import {ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";

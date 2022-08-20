@@ -31,10 +31,9 @@ contract ERC20PriceOracleVaultFactory is Factory {
     ///
     /// @param config_ construction config for the `ERC20PriceOracleVault`.
     /// @return New `ERC20PriceOracleVault` child contract address.
-    function createChildTyped(ERC20PriceOracleVaultConstructionConfig memory config_)
-        external
-        returns (ERC20PriceOracleVault)
-    {
+    function createChildTyped(
+        ERC20PriceOracleVaultConstructionConfig memory config_
+    ) external returns (ERC20PriceOracleVault) {
         return ERC20PriceOracleVault(createChild(abi.encode(config_)));
     }
 }

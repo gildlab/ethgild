@@ -30,7 +30,10 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
     /// Emitted upon deployment and construction of oracle
     /// @param sender `msg.sender` that deploys the oracle.
     /// @param config All config used to construct the contract.
-    event Construction(address sender, ChainlinkFeedPriceOracleConstructionConfig config);
+    event Construction(
+        address sender,
+        ChainlinkFeedPriceOracleConstructionConfig config
+    );
 
     /// Immutable copy of `ConstructionConfig.feed`.
     AggregatorV3Interface public immutable feed;
