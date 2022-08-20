@@ -7,7 +7,7 @@ import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 /// All config required for construction.
 /// @param base The base price of the merged pair, will be the numerator.
 /// @param quote The quote price of the merged pair, will be the denominator.
-struct ConstructionConfig {
+struct TwoPriceOracleConstructionConfig {
     address base;
     address quote;
 }
@@ -22,7 +22,7 @@ contract TwoPriceOracle is IPriceOracle {
     using FixedPointMath for uint256;
 
     /// Emitted upon deployment and construction.
-    event Construction(address sender, ConstructionConfig config);
+    event Construction(address sender, TwoPriceOracleConstructionConfig config);
 
     /// As per `ConstructionConfig.base`.
     IPriceOracle public immutable base;
@@ -31,7 +31,7 @@ contract TwoPriceOracle is IPriceOracle {
 
     /// Constructor.
     /// @param config_ All configr required to construct.
-    constructor(ConstructionConfig memory config_) {
+    constructor(TwoPriceOracleConstructionConfig memory config_) {
         base = IPriceOracle(config_.base);
         quote = IPriceOracle(config_.quote);
         emit Construction(msg.sender, config_);
