@@ -34,7 +34,7 @@ let TierV2TestContract: ReadWriteTier;
 describe("OffChainAssetVault", async function () {
   beforeEach(async () => {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    TierV2TestContract = await TierV2Test.deploy();
+    TierV2TestContract = await TierV2Test.deploy() as ReadWriteTier;
     await TierV2TestContract.deployed();
   });
 

@@ -11,7 +11,7 @@ import "../IPriceOracle.sol";
 /// @param feed The address of the underlying chainlink oracle.
 /// @param staleAfter The duration after which price data will be considered
 /// too stale for use and error.
-struct ConstructionConfig {
+struct ChainlinkFeedPriceOracleConstructionConfig {
     address feed;
     uint256 staleAfter;
 }
@@ -30,7 +30,7 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
     /// Emitted upon deployment and construction of oracle
     /// @param sender `msg.sender` that deploys the oracle.
     /// @param config All config used to construct the contract.
-    event Construction(address sender, ConstructionConfig config);
+    event Construction(address sender, ChainlinkFeedPriceOracleConstructionConfig config);
 
     /// Immutable copy of `ConstructionConfig.feed`.
     AggregatorV3Interface public immutable feed;
@@ -40,7 +40,7 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
 
     /// Constructor.
     /// @param config_ All config required to construct the contract.
-    constructor(ConstructionConfig memory config_) {
+    constructor(ChainlinkFeedPriceOracleConstructionConfig memory config_) {
         feed = AggregatorV3Interface(config_.feed);
         staleAfter = config_.staleAfter;
         emit Construction(msg.sender, config_);

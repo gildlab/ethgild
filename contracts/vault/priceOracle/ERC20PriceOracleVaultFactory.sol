@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import {ERC20PriceOracleVault, ConstructionConfig} from "./ERC20PriceOracleVault.sol";
+import {ERC20PriceOracleVault, ERC20PriceOracleVaultConstructionConfig} from "./ERC20PriceOracleVault.sol";
 
 /// @title ERC20PriceOracleVaultFactory
 /// @notice Factory for creating and deploying `ERC20PriceOracleVault`.
@@ -20,7 +20,7 @@ contract ERC20PriceOracleVaultFactory is Factory {
         return
             address(
                 new ERC20PriceOracleVault(
-                    abi.decode(data_, (ConstructionConfig))
+                    abi.decode(data_, (ERC20PriceOracleVaultConstructionConfig))
                 )
             );
     }
@@ -31,7 +31,7 @@ contract ERC20PriceOracleVaultFactory is Factory {
     ///
     /// @param config_ construction config for the `ERC20PriceOracleVault`.
     /// @return New `ERC20PriceOracleVault` child contract address.
-    function createChildTyped(ConstructionConfig memory config_)
+    function createChildTyped(ERC20PriceOracleVaultConstructionConfig memory config_)
         external
         returns (ERC20PriceOracleVault)
     {

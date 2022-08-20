@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
-struct ConstructionConfig {
+struct ReceiptVaultConstructionConfig {
     address asset;
     string name;
     string symbol;
@@ -62,7 +62,7 @@ contract ReceiptVault is
     /// Emitted when deployed and constructed.
     /// @param caller `msg.sender` that deployed the contract.
     /// @param config All construction config.
-    event Construction(address caller, ConstructionConfig config);
+    event Construction(address caller, ReceiptVaultConstructionConfig config);
 
     /// Emitted when new information is provided for a receipt.
     /// @param caller `msg.sender` emitting the information for the receipt.
@@ -85,7 +85,7 @@ contract ReceiptVault is
     /// the non-standard equivalent functions that take a ID parameter.
     mapping(address => uint256) public withdrawIds;
 
-    constructor(ConstructionConfig memory config_)
+    constructor(ReceiptVaultConstructionConfig memory config_)
         ERC20(config_.name, config_.symbol)
         ERC1155(config_.uri)
     {

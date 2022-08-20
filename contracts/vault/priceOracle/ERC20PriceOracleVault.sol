@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ConstructionConfig as ReceiptVaultConstructionConfig, ReceiptVault} from "../ReceiptVault.sol";
+import {ReceiptVaultConstructionConfig, ReceiptVault} from "../ReceiptVault.sol";
 import "../../oracle/price/IPriceOracle.sol";
 
 /// All config required to construct `ERC20PriceOracleVault`.
@@ -11,7 +11,7 @@ import "../../oracle/price/IPriceOracle.sol";
 /// @param symbol `ERC20` symbol for `ERC4626` shares.
 /// @param uri `ERC1155` uri for deposit receipts.
 /// @param address `IPriceOracle` oracle to define share mints upon deposit.
-struct ConstructionConfig {
+struct ERC20PriceOracleVaultConstructionConfig {
     address priceOracle;
     ReceiptVaultConstructionConfig receiptVaultConfig;
 }
@@ -124,7 +124,7 @@ contract ERC20PriceOracleVault is ReceiptVault {
     /// @param config All construction config.
     event ERC20PriceOracleVaultConstruction(
         address caller,
-        ConstructionConfig config
+        ERC20PriceOracleVaultConstructionConfig config
     );
 
     /// The price oracle used for all minting calculations.
@@ -132,7 +132,7 @@ contract ERC20PriceOracleVault is ReceiptVault {
 
     /// Constructor.
     /// @param config_ All necessary config for deployment.
-    constructor(ConstructionConfig memory config_)
+    constructor(ERC20PriceOracleVaultConstructionConfig memory config_)
         ReceiptVault(config_.receiptVaultConfig)
     {
         priceOracle = IPriceOracle(config_.priceOracle);

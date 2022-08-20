@@ -19,7 +19,7 @@ contract TwoPriceOracleFactory is Factory {
         // deployments.
         return
             address(
-                new TwoPriceOracle(abi.decode(data_, (ConstructionConfig)))
+                new TwoPriceOracle(abi.decode(data_, (TwoPriceOracleConstructionConfig)))
             );
     }
 
@@ -29,7 +29,7 @@ contract TwoPriceOracleFactory is Factory {
     ///
     /// @param config_ Construction config for the oracle.
     /// @return New `ChainlinkFeedPriceOracle` child contract address.
-    function createChildTyped(ConstructionConfig memory config_)
+    function createChildTyped(TwoPriceOracleConstructionConfig memory config_)
         external
         returns (TwoPriceOracle)
     {

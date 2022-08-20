@@ -2,7 +2,7 @@
 pragma solidity =0.8.10;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import {OffchainAssetVault, ConstructionConfig} from "./OffchainAssetVault.sol";
+import {OffchainAssetVault, OffchainAssetVaultConstructionConfig} from "./OffchainAssetVault.sol";
 
 /// @title OffchainAssetVaultFactory
 /// @notice Factory for creating and deploying `OffchainAssetVault`.
@@ -19,7 +19,7 @@ contract OffchainAssetVaultFactory is Factory {
         // and ERC1155Upgradeable at the same time.
         return
             address(
-                new OffchainAssetVault(abi.decode(data_, (ConstructionConfig)))
+                new OffchainAssetVault(abi.decode(data_, (OffchainAssetVaultConstructionConfig)))
             );
     }
 
@@ -29,7 +29,7 @@ contract OffchainAssetVaultFactory is Factory {
     ///
     /// @param config_ Construction config for the vault.
     /// @return New `OffchainAssetVault` child contract address.
-    function createChildTyped(ConstructionConfig memory config_)
+    function createChildTyped(OffchainAssetVaultConstructionConfig memory config_)
         external
         returns (OffchainAssetVault)
     {

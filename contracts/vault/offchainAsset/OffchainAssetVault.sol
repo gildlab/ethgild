@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.10;
 
-import {ConstructionConfig as ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
+import { ReceiptVaultConstructionConfig, ReceiptVault, ERC1155 } from "../ReceiptVault.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
@@ -13,7 +13,7 @@ import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and many other things).
 /// @param receiptConstructionConfig Forwarded to construction ReceiptVault.
-struct ConstructionConfig {
+struct OffchainAssetVaultConstructionConfig {
     address admin;
     ReceiptVaultConstructionConfig receiptVaultConfig;
 }
@@ -62,7 +62,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     /// @param config All construction config.
     event OffchainAssetVaultConstruction(
         address caller,
-        ConstructionConfig config
+        OffchainAssetVaultConstructionConfig config
     );
 
     /// A new certification time has been set.
@@ -164,7 +164,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    constructor(ConstructionConfig memory config_)
+    constructor(OffchainAssetVaultConstructionConfig memory config_)
         ReceiptVault(config_.receiptVaultConfig)
     {
         // There is no asset, the asset is offchain.
