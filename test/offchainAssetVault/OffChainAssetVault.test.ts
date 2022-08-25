@@ -1,7 +1,11 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
-import { OffchainAssetVaultFactory, ReadWriteTier } from "../../typechain";
+import { artifacts, ethers } from "hardhat";
+import {
+  OffchainAssetVault,
+  OffchainAssetVaultFactory,
+  ReadWriteTier
+} from "../../typechain";
 import {
   getEventArgs,
   expectedName,
@@ -747,9 +751,9 @@ describe("OffChainAssetVault", async function () {
       `Shares has not been confiscated`
     );
   });
-  it("should deploy offchainAssetVault using factory", async () => {
+  it.only("should deploy offchainAssetVault using factory", async () => {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
+    const alice = signers[2];
 
     const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
       "OffchainAssetVaultFactory"
@@ -760,16 +764,38 @@ describe("OffChainAssetVault", async function () {
     await offchainAssetVaultFactory.deployed();
 
     const constructionConfig = {
-      admin: alice.address,
+      admin: "0xc0d477556c25c9d67e1f57245c7453da776b51cf",
       receiptVaultConfig: {
         asset: ADDRESS_ZERO,
-        name: "EthGild",
-        symbol: "ETHg",
-        uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
+        name: "OPUS",
+        symbol: "OPS",
+        uri: "https://www.astro.com/h/index_e.htm",
       },
     };
     const offchainAssetVault = await offchainAssetVaultFactory.createChildTyped(
       constructionConfig
     );
+
+    const vault = new ethers.Contract(
+      ethers.utils.hexZeroPad(
+        ethers.utils.hexStripZeros(
+          (
+            await getEventArgs(
+              offchainAssetVault,
+              "NewChild",
+              offchainAssetVaultFactory
+            )
+          ).child
+        ),
+        20
+      ),
+      (await artifacts.readArtifact("OffchainAssetVault")).abi,
+      alice
+    ) as OffchainAssetVault;
+    try {
+      await vault.deployed();
+    } catch (err) {
+      console.log(err);
+    }
   });
 });
