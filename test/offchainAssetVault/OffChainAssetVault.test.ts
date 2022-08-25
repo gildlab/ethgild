@@ -751,7 +751,8 @@ describe("OffChainAssetVault", async function () {
       `Shares has not been confiscated`
     );
   });
-  it.only("should deploy offchainAssetVault using factory", async () => {
+  it.only("should deploy offchainAssetVault using factory", async function() {
+    this.timeout(0)
     const signers = await ethers.getSigners();
     const alice = signers[2];
 
@@ -759,9 +760,11 @@ describe("OffChainAssetVault", async function () {
       "OffchainAssetVaultFactory"
     );
 
+    console.log('deploying factory')
     const offchainAssetVaultFactory =
       (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
     await offchainAssetVaultFactory.deployed();
+    console.log('factory deployed')
 
     const constructionConfig = {
       admin: "0xc0d477556c25c9d67e1f57245c7453da776b51cf",
@@ -772,16 +775,18 @@ describe("OffChainAssetVault", async function () {
         uri: "https://www.astro.com/h/index_e.htm",
       },
     };
-    const offchainAssetVault = await offchainAssetVaultFactory.createChildTyped(
+    console.log('deploying child')
+    const offchainAssetVaultTx = await offchainAssetVaultFactory.createChildTyped(
       constructionConfig
     );
+    console.log('child deployed')
 
     const vault = new ethers.Contract(
       ethers.utils.hexZeroPad(
         ethers.utils.hexStripZeros(
           (
             await getEventArgs(
-              offchainAssetVault,
+              offchainAssetVaultTx,
               "NewChild",
               offchainAssetVaultFactory
             )
@@ -793,7 +798,8 @@ describe("OffChainAssetVault", async function () {
       alice
     ) as OffchainAssetVault;
     try {
-      await vault.deployed();
+      console.log('child address', vault.address)
+      assert((await vault.totalSupply()).eq(0))
     } catch (err) {
       console.log(err);
     }

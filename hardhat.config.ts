@@ -26,7 +26,7 @@ export const config = {
       gasPrice: 53000000000,
     },
     mumbai: {
-      url: MUMBAI_URL || "",
+      url: MUMBAI_URL || "https://rpc-mumbai.maticvigil.com",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 53000000000,
     },
