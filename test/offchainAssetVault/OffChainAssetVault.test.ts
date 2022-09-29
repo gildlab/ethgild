@@ -779,7 +779,6 @@ describe("OffChainAssetVault", async function () {
     );
   });
   it.only("Should call multicall", async () => {
-    this.timeout(100000);
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
