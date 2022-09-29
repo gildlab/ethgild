@@ -1,7 +1,11 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { OffchainAssetVaultFactory, ReadWriteTier } from "../../typechain";
+import {
+  OffchainAssetVaultFactory,
+  ReadWriteTier,
+  TestErc20,
+} from "../../typechain";
 import {
   getEventArgs,
   expectedName,
@@ -14,6 +18,8 @@ import {
   fixedPointDiv,
   deployERC20PriceOracleVault,
 } from "../util";
+
+import { artifacts } from "hardhat";
 
 import {
   SetERC20TierEvent,
@@ -771,5 +777,62 @@ describe("OffChainAssetVault", async function () {
     const offchainAssetVault = await offchainAssetVaultFactory.createChildTyped(
       constructionConfig
     );
+  });
+  it.only("Should call multicall", async () => {
+    this.timeout(100000);
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault] = await deployOffChainAssetVault();
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
+    await testErc20Contract.deployed();
+
+    const aliceAssets = ethers.BigNumber.from(1000);
+    const shares = ethers.BigNumber.from(10);
+    const shares2 = ethers.BigNumber.from(20);
+
+    await testErc20Contract.transfer(alice.address, aliceAssets);
+
+    await testErc20Contract
+      .connect(alice)
+      .increaseAllowance(vault.address, aliceAssets);
+
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+
+    const tx1 = await vault
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, 1, []);
+    const tx2 = await vault
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares2, alice.address, 2, []);
+
+    // let receipts = [1, 2]
+    // let receiptBalances = []
+    // receipts.map(async receipt => {
+    //   let balance = await vault[ "balanceOf(address,uint256)" ](
+    //       alice.address,
+    //       receipt
+    //   )
+    //   console.log(balance);
+    //   receiptBalances.push(balance)
+    // })
+
+    //uint256
+    // let balance = await vault["balanceOf(address,uint256)"](
+    //     alice.address,
+    //     receipts[0]
+    // )
+    // let tx = await vault["redeem(uint256,address,address,uint256)"](
+    //     balance,
+    //     alice.address,
+    //     alice.address,
+    //     receipts[0]
+    // )
+    //
+
+    // let enc = ethers.utils.defaultAbiCoder.encode(['uint256'], [tx])
+
+    // console.log(enc)
   });
 });
