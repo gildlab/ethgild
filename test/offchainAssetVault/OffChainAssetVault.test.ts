@@ -782,15 +782,20 @@ describe("OffChainAssetVault", async function () {
     this.timeout(100000);
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const bob = signers[1];
 
     const [vault] = await deployOffChainAssetVault();
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const testErc20Contract = (await testErc20.deploy()) as TestErc20;
     await testErc20Contract.deployed();
 
-    const aliceAssets = ethers.BigNumber.from(100);
-    await testErc20Contract.transfer(alice.address, aliceAssets);
+    const assets = ethers.BigNumber.from(100);
+    await testErc20Contract.transfer(bob.address, assets);
+    await testErc20Contract
+        .connect(bob)
+        .increaseAllowance(vault.address, assets);
 
+    await vault.grantRole(await vault.DEPOSITOR(), bob.address);
 
   });
 });
