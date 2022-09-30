@@ -779,6 +779,7 @@ describe("OffChainAssetVault", async function () {
     );
   });
   it.only("Should call multicall", async () => {
+    this.timeout(0);
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -791,10 +792,31 @@ describe("OffChainAssetVault", async function () {
     const assets = ethers.BigNumber.from(100);
     await testErc20Contract.transfer(bob.address, assets);
     await testErc20Contract
-        .connect(bob)
-        .increaseAllowance(vault.address, assets);
+      .connect(bob)
+      .increaseAllowance(vault.address, assets);
 
     await vault.grantRole(await vault.DEPOSITOR(), bob.address);
 
+    const shares = ethers.BigNumber.from(10);
+    const shares2 = ethers.BigNumber.from(20);
+    const tx1 = await vault
+      .connect(bob)
+      ["mint(uint256,address,uint256,bytes)"](shares, bob.address, 1, []);
+    const tx2 = await vault
+      .connect(bob)
+      ["mint(uint256,address,uint256,bytes)"](shares2, bob.address, 2, []);
+
+    let ABI = [
+      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
+    ];
+
+    let iface = new ethers.utils.Interface(ABI);
+    let encoded = iface.encodeFunctionData("redeem", [
+      shares,
+      bob.address,
+      bob.address,
+      1,
+    ]);
+    console.log(encoded);
   });
 });
