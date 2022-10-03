@@ -789,7 +789,7 @@ describe("OffChainAssetVault", async function () {
     const testErc20Contract = (await testErc20.deploy()) as TestErc20;
     await testErc20Contract.deployed();
 
-    const assets = ethers.BigNumber.from(100);
+    const assets = ethers.BigNumber.from(30);
     await testErc20Contract.transfer(bob.address, assets);
     await testErc20Contract
       .connect(bob)
@@ -809,14 +809,37 @@ describe("OffChainAssetVault", async function () {
     let ABI = [
       "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
     ];
-
     let iface = new ethers.utils.Interface(ABI);
-    let encoded = iface.encodeFunctionData("redeem", [
-      shares,
-      bob.address,
-      bob.address,
-      1,
-    ]);
-    console.log(encoded);
+    await vault.grantRole(await vault.WITHDRAWER(), bob.address);
+
+    let tx = await vault.connect(bob).multicall([
+      iface.encodeFunctionData("redeem", [
+        ethers.BigNumber.from(10),
+        bob.address,
+        bob.address,
+        1
+      ]),
+      iface.encodeFunctionData("redeem", [
+        ethers.BigNumber.from(20),
+        bob.address,
+        bob.address,
+        2,
+      ])
+    ], { from: bob.address });
+
+    let balance1 = await vault["balanceOf(address,uint256)"](
+        bob.address,
+        1
+    );
+    let balance2 = await vault["balanceOf(address,uint256)"](
+        bob.address,
+        2
+    );
+
+    assert(
+        balance1.eq(ethers.BigNumber.from(0)) && balance2.eq(ethers.BigNumber.from(0)),
+        `Shares has not been redeemed`
+    );
+
   });
 });
