@@ -812,34 +812,33 @@ describe("OffChainAssetVault", async function () {
     let iface = new ethers.utils.Interface(ABI);
     await vault.grantRole(await vault.WITHDRAWER(), bob.address);
 
-    let tx = await vault.connect(bob).multicall([
-      iface.encodeFunctionData("redeem", [
-        ethers.BigNumber.from(10),
-        bob.address,
-        bob.address,
-        1
-      ]),
-      iface.encodeFunctionData("redeem", [
-        ethers.BigNumber.from(20),
-        bob.address,
-        bob.address,
-        2,
-      ])
-    ], { from: bob.address });
+    let tx = await vault
+      .connect(bob)
+      .multicall(
+        [
+          iface.encodeFunctionData("redeem", [
+            ethers.BigNumber.from(10),
+            bob.address,
+            bob.address,
+            1,
+          ]),
+          iface.encodeFunctionData("redeem", [
+            ethers.BigNumber.from(20),
+            bob.address,
+            bob.address,
+            2,
+          ]),
+        ],
+        { from: bob.address }
+      );
 
-    let balance1 = await vault["balanceOf(address,uint256)"](
-        bob.address,
-        1
-    );
-    let balance2 = await vault["balanceOf(address,uint256)"](
-        bob.address,
-        2
-    );
+    let balance1 = await vault["balanceOf(address,uint256)"](bob.address, 1);
+    let balance2 = await vault["balanceOf(address,uint256)"](bob.address, 2);
 
     assert(
-        balance1.eq(ethers.BigNumber.from(0)) && balance2.eq(ethers.BigNumber.from(0)),
-        `Shares has not been redeemed`
+      balance1.eq(ethers.BigNumber.from(0)) &&
+        balance2.eq(ethers.BigNumber.from(0)),
+      `Shares has not been redeemed`
     );
-
   });
 });
