@@ -1,7 +1,11 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { OffchainAssetVaultFactory, ReadWriteTier } from "../../typechain";
+import {
+  OffchainAssetVaultFactory,
+  ReadWriteTier,
+  TestErc20,
+} from "../../typechain";
 import {
   getEventArgs,
   expectedName,
@@ -14,6 +18,8 @@ import {
   fixedPointDiv,
   deployERC20PriceOracleVault,
 } from "../util";
+
+import { artifacts } from "hardhat";
 
 import {
   SetERC20TierEvent,
@@ -770,6 +776,69 @@ describe("OffChainAssetVault", async function () {
     };
     const offchainAssetVault = await offchainAssetVaultFactory.createChildTyped(
       constructionConfig
+    );
+  });
+  it.only("Should call multicall", async () => {
+    this.timeout(0);
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const [vault] = await deployOffChainAssetVault();
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
+    await testErc20Contract.deployed();
+
+    const assets = ethers.BigNumber.from(30);
+    await testErc20Contract.transfer(bob.address, assets);
+    await testErc20Contract
+      .connect(bob)
+      .increaseAllowance(vault.address, assets);
+
+    await vault.grantRole(await vault.DEPOSITOR(), bob.address);
+
+    const shares = ethers.BigNumber.from(10);
+    const shares2 = ethers.BigNumber.from(20);
+    const tx1 = await vault
+      .connect(bob)
+      ["mint(uint256,address,uint256,bytes)"](shares, bob.address, 1, []);
+    const tx2 = await vault
+      .connect(bob)
+      ["mint(uint256,address,uint256,bytes)"](shares2, bob.address, 2, []);
+
+    let ABI = [
+      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    await vault.grantRole(await vault.WITHDRAWER(), bob.address);
+
+    let tx = await vault
+      .connect(bob)
+      .multicall(
+        [
+          iface.encodeFunctionData("redeem", [
+            ethers.BigNumber.from(10),
+            bob.address,
+            bob.address,
+            1,
+          ]),
+          iface.encodeFunctionData("redeem", [
+            ethers.BigNumber.from(20),
+            bob.address,
+            bob.address,
+            2,
+          ]),
+        ],
+        { from: bob.address }
+      );
+
+    let balance1 = await vault["balanceOf(address,uint256)"](bob.address, 1);
+    let balance2 = await vault["balanceOf(address,uint256)"](bob.address, 2);
+
+    assert(
+      balance1.eq(ethers.BigNumber.from(0)) &&
+        balance2.eq(ethers.BigNumber.from(0)),
+      `Shares has not been redeemed`
     );
   });
 });
