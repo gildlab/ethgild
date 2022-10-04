@@ -4,7 +4,7 @@ import { artifacts, ethers } from "hardhat";
 import {
   OffchainAssetVault,
   OffchainAssetVaultFactory,
-  ReadWriteTier
+  ReadWriteTier,
 } from "../../typechain";
 import {
   getEventArgs,
@@ -751,8 +751,8 @@ describe("OffChainAssetVault", async function () {
       `Shares has not been confiscated`
     );
   });
-  it.only("should deploy offchainAssetVault using factory", async function() {
-    this.timeout(0)
+  it.only("should deploy offchainAssetVault using factory", async function () {
+    this.timeout(0);
     const signers = await ethers.getSigners();
     const alice = signers[2];
 
@@ -760,11 +760,11 @@ describe("OffChainAssetVault", async function () {
       "OffchainAssetVaultFactory"
     );
 
-    console.log('deploying factory')
+    console.log("deploying factory");
     const offchainAssetVaultFactory =
       (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
     await offchainAssetVaultFactory.deployed();
-    console.log('factory deployed')
+    console.log("factory deployed");
 
     const constructionConfig = {
       admin: "0xc0d477556c25c9d67e1f57245c7453da776b51cf",
@@ -775,11 +775,10 @@ describe("OffChainAssetVault", async function () {
         uri: "https://www.astro.com/h/index_e.htm",
       },
     };
-    console.log('deploying child')
-    const offchainAssetVaultTx = await offchainAssetVaultFactory.createChildTyped(
-      constructionConfig
-    );
-    console.log('child deployed')
+    console.log("deploying child");
+    const offchainAssetVaultTx =
+      await offchainAssetVaultFactory.createChildTyped(constructionConfig);
+    console.log("child deployed");
 
     const vault = new ethers.Contract(
       ethers.utils.hexZeroPad(
@@ -798,8 +797,8 @@ describe("OffChainAssetVault", async function () {
       alice
     ) as OffchainAssetVault;
     try {
-      console.log('child address', vault.address)
-      assert((await vault.totalSupply()).eq(0))
+      console.log("child address", vault.address);
+      assert((await vault.totalSupply()).eq(0));
     } catch (err) {
       console.log(err);
     }
