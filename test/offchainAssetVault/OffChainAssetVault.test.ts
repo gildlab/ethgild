@@ -1,11 +1,13 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
-import { artifacts, ethers } from "hardhat";
 import {
   OffchainAssetVault,
   OffchainAssetVaultFactory,
   ReadWriteTier,
+  TestErc20,
 } from "../../typechain";
+import { artifacts, ethers } from "hardhat";
+
 import {
   getEventArgs,
   expectedName,
@@ -751,34 +753,29 @@ describe("OffChainAssetVault", async function () {
       `Shares has not been confiscated`
     );
   });
-  it.only("should deploy offchainAssetVault using factory", async function () {
-    this.timeout(0);
+  it("should deploy offchainAssetVault using factory", async () => {
     const signers = await ethers.getSigners();
-    const alice = signers[2];
+    const alice = signers[0];
 
     const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
       "OffchainAssetVaultFactory"
     );
 
-    console.log("deploying factory");
     const offchainAssetVaultFactory =
       (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
     await offchainAssetVaultFactory.deployed();
-    console.log("factory deployed");
 
     const constructionConfig = {
-      admin: "0xc0d477556c25c9d67e1f57245c7453da776b51cf",
+      admin: alice.address,
       receiptVaultConfig: {
         asset: ADDRESS_ZERO,
-        name: "OPUS",
-        symbol: "OPS",
-        uri: "https://www.astro.com/h/index_e.htm",
+        name: "EthGild",
+        symbol: "ETHg",
+        uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
       },
     };
-    console.log("deploying child");
     const offchainAssetVaultTx =
       await offchainAssetVaultFactory.createChildTyped(constructionConfig);
-    console.log("child deployed");
 
     const vault = new ethers.Contract(
       ethers.utils.hexZeroPad(
@@ -802,5 +799,68 @@ describe("OffChainAssetVault", async function () {
     } catch (err) {
       console.log(err);
     }
+  });
+  it("Should call multicall", async () => {
+    this.timeout(0);
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const [vault] = await deployOffChainAssetVault();
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
+    await testErc20Contract.deployed();
+
+    const assets = ethers.BigNumber.from(30);
+    await testErc20Contract.transfer(bob.address, assets);
+    await testErc20Contract
+      .connect(bob)
+      .increaseAllowance(vault.address, assets);
+
+    await vault.grantRole(await vault.DEPOSITOR(), bob.address);
+
+    const shares = ethers.BigNumber.from(10);
+    const shares2 = ethers.BigNumber.from(20);
+    const tx1 = await vault
+      .connect(bob)
+      ["mint(uint256,address,uint256,bytes)"](shares, bob.address, 1, []);
+    const tx2 = await vault
+      .connect(bob)
+      ["mint(uint256,address,uint256,bytes)"](shares2, bob.address, 2, []);
+
+    let ABI = [
+      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
+    ];
+    let iface = new ethers.utils.Interface(ABI);
+    await vault.grantRole(await vault.WITHDRAWER(), bob.address);
+
+    let tx = await vault
+      .connect(bob)
+      .multicall(
+        [
+          iface.encodeFunctionData("redeem", [
+            ethers.BigNumber.from(10),
+            bob.address,
+            bob.address,
+            1,
+          ]),
+          iface.encodeFunctionData("redeem", [
+            ethers.BigNumber.from(20),
+            bob.address,
+            bob.address,
+            2,
+          ]),
+        ],
+        { from: bob.address }
+      );
+
+    let balance1 = await vault["balanceOf(address,uint256)"](bob.address, 1);
+    let balance2 = await vault["balanceOf(address,uint256)"](bob.address, 2);
+
+    assert(
+      balance1.eq(ethers.BigNumber.from(0)) &&
+        balance2.eq(ethers.BigNumber.from(0)),
+      `Shares has not been redeemed`
+    );
   });
 });
