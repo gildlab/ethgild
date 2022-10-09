@@ -4,12 +4,13 @@ pragma solidity =0.8.15;
 import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IReceiptOwner.sol";
+import "./IReceipt.sol";
 
 struct ReceiptConstructionConfig {
     string uri;
 }
 
-contract Receipt is Ownable, ERC1155 {
+contract Receipt is IReceipt, Ownable, ERC1155 {
     /// Emitted when new information is provided for a receipt.
     /// @param caller `msg.sender` emitting the information for the receipt.
     /// @param id Receipt the information is for.
@@ -25,6 +26,7 @@ contract Receipt is Ownable, ERC1155 {
         __ERC1155_init(config_.uri);
     }
 
+    /// @inheritdoc IReceipt
     function ownerMint(
         address account_,
         uint256 id_,
@@ -35,6 +37,7 @@ contract Receipt is Ownable, ERC1155 {
         receiptInformation(id_, data_);
     }
 
+    /// @inheritdoc IReceipt
     function ownerBurn(
         address account_,
         uint256 id_,
@@ -43,6 +46,7 @@ contract Receipt is Ownable, ERC1155 {
         _burn(account_, id_, amount_);
     }
 
+    /// @inheritdoc IReceipt
     function ownerTransferFrom(
         address from_,
         address to_,
@@ -53,7 +57,7 @@ contract Receipt is Ownable, ERC1155 {
         _safeTransferFrom(from_, to_, id_, amount_, data_);
     }
 
-    // @inheritdoc ERC1155
+    /// @inheritdoc ERC1155
     function _beforeTokenTransfer(
         address,
         address from_,
@@ -65,6 +69,7 @@ contract Receipt is Ownable, ERC1155 {
         IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
+    /// @inheritdoc IReceipt
     function receiptInformation(uint256 id_, bytes memory data_) public {
         // No data is noop.
         if (data_.length > 0) {

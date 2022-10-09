@@ -7,7 +7,7 @@ import {ReentrancyGuardUpgradeable as ReentrancyGuard} from "@openzeppelin/contr
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "./Receipt.sol";
+import "./IReceipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 import "./IReceiptOwner.sol";
 
@@ -88,10 +88,6 @@ contract ReceiptVault is
         __ReentrancyGuard_init();
         __ERC20_init(config_.name, config_.symbol);
         _asset = config_.asset;
-        require(
-            Receipt(config_.receipt).owner() == address(this),
-            "BAD_RECEIPT_OWNER"
-        );
         _receipt = config_.receipt;
     }
 
@@ -446,7 +442,7 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        Receipt(_receipt).ownerMint(
+        IReceipt(_receipt).ownerMint(
             receiver_,
             id_,
             shares_,
@@ -534,7 +530,7 @@ contract ReceiptVault is
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
         maxAssets_ = _calculateRedeem(
-            Receipt(_receipt).balanceOf(owner_, id_),
+            IReceipt(_receipt).balanceOf(owner_, id_),
             _shareRatioForId(id_)
         );
     }
@@ -648,7 +644,7 @@ contract ReceiptVault is
         _burn(owner_, shares_);
 
         // erc1155 burn.
-        Receipt(_receipt).ownerBurn(owner_, id_, shares_);
+        IReceipt(_receipt).ownerBurn(owner_, id_, shares_);
 
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
     }
@@ -690,7 +686,7 @@ contract ReceiptVault is
         view
         returns (uint256 maxShares_)
     {
-        maxShares_ = Receipt(_receipt).balanceOf(owner_, id_);
+        maxShares_ = IReceipt(_receipt).balanceOf(owner_, id_);
     }
 
     /// Preview redeem is only relevant to the currently set withdraw ID for

@@ -3,7 +3,7 @@ pragma solidity =0.8.15;
 
 import {ReceiptVaultConstructionConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "../receipt/Receipt.sol";
+import "../receipt/IReceipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 
 /// All data required to construct `CertifiedAssetConnect`.
@@ -312,7 +312,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
         require(
-            Receipt(_receipt).balanceOf(msg.sender, id_) > 0 ||
+            IReceipt(_receipt).balanceOf(msg.sender, id_) > 0 ||
                 hasRole(CERTIFIER, msg.sender),
             "ASSET_INFORMATION_AUTH"
         );
@@ -337,7 +337,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ) external returns (uint256 shares_) {
         // This is stricter than the standard "or certifier" check.
         require(
-            Receipt(_receipt).balanceOf(msg.sender, id_) > 0,
+            IReceipt(_receipt).balanceOf(msg.sender, id_) > 0,
             "NOT_RECEIPT_HOLDER"
         );
         _deposit(
@@ -514,8 +514,8 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
                 erc1155TierContext
             )
         ) {
-            Receipt receipt_ = Receipt(_receipt);
-            confiscated_ = receipt_.balanceOf(confiscatee_, id_);
+            IReceipt receipt_ = IReceipt(_receipt);
+            confiscated_ = IReceipt(receipt_).balanceOf(confiscatee_, id_);
             if (confiscated_ > 0) {
                 receipt_.ownerTransferFrom(
                     confiscatee_,
