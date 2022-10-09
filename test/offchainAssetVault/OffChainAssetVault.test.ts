@@ -1,11 +1,13 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
 import {
+  OffchainAssetVault,
   OffchainAssetVaultFactory,
   ReadWriteTier,
   TestErc20,
 } from "../../typechain";
+import { artifacts, ethers } from "hardhat";
+
 import {
   getEventArgs,
   expectedName,
@@ -18,8 +20,6 @@ import {
   fixedPointDiv,
   deployERC20PriceOracleVault,
 } from "../util";
-
-import { artifacts } from "hardhat";
 
 import {
   SetERC20TierEvent,
@@ -774,11 +774,33 @@ describe("OffChainAssetVault", async function () {
         uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
       },
     };
-    const offchainAssetVault = await offchainAssetVaultFactory.createChildTyped(
-      constructionConfig
-    );
+    const offchainAssetVaultTx =
+      await offchainAssetVaultFactory.createChildTyped(constructionConfig);
+
+    const vault = new ethers.Contract(
+      ethers.utils.hexZeroPad(
+        ethers.utils.hexStripZeros(
+          (
+            await getEventArgs(
+              offchainAssetVaultTx,
+              "NewChild",
+              offchainAssetVaultFactory
+            )
+          ).child
+        ),
+        20
+      ),
+      (await artifacts.readArtifact("OffchainAssetVault")).abi,
+      alice
+    ) as OffchainAssetVault;
+    try {
+      console.log("child address", vault.address);
+      assert((await vault.totalSupply()).eq(0));
+    } catch (err) {
+      console.log(err);
+    }
   });
-  it.only("Should call multicall", async () => {
+  it("Should call multicall", async () => {
     this.timeout(0);
     const signers = await ethers.getSigners();
     const alice = signers[0];

@@ -6,7 +6,7 @@ import "hardhat-gas-reporter";
 
 require("dotenv").config();
 
-const { RINKEBY_URL, PRIVATE_KEY, POLYGON_URL } = process.env;
+const { RINKEBY_URL, PRIVATE_KEY, POLYGON_URL, MUMBAI_URL } = process.env;
 
 export const config = {
   networks: {
@@ -25,6 +25,11 @@ export const config = {
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 53000000000,
     },
+    mumbai: {
+      url: MUMBAI_URL || "https://rpc-mumbai.maticvigil.com",
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 53000000000,
+    },
   },
   solidity: {
     compilers: [
@@ -33,7 +38,7 @@ export const config = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 100000,
+            runs: 100,
           },
         },
       },
