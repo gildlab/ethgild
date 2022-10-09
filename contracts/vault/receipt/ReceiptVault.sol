@@ -9,18 +9,22 @@ import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgrade
 import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./Receipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
-import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 import "./IReceiptOwner.sol";
 
 struct ReceiptVaultConstructionConfig {
     address asset;
-    address receiptImplementation;
-    ReceiptConstructionConfig receiptConfig;
+    address receipt;
     string name;
     string symbol;
 }
 
-contract ReceiptVault is IReceiptOwner, Multicall, ReentrancyGuard, ERC20Snapshot, IERC4626 {
+contract ReceiptVault is
+    IReceiptOwner,
+    Multicall,
+    ReentrancyGuard,
+    ERC20Snapshot,
+    IERC4626
+{
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -61,13 +65,6 @@ contract ReceiptVault is IReceiptOwner, Multicall, ReentrancyGuard, ERC20Snapsho
     /// @param config All construction config.
     event Construction(address caller, ReceiptVaultConstructionConfig config);
 
-    /// Emitted when new information is provided for a receipt.
-    /// @param caller `msg.sender` emitting the information for the receipt.
-    /// @param id Receipt the information is for.
-    /// @param information Information for the receipt. MAY reference offchain
-    /// data where the payload is large.
-    event ReceiptInformation(address caller, uint256 id, bytes information);
-
     address internal _asset;
     address internal _receipt;
 
@@ -91,14 +88,32 @@ contract ReceiptVault is IReceiptOwner, Multicall, ReentrancyGuard, ERC20Snapsho
         __ReentrancyGuard_init();
         __ERC20_init(config_.name, config_.symbol);
         _asset = config_.asset;
-        address receiptClone_ = Clones.clone(config_.receiptImplementation);
-        Receipt(receiptClone_).initialize(config_.receiptConfig);
-        _receipt = receiptClone_;
+        require(
+            Receipt(config_.receipt).owner() == address(this),
+            "BAD_RECEIPT_OWNER"
+        );
+        _receipt = config_.receipt;
     }
 
     /// @inheritdoc IReceiptOwner
-    function authorizeReceiptTransfer(address, address) external view virtual {
+    function authorizeReceiptTransfer(address, address)
+        external
+        view
+        virtual
+    // solhint-disable-next-line no-empty-blocks
+
+    {
         // Authorize all receipt transfers by default.
+    }
+
+    /// @inheritdoc IReceiptOwner
+    function authorizeReceiptInformation(uint256 id_, bytes memory data_)
+        external
+        view
+        virtual
+    // solhint-disable-next-line no-empty-blocks
+    {
+        // Authorize all receipt information by default.
     }
 
     /// Calculate how many shares_ will be minted in return for assets_.
@@ -431,9 +446,12 @@ contract ReceiptVault is IReceiptOwner, Multicall, ReentrancyGuard, ERC20Snapsho
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        Receipt(_receipt).ownerMint(receiver_, id_, shares_, receiptInformation_);
-
-        receiptInformation(id_, receiptInformation_);
+        Receipt(_receipt).ownerMint(
+            receiver_,
+            id_,
+            shares_,
+            receiptInformation_
+        );
     }
 
     function _beforeDeposit(
@@ -444,23 +462,6 @@ contract ReceiptVault is IReceiptOwner, Multicall, ReentrancyGuard, ERC20Snapsho
     ) internal virtual {
         // Default behaviour is to assets before minting shares.
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets_);
-    }
-
-    function receiptInformation(uint256 id_, bytes memory data_) public {
-        // No data is noop.
-        if (data_.length > 0) {
-            _beforeReceiptInformation(id_, data_);
-            emit ReceiptInformation(msg.sender, id_, data_);
-        }
-    }
-
-    /// Default is no restrictions on who can add information for a receipt.
-    function _beforeReceiptInformation(uint256 id_, bytes memory data_)
-        internal
-        virtual
-    // solhint-disable-next-line no-empty-blocks
-    {
-
     }
 
     /// If the sender wants to use the ERC4626 `mint` function and set a

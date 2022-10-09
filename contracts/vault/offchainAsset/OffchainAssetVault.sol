@@ -303,15 +303,17 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         highwaterId = id_;
     }
 
-    function _beforeReceiptInformation(uint256 id_, bytes memory)
-        internal
+    function authorizeReceiptInformation(uint256 id_, bytes memory)
+        external
         view
+        virtual
         override
     {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
         require(
-            Receipt(_receipt).balanceOf(msg.sender, id_) > 0 || hasRole(CERTIFIER, msg.sender),
+            Receipt(_receipt).balanceOf(msg.sender, id_) > 0 ||
+                hasRole(CERTIFIER, msg.sender),
             "ASSET_INFORMATION_AUTH"
         );
     }
@@ -333,7 +335,11 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256 shares_) {
-        require(Receipt(_receipt).balanceOf(msg.sender, id_) > 0, "NOT_RECEIPT_HOLDER");
+        // This is stricter than the standard "or certifier" check.
+        require(
+            Receipt(_receipt).balanceOf(msg.sender, id_) > 0,
+            "NOT_RECEIPT_HOLDER"
+        );
         _deposit(
             assets_,
             receiver_,
@@ -455,7 +461,12 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         );
     }
 
-    function authorizeReceiptTransfer(address from_, address to_) external view virtual override {
+    function authorizeReceiptTransfer(address from_, address to_)
+        external
+        view
+        virtual
+        override
+    {
         enforceValidTransfer(
             erc1155Tier,
             erc1155MinimumTier,
@@ -506,7 +517,13 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
             Receipt receipt_ = Receipt(_receipt);
             confiscated_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscated_ > 0) {
-                receipt_.ownerTransferFrom(confiscatee_, msg.sender, id_, confiscated_, "");
+                receipt_.ownerTransferFrom(
+                    confiscatee_,
+                    msg.sender,
+                    id_,
+                    confiscated_,
+                    ""
+                );
             }
         }
         emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);
