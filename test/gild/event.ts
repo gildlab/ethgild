@@ -1,42 +1,44 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
-import { deployERC20PriceOracleVault, getEventArgs, priceOne } from "../util";
+import {
+  deployERC20PriceOracleVault,
+  fixedPointDiv,
+  getEventArgs,
+} from "../util";
 
 chai.use(solidity);
-const { expect, assert } = chai;
+const { assert } = chai;
 
 describe("events", async function () {
   it("should emit events on deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
-    const [ethGild, erc20Token, priceOracle] =
+    const [vault, erc20Token, priceOracle] =
       await deployERC20PriceOracleVault();
 
     const alice = signers[0];
 
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     const ethAmount = 5000;
 
-    const id1155 = price;
-    await erc20Token
-      .connect(alice)
-      .increaseAllowance(ethGild.address, ethAmount);
+    const id1155 = shareRatio;
+    await erc20Token.connect(alice).increaseAllowance(vault.address, ethAmount);
 
-    const gildTx = await ethGild
+    const depositTx = await vault
       .connect(alice)
       ["deposit(uint256,address)"](ethAmount, alice.address);
 
-    const gildEventArgs = await getEventArgs(gildTx, "Deposit", ethGild);
+    const depositEventArgs = await getEventArgs(depositTx, "Deposit", vault);
 
     assert(
-      gildEventArgs.assets.eq(ethAmount),
-      `incorrect Gild ethAmount. expected ${ethAmount} got ${gildEventArgs.assets}`
+      depositEventArgs.assets.eq(ethAmount),
+      `incorrect assets. expected ${ethAmount} got ${depositEventArgs.assets}`
     );
 
-    const aliceBalance = await ethGild["balanceOf(address)"](alice.address);
+    const aliceBalance = await vault["balanceOf(address)"](alice.address);
 
-    const alice1155BalanceBefore = await ethGild["balanceOf(address,uint256)"](
+    const alice1155BalanceBefore = await vault["balanceOf(address,uint256)"](
       alice.address,
       id1155
     );
@@ -45,62 +47,57 @@ describe("events", async function () {
       `incorrect balance before. expected ${aliceBalance} got ${alice1155BalanceBefore}`
     );
 
-    const gildTransferSingleEventArgs = await getEventArgs(
-      gildTx,
+    const transferSingleEventArgs = await getEventArgs(
+      depositTx,
       "TransferSingle",
-      ethGild
+      vault
     );
     assert(
-      gildTransferSingleEventArgs.id.eq(id1155),
-      `incorrect TransferSingle id. expected ${id1155} got ${gildTransferSingleEventArgs.id}`
+      transferSingleEventArgs.id.eq(id1155),
+      `incorrect TransferSingle id. expected ${id1155} got ${transferSingleEventArgs.id}`
     );
     assert(
-      gildTransferSingleEventArgs.value.eq(aliceBalance),
-      `incorrect TransferSingle value. expected ${aliceBalance} got ${gildTransferSingleEventArgs.value}`
+      transferSingleEventArgs.value.eq(aliceBalance),
+      `incorrect TransferSingle value. expected ${aliceBalance} got ${transferSingleEventArgs.value}`
     );
 
-    const gildTransferEventArgs = await getEventArgs(
-      gildTx,
-      "Transfer",
-      ethGild
-    );
+    const transferEventArgs = await getEventArgs(depositTx, "Transfer", vault);
     assert(
-      gildTransferEventArgs.value.eq(aliceBalance),
-      `incorrect Transfer value. expected ${aliceBalance} got ${gildTransferEventArgs.value}`
+      transferEventArgs.value.eq(aliceBalance),
+      `incorrect Transfer value. expected ${aliceBalance} got ${transferEventArgs.value}`
     );
 
-    const ungildERC1155Amount = aliceBalance;
-    const ungildTx = await ethGild["redeem(uint256,address,address,uint256)"](
-      ungildERC1155Amount,
+    const ERC1155Amount = aliceBalance;
+    const redeemTx = await vault["redeem(uint256,address,address,uint256)"](
+      ERC1155Amount,
       alice.address,
       alice.address,
-      price
+      shareRatio
     );
 
-    const ungildEventArgs = await getEventArgs(ungildTx, "Withdraw", ethGild);
-    // Ungild ETH is always rounded down.
-    const ungildAmount = ungildERC1155Amount.mul(priceOne).div(price);
+    const withdrawEventArgs = await getEventArgs(redeemTx, "Withdraw", vault);
+    // withdrawAmount is always rounded down.
+    const withdrawAmount = fixedPointDiv(ERC1155Amount, shareRatio);
     assert(
-      ungildEventArgs.assets.eq(ungildAmount),
-      `wrong ungild amount. expected ${ungildAmount} actual ${ungildEventArgs.assets}`
+      withdrawEventArgs.assets.eq(withdrawAmount),
+      `wrong assets amount. expected ${withdrawAmount} actual ${withdrawEventArgs.assets}`
     );
 
-    const ungildTransferSingleEventArgs = await getEventArgs(
-      ungildTx,
+    const withdrawTransferSingleEventArgs = await getEventArgs(
+      redeemTx,
       "TransferSingle",
-      ethGild
+      vault
     );
 
     assert(
-      ungildTransferSingleEventArgs.id.eq(id1155),
-      `incorrect TransferSingle id. expected ${id1155} got ${ungildTransferSingleEventArgs.id}`
+      withdrawTransferSingleEventArgs.id.eq(id1155),
+      `incorrect TransferSingle id. expected ${id1155} got ${withdrawTransferSingleEventArgs.id}`
     );
-    const alice1155BalanceAfter = await ethGild["balanceOf(address,uint256)"](
+    const alice1155BalanceAfter = await vault["balanceOf(address,uint256)"](
       alice.address,
       id1155
     );
-    const expected1155BalanceAfter =
-      alice1155BalanceBefore.sub(ungildERC1155Amount);
+    const expected1155BalanceAfter = alice1155BalanceBefore.sub(ERC1155Amount);
     assert(
       alice1155BalanceAfter.eq(expected1155BalanceAfter),
       `incorrect 1155 balance after. expected ${expected1155BalanceAfter} got ${alice1155BalanceAfter}`

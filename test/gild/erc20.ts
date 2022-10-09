@@ -6,9 +6,6 @@ import {
   expectedName,
   expectedSymbol,
   fixedPointMul,
-  fixedPointDiv,
-  quotePrice,
-  basePrice,
 } from "../util";
 
 chai.use(solidity);
@@ -16,10 +13,10 @@ const { assert } = chai;
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {
-    const [ethGild] = await deployERC20PriceOracleVault();
+    const [vault] = await deployERC20PriceOracleVault();
 
-    const erc20Name = await ethGild.name();
-    const erc20Symbol = await ethGild.symbol();
+    const erc20Name = await vault.name();
+    const erc20Symbol = await vault.symbol();
 
     assert(
       erc20Name === expectedName,
@@ -38,7 +35,7 @@ describe("erc20 usage", async function () {
       await deployERC20PriceOracleVault();
 
     const alice = signers[0];
-    const price = await priceOracle.price();
+    const shareRatio = await priceOracle.price();
 
     const assetAmount = ethers.BigNumber.from(1000);
 
@@ -50,11 +47,11 @@ describe("erc20 usage", async function () {
       ["deposit(uint256,address,uint256,bytes)"](
         assetAmount,
         alice.address,
-        price,
+        shareRatio,
         []
       );
 
-    const expectedErc20Balance = fixedPointMul(assetAmount, price);
+    const expectedErc20Balance = fixedPointMul(assetAmount, shareRatio);
 
     const expectedErc20BalanceAfter = expectedErc20Balance.div(2);
     const expectedErc1155Balance = expectedErc20Balance;
