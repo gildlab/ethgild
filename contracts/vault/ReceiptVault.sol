@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
-import {ERC20, ERC20Snapshot} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Snapshot.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/interfaces/IERC4626.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {ERC20Upgradeable as ERC20, ERC20SnapshotUpgradeable as ERC20Snapshot} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
+import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {IERC4626Upgradeable as IERC4626} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
+import {ReentrancyGuardUpgradeable as ReentrancyGuard} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
 
 struct ReceiptVaultConstructionConfig {
     address asset;
@@ -18,11 +18,13 @@ struct ReceiptVaultConstructionConfig {
 }
 
 contract ReceiptVault is
+    Multicall,
+        ReentrancyGuard,
     ERC20Snapshot,
     ERC1155,
-    IERC4626,
-    ReentrancyGuard,
-    Multicall
+    IERC4626
+
+
 {
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
@@ -71,7 +73,7 @@ contract ReceiptVault is
     /// data where the payload is large.
     event ReceiptInformation(address caller, uint256 id, bytes information);
 
-    address private immutable _asset;
+    address private _asset;
 
     /// Users MAY OPTIONALLY set minimum share ratios for 4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
@@ -85,10 +87,11 @@ contract ReceiptVault is
     /// the non-standard equivalent functions that take a ID parameter.
     mapping(address => uint256) public withdrawIds;
 
-    constructor(ReceiptVaultConstructionConfig memory config_)
-        ERC20(config_.name, config_.symbol)
-        ERC1155(config_.uri)
-    {
+    function __ReceiptVault_init(ReceiptVaultConstructionConfig memory config_) internal virtual {
+        __Multicall_init();
+        __ReentrancyGuard_init();
+        __ERC20_init(config_.name, config_.symbol);
+        __ERC1155_init(config_.uri);
         _asset = config_.asset;
     }
 

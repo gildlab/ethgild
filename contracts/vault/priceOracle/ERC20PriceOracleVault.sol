@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {ReceiptVaultConstructionConfig, ReceiptVault} from "../ReceiptVault.sol";
 import "../../oracle/price/IPriceOracle.sol";
 
@@ -128,14 +128,11 @@ contract ERC20PriceOracleVault is ReceiptVault {
     );
 
     /// The price oracle used for all minting calculations.
-    IPriceOracle public immutable priceOracle;
+    IPriceOracle public priceOracle;
 
-    /// Constructor.
-    /// @param config_ All necessary config for deployment.
-    constructor(ERC20PriceOracleVaultConstructionConfig memory config_)
-        ReceiptVault(config_.receiptVaultConfig)
-    {
-        priceOracle = IPriceOracle(config_.priceOracle);
+    function initialize(ERC20PriceOracleVaultConstructionConfig memory config_) external initializer {
+        __ReceiptVault_init(config_.receiptVaultConfig);
+                priceOracle = IPriceOracle(config_.priceOracle);
         emit ERC20PriceOracleVaultConstruction(msg.sender, config_);
     }
 

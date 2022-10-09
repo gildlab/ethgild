@@ -1,12 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import {ERC20PriceOracleVault, ERC20PriceOracleVaultConstructionConfig} from "./ERC20PriceOracleVault.sol";
+import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 /// @title ERC20PriceOracleVaultFactory
 /// @notice Factory for creating and deploying `ERC20PriceOracleVault`.
 contract ERC20PriceOracleVaultFactory is Factory {
+    /// Template contract to clone.
+    /// Deployed by the constructor.
+    address public immutable implementation;
+
+    /// Build the reference implementation to clone for each child.
+    constructor() {
+        address implementation_ = address(new ERC20PriceOracleVault());
+        emit Implementation(msg.sender, implementation_);
+        implementation = implementation_;
+    }
+
     /// @inheritdoc Factory
     function _createChild(bytes memory data_)
         internal
@@ -14,15 +26,10 @@ contract ERC20PriceOracleVaultFactory is Factory {
         override
         returns (address)
     {
-        // This is built directly with `new` instead of cloning as we're
-        // optimizing for use of cheap immutables at runtime rather than cheap
-        // deployments.
-        return
-            address(
-                new ERC20PriceOracleVault(
-                    abi.decode(data_, (ERC20PriceOracleVaultConstructionConfig))
-                )
-            );
+        ERC20PriceOracleVaultConstructionConfig memory config_ = abi.decode(data_, (ERC20PriceOracleVaultConstructionConfig));
+        address clone_ = Clones.clone(implementation);
+        ERC20PriceOracleVault(payable(clone_)).initialize(config_);
+        return clone_;
     }
 
     /// Typed wrapper for `createChild` with Source.

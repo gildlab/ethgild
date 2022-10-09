@@ -19,7 +19,7 @@ chai.use(solidity);
 const { assert } = chai;
 
 let vault: ERC20PriceOracleVault,
-  asset: ERC20,
+  asset: IERC20,
   shareRatio: BigNumber,
   aliceAddress: string,
   aliceAssets: BigNumber;

@@ -1,12 +1,24 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.15;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import {OffchainAssetVault, OffchainAssetVaultConstructionConfig} from "./OffchainAssetVault.sol";
+import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 /// @title OffchainAssetVaultFactory
 /// @notice Factory for creating and deploying `OffchainAssetVault`.
 contract OffchainAssetVaultFactory is Factory {
+    /// Template contract to clone.
+    /// Deployed by the constructor.
+    address public immutable implementation;
+
+    /// Build the reference implementation to clone for each child.
+    constructor() {
+        address implementation_ = address(new OffchainAssetVault());
+        emit Implementation(msg.sender, implementation_);
+        implementation = implementation_;
+    }
+
     /// @inheritdoc Factory
     function _createChild(bytes memory data_)
         internal
@@ -14,15 +26,10 @@ contract OffchainAssetVaultFactory is Factory {
         override
         returns (address)
     {
-        // Deploying each contract directly rather than cloning it as there
-        // doesn't seem to be a way to cleanly inherit both ERC20Upgradeable
-        // and ERC1155Upgradeable at the same time.
-        return
-            address(
-                new OffchainAssetVault(
-                    abi.decode(data_, (OffchainAssetVaultConstructionConfig))
-                )
-            );
+        OffchainAssetVaultConstructionConfig memory config_ = abi.decode(data_, (OffchainAssetVaultConstructionConfig));
+        address clone_ = Clones.clone(implementation);
+        OffchainAssetVault(payable(clone_)).initialize(config_);
+        return clone_;
     }
 
     /// Typed wrapper for `createChild` with Source.
