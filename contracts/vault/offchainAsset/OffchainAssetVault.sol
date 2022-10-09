@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.15;
 
-import {ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
+import {ReceiptVaultConstructionConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-
+import "../receipt/Receipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 
 /// All data required to construct `CertifiedAssetConnect`.
@@ -164,7 +164,10 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    function initialize(OffchainAssetVaultConstructionConfig memory config_) external initializer {
+    function initialize(OffchainAssetVaultConstructionConfig memory config_)
+        external
+        initializer
+    {
         __ReceiptVault_init(config_.receiptVaultConfig);
         __AccessControl_init();
 
@@ -308,7 +311,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
         require(
-            balanceOf(msg.sender, id_) > 0 || hasRole(CERTIFIER, msg.sender),
+            Receipt(_receipt).balanceOf(msg.sender, id_) > 0 || hasRole(CERTIFIER, msg.sender),
             "ASSET_INFORMATION_AUTH"
         );
     }
@@ -330,7 +333,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256 shares_) {
-        require(balanceOf(msg.sender, id_) > 0, "NOT_RECEIPT_HOLDER");
+        require(Receipt(_receipt).balanceOf(msg.sender, id_) > 0, "NOT_RECEIPT_HOLDER");
         _deposit(
             assets_,
             receiver_,
@@ -339,18 +342,6 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
             receiptInformation_
         );
         shares_ = assets_;
-    }
-
-    /// Needed here to fix Open Zeppelin implementing `supportsInterface` on
-    /// multiple base contracts.
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, AccessControl)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 
     function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
@@ -464,15 +455,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         );
     }
 
-    // @inheritdoc ERC1155
-    function _beforeTokenTransfer(
-        address,
-        address from_,
-        address to_,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) internal view override {
+    function authorizeReceiptTransfer(address from_, address to_) external view virtual override {
         enforceValidTransfer(
             erc1155Tier,
             erc1155MinimumTier,
@@ -520,15 +503,10 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
                 erc1155TierContext
             )
         ) {
-            confiscated_ = balanceOf(confiscatee_, id_);
+            Receipt receipt_ = Receipt(_receipt);
+            confiscated_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscated_ > 0) {
-                _safeTransferFrom(
-                    confiscatee_,
-                    msg.sender,
-                    id_,
-                    confiscated_,
-                    ""
-                );
+                receipt_.ownerTransferFrom(confiscatee_, msg.sender, id_, confiscated_, "");
             }
         }
         emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);

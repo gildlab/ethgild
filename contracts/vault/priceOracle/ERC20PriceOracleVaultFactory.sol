@@ -26,9 +26,12 @@ contract ERC20PriceOracleVaultFactory is Factory {
         override
         returns (address)
     {
-        ERC20PriceOracleVaultConstructionConfig memory config_ = abi.decode(data_, (ERC20PriceOracleVaultConstructionConfig));
+        ERC20PriceOracleVaultConstructionConfig memory config_ = abi.decode(
+            data_,
+            (ERC20PriceOracleVaultConstructionConfig)
+        );
         address clone_ = Clones.clone(implementation);
-        ERC20PriceOracleVault(payable(clone_)).initialize(config_);
+        ERC20PriceOracleVault(clone_).initialize(config_);
         return clone_;
     }
 

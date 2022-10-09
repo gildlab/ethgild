@@ -26,9 +26,12 @@ contract OffchainAssetVaultFactory is Factory {
         override
         returns (address)
     {
-        OffchainAssetVaultConstructionConfig memory config_ = abi.decode(data_, (OffchainAssetVaultConstructionConfig));
+        OffchainAssetVaultConstructionConfig memory config_ = abi.decode(
+            data_,
+            (OffchainAssetVaultConstructionConfig)
+        );
         address clone_ = Clones.clone(implementation);
-        OffchainAssetVault(payable(clone_)).initialize(config_);
+        OffchainAssetVault(clone_).initialize(config_);
         return clone_;
     }
 

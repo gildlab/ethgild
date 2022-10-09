@@ -2,7 +2,7 @@
 pragma solidity =0.8.15;
 
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {ReceiptVaultConstructionConfig, ReceiptVault} from "../ReceiptVault.sol";
+import {ReceiptVaultConstructionConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import "../../oracle/price/IPriceOracle.sol";
 
 /// All config required to construct `ERC20PriceOracleVault`.
@@ -130,9 +130,12 @@ contract ERC20PriceOracleVault is ReceiptVault {
     /// The price oracle used for all minting calculations.
     IPriceOracle public priceOracle;
 
-    function initialize(ERC20PriceOracleVaultConstructionConfig memory config_) external initializer {
+    function initialize(ERC20PriceOracleVaultConstructionConfig memory config_)
+        external
+        initializer
+    {
         __ReceiptVault_init(config_.receiptVaultConfig);
-                priceOracle = IPriceOracle(config_.priceOracle);
+        priceOracle = IPriceOracle(config_.priceOracle);
         emit ERC20PriceOracleVaultConstruction(msg.sender, config_);
     }
 

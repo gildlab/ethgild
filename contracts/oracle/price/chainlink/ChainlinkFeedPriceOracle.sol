@@ -3,7 +3,7 @@ pragma solidity =0.8.15;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
-import { SafeCastUpgradeable as SafeCast } from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import {SafeCastUpgradeable as SafeCast} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import "../IPriceOracle.sol";
 

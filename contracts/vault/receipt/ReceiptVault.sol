@@ -2,30 +2,25 @@
 pragma solidity =0.8.15;
 
 import {ERC20Upgradeable as ERC20, ERC20SnapshotUpgradeable as ERC20Snapshot} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
-import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import {IERC4626Upgradeable as IERC4626} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
 import {ReentrancyGuardUpgradeable as ReentrancyGuard} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "./Receipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
+import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+import "./IReceiptOwner.sol";
 
 struct ReceiptVaultConstructionConfig {
     address asset;
+    address receiptImplementation;
+    ReceiptConstructionConfig receiptConfig;
     string name;
     string symbol;
-    string uri;
 }
 
-contract ReceiptVault is
-    Multicall,
-        ReentrancyGuard,
-    ERC20Snapshot,
-    ERC1155,
-    IERC4626
-
-
-{
+contract ReceiptVault is IReceiptOwner, Multicall, ReentrancyGuard, ERC20Snapshot, IERC4626 {
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -73,7 +68,8 @@ contract ReceiptVault is
     /// data where the payload is large.
     event ReceiptInformation(address caller, uint256 id, bytes information);
 
-    address private _asset;
+    address internal _asset;
+    address internal _receipt;
 
     /// Users MAY OPTIONALLY set minimum share ratios for 4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
@@ -87,12 +83,22 @@ contract ReceiptVault is
     /// the non-standard equivalent functions that take a ID parameter.
     mapping(address => uint256) public withdrawIds;
 
-    function __ReceiptVault_init(ReceiptVaultConstructionConfig memory config_) internal virtual {
+    function __ReceiptVault_init(ReceiptVaultConstructionConfig memory config_)
+        internal
+        virtual
+    {
         __Multicall_init();
         __ReentrancyGuard_init();
         __ERC20_init(config_.name, config_.symbol);
-        __ERC1155_init(config_.uri);
         _asset = config_.asset;
+        address receiptClone_ = Clones.clone(config_.receiptImplementation);
+        Receipt(receiptClone_).initialize(config_.receiptConfig);
+        _receipt = receiptClone_;
+    }
+
+    /// @inheritdoc IReceiptOwner
+    function authorizeReceiptTransfer(address, address) external view virtual {
+        // Authorize all receipt transfers by default.
     }
 
     /// Calculate how many shares_ will be minted in return for assets_.
@@ -425,7 +431,7 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        _mint(receiver_, id_, shares_, receiptInformation_);
+        Receipt(_receipt).ownerMint(receiver_, id_, shares_, receiptInformation_);
 
         receiptInformation(id_, receiptInformation_);
     }
@@ -527,7 +533,7 @@ contract ReceiptVault is
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
         maxAssets_ = _calculateRedeem(
-            balanceOf(owner_, id_),
+            Receipt(_receipt).balanceOf(owner_, id_),
             _shareRatioForId(id_)
         );
     }
@@ -641,7 +647,7 @@ contract ReceiptVault is
         _burn(owner_, shares_);
 
         // erc1155 burn.
-        _burn(owner_, id_, shares_);
+        Receipt(_receipt).ownerBurn(owner_, id_, shares_);
 
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
     }
@@ -683,7 +689,7 @@ contract ReceiptVault is
         view
         returns (uint256 maxShares_)
     {
-        maxShares_ = balanceOf(owner_, id_);
+        maxShares_ = Receipt(_receipt).balanceOf(owner_, id_);
     }
 
     /// Preview redeem is only relevant to the currently set withdraw ID for
