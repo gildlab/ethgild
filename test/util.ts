@@ -7,6 +7,7 @@ import { Result } from "ethers/lib/utils";
 import type { ERC20PriceOracleVault } from "../typechain";
 import type { TwoPriceOracle } from "../typechain";
 import type { TestErc20 } from "../typechain";
+import type { ReserveTokenERC1155 } from "../typechain";
 import type { TestChainlinkDataFeed } from "../typechain";
 
 export const ethMainnetFeedRegistry =
@@ -30,8 +31,8 @@ export const ONE = priceOne;
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const quotePrice = "186051000000";
-export const basePrice = "167917253245";
+export const quotePrice = "167642999800";
+export const basePrice = "157675736633";
 
 export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
@@ -46,7 +47,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
     TestErc20,
     TwoPriceOracle,
     TestChainlinkDataFeed,
-    TestChainlinkDataFeed
+    TestChainlinkDataFeed,
+    ReserveTokenERC1155
   ]
 > => {
   const oracleFactory = await ethers.getContractFactory(
@@ -86,6 +88,11 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const testErc20Contract = (await testErc20.deploy()) as TestErc20;
   await testErc20Contract.deployed();
 
+  const testErc1155 = await ethers.getContractFactory("ReserveTokenERC1155");
+  const testErc1155Contract = (await testErc1155.deploy()) as ReserveTokenERC1155;
+  await testErc1155Contract.deployed();
+
+
   const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkFeedPriceOracle"
   );
@@ -112,20 +119,22 @@ export const deployERC20PriceOracleVault = async (): Promise<
 
   const constructionConfig = {
     asset: testErc20Contract.address,
+    receipt: testErc1155Contract.address,
     name: "EthGild",
     symbol: "ETHg",
-    uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
   };
 
   const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
     "ERC20PriceOracleVault"
   );
 
-  const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy({
+  const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
+  await erc20PriceOracleVault.deployed();
+
+  await erc20PriceOracleVault.initialize({
     priceOracle: twoPriceOracle.address,
     receiptVaultConfig: constructionConfig,
-  })) as ERC20PriceOracleVault;
-  await erc20PriceOracleVault.deployed();
+  })
 
   return [
     erc20PriceOracleVault,
@@ -133,6 +142,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
     twoPriceOracle,
     basePriceOracle,
     quotePriceOracle,
+    testErc1155Contract
   ];
 };
 
