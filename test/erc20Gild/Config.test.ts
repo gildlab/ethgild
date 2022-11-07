@@ -2,15 +2,20 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
+  basePrice,
   deployERC20PriceOracleVault,
   expectedName,
   expectedSymbol,
-  expectedUri,
+  quotePrice,
+  usdDecimals,
+  xauDecimals
 } from "../util";
-import { ERC20PriceOracleVaultConstructionEvent } from "../../typechain/ERC20PriceOracleVault";
+import { ERC20PriceOracleVault, ERC20PriceOracleVaultConstructionEvent } from "../../typechain/ERC20PriceOracleVault";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { getEventArgs } from "../util";
+import { Receipt, TestChainlinkDataFeed, TestErc20, TwoPriceOracle } from "../../typechain";
+import { BigNumber } from "ethers";
 
 let owner: SignerWithAddress;
 
@@ -22,12 +27,96 @@ describe("config", async function () {
   it("Checks construction event", async function () {
     [owner] = await ethers.getSigners();
 
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const oracleFactory = await ethers.getContractFactory(
+        "TestChainlinkDataFeed"
+    );
+    const basePriceOracle =
+        (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+    await basePriceOracle.deployed();
+    // ETHUSD as of 2022-06-30
+
+    await basePriceOracle.setDecimals(usdDecimals);
+    await basePriceOracle.setRoundData(1, {
+      startedAt: BigNumber.from(Date.now()).div(1000),
+      updatedAt: BigNumber.from(Date.now()).div(1000),
+      answer: basePrice,
+      answeredInRound: 1,
+    });
+
+    const quotePriceOracle =
+        (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+    await quotePriceOracle.deployed();
+    // XAUUSD as of 2022-06-30
+    await quotePriceOracle.setDecimals(xauDecimals);
+    await quotePriceOracle.setRoundData(1, {
+      startedAt: BigNumber.from(Date.now()).div(1000),
+      updatedAt: BigNumber.from(Date.now()).div(1000),
+      answer: quotePrice,
+      answeredInRound: 1,
+    });
+
+    // 1 hour
+    const baseStaleAfter = 60 * 60;
+    // 48 hours
+    const quoteStaleAfter = 48 * 60 * 60;
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const receipt = await ethers.getContractFactory("Receipt");
+    const receiptContract = (await receipt.deploy()) as Receipt;
+    await receiptContract.deployed();
+
+
+    const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
+        "ChainlinkFeedPriceOracle"
+    );
+    const chainlinkFeedPriceOracleBase =
+        await chainlinkFeedPriceOracleFactory.deploy({
+          feed: basePriceOracle.address,
+          staleAfter: baseStaleAfter,
+        });
+    const chainlinkFeedPriceOracleQuote =
+        await chainlinkFeedPriceOracleFactory.deploy({
+          feed: quotePriceOracle.address,
+          staleAfter: quoteStaleAfter,
+        });
+    await chainlinkFeedPriceOracleBase.deployed();
+    await chainlinkFeedPriceOracleQuote.deployed();
+
+    const twoPriceOracleFactory = await ethers.getContractFactory(
+        "TwoPriceOracle"
+    );
+    const twoPriceOracle = (await twoPriceOracleFactory.deploy({
+      base: chainlinkFeedPriceOracleBase.address,
+      quote: chainlinkFeedPriceOracleQuote.address,
+    })) as TwoPriceOracle;
+
+    const constructionConfig = {
+      asset: asset.address,
+      receipt: receiptContract.address,
+      name: "EthGild",
+      symbol: "ETHg",
+    };
+
+    const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
+        "ERC20PriceOracleVault"
+    );
+
+    let erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
+    await erc20PriceOracleVault.deployed();
+
 
     const { caller, config } = (await getEventArgs(
-      vault.deployTransaction,
+      await erc20PriceOracleVault.initialize(
+          {
+            priceOracle: twoPriceOracle.address,
+            receiptVaultConfig: constructionConfig,
+          }
+      ),
       "ERC20PriceOracleVaultConstruction",
-      vault
+        erc20PriceOracleVault
     )) as ERC20PriceOracleVaultConstructionEvent["args"];
 
     assert(caller === owner.address, "wrong deploy sender");
@@ -43,10 +132,10 @@ describe("config", async function () {
       config.receiptVaultConfig.symbol === expectedSymbol,
       "wrong deploy symbol"
     );
-    assert(config.receiptVaultConfig.uri === expectedUri);
+    assert(config.receiptVaultConfig.receipt === receiptContract.address);
     assert(
-      config.priceOracle === priceOracle.address,
-      "wrong deploy priceOracle address"
+      config.priceOracle === twoPriceOracle.address,
+      `wrong deploy priceOracle addresს: expected ${config.priceOracle} got ${twoPriceOracle.address}`
     );
   });
 });

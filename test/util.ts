@@ -7,7 +7,7 @@ import { Result } from "ethers/lib/utils";
 import type { ERC20PriceOracleVault } from "../typechain";
 import type { TwoPriceOracle } from "../typechain";
 import type { TestErc20 } from "../typechain";
-import type { ReserveTokenERC1155 } from "../typechain";
+import type { Receipt } from "../typechain";
 import type { TestChainlinkDataFeed } from "../typechain";
 
 export const ethMainnetFeedRegistry =
@@ -42,20 +42,20 @@ export const fixedPointDiv = (a: BigNumber, b: BigNumber): BigNumber =>
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
 export const deployERC20PriceOracleVault = async (): Promise<
-  [
-    ERC20PriceOracleVault,
-    TestErc20,
-    TwoPriceOracle,
-    TestChainlinkDataFeed,
-    TestChainlinkDataFeed,
-    ReserveTokenERC1155
-  ]
-> => {
+    [
+      ERC20PriceOracleVault,
+      TestErc20,
+      TwoPriceOracle,
+      Receipt,
+      TestChainlinkDataFeed,
+      TestChainlinkDataFeed
+    ]
+    > => {
   const oracleFactory = await ethers.getContractFactory(
-    "TestChainlinkDataFeed"
+      "TestChainlinkDataFeed"
   );
   const basePriceOracle =
-    (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
   await basePriceOracle.deployed();
   // ETHUSD as of 2022-06-30
 
@@ -68,7 +68,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   });
 
   const quotePriceOracle =
-    (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
   await quotePriceOracle.deployed();
   // XAUUSD as of 2022-06-30
   await quotePriceOracle.setDecimals(xauDecimals);
@@ -88,29 +88,29 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const testErc20Contract = (await testErc20.deploy()) as TestErc20;
   await testErc20Contract.deployed();
 
-  const testErc1155 = await ethers.getContractFactory("ReserveTokenERC1155");
-  const testErc1155Contract = (await testErc1155.deploy()) as ReserveTokenERC1155;
-  await testErc1155Contract.deployed();
+  const receipt = await ethers.getContractFactory("Receipt");
+  const receiptContract = (await receipt.deploy()) as Receipt;
+  await receiptContract.deployed();
 
 
   const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
-    "ChainlinkFeedPriceOracle"
+      "ChainlinkFeedPriceOracle"
   );
   const chainlinkFeedPriceOracleBase =
-    await chainlinkFeedPriceOracleFactory.deploy({
-      feed: basePriceOracle.address,
-      staleAfter: baseStaleAfter,
-    });
+      await chainlinkFeedPriceOracleFactory.deploy({
+        feed: basePriceOracle.address,
+        staleAfter: baseStaleAfter,
+      });
   const chainlinkFeedPriceOracleQuote =
-    await chainlinkFeedPriceOracleFactory.deploy({
-      feed: quotePriceOracle.address,
-      staleAfter: quoteStaleAfter,
-    });
+      await chainlinkFeedPriceOracleFactory.deploy({
+        feed: quotePriceOracle.address,
+        staleAfter: quoteStaleAfter,
+      });
   await chainlinkFeedPriceOracleBase.deployed();
   await chainlinkFeedPriceOracleQuote.deployed();
 
   const twoPriceOracleFactory = await ethers.getContractFactory(
-    "TwoPriceOracle"
+      "TwoPriceOracle"
   );
   const twoPriceOracle = (await twoPriceOracleFactory.deploy({
     base: chainlinkFeedPriceOracleBase.address,
@@ -119,13 +119,13 @@ export const deployERC20PriceOracleVault = async (): Promise<
 
   const constructionConfig = {
     asset: testErc20Contract.address,
-    receipt: testErc1155Contract.address,
+    receipt: receiptContract.address,
     name: "EthGild",
     symbol: "ETHg",
   };
 
   const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleVault"
+      "ERC20PriceOracleVault"
   );
 
   const erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
@@ -140,9 +140,9 @@ export const deployERC20PriceOracleVault = async (): Promise<
     erc20PriceOracleVault,
     testErc20Contract,
     twoPriceOracle,
+    receiptContract,
     basePriceOracle,
-    quotePriceOracle,
-    testErc1155Contract
+    quotePriceOracle
   ];
 };
 
