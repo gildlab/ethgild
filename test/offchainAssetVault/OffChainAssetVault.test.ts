@@ -84,21 +84,21 @@ describe("OffChainAssetVault", async function () {
 
     assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
   });
-  // it("Checks SetERC20Tier role", async function () {
-  //   const [vault] = await deployOffChainAssetVault();
-  //
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   const minTier = ethers.BigNumber.from(10);
-  //
-  //   await assertError(
-  //     async () =>
-  //       await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
-  //     `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20TIERER()}`,
-  //     "Failed to set erc20tier"
-  //   );
-  // });
+  it("Checks SetERC20Tier role", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const minTier = ethers.BigNumber.from(10);
+
+    await assertError(
+      async () =>
+        await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20TIERER()}`,
+      "Failed to set erc20tier"
+    );
+  });
   // it("Checks SetERC20Tier event is emitted", async function () {
   //   const [vault] = await deployOffChainAssetVault();
   //
