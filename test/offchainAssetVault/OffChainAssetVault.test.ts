@@ -204,34 +204,34 @@ describe("OffChainAssetVault", async function () {
   //     `Wrong total assets. Expected ${totalSupply} got ${totalAssets}`
   //   );
   // });
-  // it("PreviewDeposit sets correct shares", async function () {
-  //   const [vault] = await deployOffChainAssetVault();
-  //   const assets = ethers.BigNumber.from(100);
-  //
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   const hasRoleDepositor = await vault.hasRole(
-  //     await vault.DEPOSITOR(),
-  //     alice.address
-  //   );
-  //
-  //   //Alice does not have role of depositor, so it should throw an error unless role is granted
-  //   assert(
-  //     !hasRoleDepositor,
-  //     `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
-  //   );
-  //
-  //   //grant depositor role to alice
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
-  //
-  //   const shares = await vault.previewDeposit(assets);
-  //
-  //   assert(
-  //     shares.eq(assets),
-  //     `Wrong shares: expected ${assets} got ${shares} `
-  //   );
-  // });
+  it("PreviewDeposit sets correct shares", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const assets = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const hasRoleDepositor = await vault.hasRole(
+      await vault.DEPOSITOR(),
+      alice.address
+    );
+
+    //Alice does not have role of depositor, so it should throw an error unless role is granted
+    assert(
+      !hasRoleDepositor,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
+    );
+
+    //grant depositor role to alice
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+
+    const shares = await vault.previewDeposit(assets);
+
+    assert(
+      shares.eq(assets),
+      `Wrong shares: expected ${assets} got ${shares} `
+    );
+  });
   // it("PreviewMint sets 0 if not DEPOSITOR", async function () {
   //   const [vault] = await deployOffChainAssetVault();
   //   const shares = ethers.BigNumber.from(100);
