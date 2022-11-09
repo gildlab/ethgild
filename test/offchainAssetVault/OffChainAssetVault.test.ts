@@ -177,10 +177,10 @@ describe("OffChainAssetVault", async function () {
   //   const [receiptVault, asset, priceOracle] =
   //     await deployERC20PriceOracleVault();
   //
-  //   const alice = signers[0];
-  //   const bob = signers[1];
+  //   const alice = signers[1];
+  //   // const bob = signers[1];
   //
-  //   const shareRatio = await priceOracle.price();
+  //   const shareRatio = fixedPointDiv(ethers.BigNumber.from(157675736633),ethers.BigNumber.from(167642999800))
   //   const aliceAssets = ethers.BigNumber.from(1000);
   //
   //   await asset.transfer(alice.address, aliceAssets);
@@ -191,8 +191,8 @@ describe("OffChainAssetVault", async function () {
   //
   //   await vault["deposit(uint256,address,uint256,bytes)"](
   //     aliceAssets,
-  //     bob.address,
-  //     shareRatio,
+  //     alice.address,
+  //     ONE,
   //     []
   //   );
   //
@@ -232,36 +232,36 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${assets} got ${shares} `
     );
   });
-  // it("PreviewMint sets 0 if not DEPOSITOR", async function () {
-  //   const [vault] = await deployOffChainAssetVault();
-  //   const shares = ethers.BigNumber.from(100);
-  //
-  //   const assets = await vault.previewMint(shares);
-  //   const expectedAssets = ethers.BigNumber.from(0);
-  //
-  //   assert(
-  //     assets.eq(expectedAssets),
-  //     `Wrong assets: expected ${expectedAssets} got ${assets} `
-  //   );
-  // });
-  // it("PreviewMint sets correct assets", async function () {
-  //   const [vault] = await deployOffChainAssetVault();
-  //   const shares = ethers.BigNumber.from(100);
-  //
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   //grant depositor role to alice
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
-  //
-  //   const assets = await vault.previewMint(shares);
-  //   const expectedAssets = fixedPointDiv(shares, ONE).add(1);
-  //
-  //   assert(
-  //     assets.eq(expectedAssets),
-  //     `Wrong assets: expected ${expectedAssets} got ${assets} `
-  //   );
-  // });
+  it("PreviewMint sets 0 if not DEPOSITOR", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const shares = ethers.BigNumber.from(100);
+
+    const assets = await vault.previewMint(shares);
+    const expectedAssets = ethers.BigNumber.from(0);
+
+    assert(
+      assets.eq(expectedAssets),
+      `Wrong assets: expected ${expectedAssets} got ${assets} `
+    );
+  });
+  it("PreviewMint sets correct assets", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const shares = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    //grant depositor role to alice
+    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+
+    const assets = await vault.previewMint(shares);
+    const expectedAssets = fixedPointDiv(shares, ONE).add(1);
+
+    assert(
+      assets.eq(expectedAssets),
+      `Wrong assets: expected ${expectedAssets} got ${assets} `
+    );
+  });
   // it("PreviewWithdraw sets 0 shares if no withdrawer role", async function () {
   //   const [vault] = await deployOffChainAssetVault();
   //   const assets = ethers.BigNumber.from(100);
