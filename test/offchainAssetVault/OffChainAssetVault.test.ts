@@ -551,13 +551,14 @@ describe("OffChainAssetVault", async function () {
   // it("Checks confiscated is same as balance", async function () {
   //   const signers = await ethers.getSigners();
   //   const alice = signers[0];
-  //   const bob = signers[1];
+  //   // const bob = signers[1];
   //   const [vault] = await deployOffChainAssetVault();
-  //   const [receiptVault, asset, priceOracle] =
-  //     await deployERC20PriceOracleVault();
+  //
+  //   const testErc20 = await ethers.getContractFactory("TestErc20");
+  //   const asset = (await testErc20.deploy()) as TestErc20;
+  //   await asset.deployed();
   //
   //   await vault.grantRole(await vault.CONFISCATOR(), alice.address);
-  //   await vault.grantRole(await vault.CONFISCATOR(), bob.address);
   //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
   //
   //   const assets = ethers.BigNumber.from(100);
@@ -566,30 +567,30 @@ describe("OffChainAssetVault", async function () {
   //
   //   await asset.connect(alice).increaseAllowance(vault.address, assets);
   //
-  //   const shareRatio = await priceOracle.price();
+  //   const shareRatio = ONE;
   //   await vault
   //     .connect(alice)
   //     ["deposit(uint256,address,uint256,bytes)"](
   //       assets,
-  //       bob.address,
+  //       alice.address,
   //       shareRatio,
   //       []
   //     );
-  //
-  //   const shares = await vault["balanceOf(address)"](bob.address);
-  //
-  //   const { confiscated } = (await getEventArgs(
-  //     await vault.connect(alice)["confiscate(address)"](bob.address),
-  //     "ConfiscateShares",
-  //     vault
-  //   )) as ConfiscateSharesEvent["args"];
-  //
-  //   assert(
-  //     confiscated.eq(shares),
-  //     `wrong confiscated expected ${shares} got ${confiscated}`
-  //   );
+  //   //
+  //   // const shares = await vault["balanceOf(address)"](alice.address);
+  //   //
+  //   // const { confiscated } = (await getEventArgs(
+  //   //   await vault.connect(alice)["confiscate(address)"](alice.address),
+  //   //   "ConfiscateShares",
+  //   //   vault
+  //   // )) as ConfiscateSharesEvent["args"];
+  //   //
+  //   // assert(
+  //   //   confiscated.eq(shares),
+  //   //   `wrong confiscated expected ${shares} got ${confiscated}`
+  //   // );
   // });
-  // it("Checks confiscated is transferred", async function () {
+  // it.only("Checks confiscated is transferred", async function () {
   //   const signers = await ethers.getSigners();
   //   const alice = signers[0];
   //   const bob = signers[1];
@@ -606,7 +607,7 @@ describe("OffChainAssetVault", async function () {
   //
   //   await asset.connect(alice).increaseAllowance(vault.address, assets);
   //
-  //   const shareRatio = await priceOracle.price();
+  //   const shareRatio = ONE;
   //   await vault
   //     .connect(alice)
   //     ["deposit(uint256,address,uint256,bytes)"](
@@ -744,53 +745,57 @@ describe("OffChainAssetVault", async function () {
   //     `Shares has not been confiscated`
   //   );
   // });
-  // it("should deploy offchainAssetVault using factory", async () => {
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
-  //     "OffchainAssetVaultFactory"
-  //   );
-  //
-  //   const offchainAssetVaultFactory =
-  //     (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
-  //   await offchainAssetVaultFactory.deployed();
-  //
-  //   const constructionConfig = {
-  //     admin: alice.address,
-  //     receiptVaultConfig: {
-  //       asset: ADDRESS_ZERO,
-  //       name: "EthGild",
-  //       symbol: "ETHg",
-  //       uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-  //     },
-  //   };
-  //   const offchainAssetVaultTx =
-  //     await offchainAssetVaultFactory.createChildTyped(constructionConfig);
-  //
-  //   const vault = new ethers.Contract(
-  //     ethers.utils.hexZeroPad(
-  //       ethers.utils.hexStripZeros(
-  //         (
-  //           await getEventArgs(
-  //             offchainAssetVaultTx,
-  //             "NewChild",
-  //             offchainAssetVaultFactory
-  //           )
-  //         ).child
-  //       ),
-  //       20
-  //     ),
-  //     (await artifacts.readArtifact("OffchainAssetVault")).abi,
-  //     alice
-  //   ) as OffchainAssetVault;
-  //   try {
-  //     console.log("child address", vault.address);
-  //     assert((await vault.totalSupply()).eq(0));
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // });
+  it("should deploy offchainAssetVault using factory", async () => {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const receipt = await ethers.getContractFactory("Receipt");
+    const receiptContract = (await receipt.deploy()) as Receipt;
+    await receiptContract.deployed();
+
+    const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
+      "OffchainAssetVaultFactory"
+    );
+
+    const offchainAssetVaultFactory =
+      (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
+    await offchainAssetVaultFactory.deployed();
+
+    const constructionConfig = {
+      admin: alice.address,
+      receiptVaultConfig: {
+        asset: ADDRESS_ZERO,
+        receipt: receiptContract.address,
+        name: "EthGild",
+        symbol: "ETHg",
+      },
+    };
+    const offchainAssetVaultTx =
+      await offchainAssetVaultFactory.createChildTyped(constructionConfig);
+
+    const vault = new ethers.Contract(
+      ethers.utils.hexZeroPad(
+        ethers.utils.hexStripZeros(
+          (
+            await getEventArgs(
+              offchainAssetVaultTx,
+              "NewChild",
+              offchainAssetVaultFactory
+            )
+          ).child
+        ),
+        20
+      ),
+      (await artifacts.readArtifact("OffchainAssetVault")).abi,
+      alice
+    ) as OffchainAssetVault;
+    try {
+      console.log("child address", vault.address);
+      assert((await vault.totalSupply()).eq(0));
+    } catch (err) {
+      console.log(err);
+    }
+  });
   // it("Should call multicall", async () => {
   //   this.timeout(0);
   //   const signers = await ethers.getSigners();
