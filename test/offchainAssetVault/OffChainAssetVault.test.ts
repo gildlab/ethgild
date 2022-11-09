@@ -41,46 +41,45 @@ let TierV2TestContract: ReadWriteTier;
 describe("OffChainAssetVault", async function () {
   beforeEach(async () => {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    TierV2TestContract = ( await TierV2Test.deploy() ) as ReadWriteTier;
+    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
   });
 
   it("Constructs well", async function () {
     const signers = await ethers.getSigners();
-    const alice = signers[ 0 ];
+    const alice = signers[0];
 
     const [vault, receipt, eventArgs] = await deployOffChainAssetVault();
 
-    const {config, caller} = eventArgs
-
-
-    assert(
-        config.receiptVaultConfig.name === expectedName,
-        `wrong name expected ${ expectedName } got ${ config.receiptVaultConfig.name }`
-    );
-    assert(
-        config.receiptVaultConfig.asset === ADDRESS_ZERO,
-        `wrong asset expected ${ ADDRESS_ZERO } got ${ config.receiptVaultConfig.asset }`
-    );
-    assert(
-        config.receiptVaultConfig.receipt === receipt.address,
-        `wrong uri expected ${ receipt.address } got ${ config.receiptVaultConfig.receipt }`
-    );
+    const { config, caller } = eventArgs;
 
     assert(
-        config.receiptVaultConfig.symbol === expectedSymbol,
-        `wrong symbol expected ${ expectedSymbol } got ${ config.receiptVaultConfig.symbol }`
+      config.receiptVaultConfig.name === expectedName,
+      `wrong name expected ${expectedName} got ${config.receiptVaultConfig.name}`
+    );
+    assert(
+      config.receiptVaultConfig.asset === ADDRESS_ZERO,
+      `wrong asset expected ${ADDRESS_ZERO} got ${config.receiptVaultConfig.asset}`
+    );
+    assert(
+      config.receiptVaultConfig.receipt === receipt.address,
+      `wrong uri expected ${receipt.address} got ${config.receiptVaultConfig.receipt}`
     );
 
     assert(
-        caller === alice.address,
-        `wrong caller expected ${ alice.address } got ${ caller }`
+      config.receiptVaultConfig.symbol === expectedSymbol,
+      `wrong symbol expected ${expectedSymbol} got ${config.receiptVaultConfig.symbol}`
+    );
+
+    assert(
+      caller === alice.address,
+      `wrong caller expected ${alice.address} got ${caller}`
     );
   });
   it("Checks asset is zero", async function () {
     const [vault, receipt, eventArgs] = await deployOffChainAssetVault();
 
-    const {config, admin} = eventArgs
+    const { config, admin } = eventArgs;
 
     assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
   });
@@ -269,7 +268,7 @@ describe("OffChainAssetVault", async function () {
     const [receiptVault, asset, priceOracle] =
       await deployERC20PriceOracleVault();
 
-    const id = ethers.BigNumber.from(1)
+    const id = ethers.BigNumber.from(1);
 
     const expectedShares = ethers.BigNumber.from(0);
 
@@ -312,7 +311,7 @@ describe("OffChainAssetVault", async function () {
     const [receiptVault, asset, priceOracle] =
       await deployERC20PriceOracleVault();
 
-    const id = ONE
+    const id = ONE;
 
     const hasRoleDepositor = await vault.hasRole(
       await vault.WITHDRAWER(),
@@ -340,7 +339,7 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault, receipt] = await deployOffChainAssetVault();
-    const shareRatio = ONE
+    const shareRatio = ONE;
 
     const aliceReceiptBalance = await receipt.balanceOf(
       alice.address,

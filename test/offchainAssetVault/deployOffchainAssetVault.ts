@@ -7,15 +7,19 @@ import { getEventArgs } from "../util";
 
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
-export const deployOffChainAssetVault = async (): Promise<[OffchainAssetVault, Receipt, any]> => {
+export const deployOffChainAssetVault = async (): Promise<
+  [OffchainAssetVault, Receipt, any]
+> => {
   const signers = await ethers.getSigners();
-  const alice = signers[ 0 ];
+  const alice = signers[0];
 
   const receipt = await ethers.getContractFactory("Receipt");
-  const receiptContract = ( await receipt.deploy() ) as Receipt;
+  const receiptContract = (await receipt.deploy()) as Receipt;
   await receiptContract.deployed();
 
-  await receiptContract.initialize({ uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4" })
+  await receiptContract.initialize({
+    uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
+  });
 
   const constructionConfig = {
     admin: alice.address,
@@ -28,16 +32,17 @@ export const deployOffChainAssetVault = async (): Promise<[OffchainAssetVault, R
   };
 
   const offChainAssetVaultFactory = await ethers.getContractFactory(
-      "OffchainAssetVault"
+    "OffchainAssetVault"
   );
 
-  const offChainAssetVault = ( await offChainAssetVaultFactory.deploy() ) as OffchainAssetVault;
+  const offChainAssetVault =
+    (await offChainAssetVaultFactory.deploy()) as OffchainAssetVault;
   await offChainAssetVault.deployed();
 
   const eventArgs = (await getEventArgs(
-      await offChainAssetVault.initialize(constructionConfig),
-      "OffchainAssetVaultConstruction",
-      offChainAssetVault
+    await offChainAssetVault.initialize(constructionConfig),
+    "OffchainAssetVaultConstruction",
+    offChainAssetVault
   )) as OffchainAssetVaultConstructionEvent["args"];
 
   return [offChainAssetVault, receiptContract, eventArgs];

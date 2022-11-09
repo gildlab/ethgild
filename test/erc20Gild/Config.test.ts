@@ -8,13 +8,21 @@ import {
   expectedSymbol,
   quotePrice,
   usdDecimals,
-  xauDecimals
+  xauDecimals,
 } from "../util";
-import { ERC20PriceOracleVault, ERC20PriceOracleVaultConstructionEvent } from "../../typechain/ERC20PriceOracleVault";
+import {
+  ERC20PriceOracleVault,
+  ERC20PriceOracleVaultConstructionEvent,
+} from "../../typechain/ERC20PriceOracleVault";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { getEventArgs } from "../util";
-import { Receipt, TestChainlinkDataFeed, TestErc20, TwoPriceOracle } from "../../typechain";
+import {
+  Receipt,
+  TestChainlinkDataFeed,
+  TestErc20,
+  TwoPriceOracle,
+} from "../../typechain";
 import { BigNumber } from "ethers";
 
 let owner: SignerWithAddress;
@@ -28,10 +36,10 @@ describe("config", async function () {
     [owner] = await ethers.getSigners();
 
     const oracleFactory = await ethers.getContractFactory(
-        "TestChainlinkDataFeed"
+      "TestChainlinkDataFeed"
     );
     const basePriceOracle =
-        (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
     await basePriceOracle.deployed();
     // ETHUSD as of 2022-06-30
 
@@ -44,7 +52,7 @@ describe("config", async function () {
     });
 
     const quotePriceOracle =
-        (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
     await quotePriceOracle.deployed();
     // XAUUSD as of 2022-06-30
     await quotePriceOracle.setDecimals(xauDecimals);
@@ -68,25 +76,24 @@ describe("config", async function () {
     const receiptContract = (await receipt.deploy()) as Receipt;
     await receiptContract.deployed();
 
-
     const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
-        "ChainlinkFeedPriceOracle"
+      "ChainlinkFeedPriceOracle"
     );
     const chainlinkFeedPriceOracleBase =
-        await chainlinkFeedPriceOracleFactory.deploy({
-          feed: basePriceOracle.address,
-          staleAfter: baseStaleAfter,
-        });
+      await chainlinkFeedPriceOracleFactory.deploy({
+        feed: basePriceOracle.address,
+        staleAfter: baseStaleAfter,
+      });
     const chainlinkFeedPriceOracleQuote =
-        await chainlinkFeedPriceOracleFactory.deploy({
-          feed: quotePriceOracle.address,
-          staleAfter: quoteStaleAfter,
-        });
+      await chainlinkFeedPriceOracleFactory.deploy({
+        feed: quotePriceOracle.address,
+        staleAfter: quoteStaleAfter,
+      });
     await chainlinkFeedPriceOracleBase.deployed();
     await chainlinkFeedPriceOracleQuote.deployed();
 
     const twoPriceOracleFactory = await ethers.getContractFactory(
-        "TwoPriceOracle"
+      "TwoPriceOracle"
     );
     const twoPriceOracle = (await twoPriceOracleFactory.deploy({
       base: chainlinkFeedPriceOracleBase.address,
@@ -101,22 +108,20 @@ describe("config", async function () {
     };
 
     const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
-        "ERC20PriceOracleVault"
+      "ERC20PriceOracleVault"
     );
 
-    let erc20PriceOracleVault = (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
+    let erc20PriceOracleVault =
+      (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
     await erc20PriceOracleVault.deployed();
 
-
     const { caller, config } = (await getEventArgs(
-      await erc20PriceOracleVault.initialize(
-          {
-            priceOracle: twoPriceOracle.address,
-            receiptVaultConfig: constructionConfig,
-          }
-      ),
+      await erc20PriceOracleVault.initialize({
+        priceOracle: twoPriceOracle.address,
+        receiptVaultConfig: constructionConfig,
+      }),
       "ERC20PriceOracleVaultConstruction",
-        erc20PriceOracleVault
+      erc20PriceOracleVault
     )) as ERC20PriceOracleVaultConstructionEvent["args"];
 
     assert(caller === owner.address, "wrong deploy sender");
