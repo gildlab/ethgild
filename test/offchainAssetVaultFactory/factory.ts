@@ -1,9 +1,10 @@
 import { expect, assert } from "chai";
 import { ethers } from "hardhat";
-import { OffchainAssetVaultFactory } from "../../typechain/OffchainAssetVaultFactory";
-import { OffchainAssetVault } from "../../typechain/OffchainAssetVault";
+import { OffchainAssetVaultFactory } from "../../typechain";
+import { OffchainAssetVault } from "../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { getEventArgs } from "../util";
+import { Receipt } from "../../typechain";
 
 let factory: OffchainAssetVaultFactory;
 let alice: SignerWithAddress;
@@ -26,13 +27,18 @@ describe("OffchainAssetVaultFactory Test", () => {
   });
 
   it("Should createChild (createTypedChild)", async () => {
+
+    const receipt = await ethers.getContractFactory("Receipt");
+    const receiptContract = (await receipt.deploy()) as Receipt;
+    await receiptContract.deployed();
+
     const constructionConfig = {
       admin: alice.address,
       receiptVaultConfig: {
         asset: ethers.constants.AddressZero,
         name: "EthGild",
         symbol: "ETHg",
-        uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
+        receipt: receiptContract.address,
       },
     };
 
