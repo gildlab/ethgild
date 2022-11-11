@@ -525,10 +525,8 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
-    const [receiptVault, asset, priceOracle] =
-      await deployERC20PriceOracleVault();
 
-    const _id = await priceOracle.price();
+    const _id = ONE;
 
     await vault.grantRole(await vault.CONFISCATOR(), alice.address);
 
