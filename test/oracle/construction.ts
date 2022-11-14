@@ -15,11 +15,11 @@ export const usdDecimals = 8;
 export const xauDecimals = 8;
 
 describe("oracle construction", async function () {
-  it("should set reference price", async function () {
+  it.only("should set reference price", async function () {
     const [_vault, _erc20, priceOracle, receipt, basePriceOracle, quotePriceOracle] =
       await deployERC20PriceOracleVault();
 
-    // ETHUSD as of 2022-06-30
+    // ETHUSD as of 2022-11-14
     await basePriceOracle.setDecimals(usdDecimals);
     await basePriceOracle.setRoundData(1, {
       startedAt: BigNumber.from(Date.now()).div(1000),
@@ -28,7 +28,7 @@ describe("oracle construction", async function () {
       answeredInRound: 1,
     });
 
-    // XAUUSD as of 2022-06-30
+    // XAUUSD as of 2022-11-14
     await quotePriceOracle.setDecimals(xauDecimals);
     await quotePriceOracle.setRoundData(1, {
       startedAt: BigNumber.from(Date.now()).div(1000),
