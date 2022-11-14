@@ -10,7 +10,10 @@ import {
   getEventArgs,
   getEvent,
 } from "../util";
-import { ERC20Upgradeable as ERC20, ERC20PriceOracleVault} from "../../typechain";
+import {
+  ERC20Upgradeable as ERC20,
+  ERC20PriceOracleVault,
+} from "../../typechain";
 import { BigNumber } from "ethers";
 import { WithdrawEvent } from "../../typechain/IERC4626";
 

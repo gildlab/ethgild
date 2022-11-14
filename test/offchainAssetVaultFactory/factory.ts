@@ -27,7 +27,6 @@ describe("OffchainAssetVaultFactory Test", () => {
   });
 
   it("Should createChild (createTypedChild)", async () => {
-
     const receipt = await ethers.getContractFactory("Receipt");
     const receiptContract = (await receipt.deploy()) as Receipt;
     await receiptContract.deployed();

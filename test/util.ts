@@ -91,7 +91,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const receipt = await ethers.getContractFactory("Receipt");
   const receiptContract = (await receipt.deploy()) as Receipt;
   await receiptContract.deployed();
-  await receiptContract.initialize({uri:expectedUri})
+  await receiptContract.initialize({ uri: expectedUri });
 
   const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkFeedPriceOracle"

@@ -12,9 +12,11 @@ import {
 } from "../util";
 import { DepositEvent } from "../../typechain/IERC4626";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { DepositWithReceiptEvent, WithdrawWithReceiptEvent,
+import {
+  DepositWithReceiptEvent,
+  WithdrawWithReceiptEvent,
 } from "../../typechain/ReceiptVault";
-import {ReceiptInformationEvent} from "../../typechain/Receipt"
+import { ReceiptInformationEvent } from "../../typechain/Receipt";
 
 import { getEventArgs } from "../util";
 
