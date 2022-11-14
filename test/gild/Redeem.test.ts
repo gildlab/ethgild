@@ -10,7 +10,7 @@ import {
   getEventArgs,
   getEvent,
 } from "../util";
-import { ERC20, ERC20PriceOracleVault } from "../../typechain";
+import { ERC20Upgradeable as ERC20, ERC20PriceOracleVault} from "../../typechain";
 import { BigNumber } from "ethers";
 import { WithdrawEvent } from "../../typechain/IERC4626";
 
@@ -19,7 +19,7 @@ chai.use(solidity);
 const { assert } = chai;
 
 let vault: ERC20PriceOracleVault,
-  asset: IERC20,
+  asset: ERC20,
   shareRatio: BigNumber,
   aliceAddress: string,
   aliceAssets: BigNumber;
