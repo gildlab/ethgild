@@ -31,8 +31,8 @@ export const ONE = priceOne;
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const quotePrice = "167642999800";
-export const basePrice = "157675736633";
+export const quotePrice = "176169500000";
+export const basePrice = "125378000000";
 
 export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
@@ -91,6 +91,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const receipt = await ethers.getContractFactory("Receipt");
   const receiptContract = (await receipt.deploy()) as Receipt;
   await receiptContract.deployed();
+  await receiptContract.initialize({uri:expectedUri})
 
   const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkFeedPriceOracle"
