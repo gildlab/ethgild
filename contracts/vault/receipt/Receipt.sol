@@ -59,13 +59,14 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
 
     /// @inheritdoc ERC1155
     function _beforeTokenTransfer(
-        address,
+        address operator_,
         address from_,
         address to_,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) internal view override {
+        uint256[] memory ids_,
+        uint256[] memory amounts_,
+        bytes memory data_
+    ) internal override virtual {
+        super._beforeTokenTransfer(operator_, from_, to_, ids_, amounts_, data_);
         IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
