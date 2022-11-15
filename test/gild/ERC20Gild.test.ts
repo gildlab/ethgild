@@ -245,126 +245,126 @@ describe("deposit", async function () {
     );
   });
 
-  it("should trade erc1155", async function () {
-    const signers = await ethers.getSigners();
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const aliceVault = vault.connect(alice);
-    const bobVault = vault.connect(bob);
-
-    const shareRatio = await priceOracle.price();
-    const id1155 = shareRatio;
-
-    let totalTokenSupply = await asset.totalSupply();
-
-    const aliceAssetBalanceAmount = totalTokenSupply.div(2);
-
-    await asset.transfer(alice.address, aliceAssetBalanceAmount);
-
-    await asset
-      .connect(alice)
-      .increaseAllowance(vault.address, aliceAssetBalanceAmount);
-
-    await aliceVault["deposit(uint256,address)"](
-      aliceAssetBalanceAmount,
-      alice.address
-    );
-
-    const aliceShareBalance = await vault["balanceOf(address)"](alice.address);
-
-    const expectedAliceShareBalance = fixedPointMul(
-      shareRatio,
-      aliceAssetBalanceAmount
-    );
-    assert(
-      expectedAliceShareBalance.eq(aliceShareBalance),
-      `wrong alice share balance`
-    );
-
-    // transfer all receipt from alice to bob.
-    await aliceVault.safeTransferFrom(
-      alice.address,
-      bob.address,
-      id1155,
-      aliceShareBalance,
-      []
-    );
-
-    // alice cannot withdraw after sending to bob.
-    await assertError(
-      async () =>
-        await aliceVault["redeem(uint256,address,address,uint256)"](
-          1000,
-          alice.address,
-          alice.address,
-          shareRatio
-        ),
-      "burn amount exceeds balance",
-      "failed to prevent alice withdrawing after sending erc1155"
-    );
-
-    // bob cannot withdraw without erc20
-    await assertError(
-      async () =>
-        await bobVault["redeem(uint256,address,address,uint256)"](
-          1000,
-          bob.address,
-          bob.address,
-          shareRatio
-        ),
-      "burn amount exceeds balance",
-      "failed to prevent bob withdrawing without receiving erc20"
-    );
-
-    // erc20 transfer all of alice's shares to bob.
-    await aliceVault.transfer(bob.address, aliceShareBalance);
-
-    await assertError(
-      async () =>
-        await aliceVault["redeem(uint256,address,address,uint256)"](
-          1000,
-          alice.address,
-          alice.address,
-          shareRatio
-        ),
-      "burn amount exceeds balance",
-      "failed to prevent alice withdrawing after sending erc1155 and erc20"
-    );
-
-    // bob can redeem now
-    const bobAssetBalanceBefore = await asset.balanceOf(bob.address);
-    const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id1155
-    );
-
-    const bobRedeemTx = await bobVault[
-      "redeem(uint256,address,address,uint256)"
-    ](bobReceiptBalance, bob.address, bob.address, shareRatio);
-    await bobRedeemTx.wait();
-    const bobReceiptBalanceAfter = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id1155
-    );
-    const bobAssetBalanceAfter = await asset.balanceOf(bob.address);
-    assert(
-      bobReceiptBalanceAfter.eq(0),
-      `bob did not redeem all 1155 receipt amounts`
-    );
-
-    const bobAssetBalanceDiff = bobAssetBalanceAfter.sub(bobAssetBalanceBefore);
-    // Bob should be able to withdraw what alice deposited.
-    const bobAssetBalanceDiffExpected = fixedPointDiv(
-      aliceShareBalance,
-      shareRatio
-    );
-    assert(
-      bobAssetBalanceDiff.eq(bobAssetBalanceDiffExpected),
-      `wrong bob asset diff ${bobAssetBalanceDiffExpected} ${bobAssetBalanceDiff}`
-    );
-  });
+  // it("should trade erc1155", async function () {
+  //   const signers = await ethers.getSigners();
+  //
+  //   const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+  //
+  //   const alice = signers[0];
+  //   const bob = signers[1];
+  //
+  //   const aliceVault = vault.connect(alice);
+  //   const bobVault = vault.connect(bob);
+  //
+  //   const shareRatio = await priceOracle.price();
+  //   const id1155 = shareRatio;
+  //
+  //   let totalTokenSupply = await asset.totalSupply();
+  //
+  //   const aliceAssetBalanceAmount = totalTokenSupply.div(2);
+  //
+  //   await asset.transfer(alice.address, aliceAssetBalanceAmount);
+  //
+  //   await asset
+  //     .connect(alice)
+  //     .increaseAllowance(vault.address, aliceAssetBalanceAmount);
+  //
+  //   await aliceVault["deposit(uint256,address)"](
+  //     aliceAssetBalanceAmount,
+  //     alice.address
+  //   );
+  //
+  //   const aliceShareBalance = await vault["balanceOf(address)"](alice.address);
+  //
+  //   const expectedAliceShareBalance = fixedPointMul(
+  //     shareRatio,
+  //     aliceAssetBalanceAmount
+  //   );
+  //   assert(
+  //     expectedAliceShareBalance.eq(aliceShareBalance),
+  //     `wrong alice share balance`
+  //   );
+  //
+  //   // transfer all receipt from alice to bob.
+  //   await aliceVault.safeTransferFrom(
+  //     alice.address,
+  //     bob.address,
+  //     id1155,
+  //     aliceShareBalance,
+  //     []
+  //   );
+  //
+  //   // alice cannot withdraw after sending to bob.
+  //   await assertError(
+  //     async () =>
+  //       await aliceVault["redeem(uint256,address,address,uint256)"](
+  //         1000,
+  //         alice.address,
+  //         alice.address,
+  //         shareRatio
+  //       ),
+  //     "burn amount exceeds balance",
+  //     "failed to prevent alice withdrawing after sending erc1155"
+  //   );
+  //
+  //   // bob cannot withdraw without erc20
+  //   await assertError(
+  //     async () =>
+  //       await bobVault["redeem(uint256,address,address,uint256)"](
+  //         1000,
+  //         bob.address,
+  //         bob.address,
+  //         shareRatio
+  //       ),
+  //     "burn amount exceeds balance",
+  //     "failed to prevent bob withdrawing without receiving erc20"
+  //   );
+  //
+  //   // erc20 transfer all of alice's shares to bob.
+  //   await aliceVault.transfer(bob.address, aliceShareBalance);
+  //
+  //   await assertError(
+  //     async () =>
+  //       await aliceVault["redeem(uint256,address,address,uint256)"](
+  //         1000,
+  //         alice.address,
+  //         alice.address,
+  //         shareRatio
+  //       ),
+  //     "burn amount exceeds balance",
+  //     "failed to prevent alice withdrawing after sending erc1155 and erc20"
+  //   );
+  //
+  //   // bob can redeem now
+  //   const bobAssetBalanceBefore = await asset.balanceOf(bob.address);
+  //   const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
+  //     bob.address,
+  //     id1155
+  //   );
+  //
+  //   const bobRedeemTx = await bobVault[
+  //     "redeem(uint256,address,address,uint256)"
+  //   ](bobReceiptBalance, bob.address, bob.address, shareRatio);
+  //   await bobRedeemTx.wait();
+  //   const bobReceiptBalanceAfter = await vault["balanceOf(address,uint256)"](
+  //     bob.address,
+  //     id1155
+  //   );
+  //   const bobAssetBalanceAfter = await asset.balanceOf(bob.address);
+  //   assert(
+  //     bobReceiptBalanceAfter.eq(0),
+  //     `bob did not redeem all 1155 receipt amounts`
+  //   );
+  //
+  //   const bobAssetBalanceDiff = bobAssetBalanceAfter.sub(bobAssetBalanceBefore);
+  //   // Bob should be able to withdraw what alice deposited.
+  //   const bobAssetBalanceDiffExpected = fixedPointDiv(
+  //     aliceShareBalance,
+  //     shareRatio
+  //   );
+  //   assert(
+  //     bobAssetBalanceDiff.eq(bobAssetBalanceDiffExpected),
+  //     `wrong bob asset diff ${bobAssetBalanceDiffExpected} ${bobAssetBalanceDiff}`
+  //   );
+  // });
 });
