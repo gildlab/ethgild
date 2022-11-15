@@ -6,7 +6,9 @@ import {
   deployERC20PriceOracleVault,
   basePrice,
   quotePrice,
+  latestBlockNow
 } from "../util";
+import { ethers } from "hardhat"
 
 chai.use(solidity);
 const { assert } = chai;
@@ -25,11 +27,13 @@ describe("oracle construction", async function () {
       quotePriceOracle,
     ] = await deployERC20PriceOracleVault();
 
+    let now = await latestBlockNow();
+
     // ETHUSD as of 2022-11-14
     await basePriceOracle.setDecimals(usdDecimals);
     await basePriceOracle.setRoundData(1, {
-      startedAt: BigNumber.from(Date.now()).div(1000),
-      updatedAt: BigNumber.from(Date.now()).div(1000),
+      startedAt: now,
+      updatedAt: now,
       answer: basePrice,
       answeredInRound: 1,
     });
@@ -37,14 +41,11 @@ describe("oracle construction", async function () {
     // XAUUSD as of 2022-11-14
     await quotePriceOracle.setDecimals(xauDecimals);
     await quotePriceOracle.setRoundData(1, {
-      startedAt: BigNumber.from(Date.now()).div(1000),
-      updatedAt: BigNumber.from(Date.now()).div(1000),
+      startedAt: now,
+      updatedAt: now,
       answer: quotePrice,
       answeredInRound: 1,
     });
-
-    console.log(await basePriceOracle.latestRoundData());
-    console.log(await quotePriceOracle.latestRoundData());
 
     const actualPrice = await priceOracle.price();
 

@@ -36,8 +36,7 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
     /// Immutable copy of `ConstructionConfig.staleAfter`.
     uint256 public immutable staleAfter;
 
-    /// Constructor.
-    /// @param config_ All config required to interface with chainlink.
+    /// @param config_ Config required to interface with chainlink.
     constructor(ChainlinkFeedPriceOracleConfig memory config_) {
         feed = config_.feed;
         staleAfter = config_.staleAfter;
@@ -45,7 +44,7 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
     }
 
     /// @inheritdoc IPriceOracle
-    function price() external view override returns (uint256 price_) {
+    function price() external view virtual returns (uint256) {
         return LibChainlink.price(feed, staleAfter);
     }
 }

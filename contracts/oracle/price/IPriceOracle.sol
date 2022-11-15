@@ -17,7 +17,7 @@ pragma solidity ^0.8.0;
 /// answer it MUST error rather than return inappropriate values. The ability
 /// to do so MAY be limited by upstream providers (e.g. Chainlink silently
 /// pausing price data during a heartbeat).
-abstract contract IPriceOracle {
+interface IPriceOracle {
     /// Returns the current/latest price according to the oracle.
-    function price() external view virtual returns (uint256 price_);
+    function price() external view returns (uint256);
 }

@@ -41,6 +41,8 @@ export const fixedPointDiv = (a: BigNumber, b: BigNumber): BigNumber =>
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
+export const latestBlockNow = async (): Promise<number> => (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
+
 export const deployERC20PriceOracleVault = async (): Promise<
   [
     ERC20PriceOracleVault,
@@ -51,6 +53,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
     TestChainlinkDataFeed
   ]
 > => {
+  let now = await latestBlockNow();
+
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
   );
@@ -61,8 +65,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
 
   await basePriceOracle.setDecimals(usdDecimals);
   await basePriceOracle.setRoundData(1, {
-    startedAt: BigNumber.from(Date.now()).div(1000),
-    updatedAt: BigNumber.from(Date.now()).div(1000),
+    startedAt: now,
+    updatedAt: now,
     answer: basePrice,
     answeredInRound: 1,
   });
@@ -73,8 +77,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
   // XAUUSD as of 2022-06-30
   await quotePriceOracle.setDecimals(xauDecimals);
   await quotePriceOracle.setRoundData(1, {
-    startedAt: BigNumber.from(Date.now()).div(1000),
-    updatedAt: BigNumber.from(Date.now()).div(1000),
+    startedAt: now,
+    updatedAt: now,
     answer: quotePrice,
     answeredInRound: 1,
   });

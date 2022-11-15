@@ -28,8 +28,7 @@ contract TwoPriceOracle is IPriceOracle {
     /// As per `ConstructionConfig.quote`.
     IPriceOracle public immutable quote;
 
-    /// Constructor.
-    /// @param config_ All configr required to construct.
+    /// @param config_ Config required to construct.
     constructor(TwoPriceOracleConfig memory config_) {
         base = IPriceOracle(config_.base);
         quote = IPriceOracle(config_.quote);
@@ -38,7 +37,7 @@ contract TwoPriceOracle is IPriceOracle {
 
     /// Calculates the price as `base / quote`.
     /// @inheritdoc IPriceOracle
-    function price() external view override returns (uint256 price_) {
-        price_ = base.price().fixedPointDiv(quote.price());
+    function price() external view override returns (uint256) {
+        return base.price().fixedPointDiv(quote.price());
     }
 }
