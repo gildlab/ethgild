@@ -456,7 +456,7 @@ contract ReceiptVault is
         uint256,
         uint256
     ) internal virtual {
-        // Default behaviour is to assets before minting shares.
+        // Default behaviour is to move assets before minting shares.
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets_);
     }
 

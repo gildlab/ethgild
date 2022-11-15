@@ -25,7 +25,7 @@
     "yargs-parser": ">=13.1.2"
   },
   "dependencies": {
-    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#b6ef1d93e6151aeed09d147aea8f7b1b682694a6",
+    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#d35c301661393f8aa70bc808d1f8fbeefe3c2a6a",
     "@chainlink/contracts": "^0.3.1"
   }
 }
