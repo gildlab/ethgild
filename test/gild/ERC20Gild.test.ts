@@ -41,17 +41,7 @@ describe("deposit", async function () {
     );
   });
 
-  it("should deposit a sensible reference price", async function () {
-    // At the time of writing
-    // Block number: 12666285
-    //
-    // Trading View ETHUSD: 2218.71
-    // Chainlink ETHUSD (8 decimals): 2228 25543758
-    //
-    // Trading View XAUUSD: 1763.95
-    // Chainlink XAUUSD (8 decimals): 1767 15500000
-    //
-    // ~ 1 ETH should buy 1.26092812321 XAU
+  it.only("should deposit a sensible reference price", async function () {
 
     const signers = await ethers.getSigners();
 
