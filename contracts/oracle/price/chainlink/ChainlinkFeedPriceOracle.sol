@@ -3,6 +3,7 @@ pragma solidity =0.8.15;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
+import "@beehiveinnovation/rain-protocol/contracts/chainlink/Chainlink.sol";
 import {SafeCastUpgradeable as SafeCast} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import "../IPriceOracle.sol";
@@ -51,14 +52,6 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
 
     /// @inheritdoc IPriceOracle
     function price() external view override returns (uint256 price_) {
-        (, int256 answer_, , uint256 updatedAt_, ) = feed.latestRoundData();
-        require(answer_ > 0, "MIN_BASE_PRICE");
-        // Checked time comparison ensures no updates from the future as that
-        // would overflow, and no stale prices.
-        // solhint-disable-next-line not-rely-on-time
-        require(block.timestamp - updatedAt_ < staleAfter, "STALE_PRICE");
-
-        // Safely cast the answer to uint and scale it to 18 decimal FP.
-        price_ = answer_.toUint256().scale18(feed.decimals());
+        return LibChainlink.price(feed, staleAfter);
     }
 }
