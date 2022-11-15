@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.15;
+pragma solidity =0.8.17;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
-import "@beehiveinnovation/rain-protocol/contracts/chainlink/Chainlink.sol";
-import {SafeCastUpgradeable as SafeCast} from "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import "@beehiveinnovation/rain-protocol/contracts/chainlink/LibChainlink.sol";
 
 import "../IPriceOracle.sol";
 
-/// All data required to construct the contract.
 /// @param feed The address of the underlying chainlink oracle.
 /// @param staleAfter The duration after which price data will be considered
 /// too stale for use and error.
-struct ChainlinkFeedPriceOracleConstructionConfig {
+struct ChainlinkFeedPriceOracleConfig {
     address feed;
     uint256 staleAfter;
 }
@@ -31,21 +28,18 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
     /// Emitted upon deployment and construction of oracle
     /// @param sender `msg.sender` that deploys the oracle.
     /// @param config All config used to construct the contract.
-    event Construction(
-        address sender,
-        ChainlinkFeedPriceOracleConstructionConfig config
-    );
+    event Construction(address sender, ChainlinkFeedPriceOracleConfig config);
 
     /// Immutable copy of `ConstructionConfig.feed`.
-    AggregatorV3Interface public immutable feed;
+    address public immutable feed;
 
     /// Immutable copy of `ConstructionConfig.staleAfter`.
     uint256 public immutable staleAfter;
 
     /// Constructor.
-    /// @param config_ All config required to construct the contract.
-    constructor(ChainlinkFeedPriceOracleConstructionConfig memory config_) {
-        feed = AggregatorV3Interface(config_.feed);
+    /// @param config_ All config required to interface with chainlink.
+    constructor(ChainlinkFeedPriceOracleConfig memory config_) {
+        feed = config_.feed;
         staleAfter = config_.staleAfter;
         emit Construction(msg.sender, config_);
     }

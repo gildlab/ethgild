@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.15;
+pragma solidity =0.8.17;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import "./ChainlinkFeedPriceOracle.sol";
@@ -20,10 +20,7 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
         return
             address(
                 new ChainlinkFeedPriceOracle(
-                    abi.decode(
-                        data_,
-                        (ChainlinkFeedPriceOracleConstructionConfig)
-                    )
+                    abi.decode(data_, (ChainlinkFeedPriceOracleConfig))
                 )
             );
     }
@@ -32,11 +29,12 @@ contract ChainlinkFeedPriceOracleFactory is Factory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param config_ construction configuration for the oracle.
+    /// @param config_ configuration for the oracle.
     /// @return New `ChainlinkFeedPriceOracle` child contract address.
-    function createChildTyped(
-        ChainlinkFeedPriceOracleConstructionConfig memory config_
-    ) external returns (ChainlinkFeedPriceOracle) {
+    function createChildTyped(ChainlinkFeedPriceOracleConfig memory config_)
+        external
+        returns (ChainlinkFeedPriceOracle)
+    {
         return ChainlinkFeedPriceOracle(createChild(abi.encode(config_)));
     }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.15;
+pragma solidity =0.8.17;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import {OffchainAssetVault, OffchainAssetVaultConstructionConfig} from "./OffchainAssetVault.sol";

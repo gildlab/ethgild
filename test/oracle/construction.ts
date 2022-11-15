@@ -43,6 +43,9 @@ describe("oracle construction", async function () {
       answeredInRound: 1,
     });
 
+    console.log(await basePriceOracle.latestRoundData());
+    console.log(await quotePriceOracle.latestRoundData());
+
     const actualPrice = await priceOracle.price();
 
     assert(
