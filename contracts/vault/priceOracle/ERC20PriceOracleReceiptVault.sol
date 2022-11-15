@@ -2,18 +2,22 @@
 pragma solidity =0.8.17;
 
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {ReceiptVaultConstructionConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import "../../oracle/price/IPriceOracle.sol";
 
-/// All config required to construct `ERC20PriceOracleVault`.
+struct ERC20PriceOracleVaultConfig {
+    address priceOracle;
+    VaultConfig vaultConfig;
+}
+
 /// @param asset `ERC4626` underlying asset.
 /// @param name `ERC20` name for `ERC4626` shares.
 /// @param symbol `ERC20` symbol for `ERC4626` shares.
 /// @param uri `ERC1155` uri for deposit receipts.
 /// @param address `IPriceOracle` oracle to define share mints upon deposit.
-struct ERC20PriceOracleVaultConstructionConfig {
+struct ERC20PriceOracleReceiptVaultConfig {
     address priceOracle;
-    ReceiptVaultConstructionConfig receiptVaultConfig;
+    ReceiptVaultConfig receiptVaultConfig;
 }
 
 /// @title ERC20PriceOracleVault
@@ -118,25 +122,25 @@ struct ERC20PriceOracleVaultConstructionConfig {
 /// to guarantee total withdrawals are strictly <= deposits, we always add 1
 /// wei to the "round up" function results unconditionally. This saves gas and
 /// simplifies the contract overall.
-contract ERC20PriceOracleVault is ReceiptVault {
+contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// Emitted when deployed and constructed.
     /// @param caller `msg.sender` that deployed the contract.
     /// @param config All construction config.
-    event ERC20PriceOracleVaultConstruction(
+    event ERC20PriceOracleReceiptVaultInitialized(
         address caller,
-        ERC20PriceOracleVaultConstructionConfig config
+        ERC20PriceOracleReceiptVaultConfig config
     );
 
     /// The price oracle used for all minting calculations.
     IPriceOracle public priceOracle;
 
-    function initialize(ERC20PriceOracleVaultConstructionConfig memory config_)
+    function initialize(ERC20PriceOracleReceiptVaultConfig memory config_)
         external
         initializer
     {
         __ReceiptVault_init(config_.receiptVaultConfig);
         priceOracle = IPriceOracle(config_.priceOracle);
-        emit ERC20PriceOracleVaultConstruction(msg.sender, config_);
+        emit ERC20PriceOracleReceiptVaultInitialized(msg.sender, config_);
     }
 
     /// @inheritdoc ReceiptVault

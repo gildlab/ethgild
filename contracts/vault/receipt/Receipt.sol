@@ -6,7 +6,7 @@ import {OwnableUpgradeable as Ownable} from "@openzeppelin/contracts-upgradeable
 import "./IReceiptOwner.sol";
 import "./IReceipt.sol";
 
-struct ReceiptConstructionConfig {
+struct ReceiptConfig {
     string uri;
 }
 
@@ -18,7 +18,11 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
     /// data where the payload is large.
     event ReceiptInformation(address caller, uint256 id, bytes information);
 
-    function initialize(ReceiptConstructionConfig memory config_)
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(ReceiptConfig memory config_)
         external
         initializer
     {

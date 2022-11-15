@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
-import {OffchainAssetVault, OffchainAssetVaultConstructionConfig} from "./OffchainAssetVault.sol";
+import {OffchainAssetVault, OffchainAssetVaultConfig} from "./OffchainAssetVault.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 /// @title OffchainAssetVaultFactory
@@ -26,9 +26,9 @@ contract OffchainAssetVaultFactory is Factory {
         override
         returns (address)
     {
-        OffchainAssetVaultConstructionConfig memory config_ = abi.decode(
+        OffchainAssetVaultConfig memory config_ = abi.decode(
             data_,
-            (OffchainAssetVaultConstructionConfig)
+            (OffchainAssetVaultConfig)
         );
         address clone_ = Clones.clone(implementation);
         OffchainAssetVault(clone_).initialize(config_);
@@ -39,10 +39,10 @@ contract OffchainAssetVaultFactory is Factory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param config_ Construction config for the vault.
+    /// @param config_ Config for the vault.
     /// @return New `OffchainAssetVault` child contract address.
     function createChildTyped(
-        OffchainAssetVaultConstructionConfig memory config_
+        OffchainAssetVaultConfig memory config_
     ) external returns (OffchainAssetVault) {
         return OffchainAssetVault(createChild(abi.encode(config_)));
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.17;
 
-import {ReceiptVaultConstructionConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {ReceiptVaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "../receipt/IReceipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
@@ -12,10 +12,10 @@ import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and many other things).
-/// @param receiptConstructionConfig Forwarded to construction ReceiptVault.
-struct OffchainAssetVaultConstructionConfig {
+/// @param receiptConfig Forwarded to ReceiptVault.
+struct OffchainAssetVaultConfig {
     address admin;
-    ReceiptVaultConstructionConfig receiptVaultConfig;
+    ReceiptVaultConfig receiptVaultConfig;
 }
 
 /// @title OffchainAssetVault
@@ -57,12 +57,12 @@ struct OffchainAssetVaultConstructionConfig {
 /// - ERC4626 compliant vault interface (inherited from ReceiptVault)
 /// - Fine grained standard Open Zeppelin access control for all system roles
 contract OffchainAssetVault is ReceiptVault, AccessControl {
-    /// Contract has constructed.
+    /// Contract has initialized.
     /// @param caller The `msg.sender` constructing the contract.
-    /// @param config All construction config.
-    event OffchainAssetVaultConstruction(
+    /// @param config All initialization config.
+    event OffchainAssetVaultInitialized(
         address caller,
-        OffchainAssetVaultConstructionConfig config
+        OffchainAssetVaultConfig config
     );
 
     /// A new certification time has been set.
@@ -164,7 +164,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    function initialize(OffchainAssetVaultConstructionConfig memory config_)
+    function initialize(OffchainAssetVaultConfig memory config_)
         external
         initializer
     {
@@ -173,7 +173,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
 
         // There is no asset, the asset is offchain.
         require(
-            config_.receiptVaultConfig.asset == address(0),
+            config_.receiptVaultConfig.vaultConfig.asset == address(0),
             "NONZERO_ASSET"
         );
 
@@ -210,7 +210,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
         _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
-        emit OffchainAssetVaultConstruction(msg.sender, config_);
+        emit OffchainAssetVaultInitialized(msg.sender, config_);
     }
 
     function _beforeDeposit(

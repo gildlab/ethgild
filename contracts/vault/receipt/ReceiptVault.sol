@@ -11,11 +11,15 @@ import "./IReceipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 import "./IReceiptOwner.sol";
 
-struct ReceiptVaultConstructionConfig {
+struct VaultConfig {
     address asset;
-    address receipt;
     string name;
     string symbol;
+}
+
+struct ReceiptVaultConfig {
+    address receipt;
+    VaultConfig vaultConfig;
 }
 
 contract ReceiptVault is
@@ -60,11 +64,6 @@ contract ReceiptVault is
         uint256 id
     );
 
-    /// Emitted when deployed and constructed.
-    /// @param caller `msg.sender` that deployed the contract.
-    /// @param config All construction config.
-    event Construction(address caller, ReceiptVaultConstructionConfig config);
-
     address internal _asset;
     address internal _receipt;
 
@@ -80,14 +79,18 @@ contract ReceiptVault is
     /// the non-standard equivalent functions that take a ID parameter.
     mapping(address => uint256) public withdrawIds;
 
-    function __ReceiptVault_init(ReceiptVaultConstructionConfig memory config_)
+    constructor() {
+        _disableInitializers();
+    }
+
+    function __ReceiptVault_init(ReceiptVaultConfig memory config_)
         internal
         virtual
     {
         __Multicall_init();
         __ReentrancyGuard_init();
-        __ERC20_init(config_.name, config_.symbol);
-        _asset = config_.asset;
+        __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
+        _asset = config_.vaultConfig.asset;
         _receipt = config_.receipt;
     }
 
