@@ -173,13 +173,14 @@ describe("OffChainAssetVault", async function () {
   //   const signers = await ethers.getSigners();
   //   const [vault] = await deployOffChainAssetVault();
   //
-  //   const [receiptVault, asset, priceOracle] =
-  //     await deployERC20PriceOracleVault();
+  //   const testErc20 = await ethers.getContractFactory("TestErc20");
+  //   const asset = (await testErc20.deploy()) as TestErc20;
+  //   await asset.deployed();
   //
-  //   const alice = signers[1];
-  //   // const bob = signers[1];
+  //   const alice = signers[0];
+  //   const bob = signers[2];
   //
-  //   const shareRatio = fixedPointDiv(ethers.BigNumber.from(157675736633),ethers.BigNumber.from(167642999800))
+  //   const shareRatio = ONE; //fixedPointDiv(ethers.BigNumber.from(157675736633),ethers.BigNumber.from(167642999800))
   //   const aliceAssets = ethers.BigNumber.from(1000);
   //
   //   await asset.transfer(alice.address, aliceAssets);
@@ -188,12 +189,14 @@ describe("OffChainAssetVault", async function () {
   //
   //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
   //
-  //   await vault["deposit(uint256,address,uint256,bytes)"](
-  //     aliceAssets,
-  //     alice.address,
-  //     ONE,
-  //     []
-  //   );
+  //   await vault
+  //     .connect(alice)
+  //     ["deposit(uint256,address,uint256,bytes)"](
+  //       aliceAssets,
+  //       bob.address,
+  //       shareRatio,
+  //       []
+  //     );
   //
   //   const totalSupply = await vault.totalSupply();
   //   const totalAssets = await vault.totalAssets();
