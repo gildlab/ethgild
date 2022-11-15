@@ -1,6 +1,5 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
-import { BigNumber } from "ethers";
 import {
   expectedReferencePrice,
   deployERC20PriceOracleVault,
@@ -8,7 +7,6 @@ import {
   quotePrice,
   latestBlockNow
 } from "../util";
-import { ethers } from "hardhat"
 
 chai.use(solidity);
 const { assert } = chai;
@@ -17,7 +15,7 @@ export const usdDecimals = 8;
 export const xauDecimals = 8;
 
 describe("oracle construction", async function () {
-  it.only("should set reference price", async function () {
+  it("should set reference price", async function () {
     const [
       _vault,
       _erc20,
