@@ -3,9 +3,8 @@ import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   basePrice,
-  deployERC20PriceOracleVault,
   expectedName,
-  expectedSymbol,
+  expectedSymbol, latestBlockNow,
   quotePrice,
   usdDecimals,
   xauDecimals,
@@ -23,7 +22,6 @@ import {
   TestErc20,
   TwoPriceOracle,
 } from "../../typechain";
-import { BigNumber } from "ethers";
 
 let owner: SignerWithAddress;
 
@@ -34,6 +32,7 @@ const { assert } = chai;
 describe("config", async function () {
   it("Checks construction event", async function () {
     [owner] = await ethers.getSigners();
+    const now = await latestBlockNow();
 
     const oracleFactory = await ethers.getContractFactory(
       "TestChainlinkDataFeed"
@@ -45,8 +44,8 @@ describe("config", async function () {
 
     await basePriceOracle.setDecimals(usdDecimals);
     await basePriceOracle.setRoundData(1, {
-      startedAt: BigNumber.from(Date.now()).div(1000),
-      updatedAt: BigNumber.from(Date.now()).div(1000),
+      startedAt: now,
+      updatedAt: now,
       answer: basePrice,
       answeredInRound: 1,
     });
@@ -57,8 +56,8 @@ describe("config", async function () {
     // XAUUSD as of 2022-06-30
     await quotePriceOracle.setDecimals(xauDecimals);
     await quotePriceOracle.setRoundData(1, {
-      startedAt: BigNumber.from(Date.now()).div(1000),
-      updatedAt: BigNumber.from(Date.now()).div(1000),
+      startedAt: now,
+      updatedAt: now,
       answer: quotePrice,
       answeredInRound: 1,
     });
