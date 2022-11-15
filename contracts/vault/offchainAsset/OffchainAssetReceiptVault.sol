@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity =0.8.17;
 
-import {ReceiptVaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "../receipt/IReceipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
+
+struct OffchainAssetVaultConfig {
+    address admin;
+    VaultConfig vaultConfig;
+}
 
 /// All data required to construct `CertifiedAssetConnect`.
 /// @param admin The initial admin has ALL ROLES. It is up to the admin to
@@ -13,12 +18,12 @@ import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and many other things).
 /// @param receiptConfig Forwarded to ReceiptVault.
-struct OffchainAssetVaultConfig {
+struct OffchainAssetReceiptVaultConfig {
     address admin;
     ReceiptVaultConfig receiptVaultConfig;
 }
 
-/// @title OffchainAssetVault
+/// @title OffchainAssetReceiptVault
 /// @notice Enables curators of offchain assets to create a token that they can
 /// arbitrage offchain assets against onchain assets. This allows them to
 /// maintain a peg between offchain and onchain markets.
@@ -56,13 +61,13 @@ struct OffchainAssetVaultConfig {
 /// - ERC20 shares in the vault that can be traded minted/burned to track a peg
 /// - ERC4626 compliant vault interface (inherited from ReceiptVault)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetVault is ReceiptVault, AccessControl {
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Contract has initialized.
     /// @param caller The `msg.sender` constructing the contract.
     /// @param config All initialization config.
     event OffchainAssetVaultInitialized(
         address caller,
-        OffchainAssetVaultConfig config
+        OffchainAssetReceiptVaultConfig config
     );
 
     /// A new certification time has been set.
@@ -164,7 +169,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    function initialize(OffchainAssetVaultConfig memory config_)
+    function initialize(OffchainAssetReceiptVaultConfig memory config_)
         external
         initializer
     {
