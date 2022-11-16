@@ -1,14 +1,14 @@
 import { ethers } from "hardhat";
 
-import type { OffchainAssetVault } from "../../typechain";
+import type { OffchainAssetReceiptVault } from "../../typechain";
 import type { Receipt } from "../../typechain";
-import { OffchainAssetVaultConstructionEvent } from "../../typechain/OffchainAssetVault";
+import { OffchainAssetVaultInitializedEvent } from "../../typechain/OffchainAssetReceiptVault";
 import { getEventArgs } from "../util";
 
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
 export const deployOffChainAssetVault = async (): Promise<
-  [OffchainAssetVault, Receipt, any]
+  [OffchainAssetReceiptVault, Receipt, any]
 > => {
   const signers = await ethers.getSigners();
   const alice = signers[0];
@@ -24,26 +24,28 @@ export const deployOffChainAssetVault = async (): Promise<
   const constructionConfig = {
     admin: alice.address,
     receiptVaultConfig: {
-      asset: ADDRESS_ZERO,
       receipt: receiptContract.address,
-      name: "EthGild",
-      symbol: "ETHg",
+      vaultConfig: {
+        asset: ADDRESS_ZERO,
+        name: "EthGild",
+        symbol: "ETHg",
+      }
     },
   };
 
   const offChainAssetVaultFactory = await ethers.getContractFactory(
-    "OffchainAssetVault"
+    "OffchainAssetReceiptVault"
   );
 
   const offChainAssetVault =
-    (await offChainAssetVaultFactory.deploy()) as OffchainAssetVault;
+    (await offChainAssetVaultFactory.deploy()) as OffchainAssetReceiptVault;
   await offChainAssetVault.deployed();
 
   const eventArgs = (await getEventArgs(
     await offChainAssetVault.initialize(constructionConfig),
-    "OffchainAssetVaultConstruction",
+    "OffchainAssetVaultInitialized",
     offChainAssetVault
-  )) as OffchainAssetVaultConstructionEvent["args"];
+  )) as OffchainAssetVaultInitializedEvent["args"];
 
   return [offChainAssetVault, receiptContract, eventArgs];
 };

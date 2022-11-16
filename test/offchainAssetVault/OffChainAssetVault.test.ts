@@ -2,7 +2,7 @@ import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import {
   OffchainAssetVault,
-  OffchainAssetVaultFactory,
+  OffchainAssetReceiptVaultFactory,
   ReadWriteTier,
   Receipt,
   TestErc20,
@@ -24,12 +24,12 @@ import {
 
 import {
   SetERC20TierEvent,
-  OffchainAssetVaultConstructionEvent,
+  OffchainAssetVaultInitializedEvent,
   CertifyEvent,
   SnapshotEvent,
   ConfiscateSharesEvent,
   ConfiscateReceiptEvent,
-} from "../../typechain/OffchainAssetVault";
+} from "../../typechain/OffchainAssetReceiptVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
 
@@ -754,25 +754,24 @@ describe("OffChainAssetVault", async function () {
     const receiptContract = (await receipt.deploy()) as Receipt;
     await receiptContract.deployed();
 
-    const offchainAssetVaultFactoryFactory = await ethers.getContractFactory(
-      "OffchainAssetVaultFactory"
+    const offchainAssetReceiptVaultFactoryFactory = await ethers.getContractFactory(
+      "OffchainAssetReceiptVaultFactory"
     );
 
-    const offchainAssetVaultFactory =
-      (await offchainAssetVaultFactoryFactory.deploy()) as OffchainAssetVaultFactory;
-    await offchainAssetVaultFactory.deployed();
+    const offchainAssetReceiptVaultFactory =
+      (await offchainAssetReceiptVaultFactoryFactory.deploy()) as OffchainAssetReceiptVaultFactory;
+    await offchainAssetReceiptVaultFactory.deployed();
 
     const constructionConfig = {
       admin: alice.address,
-      receiptVaultConfig: {
-        asset: ADDRESS_ZERO,
-        receipt: receiptContract.address,
-        name: "EthGild",
-        symbol: "ETHg",
-      },
+        vaultConfig: {
+          asset: ADDRESS_ZERO,
+          name: "EthGild",
+          symbol: "ETHg",
+        },
     };
     const offchainAssetVaultTx =
-      await offchainAssetVaultFactory.createChildTyped(constructionConfig);
+      await offchainAssetReceiptVaultFactory.createChildTyped(constructionConfig);
 
     const vault = new ethers.Contract(
       ethers.utils.hexZeroPad(
@@ -781,7 +780,7 @@ describe("OffChainAssetVault", async function () {
             await getEventArgs(
               offchainAssetVaultTx,
               "NewChild",
-              offchainAssetVaultFactory
+              offchainAssetReceiptVaultFactory
             )
           ).child
         ),
