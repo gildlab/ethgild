@@ -1,10 +1,11 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
-import { ethers } from "hardhat";
+import { artifacts, ethers } from "hardhat";
 import {
   basePrice,
   expectedName,
   expectedSymbol,
+  getEvent,
   latestBlockNow,
   quotePrice,
   usdDecimals,
@@ -14,15 +15,21 @@ import {
   ERC20PriceOracleReceiptVault,
   ERC20PriceOracleReceiptVaultInitializedEvent,
 } from "../../typechain/ERC20PriceOracleReceiptVault";
+import {
+  ERC20PriceOracleReceiptVaultFactory,
+  NewChildEvent
+} from "../../typechain/ERC20PriceOracleReceiptVaultFactory";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { getEventArgs } from "../util";
 import {
   Receipt,
+  ReceiptFactory,
   TestChainlinkDataFeed,
   TestErc20,
   TwoPriceOracle,
 } from "../../typechain";
+import { Contract } from "ethers";
 
 let owner: SignerWithAddress;
 
@@ -72,10 +79,6 @@ describe("config", async function () {
     const asset = (await testErc20.deploy()) as TestErc20;
     await asset.deployed();
 
-    const receipt = await ethers.getContractFactory("Receipt");
-    const receiptContract = (await receipt.deploy()) as Receipt;
-    await receiptContract.deployed();
-
     const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
       "ChainlinkFeedPriceOracle"
     );
@@ -100,33 +103,53 @@ describe("config", async function () {
       quote: chainlinkFeedPriceOracleQuote.address,
     })) as TwoPriceOracle;
 
-    const constructionConfig = {
-      receipt: receiptContract.address,
+    const receiptFactoryFactory = await ethers.getContractFactory("ReceiptFactory");
+    const receiptFactoryContract = (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+    await receiptFactoryContract.deployed();
+
+    const receiptConfig = {
+      uri: "https://example.com"
+    };
+
+    const erc20PriceOracleVaultConfig = {
+      priceOracle: twoPriceOracle.address,
       vaultConfig: {
         asset: asset.address,
         name: "EthGild",
         symbol: "ETHg",
       }
-    };
+    }
 
-    const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
-      "ERC20PriceOracleReceiptVault"
+    const erc20PriceOracleVaultFactoryFactory = await ethers.getContractFactory(
+      "ERC20PriceOracleReceiptVaultFactory"
     );
 
-    let erc20PriceOracleReceiptVault =
-      (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleReceiptVault;
-    await erc20PriceOracleReceiptVault.deployed();
+    let erc20PriceOracleReceiptVaultFactory =
+      (await erc20PriceOracleVaultFactoryFactory.deploy(receiptFactoryContract.address)) as ERC20PriceOracleReceiptVaultFactory;
+    await erc20PriceOracleReceiptVaultFactory.deployed();
 
-    const { caller, config } = (await getEventArgs(
-      await erc20PriceOracleReceiptVault.initialize({
-        priceOracle: twoPriceOracle.address,
-        receiptVaultConfig: constructionConfig,
-      }),
+    let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(receiptConfig, erc20PriceOracleVaultConfig)
+    let {sender, child} = (await getEventArgs(
+      tx,
+      "NewChild",
+      erc20PriceOracleReceiptVaultFactory
+    )) as NewChildEvent["args"]
+
+    let receiptFactoryArgs = (await getEventArgs(
+      tx,
+      "NewChild",
+      receiptFactoryContract
+    )) as NewChildEvent["args"]
+
+    let childContract = new Contract(child, (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi)
+
+    let { caller, config } = (await getEventArgs(
+      tx,
       "ERC20PriceOracleReceiptVaultInitialized",
-      erc20PriceOracleReceiptVault
-    )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
+      childContract
+    )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"]
 
-    assert(caller === owner.address, "wrong deploy sender");
+    assert(caller === erc20PriceOracleReceiptVaultFactory.address, "wrong deploy sender");
     assert(
       config.receiptVaultConfig.vaultConfig.asset === asset.address,
       "wrong asset address"
@@ -139,7 +162,7 @@ describe("config", async function () {
       config.receiptVaultConfig.vaultConfig.symbol === expectedSymbol,
       "wrong deploy symbol"
     );
-    assert(config.receiptVaultConfig.receipt === receiptContract.address);
+    assert(config.receiptVaultConfig.receipt === receiptFactoryArgs.child);
     assert(
       config.priceOracle === twoPriceOracle.address,
       `wrong deploy priceOracle address: expected ${config.priceOracle} got ${twoPriceOracle.address}`
