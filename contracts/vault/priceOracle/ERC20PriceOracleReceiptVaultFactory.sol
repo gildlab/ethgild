@@ -33,22 +33,26 @@ contract ERC20PriceOracleReceiptVaultFactory is Factory {
         override
         returns (address)
     {
-        (ReceiptConfig memory receiptConfig_, ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_) = abi.decode(
-            data_,
-            (ReceiptConfig, ERC20PriceOracleVaultConfig)
+        (
+            ReceiptConfig memory receiptConfig_,
+            ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_
+        ) = abi.decode(data_, (ReceiptConfig, ERC20PriceOracleVaultConfig));
+        Receipt receipt_ = ReceiptFactory(receiptFactory).createChildTyped(
+            receiptConfig_
         );
-        Receipt receipt_ = ReceiptFactory(receiptFactory).createChildTyped(receiptConfig_);
 
         address clone_ = Clones.clone(implementation);
         receipt_.transferOwnership(clone_);
 
-        ERC20PriceOracleReceiptVault(clone_).initialize(ERC20PriceOracleReceiptVaultConfig(
-            erc20PriceOracleVaultConfig_.priceOracle,
-            ReceiptVaultConfig(
-                address(receipt_),
-                erc20PriceOracleVaultConfig_.vaultConfig
+        ERC20PriceOracleReceiptVault(clone_).initialize(
+            ERC20PriceOracleReceiptVaultConfig(
+                erc20PriceOracleVaultConfig_.priceOracle,
+                ReceiptVaultConfig(
+                    address(receipt_),
+                    erc20PriceOracleVaultConfig_.vaultConfig
+                )
             )
-        ));
+        );
         return clone_;
     }
 
@@ -64,6 +68,11 @@ contract ERC20PriceOracleReceiptVaultFactory is Factory {
         ReceiptConfig memory receiptConfig_,
         ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_
     ) external returns (ERC20PriceOracleReceiptVault) {
-        return ERC20PriceOracleReceiptVault(createChild(abi.encode(receiptConfig_, erc20PriceOracleVaultConfig_)));
+        return
+            ERC20PriceOracleReceiptVault(
+                createChild(
+                    abi.encode(receiptConfig_, erc20PriceOracleVaultConfig_)
+                )
+            );
     }
 }

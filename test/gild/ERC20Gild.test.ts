@@ -42,7 +42,6 @@ describe("deposit", async function () {
   });
 
   it.only("should deposit a sensible reference price", async function () {
-
     const signers = await ethers.getSigners();
 
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();

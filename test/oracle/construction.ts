@@ -5,7 +5,7 @@ import {
   deployERC20PriceOracleVault,
   basePrice,
   quotePrice,
-  latestBlockNow
+  latestBlockNow,
 } from "../util";
 
 chai.use(solidity);

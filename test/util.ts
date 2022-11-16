@@ -41,7 +41,9 @@ export const fixedPointDiv = (a: BigNumber, b: BigNumber): BigNumber =>
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
-export const latestBlockNow = async (): Promise<number> => (await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp
+export const latestBlockNow = async (): Promise<number> =>
+  (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+    .timestamp;
 
 export const deployERC20PriceOracleVault = async (): Promise<
   [
