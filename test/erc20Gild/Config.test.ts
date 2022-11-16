@@ -10,9 +10,9 @@ import {
   xauDecimals,
 } from "../util";
 import {
-  ERC20PriceOracleVault,
-  ERC20PriceOracleVaultConstructionEvent,
-} from "../../typechain/ERC20PriceOracleVault";
+  ERC20PriceOracleReceiptVault,
+  ERC20PriceOracleReceiptVaultInitializedEvent,
+} from "../../typechain/ERC20PriceOracleReceiptVault";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { getEventArgs } from "../util";
@@ -30,7 +30,7 @@ chai.use(solidity);
 const { assert } = chai;
 
 describe("config", async function () {
-  it("Checks construction event", async function () {
+  it.only("Checks construction event", async function () {
     [owner] = await ethers.getSigners();
     const now = await latestBlockNow();
 
@@ -100,46 +100,48 @@ describe("config", async function () {
     })) as TwoPriceOracle;
 
     const constructionConfig = {
-      asset: asset.address,
       receipt: receiptContract.address,
-      name: "EthGild",
-      symbol: "ETHg",
+      vaultConfig: {
+        asset: asset.address,
+        name: "EthGild",
+        symbol: "ETHg",
+      }
     };
 
     const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
-      "ERC20PriceOracleVault"
+      "ERC20PriceOracleReceiptVault"
     );
 
-    let erc20PriceOracleVault =
-      (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
-    await erc20PriceOracleVault.deployed();
+    let erc20PriceOracleReceiptVault =
+      (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleReceiptVault;
+    await erc20PriceOracleReceiptVault.deployed();
 
     const { caller, config } = (await getEventArgs(
-      await erc20PriceOracleVault.initialize({
+      await erc20PriceOracleReceiptVault.initialize({
         priceOracle: twoPriceOracle.address,
         receiptVaultConfig: constructionConfig,
       }),
-      "ERC20PriceOracleVaultConstruction",
-      erc20PriceOracleVault
-    )) as ERC20PriceOracleVaultConstructionEvent["args"];
+      "ERC20PriceOracleReceiptVaultInitialized",
+      erc20PriceOracleReceiptVault
+    )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
 
     assert(caller === owner.address, "wrong deploy sender");
     assert(
-      config.receiptVaultConfig.asset === asset.address,
+      config.receiptVaultConfig.vaultConfig.asset === asset.address,
       "wrong asset address"
     );
     assert(
-      config.receiptVaultConfig.name === expectedName,
+      config.receiptVaultConfig.vaultConfig.name === expectedName,
       "wrong deploy name"
     );
     assert(
-      config.receiptVaultConfig.symbol === expectedSymbol,
+      config.receiptVaultConfig.vaultConfig.symbol === expectedSymbol,
       "wrong deploy symbol"
     );
     assert(config.receiptVaultConfig.receipt === receiptContract.address);
     assert(
       config.priceOracle === twoPriceOracle.address,
-      `wrong deploy priceOracle addresს: expected ${config.priceOracle} got ${twoPriceOracle.address}`
+      `wrong deploy priceOracle address: expected ${config.priceOracle} got ${twoPriceOracle.address}`
     );
   });
 });
