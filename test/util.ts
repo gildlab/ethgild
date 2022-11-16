@@ -4,11 +4,11 @@ import { ContractTransaction, Contract, BigNumber, Event } from "ethers";
 
 const { assert } = chai;
 import { Result } from "ethers/lib/utils";
-import type { ERC20PriceOracleVault } from "../typechain";
 import type { TwoPriceOracle } from "../typechain";
 import type { TestErc20 } from "../typechain";
 import type { Receipt } from "../typechain";
 import type { TestChainlinkDataFeed } from "../typechain";
+import { ERC20PriceOracleReceiptVault } from "../typechain";
 
 export const ethMainnetFeedRegistry =
   "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
@@ -45,7 +45,7 @@ export const latestBlockNow = async (): Promise<number> => (await ethers.provide
 
 export const deployERC20PriceOracleVault = async (): Promise<
   [
-    ERC20PriceOracleVault,
+    ERC20PriceOracleReceiptVault,
     TestErc20,
     TwoPriceOracle,
     Receipt,
@@ -122,27 +122,29 @@ export const deployERC20PriceOracleVault = async (): Promise<
   })) as TwoPriceOracle;
 
   const constructionConfig = {
-    asset: testErc20Contract.address,
     receipt: receiptContract.address,
-    name: "EthGild",
-    symbol: "ETHg",
+    vaultConfig: {
+      asset: testErc20Contract.address,
+      name: "EthGild",
+      symbol: "ETHg",
+    }
   };
 
-  const erc20PriceOracleVaultFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleVault"
+  const erc20PriceOracleVaultReceiptFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleReceiptVault"
   );
 
-  const erc20PriceOracleVault =
-    (await erc20PriceOracleVaultFactory.deploy()) as ERC20PriceOracleVault;
-  await erc20PriceOracleVault.deployed();
+  const erc20PriceOracleReceiptVault =
+    (await erc20PriceOracleVaultReceiptFactory.deploy()) as ERC20PriceOracleReceiptVault;
+  await erc20PriceOracleReceiptVault.deployed();
 
-  await erc20PriceOracleVault.initialize({
+  await erc20PriceOracleReceiptVault.initialize({
     priceOracle: twoPriceOracle.address,
     receiptVaultConfig: constructionConfig,
   });
 
   return [
-    erc20PriceOracleVault,
+    erc20PriceOracleReceiptVault,
     testErc20Contract,
     twoPriceOracle,
     receiptContract,
