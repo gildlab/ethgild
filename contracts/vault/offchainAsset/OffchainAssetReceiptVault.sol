@@ -49,7 +49,7 @@ struct OffchainAssetReceiptVaultConfig {
 /// In contrast to pure algorithmic tokens and sentiment based stablecoins, a
 /// competent custodian can profit "infinitely" to maintain the peg no matter
 /// how badly the peg breaks. As long as every token is fully collateralised by
-/// liquid offchain assets tokens can be profitably bought and burned by the
+/// liquid offchain assets, tokens can be profitably bought and burned by the
 /// custodian all the way to 0 token supply.
 ///
 /// This model is contingent on existing onchain and offchain liquidity
