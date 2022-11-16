@@ -15,7 +15,12 @@ contract ReceiptFactory is Factory {
     }
 
     /// @inheritdoc Factory
-    function _createChild(bytes memory data_) internal virtual override returns (address) {
+    function _createChild(bytes memory data_)
+        internal
+        virtual
+        override
+        returns (address)
+    {
         ReceiptConfig memory config_ = abi.decode(data_, (ReceiptConfig));
         address clone_ = Clones.clone(implementation);
         Receipt(clone_).initialize(config_);
@@ -29,9 +34,10 @@ contract ReceiptFactory is Factory {
     ///
     /// @param config_ construction config for the `Receipt`.
     /// @return New `Receipt` child contract address.
-    function createChildTyped(
-        ReceiptConfig memory config_
-    ) external returns (Receipt) {
+    function createChildTyped(ReceiptConfig memory config_)
+        external
+        returns (Receipt)
+    {
         return Receipt(createChild(abi.encode(config_)));
     }
 }

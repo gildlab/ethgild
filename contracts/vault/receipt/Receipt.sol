@@ -22,10 +22,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         _disableInitializers();
     }
 
-    function initialize(ReceiptConfig memory config_)
-        external
-        initializer
-    {
+    function initialize(ReceiptConfig memory config_) external initializer {
         __Ownable_init();
         __ERC1155_init(config_.uri);
     }
@@ -69,8 +66,15 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         uint256[] memory ids_,
         uint256[] memory amounts_,
         bytes memory data_
-    ) internal override virtual {
-        super._beforeTokenTransfer(operator_, from_, to_, ids_, amounts_, data_);
+    ) internal virtual override {
+        super._beforeTokenTransfer(
+            operator_,
+            from_,
+            to_,
+            ids_,
+            amounts_,
+            data_
+        );
         IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
     }
 

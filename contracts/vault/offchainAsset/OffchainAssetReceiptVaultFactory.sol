@@ -33,22 +33,26 @@ contract OffchainAssetReceiptVaultFactory is Factory {
         override
         returns (address)
     {
-        (ReceiptConfig memory receiptConfig_, OffchainAssetVaultConfig memory offchainAssetVaultConfig_) = abi.decode(
-            data_,
-            (ReceiptConfig, OffchainAssetVaultConfig)
+        (
+            ReceiptConfig memory receiptConfig_,
+            OffchainAssetVaultConfig memory offchainAssetVaultConfig_
+        ) = abi.decode(data_, (ReceiptConfig, OffchainAssetVaultConfig));
+        Receipt receipt_ = ReceiptFactory(receiptFactory).createChildTyped(
+            receiptConfig_
         );
-        Receipt receipt_ = ReceiptFactory(receiptFactory).createChildTyped(receiptConfig_);
 
         address clone_ = Clones.clone(implementation);
         receipt_.transferOwnership(clone_);
-    
-        OffchainAssetReceiptVault(clone_).initialize(OffchainAssetReceiptVaultConfig(
-            offchainAssetVaultConfig_.admin,
-            ReceiptVaultConfig(
-                address(receipt_),
-                offchainAssetVaultConfig_.vaultConfig
+
+        OffchainAssetReceiptVault(clone_).initialize(
+            OffchainAssetReceiptVaultConfig(
+                offchainAssetVaultConfig_.admin,
+                ReceiptVaultConfig(
+                    address(receipt_),
+                    offchainAssetVaultConfig_.vaultConfig
+                )
             )
-        ));
+        );
         return clone_;
     }
 
@@ -58,9 +62,10 @@ contract OffchainAssetReceiptVaultFactory is Factory {
     ///
     /// @param config_ Config for the vault.
     /// @return New `OffchainAssetVault` child contract address.
-    function createChildTyped(
-        OffchainAssetVaultConfig memory config_
-    ) external returns (OffchainAssetReceiptVault) {
+    function createChildTyped(OffchainAssetVaultConfig memory config_)
+        external
+        returns (OffchainAssetReceiptVault)
+    {
         return OffchainAssetReceiptVault(createChild(abi.encode(config_)));
     }
 }

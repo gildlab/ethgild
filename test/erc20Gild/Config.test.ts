@@ -4,7 +4,8 @@ import { ethers } from "hardhat";
 import {
   basePrice,
   expectedName,
-  expectedSymbol, latestBlockNow,
+  expectedSymbol,
+  latestBlockNow,
   quotePrice,
   usdDecimals,
   xauDecimals,
