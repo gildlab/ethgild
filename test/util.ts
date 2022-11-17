@@ -43,8 +43,8 @@ export const ONE = priceOne;
 export const usdDecimals = 8;
 export const xauDecimals = 8;
 
-export const quotePrice = "176169500000";
-export const basePrice = "125378000000";
+export const quotePrice = "176617500000";
+export const basePrice = "119832442811";
 
 export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
