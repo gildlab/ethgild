@@ -92,147 +92,147 @@ describe("deposit", async function () {
     );
   });
 
-  // it("should deposit and withdraw", async function () {
-  //   const signers = await ethers.getSigners();
-  //
-  //   const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-  //
-  //   const alice = signers[0];
-  //   const bob = signers[1];
-  //
-  //   const shareRatio = await priceOracle.price();
-  //   const id1155 = shareRatio;
-  //   assert(
-  //     shareRatio.eq(expectedReferencePrice),
-  //     `bad shareRatio ${shareRatio} ${expectedReferencePrice}`
-  //   );
-  //
-  //   let totalTokenSupply = await asset.totalSupply();
-  //
-  //   const aliceEthAmount = totalTokenSupply.div(2);
-  //
-  //   await asset.connect(alice).increaseAllowance(vault.address, aliceEthAmount);
-  //
-  //   await vault
-  //     .connect(alice)
-  //     ["deposit(uint256,address,uint256,bytes)"](
-  //       aliceEthAmount,
-  //       alice.address,
-  //       shareRatio,
-  //       []
-  //     );
-  //
-  //   const expectedAliceBalance = fixedPointMul(
-  //     aliceEthAmount,
-  //     expectedReferencePrice
-  //   );
-  //   const aliceBalance = await vault.connect(alice)["balanceOf(address)"](alice.address);
-  //   assert(
-  //     aliceBalance.eq(expectedAliceBalance),
-  //     `wrong ERC20 balance ${aliceBalance} ${expectedAliceBalance}`
-  //   );
-  //
-  //   const bobErc20Balance = await vault.connect(alice)["balanceOf(address)"](bob.address);
-  //   assert(
-  //     bobErc20Balance.eq(0),
-  //     `wrong bob erc20 balance ${bobErc20Balance} 0`
-  //   );
-  //
-  //   const erc1155Balance = await vault.connect(alice)["balanceOf(address,uint256)"](
-  //     alice.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     erc1155Balance.eq(expectedAliceBalance),
-  //     `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
-  //   );
-  //
-  //   const bobErc1155Balance = await vault.connect(alice)["balanceOf(address,uint256)"](
-  //     bob.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     bobErc1155Balance.eq(0),
-  //     `wrong bob erc1155 balance ${bobErc1155Balance} 0`
-  //   );
-  //
-  //   totalTokenSupply = await asset.totalSupply();
-  //
-  //   const bobEthAmount = totalTokenSupply.div(3);
-  //
-  //   await asset.transfer(bob.address, bobEthAmount);
-  //
-  //   await asset.connect(bob).increaseAllowance(vault.address, bobEthAmount);
-  //
-  //   await vault
-  //     .connect(bob)
-  //     ["deposit(uint256,address,uint256,bytes)"](
-  //       bobEthAmount,
-  //       bob.address,
-  //       shareRatio,
-  //       []
-  //     );
-  //
-  //   const expectedBobBalance = fixedPointMul(
-  //     expectedReferencePrice,
-  //     bobEthAmount
-  //   );
-  //   const bobBalance = await vault.connect(alice)["balanceOf(address)"](bob.address);
-  //   assert(
-  //     bobBalance.eq(expectedBobBalance),
-  //     `wrong bob erc20 balance ${bobBalance} ${expectedBobBalance}`
-  //   );
-  //
-  //   const erc1155BobBalance = await vault.connect(alice)["balanceOf(address,uint256)"](
-  //     bob.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     erc1155BobBalance.eq(expectedBobBalance),
-  //     `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`
-  //   );
-  //
-  //   await vault
-  //     .connect(alice)
-  //     ["redeem(uint256,address,address,uint256)"](
-  //       erc1155Balance,
-  //       alice.address,
-  //       alice.address,
-  //       shareRatio
-  //     );
-  //   const erc20AliceBalanceWithdraw = await vault.connect(alice)["balanceOf(address)"](
-  //     alice.address
-  //   );
-  //
-  //   assert(
-  //     erc20AliceBalanceWithdraw.eq(0),
-  //     `wrong alice erc20 balance after redeem ${erc20AliceBalanceWithdraw} 0`
-  //   );
-  //
-  //   // alice cannot withdraw a different shareRatio deposit.
-  //   await assertError(
-  //     async () =>
-  //       await vault
-  //         .connect(alice)
-  //         ["redeem(uint256,address,address,uint256)"](
-  //           erc1155Balance.sub(1),
-  //           alice.address,
-  //           alice.address,
-  //           shareRatio
-  //         ),
-  //     "burn amount exceeds balance",
-  //     "failed to prevent shareRatio manipulation"
-  //   );
-  //
-  //   const erc1155AliceBalanceRedeem = await vault.connect(alice)["balanceOf(address,uint256)"](
-  //     alice.address,
-  //     id1155
-  //   );
-  //   assert(
-  //     erc1155AliceBalanceRedeem.eq(0),
-  //     `wrong alice erc1155 balance after redeem ${erc1155AliceBalanceRedeem} 0`
-  //   );
-  // });
+  it("should deposit and withdraw", async function () {
+    const signers = await ethers.getSigners();
+
+    const [vault, asset, priceOracle, receipt] = await deployERC20PriceOracleVault();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const shareRatio = await priceOracle.price();
+    const id1155 = shareRatio;
+    assert(
+      shareRatio.eq(expectedReferencePrice),
+      `bad shareRatio ${shareRatio} ${expectedReferencePrice}`
+    );
+
+    let totalTokenSupply = await asset.totalSupply();
+
+    const aliceEthAmount = totalTokenSupply.div(2);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceEthAmount);
+
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+        aliceEthAmount,
+        alice.address,
+        shareRatio,
+        []
+      );
+
+    const expectedAliceBalance = fixedPointMul(
+      aliceEthAmount,
+      expectedReferencePrice
+    );
+    const aliceBalance = await vault.connect(alice)["balanceOf(address)"](alice.address);
+    assert(
+      aliceBalance.eq(expectedAliceBalance),
+      `wrong ERC20 balance ${aliceBalance} ${expectedAliceBalance}`
+    );
+
+    const bobErc20Balance = await vault.connect(alice)["balanceOf(address)"](bob.address);
+    assert(
+      bobErc20Balance.eq(0),
+      `wrong bob erc20 balance ${bobErc20Balance} 0`
+    );
+
+    const erc1155Balance = await receipt.connect(alice)["balanceOf(address,uint256)"](
+      alice.address,
+      id1155
+    );
+    assert(
+      erc1155Balance.eq(expectedAliceBalance),
+      `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
+    );
+
+    const bobErc1155Balance = await receipt.connect(alice)["balanceOf(address,uint256)"](
+      bob.address,
+      id1155
+    );
+    assert(
+      bobErc1155Balance.eq(0),
+      `wrong bob erc1155 balance ${bobErc1155Balance} 0`
+    );
+
+    totalTokenSupply = await asset.totalSupply();
+
+    const bobEthAmount = totalTokenSupply.div(3);
+
+    await asset.transfer(bob.address, bobEthAmount);
+
+    await asset.connect(bob).increaseAllowance(vault.address, bobEthAmount);
+
+    await vault
+      .connect(bob)
+      ["deposit(uint256,address,uint256,bytes)"](
+        bobEthAmount,
+        bob.address,
+        shareRatio,
+        []
+      );
+
+    const expectedBobBalance = fixedPointMul(
+      expectedReferencePrice,
+      bobEthAmount
+    );
+    const bobBalance = await vault.connect(alice)["balanceOf(address)"](bob.address);
+    assert(
+      bobBalance.eq(expectedBobBalance),
+      `wrong bob erc20 balance ${bobBalance} ${expectedBobBalance}`
+    );
+
+    const erc1155BobBalance = await receipt.connect(alice)["balanceOf(address,uint256)"](
+      bob.address,
+      id1155
+    );
+    assert(
+      erc1155BobBalance.eq(expectedBobBalance),
+      `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`
+    );
+
+    await vault
+      .connect(alice)
+      ["redeem(uint256,address,address,uint256)"](
+        erc1155Balance,
+        alice.address,
+        alice.address,
+        shareRatio
+      );
+    const erc20AliceBalanceWithdraw = await vault.connect(alice)["balanceOf(address)"](
+      alice.address
+    );
+
+    assert(
+      erc20AliceBalanceWithdraw.eq(0),
+      `wrong alice erc20 balance after redeem ${erc20AliceBalanceWithdraw} 0`
+    );
+
+    // alice cannot withdraw a different shareRatio deposit.
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["redeem(uint256,address,address,uint256)"](
+            erc1155Balance.sub(1),
+            alice.address,
+            alice.address,
+            shareRatio
+          ),
+      "burn amount exceeds balance",
+      "failed to prevent shareRatio manipulation"
+    );
+
+    const erc1155AliceBalanceRedeem = await receipt.connect(alice)["balanceOf(address,uint256)"](
+      alice.address,
+      id1155
+    );
+    assert(
+      erc1155AliceBalanceRedeem.eq(0),
+      `wrong alice erc1155 balance after redeem ${erc1155AliceBalanceRedeem} 0`
+    );
+  });
 
   // it("should trade erc1155", async function () {
   //   const signers = await ethers.getSigners();

@@ -1,13 +1,17 @@
 import chai, { assert } from "chai";
 import { solidity } from "ethereum-waffle";
 import { artifacts, ethers } from "hardhat";
-import { ERC20PriceOracleReceiptVault } from "../typechain/ERC20PriceOracleReceiptVault";
+import {
+  ERC20PriceOracleReceiptVault,
+  ERC20PriceOracleReceiptVaultInitializedEvent
+} from "../typechain/ERC20PriceOracleReceiptVault";
 import {
   ERC20PriceOracleReceiptVaultFactory,
   NewChildEvent,
 } from "../typechain/ERC20PriceOracleReceiptVaultFactory";
 
 import {
+  Receipt,
   ReceiptFactory,
   TestChainlinkDataFeed,
   TestErc20,
@@ -58,6 +62,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
     ERC20PriceOracleReceiptVault,
     TestErc20,
     TwoPriceOracle,
+    Receipt,
     TestChainlinkDataFeed,
     TestChainlinkDataFeed
   ]
@@ -169,10 +174,24 @@ export const deployERC20PriceOracleVault = async (): Promise<
     (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi
   ) as ERC20PriceOracleReceiptVault;
 
+  let { config } = (await getEventArgs(
+      tx,
+      "ERC20PriceOracleReceiptVaultInitialized",
+      childContract
+  )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
+
+  let receiptContractAddress = config.receiptVaultConfig.receipt
+
+  let receiptContract = new Contract(
+      receiptContractAddress,
+      (await artifacts.readArtifact("Receipt")).abi
+  ) as Receipt;
+
   return [
     childContract,
     asset,
     twoPriceOracle,
+    receiptContract,
     basePriceOracle,
     quotePriceOracle,
   ];
