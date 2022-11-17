@@ -5,7 +5,6 @@ import {
   basePrice,
   expectedName,
   expectedSymbol,
-  getEvent,
   latestBlockNow,
   quotePrice,
   usdDecimals,
@@ -19,11 +18,9 @@ import {
   ERC20PriceOracleReceiptVaultFactory,
   NewChildEvent
 } from "../../typechain/ERC20PriceOracleReceiptVaultFactory";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 import { getEventArgs } from "../util";
 import {
-  Receipt,
   ReceiptFactory,
   TestChainlinkDataFeed,
   TestErc20,
@@ -31,15 +28,13 @@ import {
 } from "../../typechain";
 import { Contract } from "ethers";
 
-let owner: SignerWithAddress;
 
 chai.use(solidity);
 
 const { assert } = chai;
 
 describe("config", async function () {
-  it.only("Checks construction event", async function () {
-    [owner] = await ethers.getSigners();
+  it("Checks construction event", async function () {
     const now = await latestBlockNow();
 
     const oracleFactory = await ethers.getContractFactory(
