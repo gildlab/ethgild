@@ -1,7 +1,7 @@
 import chai from "chai";
 import { solidity } from "ethereum-waffle";
 import {
-  OffchainAssetVault,
+  OffchainAssetReceiptVault,
   OffchainAssetReceiptVaultFactory,
   ReadWriteTier,
   Receipt,
@@ -746,57 +746,6 @@ describe("OffChainAssetVault", async function () {
   //     `Shares has not been confiscated`
   //   );
   // });
-  it("should deploy offchainAssetVault using factory", async () => {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const receipt = await ethers.getContractFactory("Receipt");
-    const receiptContract = (await receipt.deploy()) as Receipt;
-    await receiptContract.deployed();
-
-    const offchainAssetReceiptVaultFactoryFactory =
-      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
-
-    const offchainAssetReceiptVaultFactory =
-      (await offchainAssetReceiptVaultFactoryFactory.deploy()) as OffchainAssetReceiptVaultFactory;
-    await offchainAssetReceiptVaultFactory.deployed();
-
-    const constructionConfig = {
-      admin: alice.address,
-      vaultConfig: {
-        asset: ADDRESS_ZERO,
-        name: "EthGild",
-        symbol: "ETHg",
-      },
-    };
-    const offchainAssetVaultTx =
-      await offchainAssetReceiptVaultFactory.createChildTyped(
-        constructionConfig
-      );
-
-    const vault = new ethers.Contract(
-      ethers.utils.hexZeroPad(
-        ethers.utils.hexStripZeros(
-          (
-            await getEventArgs(
-              offchainAssetVaultTx,
-              "NewChild",
-              offchainAssetReceiptVaultFactory
-            )
-          ).child
-        ),
-        20
-      ),
-      (await artifacts.readArtifact("OffchainAssetVault")).abi,
-      alice
-    ) as OffchainAssetVault;
-    try {
-      console.log("child address", vault.address);
-      assert((await vault.totalSupply()).eq(0));
-    } catch (err) {
-      console.log(err);
-    }
-  });
   // it("Should call multicall", async () => {
   //   this.timeout(0);
   //   const signers = await ethers.getSigners();
