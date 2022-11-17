@@ -222,12 +222,14 @@ describe("Mint", async function () {
 
     await assertError(
       async () =>
-        await vault.connect(alice)["mint(uint256,address,uint256,bytes)"](
-          shares,
-          alice.address,
-          shareRatio.add(1),
-          []
-        ),
+        await vault
+          .connect(alice)
+          ["mint(uint256,address,uint256,bytes)"](
+            shares,
+            alice.address,
+            shareRatio.add(1),
+            []
+          ),
       "MIN_SHARE_RATIO",
       "failed to respect min shareRatio"
     );
