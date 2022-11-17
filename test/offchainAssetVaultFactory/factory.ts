@@ -1,6 +1,9 @@
 import { expect, assert } from "chai";
 import { ethers } from "hardhat";
-import { OffchainAssetReceiptVaultFactory, ReceiptFactory } from "../../typechain";
+import {
+  OffchainAssetReceiptVaultFactory,
+  ReceiptFactory,
+} from "../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { getEventArgs } from "../util";
 
@@ -13,21 +16,19 @@ describe("OffchainAssetVaultFactory Test", () => {
     alice = signers[0];
 
     const receiptFactoryFactory = await ethers.getContractFactory(
-        "ReceiptFactory"
+      "ReceiptFactory"
     );
     const receiptFactoryContract =
-        (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-
-    const offchainAssetReceiptVaultFactoryFactory = await ethers.getContractFactory(
-        "OffchainAssetReceiptVaultFactory"
-    );
+    const offchainAssetReceiptVaultFactoryFactory =
+      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
 
     offchainAssetReceiptVaultFactory =
-        (await offchainAssetReceiptVaultFactoryFactory.deploy(
-            receiptFactoryContract.address
-        )) as OffchainAssetReceiptVaultFactory;
+      (await offchainAssetReceiptVaultFactoryFactory.deploy(
+        receiptFactoryContract.address
+      )) as OffchainAssetReceiptVaultFactory;
     await offchainAssetReceiptVaultFactory.deployed();
   });
 
@@ -36,7 +37,6 @@ describe("OffchainAssetVaultFactory Test", () => {
   });
 
   it("Should createChild", async () => {
-
     const constructionConfig = {
       admin: alice.address,
       vaultConfig: {
@@ -47,13 +47,13 @@ describe("OffchainAssetVaultFactory Test", () => {
     };
 
     let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
-        constructionConfig
+      constructionConfig
     );
 
     const { sender, child } = await getEventArgs(
-        tx,
+      tx,
       "NewChild",
-        offchainAssetReceiptVaultFactory
+      offchainAssetReceiptVaultFactory
     );
     expect(sender).to.equals(alice.address);
     expect(child).to.not.null;
