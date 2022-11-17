@@ -46,14 +46,8 @@ describe("OffchainAssetVaultFactory Test", () => {
       },
     };
 
-    const receiptConfig = {
-      uri: "https://example.com",
-    };
-
     let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
-    receiptConfig,
-        constructionConfig,
-
+        constructionConfig
     );
 
     const { sender, child } = await getEventArgs(
