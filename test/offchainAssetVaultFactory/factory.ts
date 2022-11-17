@@ -1,53 +1,65 @@
 import { expect, assert } from "chai";
 import { ethers } from "hardhat";
-import { OffchainAssetVaultFactory } from "../../typechain";
-import { OffchainAssetVault } from "../../typechain";
+import { OffchainAssetReceiptVaultFactory, ReceiptFactory } from "../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { getEventArgs } from "../util";
-import { Receipt } from "../../typechain";
 
-let factory: OffchainAssetVaultFactory;
+let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
 let alice: SignerWithAddress;
-let vault: OffchainAssetVault;
 
 describe("OffchainAssetVaultFactory Test", () => {
   before(async () => {
     const signers = await ethers.getSigners();
     alice = signers[0];
 
-    const Factory = await ethers.getContractFactory(
-      "OffchainAssetVaultFactory"
+    const receiptFactoryFactory = await ethers.getContractFactory(
+        "ReceiptFactory"
     );
-    factory = (await Factory.deploy()) as OffchainAssetVaultFactory;
-    await factory.deployed();
+    const receiptFactoryContract =
+        (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+    await receiptFactoryContract.deployed();
+
+
+    const offchainAssetReceiptVaultFactoryFactory = await ethers.getContractFactory(
+        "OffchainAssetReceiptVaultFactory"
+    );
+
+    offchainAssetReceiptVaultFactory =
+        (await offchainAssetReceiptVaultFactoryFactory.deploy(
+            receiptFactoryContract.address
+        )) as OffchainAssetReceiptVaultFactory;
+    await offchainAssetReceiptVaultFactory.deployed();
   });
 
   it("Should deploy Factory correctly", async () => {
-    expect(factory.address).to.not.null;
+    expect(offchainAssetReceiptVaultFactory.address).to.not.null;
   });
 
-  it("Should createChild (createTypedChild)", async () => {
-    const receipt = await ethers.getContractFactory("Receipt");
-    const receiptContract = (await receipt.deploy()) as Receipt;
-    await receiptContract.deployed();
+  it("Should createChild", async () => {
 
     const constructionConfig = {
       admin: alice.address,
-      receiptVaultConfig: {
+      vaultConfig: {
         asset: ethers.constants.AddressZero,
         name: "EthGild",
         symbol: "ETHg",
-        receipt: receiptContract.address,
       },
     };
 
-    let deployTrx = await factory
-      .connect(alice)
-      .createChildTyped(constructionConfig);
+    const receiptConfig = {
+      uri: "https://example.com",
+    };
+
+    let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
+    receiptConfig,
+        constructionConfig,
+
+    );
+
     const { sender, child } = await getEventArgs(
-      deployTrx,
+        tx,
       "NewChild",
-      factory
+        offchainAssetReceiptVaultFactory
     );
     expect(sender).to.equals(alice.address);
     expect(child).to.not.null;
