@@ -39,9 +39,7 @@ describe("erc20 usage", async function () {
 
     const assetAmount = ethers.BigNumber.from(1000);
 
-    await asset
-      .connect(alice)
-      .increaseAllowance(vault.address, assetAmount);
+    await asset.connect(alice).increaseAllowance(vault.address, assetAmount);
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
