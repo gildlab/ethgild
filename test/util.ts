@@ -3,7 +3,7 @@ import { solidity } from "ethereum-waffle";
 import { artifacts, ethers } from "hardhat";
 import {
   ERC20PriceOracleReceiptVault,
-  ERC20PriceOracleReceiptVaultInitializedEvent
+  ERC20PriceOracleReceiptVaultInitializedEvent,
 } from "../typechain/ERC20PriceOracleReceiptVault";
 import {
   ERC20PriceOracleReceiptVaultFactory,
@@ -175,16 +175,16 @@ export const deployERC20PriceOracleVault = async (): Promise<
   ) as ERC20PriceOracleReceiptVault;
 
   let { config } = (await getEventArgs(
-      tx,
-      "ERC20PriceOracleReceiptVaultInitialized",
-      childContract
+    tx,
+    "ERC20PriceOracleReceiptVaultInitialized",
+    childContract
   )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
 
-  let receiptContractAddress = config.receiptVaultConfig.receipt
+  let receiptContractAddress = config.receiptVaultConfig.receipt;
 
   let receiptContract = new Contract(
-      receiptContractAddress,
-      (await artifacts.readArtifact("Receipt")).abi
+    receiptContractAddress,
+    (await artifacts.readArtifact("Receipt")).abi
   ) as Receipt;
 
   return [
