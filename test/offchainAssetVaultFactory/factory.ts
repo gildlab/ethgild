@@ -5,7 +5,7 @@ import {
   ReceiptFactory,
 } from "../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { getEventArgs } from "../util";
+import { expectedUri, getEventArgs } from "../util";
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
 let alice: SignerWithAddress;
@@ -46,7 +46,12 @@ describe("OffchainAssetVaultFactory Test", () => {
       },
     };
 
+    const receiptConfig = {
+      uri: expectedUri,
+    };
+
     let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
+      receiptConfig,
       constructionConfig
     );
 
