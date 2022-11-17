@@ -5,14 +5,12 @@ import {
   assertError,
   deployERC20PriceOracleVault,
   fixedPointDiv,
-  fixedPointMul,
   ADDRESS_ZERO,
-  getEventArgs,
   getEvent,
 } from "../util";
 import {
   ERC20Upgradeable as ERC20,
-  ERC20PriceOracleVault,
+  ERC20PriceOracleReceiptVault, Receipt,
 } from "../../typechain";
 import { BigNumber } from "ethers";
 import { WithdrawEvent } from "../../typechain/IERC4626";
@@ -21,23 +19,26 @@ chai.use(solidity);
 
 const { assert } = chai;
 
-let vault: ERC20PriceOracleVault,
+let vault: ERC20PriceOracleReceiptVault,
   asset: ERC20,
   shareRatio: BigNumber,
   aliceAddress: string,
-  aliceAssets: BigNumber;
+  aliceAssets: BigNumber,
+  receipt: Receipt;
 
 describe("Overloaded Redeem", async function () {
+  let alice;
   beforeEach(async () => {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
+    alice = signers[0];
 
-    const [ERC20PriceOracleVault, Erc20Asset, priceOracle] =
+    const [ERC20PriceOracleVault, Erc20Asset, priceOracle, receiptContract] =
       await deployERC20PriceOracleVault();
 
     vault = await ERC20PriceOracleVault;
     asset = await Erc20Asset;
     shareRatio = await priceOracle.price();
+    receipt = await receiptContract;
     aliceAddress = alice.address;
 
     aliceAssets = ethers.BigNumber.from(5000);
@@ -45,7 +46,7 @@ describe("Overloaded Redeem", async function () {
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
-    const depositTx = await vault["deposit(uint256,address,uint256,bytes)"](
+    const depositTx = await vault.connect(alice)["deposit(uint256,address,uint256,bytes)"](
       aliceAssets,
       aliceAddress,
       shareRatio,
@@ -55,19 +56,19 @@ describe("Overloaded Redeem", async function () {
     await depositTx.wait();
   });
   it("Redeems", async function () {
-    const receiptBalance = await vault["balanceOf(address,uint256)"](
+    const receiptBalance = await receipt.connect(alice)["balanceOf(address,uint256)"](
       aliceAddress,
       shareRatio
     );
 
-    await vault["redeem(uint256,address,address,uint256)"](
+    await vault.connect(alice)["redeem(uint256,address,address,uint256)"](
       receiptBalance,
       aliceAddress,
       aliceAddress,
       shareRatio
     );
 
-    const receiptBalanceAfter = await vault["balanceOf(address,uint256)"](
+    const receiptBalanceAfter = await receipt.connect(alice)["balanceOf(address,uint256)"](
       aliceAddress,
       shareRatio
     );
@@ -79,7 +80,7 @@ describe("Overloaded Redeem", async function () {
   it("Should not redeem on zero assets", async function () {
     await assertError(
       async () =>
-        await vault["redeem(uint256,address,address,uint256)"](
+        await vault.connect(alice)["redeem(uint256,address,address,uint256)"](
           ethers.BigNumber.from(0),
           aliceAddress,
           aliceAddress,
@@ -90,14 +91,14 @@ describe("Overloaded Redeem", async function () {
     );
   });
   it("Should not redeem on zero address receiver", async function () {
-    const receiptBalance = await vault["balanceOf(address,uint256)"](
+    const receiptBalance = await receipt.connect(alice)["balanceOf(address,uint256)"](
       aliceAddress,
       shareRatio
     );
 
     await assertError(
       async () =>
-        await vault["redeem(uint256,address,address,uint256)"](
+        await vault.connect(alice)["redeem(uint256,address,address,uint256)"](
           receiptBalance,
           ADDRESS_ZERO,
           aliceAddress,
@@ -108,14 +109,14 @@ describe("Overloaded Redeem", async function () {
     );
   });
   it("Should not redeem on zero address owner", async function () {
-    const receiptBalance = await vault["balanceOf(address,uint256)"](
+    const receiptBalance = await receipt.connect(alice)["balanceOf(address,uint256)"](
       aliceAddress,
       shareRatio
     );
 
     await assertError(
       async () =>
-        await vault["redeem(uint256,address,address,uint256)"](
+        await vault.connect(alice)["redeem(uint256,address,address,uint256)"](
           receiptBalance,
           aliceAddress,
           ADDRESS_ZERO,
@@ -126,15 +127,15 @@ describe("Overloaded Redeem", async function () {
     );
   });
   it("Should emit withdraw event", async function () {
-    const receiptBalance = await vault["balanceOf(address,uint256)"](
+    const receiptBalance = await receipt.connect(alice)["balanceOf(address,uint256)"](
       aliceAddress,
       shareRatio
     );
-    await vault.setWithdrawId(shareRatio);
+    await vault.connect(alice).setWithdrawId(shareRatio);
 
     const expectedAssets = fixedPointDiv(receiptBalance, shareRatio);
 
-    const redwwmTx = await vault["redeem(uint256,address,address,uint256)"](
+    const redeemTx = await vault.connect(alice)["redeem(uint256,address,address,uint256)"](
       receiptBalance,
       aliceAddress,
       aliceAddress,
@@ -142,7 +143,7 @@ describe("Overloaded Redeem", async function () {
     );
 
     const withdrawEvent = (await getEvent(
-      redwwmTx,
+      redeemTx,
       "Withdraw",
       vault
     )) as WithdrawEvent;
