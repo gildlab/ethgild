@@ -137,7 +137,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   await receiptFactoryContract.deployed();
 
   const receiptConfig = {
-    uri: "https://example.com",
+    uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
   };
 
   const erc20PriceOracleVaultConfig = {

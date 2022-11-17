@@ -14,13 +14,15 @@ describe("erc1155 usage", async function () {
   it("should initialize well", async function () {
     const [vault, asset, price, receipt] = await deployERC20PriceOracleVault();
 
+    const signers =  await ethers.getSigners()
+    const alice = signers[0]
     const id = 12345;
 
-    const erc1155Uri = await receipt.uri(id);
+    const erc1155Uri = await receipt.connect(alice).uri(id);
 
     assert(
       erc1155Uri === expectedUri,
-      "erc1155 did not construct with correct uri"
+      `erc1155 did not construct with correct uri expected - ${expectedUri}, got - ${erc1155Uri} `
     );
   });
 
