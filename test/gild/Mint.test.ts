@@ -25,7 +25,7 @@ describe("Mint", async function () {
       .pow(256)
       //up to 2**256 so should substruct 1
       .sub(1);
-    const maxShares = await vault.maxMint(owner.address);
+    const maxShares = await vault.connect(owner).maxMint(owner.address);
 
     assert(
       maxShares.eq(expectedMaxShares),
@@ -48,7 +48,7 @@ describe("Mint", async function () {
     await vault.connect(alice).setMinShareRatio(shareRatio.add(1));
 
     await assertError(
-      async () => await vault.previewMint(shares),
+      async () => await vault.connect(alice).previewMint(shares),
       "MIN_SHARE_RATIO",
       "failed to respect min shareRatio"
     );
@@ -56,7 +56,8 @@ describe("Mint", async function () {
   it("PreviewMint - Calculates assets correctly with round up", async function () {
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const shareRatio = await priceOracle.price();
-
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
     assert(
       shareRatio.eq(expectedReferencePrice),
       `Incorrect shareRatio ${shareRatio} ${expectedReferencePrice}`
@@ -65,7 +66,7 @@ describe("Mint", async function () {
     const shares = ethers.BigNumber.from("10").pow(20);
     const expectedAssets = fixedPointDiv(shares, shareRatio).add(1);
 
-    const assets = await vault.previewMint(shares);
+    const assets = await vault.connect(alice).previewMint(shares);
 
     assert(
       assets.eq(expectedAssets),
@@ -89,7 +90,7 @@ describe("Mint", async function () {
 
     const shares = fixedPointMul(assets, shareRatio);
     //set minShareRatio
-    await vault.setMinShareRatio(shareRatio.sub(1));
+    await vault.connect(alice).setMinShareRatio(shareRatio.sub(1));
 
     await vault.connect(alice)["mint(uint256,address)"](shares, alice.address);
 
@@ -221,7 +222,7 @@ describe("Mint", async function () {
 
     await assertError(
       async () =>
-        await vault["mint(uint256,address,uint256,bytes)"](
+        await vault.connect(alice)["mint(uint256,address,uint256,bytes)"](
           shares,
           alice.address,
           shareRatio.add(1),
