@@ -1,14 +1,22 @@
-import chai from "chai";
-import { ethers } from "hardhat";
-import { ContractTransaction, Contract, BigNumber, Event } from "ethers";
+import chai, { assert } from "chai";
+import { solidity } from "ethereum-waffle";
+import { artifacts, ethers } from "hardhat";
+import { ERC20PriceOracleReceiptVault } from "../typechain/ERC20PriceOracleReceiptVault";
+import {
+  ERC20PriceOracleReceiptVaultFactory,
+  NewChildEvent,
+} from "../typechain/ERC20PriceOracleReceiptVaultFactory";
 
-const { assert } = chai;
+import {
+  ReceiptFactory,
+  TestChainlinkDataFeed,
+  TestErc20,
+  TwoPriceOracle,
+} from "../typechain";
+import { ContractTransaction, Contract, BigNumber, Event } from "ethers";
 import { Result } from "ethers/lib/utils";
-import type { TwoPriceOracle } from "../typechain";
-import type { TestErc20 } from "../typechain";
-import type { Receipt } from "../typechain";
-import type { TestChainlinkDataFeed } from "../typechain";
-import { ERC20PriceOracleReceiptVault } from "../typechain";
+
+chai.use(solidity);
 
 export const ethMainnetFeedRegistry =
   "0x47Fb2585D2C56Fe188D0E6ec628a38b74fCeeeDf";
@@ -50,12 +58,11 @@ export const deployERC20PriceOracleVault = async (): Promise<
     ERC20PriceOracleReceiptVault,
     TestErc20,
     TwoPriceOracle,
-    Receipt,
     TestChainlinkDataFeed,
     TestChainlinkDataFeed
   ]
 > => {
-  let now = await latestBlockNow();
+  const now = await latestBlockNow();
 
   const oracleFactory = await ethers.getContractFactory(
     "TestChainlinkDataFeed"
@@ -63,7 +70,6 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const basePriceOracle =
     (await oracleFactory.deploy()) as TestChainlinkDataFeed;
   await basePriceOracle.deployed();
-  // ETHUSD as of 2022-06-30
 
   await basePriceOracle.setDecimals(usdDecimals);
   await basePriceOracle.setRoundData(1, {
@@ -76,7 +82,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const quotePriceOracle =
     (await oracleFactory.deploy()) as TestChainlinkDataFeed;
   await quotePriceOracle.deployed();
-  // XAUUSD as of 2022-06-30
+
   await quotePriceOracle.setDecimals(xauDecimals);
   await quotePriceOracle.setRoundData(1, {
     startedAt: now,
@@ -91,13 +97,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const quoteStaleAfter = 48 * 60 * 60;
 
   const testErc20 = await ethers.getContractFactory("TestErc20");
-  const testErc20Contract = (await testErc20.deploy()) as TestErc20;
-  await testErc20Contract.deployed();
-
-  const receipt = await ethers.getContractFactory("Receipt");
-  const receiptContract = (await receipt.deploy()) as Receipt;
-  await receiptContract.deployed();
-  await receiptContract.initialize({ uri: expectedUri });
+  const asset = (await testErc20.deploy()) as TestErc20;
+  await asset.deployed();
 
   const chainlinkFeedPriceOracleFactory = await ethers.getContractFactory(
     "ChainlinkFeedPriceOracle"
@@ -123,33 +124,55 @@ export const deployERC20PriceOracleVault = async (): Promise<
     quote: chainlinkFeedPriceOracleQuote.address,
   })) as TwoPriceOracle;
 
-  const constructionConfig = {
-    receipt: receiptContract.address,
-    vaultConfig: {
-      asset: testErc20Contract.address,
-      name: "EthGild",
-      symbol: "ETHg",
-    }
+  const receiptFactoryFactory = await ethers.getContractFactory(
+    "ReceiptFactory"
+  );
+  const receiptFactoryContract =
+    (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+  await receiptFactoryContract.deployed();
+
+  const receiptConfig = {
+    uri: "https://example.com",
   };
 
-  const erc20PriceOracleVaultReceiptFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleReceiptVault"
+  const erc20PriceOracleVaultConfig = {
+    priceOracle: twoPriceOracle.address,
+    vaultConfig: {
+      asset: asset.address,
+      name: "EthGild",
+      symbol: "ETHg",
+    },
+  };
+
+  const erc20PriceOracleVaultFactoryFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleReceiptVaultFactory"
   );
 
-  const erc20PriceOracleReceiptVault =
-    (await erc20PriceOracleVaultReceiptFactory.deploy()) as ERC20PriceOracleReceiptVault;
-  await erc20PriceOracleReceiptVault.deployed();
+  let erc20PriceOracleReceiptVaultFactory =
+    (await erc20PriceOracleVaultFactoryFactory.deploy(
+      receiptFactoryContract.address
+    )) as ERC20PriceOracleReceiptVaultFactory;
+  await erc20PriceOracleReceiptVaultFactory.deployed();
 
-  await erc20PriceOracleReceiptVault.initialize({
-    priceOracle: twoPriceOracle.address,
-    receiptVaultConfig: constructionConfig,
-  });
+  let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(
+    receiptConfig,
+    erc20PriceOracleVaultConfig
+  );
+  let { child } = (await getEventArgs(
+    tx,
+    "NewChild",
+    erc20PriceOracleReceiptVaultFactory
+  )) as NewChildEvent["args"];
+
+  let childContract = new Contract(
+    child,
+    (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi
+  ) as ERC20PriceOracleReceiptVault;
 
   return [
-    erc20PriceOracleReceiptVault,
-    testErc20Contract,
+    childContract,
+    asset,
     twoPriceOracle,
-    receiptContract,
     basePriceOracle,
     quotePriceOracle,
   ];
