@@ -1,7 +1,8 @@
 import { assert } from "chai";
 import { ethers } from "hardhat";
 import {
-  deployERC20PriceOracleVault, expectedName,
+  deployERC20PriceOracleVault,
+  expectedName,
   expectedSymbol,
   fixedPointMul,
 } from "../util";
@@ -56,16 +57,17 @@ describe("erc20 usage", async function () {
     const expectedErc1155BalanceAfter = expectedErc1155Balance;
     const expected1155ID = await priceOracle.price();
 
-    const erc20Balance = await vault.connect(alice)["balanceOf(address)"](signers[0].address);
+    const erc20Balance = await vault
+      .connect(alice)
+      ["balanceOf(address)"](signers[0].address);
     assert(
       erc20Balance.eq(expectedErc20Balance),
       `wrong erc20 balance ${expectedErc20Balance} ${erc20Balance}`
     );
 
-    const erc1155Balance = await vault.connect(alice)["balanceOf(address,uint256)"](
-      signers[0].address,
-      expected1155ID
-    );
+    const erc1155Balance = await vault
+      .connect(alice)
+      ["balanceOf(address,uint256)"](signers[0].address, expected1155ID);
     assert(
       erc1155Balance.eq(expectedErc1155Balance),
       `wrong erc1155 balance ${expectedErc20Balance} ${erc1155Balance}`
@@ -73,26 +75,25 @@ describe("erc20 usage", async function () {
 
     await vault.transfer(signers[1].address, expectedErc20BalanceAfter);
 
-    const erc20BalanceAfter = await vault.connect(alice)["balanceOf(address)"](
-      signers[0].address
-    );
+    const erc20BalanceAfter = await vault
+      .connect(alice)
+      ["balanceOf(address)"](signers[0].address);
     assert(
       erc20BalanceAfter.eq(expectedErc20BalanceAfter),
       `wrong erc20 balance after ${expectedErc20BalanceAfter} ${erc20BalanceAfter}`
     );
 
-    const erc20BalanceAfter2 = await vault.connect(alice)["balanceOf(address)"](
-      signers[1].address
-    );
+    const erc20BalanceAfter2 = await vault
+      .connect(alice)
+      ["balanceOf(address)"](signers[1].address);
     assert(
       erc20BalanceAfter2.eq(expectedErc20BalanceAfter),
       `wrong erc20 balance after 2 ${expectedErc20BalanceAfter} ${erc20BalanceAfter2}`
     );
 
-    const erc1155BalanceAfter = await vault.connect(alice)["balanceOf(address,uint256)"](
-      signers[0].address,
-      expected1155ID
-    );
+    const erc1155BalanceAfter = await vault
+      .connect(alice)
+      ["balanceOf(address,uint256)"](signers[0].address, expected1155ID);
     assert(
       erc1155BalanceAfter.eq(expectedErc20Balance),
       `wrong erc1155 balance after ${expectedErc1155BalanceAfter} ${erc1155BalanceAfter}`
@@ -100,10 +101,9 @@ describe("erc20 usage", async function () {
 
     assert(
       (
-        await vault.connect(alice)["balanceOf(address,uint256)"](
-          signers[1].address,
-          expected1155ID
-        )
+        await vault
+          .connect(alice)
+          ["balanceOf(address,uint256)"](signers[1].address, expected1155ID)
       ).eq(0),
       `wrong erc1155 balance 2 after ${expectedErc1155BalanceAfter} ${erc1155BalanceAfter}`
     );

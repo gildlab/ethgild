@@ -29,7 +29,7 @@ export const deployOffChainAssetVault = async (): Promise<
         asset: ADDRESS_ZERO,
         name: "EthGild",
         symbol: "ETHg",
-      }
+      },
     },
   };
 

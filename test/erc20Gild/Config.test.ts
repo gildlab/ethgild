@@ -16,7 +16,7 @@ import {
 } from "../../typechain/ERC20PriceOracleReceiptVault";
 import {
   ERC20PriceOracleReceiptVaultFactory,
-  NewChildEvent
+  NewChildEvent,
 } from "../../typechain/ERC20PriceOracleReceiptVaultFactory";
 
 import { getEventArgs } from "../util";
@@ -27,7 +27,6 @@ import {
   TwoPriceOracle,
 } from "../../typechain";
 import { Contract } from "ethers";
-
 
 chai.use(solidity);
 
@@ -98,12 +97,15 @@ describe("config", async function () {
       quote: chainlinkFeedPriceOracleQuote.address,
     })) as TwoPriceOracle;
 
-    const receiptFactoryFactory = await ethers.getContractFactory("ReceiptFactory");
-    const receiptFactoryContract = (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+    const receiptFactoryFactory = await ethers.getContractFactory(
+      "ReceiptFactory"
+    );
+    const receiptFactoryContract =
+      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
     const receiptConfig = {
-      uri: "https://example.com"
+      uri: "https://example.com",
     };
 
     const erc20PriceOracleVaultConfig = {
@@ -112,39 +114,50 @@ describe("config", async function () {
         asset: asset.address,
         name: "EthGild",
         symbol: "ETHg",
-      }
-    }
+      },
+    };
 
     const erc20PriceOracleVaultFactoryFactory = await ethers.getContractFactory(
       "ERC20PriceOracleReceiptVaultFactory"
     );
 
     let erc20PriceOracleReceiptVaultFactory =
-      (await erc20PriceOracleVaultFactoryFactory.deploy(receiptFactoryContract.address)) as ERC20PriceOracleReceiptVaultFactory;
+      (await erc20PriceOracleVaultFactoryFactory.deploy(
+        receiptFactoryContract.address
+      )) as ERC20PriceOracleReceiptVaultFactory;
     await erc20PriceOracleReceiptVaultFactory.deployed();
 
-    let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(receiptConfig, erc20PriceOracleVaultConfig)
-    let {sender, child} = (await getEventArgs(
+    let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(
+      receiptConfig,
+      erc20PriceOracleVaultConfig
+    );
+    let { sender, child } = (await getEventArgs(
       tx,
       "NewChild",
       erc20PriceOracleReceiptVaultFactory
-    )) as NewChildEvent["args"]
+    )) as NewChildEvent["args"];
 
     let receiptFactoryArgs = (await getEventArgs(
       tx,
       "NewChild",
       receiptFactoryContract
-    )) as NewChildEvent["args"]
+    )) as NewChildEvent["args"];
 
-    let childContract = new Contract(child, (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi)
+    let childContract = new Contract(
+      child,
+      (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi
+    );
 
     let { caller, config } = (await getEventArgs(
       tx,
       "ERC20PriceOracleReceiptVaultInitialized",
       childContract
-    )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"]
+    )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
 
-    assert(caller === erc20PriceOracleReceiptVaultFactory.address, "wrong deploy sender");
+    assert(
+      caller === erc20PriceOracleReceiptVaultFactory.address,
+      "wrong deploy sender"
+    );
     assert(
       config.receiptVaultConfig.vaultConfig.asset === asset.address,
       "wrong asset address"

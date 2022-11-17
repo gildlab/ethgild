@@ -754,9 +754,8 @@ describe("OffChainAssetVault", async function () {
     const receiptContract = (await receipt.deploy()) as Receipt;
     await receiptContract.deployed();
 
-    const offchainAssetReceiptVaultFactoryFactory = await ethers.getContractFactory(
-      "OffchainAssetReceiptVaultFactory"
-    );
+    const offchainAssetReceiptVaultFactoryFactory =
+      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
 
     const offchainAssetReceiptVaultFactory =
       (await offchainAssetReceiptVaultFactoryFactory.deploy()) as OffchainAssetReceiptVaultFactory;
@@ -764,14 +763,16 @@ describe("OffChainAssetVault", async function () {
 
     const constructionConfig = {
       admin: alice.address,
-        vaultConfig: {
-          asset: ADDRESS_ZERO,
-          name: "EthGild",
-          symbol: "ETHg",
-        },
+      vaultConfig: {
+        asset: ADDRESS_ZERO,
+        name: "EthGild",
+        symbol: "ETHg",
+      },
     };
     const offchainAssetVaultTx =
-      await offchainAssetReceiptVaultFactory.createChildTyped(constructionConfig);
+      await offchainAssetReceiptVaultFactory.createChildTyped(
+        constructionConfig
+      );
 
     const vault = new ethers.Contract(
       ethers.utils.hexZeroPad(
