@@ -49,32 +49,23 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [vault, receipt, eventArgs] = await deployOffChainAssetVault();
+    const [vault, receipt, config] = await deployOffChainAssetVault();
 
-    const { config, caller } = eventArgs;
 
     assert(
-      config.receiptVaultConfig.name === expectedName,
-      `wrong name expected ${expectedName} got ${config.receiptVaultConfig.name}`
+      config.receiptVaultConfig.vaultConfig.name === expectedName,
+      `wrong name expected ${expectedName} got ${config.receiptVaultConfig.vaultConfig.name}`
     );
     assert(
-      config.receiptVaultConfig.asset === ADDRESS_ZERO,
-      `wrong asset expected ${ADDRESS_ZERO} got ${config.receiptVaultConfig.asset}`
-    );
-    assert(
-      config.receiptVaultConfig.receipt === receipt.address,
-      `wrong uri expected ${receipt.address} got ${config.receiptVaultConfig.receipt}`
+      config.receiptVaultConfig.vaultConfig.asset === ADDRESS_ZERO,
+      `wrong asset expected ${ADDRESS_ZERO} got ${config.receiptVaultConfig.vaultConfig.asset}`
     );
 
     assert(
-      config.receiptVaultConfig.symbol === expectedSymbol,
-      `wrong symbol expected ${expectedSymbol} got ${config.receiptVaultConfig.symbol}`
+      config.receiptVaultConfig.vaultConfig.symbol === expectedSymbol,
+      `wrong symbol expected ${expectedSymbol} got ${config.receiptVaultConfig.vaultConfig.symbol}`
     );
 
-    assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
-    );
   });
   it("Checks asset is zero", async function () {
     const [vault, receipt, eventArgs] = await deployOffChainAssetVault();

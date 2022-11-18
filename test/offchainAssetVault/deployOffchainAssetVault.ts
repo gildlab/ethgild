@@ -1,11 +1,11 @@
-import { ethers } from "hardhat";
+import { artifacts, ethers } from "hardhat";
 
 import type { OffchainAssetReceiptVault } from "../../typechain";
 import type { Receipt } from "../../typechain";
 import { OffchainAssetVaultInitializedEvent } from "../../typechain/OffchainAssetReceiptVault";
-import { getEventArgs } from "../util";
-
-export const ADDRESS_ZERO = ethers.constants.AddressZero;
+import { expectedUri, getEventArgs } from "../util";
+import { OffchainAssetReceiptVaultFactory, ReceiptFactory } from "../../typechain";
+import { Contract } from "ethers";
 
 export const deployOffChainAssetVault = async (): Promise<
   [OffchainAssetReceiptVault, Receipt, any]
@@ -13,39 +13,63 @@ export const deployOffChainAssetVault = async (): Promise<
   const signers = await ethers.getSigners();
   const alice = signers[0];
 
-  const receipt = await ethers.getContractFactory("Receipt");
-  const receiptContract = (await receipt.deploy()) as Receipt;
-  await receiptContract.deployed();
+  const receiptFactoryFactory = await ethers.getContractFactory(
+      "ReceiptFactory"
+  );
+  const receiptFactoryContract =
+      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+  await receiptFactoryContract.deployed();
 
-  await receiptContract.initialize({
-    uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-  });
+  const offchainAssetReceiptVaultFactoryFactory =
+      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
+
+  const offchainAssetReceiptVaultFactory =
+      (await offchainAssetReceiptVaultFactoryFactory.deploy(
+          receiptFactoryContract.address
+      )) as OffchainAssetReceiptVaultFactory;
+  await offchainAssetReceiptVaultFactory.deployed();
 
   const constructionConfig = {
     admin: alice.address,
-    receiptVaultConfig: {
-      receipt: receiptContract.address,
-      vaultConfig: {
-        asset: ADDRESS_ZERO,
-        name: "EthGild",
-        symbol: "ETHg",
-      },
+    vaultConfig: {
+      asset: ethers.constants.AddressZero,
+      name: "EthGild",
+      symbol: "ETHg",
     },
   };
 
-  const offChainAssetVaultFactory = await ethers.getContractFactory(
-    "OffchainAssetReceiptVault"
+  const receiptConfig = {
+    uri: expectedUri,
+  };
+
+  let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
+      receiptConfig,
+      constructionConfig
   );
 
-  const offChainAssetVault =
-    (await offChainAssetVaultFactory.deploy()) as OffchainAssetReceiptVault;
-  await offChainAssetVault.deployed();
+  const { sender, child } = await getEventArgs(
+      tx,
+      "NewChild",
+      offchainAssetReceiptVaultFactory
+  );
 
-  const eventArgs = (await getEventArgs(
-    await offChainAssetVault.initialize(constructionConfig),
-    "OffchainAssetVaultInitialized",
-    offChainAssetVault
+  let childContract = new Contract(
+      child,
+      (await artifacts.readArtifact("OffchainAssetReceiptVault")).abi
+  );
+
+  let {config} = (await getEventArgs(
+      tx,
+      "OffchainAssetVaultInitialized",
+      childContract
   )) as OffchainAssetVaultInitializedEvent["args"];
 
-  return [offChainAssetVault, receiptContract, eventArgs];
+  let receiptContractAddress = config.receiptVaultConfig.receipt;
+
+  let receiptContract = new Contract(
+      receiptContractAddress,
+      (await artifacts.readArtifact("Receipt")).abi
+  ) as Receipt;
+
+  return [child, receiptContract, config];
 };
