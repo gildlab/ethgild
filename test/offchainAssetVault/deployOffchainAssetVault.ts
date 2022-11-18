@@ -4,7 +4,10 @@ import type { OffchainAssetReceiptVault } from "../../typechain";
 import type { Receipt } from "../../typechain";
 import { OffchainAssetVaultInitializedEvent } from "../../typechain/OffchainAssetReceiptVault";
 import { expectedUri, getEventArgs } from "../util";
-import { OffchainAssetReceiptVaultFactory, ReceiptFactory } from "../../typechain";
+import {
+  OffchainAssetReceiptVaultFactory,
+  ReceiptFactory,
+} from "../../typechain";
 import { Contract } from "ethers";
 
 export const deployOffChainAssetVault = async (): Promise<
@@ -14,19 +17,19 @@ export const deployOffChainAssetVault = async (): Promise<
   const alice = signers[0];
 
   const receiptFactoryFactory = await ethers.getContractFactory(
-      "ReceiptFactory"
+    "ReceiptFactory"
   );
   const receiptFactoryContract =
-      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+    (await receiptFactoryFactory.deploy()) as ReceiptFactory;
   await receiptFactoryContract.deployed();
 
   const offchainAssetReceiptVaultFactoryFactory =
-      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
+    await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
 
   const offchainAssetReceiptVaultFactory =
-      (await offchainAssetReceiptVaultFactoryFactory.deploy(
-          receiptFactoryContract.address
-      )) as OffchainAssetReceiptVaultFactory;
+    (await offchainAssetReceiptVaultFactoryFactory.deploy(
+      receiptFactoryContract.address
+    )) as OffchainAssetReceiptVaultFactory;
   await offchainAssetReceiptVaultFactory.deployed();
 
   const constructionConfig = {
@@ -43,32 +46,32 @@ export const deployOffChainAssetVault = async (): Promise<
   };
 
   let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
-      receiptConfig,
-      constructionConfig
+    receiptConfig,
+    constructionConfig
   );
 
   const { sender, child } = await getEventArgs(
-      tx,
-      "NewChild",
-      offchainAssetReceiptVaultFactory
+    tx,
+    "NewChild",
+    offchainAssetReceiptVaultFactory
   );
 
   let childContract = new Contract(
-      child,
-      (await artifacts.readArtifact("OffchainAssetReceiptVault")).abi
+    child,
+    (await artifacts.readArtifact("OffchainAssetReceiptVault")).abi
   ) as OffchainAssetReceiptVault;
 
-  let {config} = (await getEventArgs(
-      tx,
-      "OffchainAssetVaultInitialized",
-      childContract
+  let { config } = (await getEventArgs(
+    tx,
+    "OffchainAssetVaultInitialized",
+    childContract
   )) as OffchainAssetVaultInitializedEvent["args"];
 
   let receiptContractAddress = config.receiptVaultConfig.receipt;
 
   let receiptContract = new Contract(
-      receiptContractAddress,
-      (await artifacts.readArtifact("Receipt")).abi
+    receiptContractAddress,
+    (await artifacts.readArtifact("Receipt")).abi
   ) as Receipt;
 
   return [childContract, receiptContract, config];
