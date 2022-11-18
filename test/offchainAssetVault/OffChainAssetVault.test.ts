@@ -259,14 +259,14 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(100);
 
-    const [receiptVault, asset, priceOracle] =
-      await deployERC20PriceOracleVault();
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
 
     const id = ethers.BigNumber.from(1);
 
     const expectedShares = ethers.BigNumber.from(0);
 
-    const shares = await vault["previewWithdraw(uint256,uint256)"](assets, id);
+    const shares = await vault.connect(alice)["previewWithdraw(uint256,uint256)"](assets, id);
 
     assert(
       shares.eq(expectedShares),
@@ -288,7 +288,7 @@ describe("OffChainAssetVault", async function () {
 
     const expectedShares = fixedPointMul(assets, id).add(1);
 
-    const shares = await vault["previewWithdraw(uint256,uint256)"](assets, id);
+    const shares = await vault.connect(alice)["previewWithdraw(uint256,uint256)"](assets, id);
 
     assert(
       shares.eq(expectedShares),
@@ -322,7 +322,7 @@ describe("OffChainAssetVault", async function () {
     await vault.connect(alice).grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
     const expectedAssets = fixedPointDiv(shares, id);
-    const assets = await vault["previewRedeem(uint256,uint256)"](shares, id);
+    const assets = await vault.connect(alice)["previewRedeem(uint256,uint256)"](shares, id);
 
     assert(
       assets.eq(expectedAssets),
@@ -335,7 +335,7 @@ describe("OffChainAssetVault", async function () {
     const [vault, receipt] = await deployOffChainAssetVault();
     const shareRatio = ONE;
 
-    const aliceReceiptBalance = await receipt.balanceOf(
+    const aliceReceiptBalance = await receipt.connect(alice).balanceOf(
       alice.address,
       shareRatio
     );
@@ -488,7 +488,7 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-      async () => await vault["confiscate(address)"](alice.address),
+      async () => await vault.connect(alice)["confiscate(address)"](alice.address),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.connect(alice).CONFISCATOR()}`,
       "failed to confiscate"
     );
@@ -501,7 +501,7 @@ describe("OffChainAssetVault", async function () {
     await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
     const { caller, confiscatee } = (await getEventArgs(
-      await vault["confiscate(address)"](alice.address),
+      await vault.connect(alice)["confiscate(address)"](alice.address),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -525,7 +525,7 @@ describe("OffChainAssetVault", async function () {
     await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
     const { caller, confiscatee, id } = (await getEventArgs(
-      await vault["confiscate(address,uint256)"](alice.address, _id),
+      await vault.connect(alice)["confiscate(address,uint256)"](alice.address, _id),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateReceiptEvent["args"];
@@ -569,7 +569,7 @@ describe("OffChainAssetVault", async function () {
   //       []
   //     );
   //   //
-  //   // const shares = await vault["balanceOf(address)"](alice.address);
+  //   // const shares = await vault.connect(alice)["balanceOf(address)"](alice.address);
   //   //
   //   // const { confiscated } = (await getEventArgs(
   //   //   await vault.connect(alice)["confiscate(address)"](alice.address),
@@ -608,7 +608,7 @@ describe("OffChainAssetVault", async function () {
   //       shareRatio,
   //       []
   //     );
-  //   const aliceBalanceBef = await vault["balanceOf(address)"](alice.address);
+  //   const aliceBalanceBef = await vault.connect(alice)["balanceOf(address)"](alice.address);
   //
   //   const { confiscated } = (await getEventArgs(
   //     await vault.connect(alice)["confiscate(address)"](bob.address),
@@ -616,7 +616,7 @@ describe("OffChainAssetVault", async function () {
   //     vault
   //   )) as ConfiscateSharesEvent["args"];
   //
-  //   const aliceBalanceAft = await vault["balanceOf(address)"](alice.address);
+  //   const aliceBalanceAft = await vault.connect(alice)["balanceOf(address)"](alice.address);
   //   assert(
   //     aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
   //     `Shares has not been confiscated`
@@ -649,7 +649,7 @@ describe("OffChainAssetVault", async function () {
   //   await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
   //
   //   const { id } = (await getEventArgs(
-  //     await vault["deposit(uint256,address,uint256,bytes)"](
+  //     await vault.connect(alice)["deposit(uint256,address,uint256,bytes)"](
   //       aliceAssets,
   //       bob.address,
   //       shareRatio,
@@ -659,7 +659,7 @@ describe("OffChainAssetVault", async function () {
   //     vault
   //   )) as DepositWithReceiptEvent["args"];
   //
-  //   const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
+  //   const bobReceiptBalance = await vault.connect(alice)["balanceOf(address,uint256)"](
   //     bob.address,
   //     id
   //   );
@@ -704,7 +704,7 @@ describe("OffChainAssetVault", async function () {
   //   await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
   //
   //   const { id } = (await getEventArgs(
-  //     await vault["deposit(uint256,address,uint256,bytes)"](
+  //     await vault.connect(alice)["deposit(uint256,address,uint256,bytes)"](
   //       aliceAssets,
   //       bob.address,
   //       shareRatio,
@@ -714,7 +714,7 @@ describe("OffChainAssetVault", async function () {
   //     vault
   //   )) as DepositWithReceiptEvent["args"];
   //
-  //   const aliceBalanceBef = await vault["balanceOf(address,uint256)"](
+  //   const aliceBalanceBef = await vault.connect(alice)["balanceOf(address,uint256)"](
   //     alice.address,
   //     id
   //   );
@@ -727,7 +727,7 @@ describe("OffChainAssetVault", async function () {
   //     vault
   //   )) as ConfiscateSharesEvent["args"];
   //
-  //   const aliceBalanceAft = await vault["balanceOf(address,uint256)"](
+  //   const aliceBalanceAft = await vault.connect(alice)["balanceOf(address,uint256)"](
   //     alice.address,
   //     id
   //   );
@@ -791,8 +791,8 @@ describe("OffChainAssetVault", async function () {
   //       { from: bob.address }
   //     );
   //
-  //   let balance1 = await vault["balanceOf(address,uint256)"](bob.address, 1);
-  //   let balance2 = await vault["balanceOf(address,uint256)"](bob.address, 2);
+  //   let balance1 = await vault.connect(alice)["balanceOf(address,uint256)"](bob.address, 1);
+  //   let balance2 = await vault.connect(alice)["balanceOf(address,uint256)"](bob.address, 2);
   //
   //   assert(
   //     balance1.eq(ethers.BigNumber.from(0)) &&
