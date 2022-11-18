@@ -319,9 +319,6 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [receiptVault, asset, priceOracle] =
-      await deployERC20PriceOracleVault();
-
     const id = ONE;
 
     const hasRoleDepositor = await vault
@@ -353,11 +350,10 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault, receipt] = await deployOffChainAssetVault();
-    const shareRatio = ONE;
 
     const aliceReceiptBalance = await receipt
       .connect(alice)
-      .balanceOf(alice.address, shareRatio);
+      .balanceOf(alice.address, ONE);
 
     assert(aliceReceiptBalance.eq(0), `NOT_RECEIPT_HOLDER`);
   });

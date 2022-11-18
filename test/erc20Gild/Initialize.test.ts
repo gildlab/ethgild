@@ -131,7 +131,7 @@ describe("config", async function () {
       receiptConfig,
       erc20PriceOracleVaultConfig
     );
-    let { sender, child } = (await getEventArgs(
+    let { child } = (await getEventArgs(
       tx,
       "NewChild",
       erc20PriceOracleReceiptVaultFactory

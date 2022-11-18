@@ -16,7 +16,6 @@ import {
   DepositWithReceiptEvent,
   WithdrawWithReceiptEvent,
 } from "../../typechain/ReceiptVault";
-import { ReceiptInformationEvent } from "../../typechain/Receipt";
 
 import { getEventArgs } from "../util";
 
@@ -321,7 +320,7 @@ describe("Deposit", async () => {
         shares.eq(expectedShares),
         `Wrong alice ETHg ${expectedShares} ${shares}`
       );
-    }),
+    })
     it("Reverts if not enough assets to be transferred", async function () {
       const signers = await ethers.getSigners();
 
@@ -660,7 +659,7 @@ describe("Overloaded `deposit`", async () => {
         shares.eq(expectedShares),
         `wrong alice ETHg ${expectedShares} ${shares}`
       );
-    }),
+    })
     it("Reverts if not enough assets to be transferred", async function () {
       const signers = await ethers.getSigners();
 

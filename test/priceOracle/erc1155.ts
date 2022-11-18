@@ -8,7 +8,7 @@ import {
 } from "../util";
 
 chai.use(solidity);
-const { expect, assert } = chai;
+const { assert } = chai;
 
 describe("erc1155 usage", async function () {
   it("should initialize well", async function () {

@@ -50,7 +50,7 @@ export const deployOffChainAssetVault = async (): Promise<
     constructionConfig
   );
 
-  const { sender, child } = await getEventArgs(
+  const { child } = await getEventArgs(
     tx,
     "NewChild",
     offchainAssetReceiptVaultFactory
