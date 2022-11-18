@@ -68,11 +68,9 @@ describe("OffChainAssetVault", async function () {
 
   });
   it("Checks asset is zero", async function () {
-    const [vault, receipt, eventArgs] = await deployOffChainAssetVault();
+    const [vault, receipt, config] = await deployOffChainAssetVault();
 
-    const { config, admin } = eventArgs;
-
-    assert(config.receiptVaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
+    assert(config.receiptVaultConfig.vaultConfig.asset === ADDRESS_ZERO, `NONZERO_ASSET`);
   });
   it("Checks SetERC20Tier role", async function () {
     const [vault] = await deployOffChainAssetVault();
@@ -84,8 +82,8 @@ describe("OffChainAssetVault", async function () {
 
     await assertError(
       async () =>
-        await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20TIERER()}`,
+        await vault.connect(alice).setERC20Tier(TierV2TestContract.address, minTier, []),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.connect(alice).ERC20TIERER()}`,
       "Failed to set erc20tier"
     );
   });
@@ -95,11 +93,11 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    await vault.grantRole(await vault.ERC20TIERER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
     const { caller, tier, minimumTier } = (await getEventArgs(
-      await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
+      await vault.connect(alice).setERC20Tier(TierV2TestContract.address, minTier, []),
       "SetERC20Tier",
       vault
     )) as SetERC20TierEvent["args"];
@@ -127,8 +125,8 @@ describe("OffChainAssetVault", async function () {
 
     await assertError(
       async () =>
-        await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC1155TIERER()}`,
+        await vault.connect(alice).setERC1155Tier(TierV2TestContract.address, minTier, []),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.connect(alice).ERC1155TIERER()}`,
       "Failed to set erc1155tier"
     );
   });
@@ -138,11 +136,11 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    await vault.grantRole(await vault.ERC1155TIERER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(100);
 
     const { caller, tier, minimumTier } = (await getEventArgs(
-      await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
+      await vault.connect(alice).setERC1155Tier(TierV2TestContract.address, minTier, []),
       "SetERC1155Tier",
       vault
     )) as SetERC20TierEvent["args"];
@@ -178,7 +176,7 @@ describe("OffChainAssetVault", async function () {
   //
   //   await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
   //
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
   //
   //   await vault
   //     .connect(alice)
@@ -204,8 +202,8 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const hasRoleDepositor = await vault.hasRole(
-      await vault.DEPOSITOR(),
+    const hasRoleDepositor = await vault.connect(alice).hasRole(
+      await vault.connect(alice).DEPOSITOR(),
       alice.address
     );
 
@@ -216,9 +214,9 @@ describe("OffChainAssetVault", async function () {
     );
 
     //grant depositor role to alice
-    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
-    const shares = await vault.previewDeposit(assets);
+    const shares = await vault.connect(alice).previewDeposit(assets);
 
     assert(
       shares.eq(assets),
@@ -228,8 +226,10 @@ describe("OffChainAssetVault", async function () {
   it("PreviewMint sets 0 if not DEPOSITOR", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
 
-    const assets = await vault.previewMint(shares);
+    const assets = await vault.connect(alice).previewMint(shares);
     const expectedAssets = ethers.BigNumber.from(0);
 
     assert(
@@ -245,9 +245,9 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
 
     //grant depositor role to alice
-    await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
-    const assets = await vault.previewMint(shares);
+    const assets = await vault.connect(alice).previewMint(shares);
     const expectedAssets = fixedPointDiv(shares, ONE).add(1);
 
     assert(
@@ -284,7 +284,7 @@ describe("OffChainAssetVault", async function () {
     const id = ONE;
 
     //grant withdrawer role to alice
-    await vault.grantRole(await vault.WITHDRAWER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
     const expectedShares = fixedPointMul(assets, id).add(1);
 
@@ -307,8 +307,8 @@ describe("OffChainAssetVault", async function () {
 
     const id = ONE;
 
-    const hasRoleDepositor = await vault.hasRole(
-      await vault.WITHDRAWER(),
+    const hasRoleDepositor = await vault.connect(alice).hasRole(
+      await vault.connect(alice).WITHDRAWER(),
       alice.address
     );
 
@@ -319,7 +319,7 @@ describe("OffChainAssetVault", async function () {
     );
 
     //grant withdrawer role to alice
-    await vault.grantRole(await vault.WITHDRAWER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
     const expectedAssets = fixedPointDiv(shares, id);
     const assets = await vault["previewRedeem(uint256,uint256)"](shares, id);
@@ -348,8 +348,8 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-      async () => await vault.snapshot(),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.ERC20SNAPSHOTTER()}`,
+      async () => await vault.connect(alice).snapshot(),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.connect(alice).ERC20SNAPSHOTTER()}`,
       "failed to snapshot"
     );
   });
@@ -358,10 +358,10 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
 
-    await vault.grantRole(await vault.ERC20SNAPSHOTTER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
 
     const { id } = (await getEventArgs(
-      await vault.snapshot(),
+      await vault.connect(alice).snapshot(),
       "Snapshot",
       vault
     )) as SnapshotEvent["args"];
@@ -374,16 +374,16 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    await vault.grantRole(await vault.ERC20TIERER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
     const { tier, minimumTier } = (await getEventArgs(
-      await vault.setERC20Tier(TierV2TestContract.address, minTier, []),
+      await vault.connect(alice).setERC20Tier(TierV2TestContract.address, minTier, []),
       "SetERC20Tier",
       vault
     )) as SetERC20TierEvent["args"];
 
-    await vault.setERC20Tier(TierV2TestContract.address, minTier, []);
+    await vault.connect(alice).setERC20Tier(TierV2TestContract.address, minTier, []);
 
     assert(
       tier === TierV2TestContract.address,
@@ -400,16 +400,16 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    await vault.grantRole(await vault.ERC1155TIERER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
     const { tier, minimumTier } = (await getEventArgs(
-      await vault.setERC1155Tier(TierV2TestContract.address, minTier, []),
+      await vault.connect(alice).setERC1155Tier(TierV2TestContract.address, minTier, []),
       "SetERC1155Tier",
       vault
     )) as SetERC20TierEvent["args"];
 
-    await vault.setERC1155Tier(TierV2TestContract.address, minTier, []);
+    await vault.connect(alice).setERC1155Tier(TierV2TestContract.address, minTier, []);
 
     assert(
       tier === TierV2TestContract.address,
@@ -431,10 +431,10 @@ describe("OffChainAssetVault", async function () {
     const block = await ethers.provider.getBlock(blockNum);
     const _until = block.timestamp + 100;
 
-    await vault.grantRole(await vault.CERTIFIER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
     const { caller, until } = (await getEventArgs(
-      await vault.certify(_until, [], false),
+      await vault.connect(alice).certify(_until, [], false),
       "Certify",
       vault
     )) as CertifyEvent["args"];
@@ -455,8 +455,8 @@ describe("OffChainAssetVault", async function () {
     const _until = block.timestamp + 100;
 
     await assertError(
-      async () => await vault.certify(_until, [], false),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CERTIFIER()}`,
+      async () => await vault.connect(alice).certify(_until, [], false),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.connect(alice).CERTIFIER()}`,
       "failed to certify"
     );
   });
@@ -469,10 +469,10 @@ describe("OffChainAssetVault", async function () {
     const block = await ethers.provider.getBlock(blockNum);
     const certifiedUntil = block.timestamp + 100;
 
-    await vault.grantRole(await vault.CERTIFIER(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
     const { until } = (await getEventArgs(
-      await vault.certify(certifiedUntil, [], false),
+      await vault.connect(alice).certify(certifiedUntil, [], false),
       "Certify",
       vault
     )) as CertifyEvent["args"];
@@ -489,7 +489,7 @@ describe("OffChainAssetVault", async function () {
 
     await assertError(
       async () => await vault["confiscate(address)"](alice.address),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.CONFISCATOR()}`,
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault.connect(alice).CONFISCATOR()}`,
       "failed to confiscate"
     );
   });
@@ -498,7 +498,7 @@ describe("OffChainAssetVault", async function () {
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
 
-    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
     const { caller, confiscatee } = (await getEventArgs(
       await vault["confiscate(address)"](alice.address),
@@ -522,7 +522,7 @@ describe("OffChainAssetVault", async function () {
 
     const _id = ONE;
 
-    await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+    await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
     const { caller, confiscatee, id } = (await getEventArgs(
       await vault["confiscate(address,uint256)"](alice.address, _id),
@@ -550,14 +550,14 @@ describe("OffChainAssetVault", async function () {
   //   const asset = (await testErc20.deploy()) as TestErc20;
   //   await asset.deployed();
   //
-  //   await vault.grantRole(await vault.CONFISCATOR(), alice.address);
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
   //
   //   const assets = ethers.BigNumber.from(100);
   //
   //   await asset.transfer(alice.address, assets);
   //
-  //   await asset.connect(alice).increaseAllowance(vault.address, assets);
+  //   await asset.connect(alice).increaseAllowance(vault.connect(alice).address, assets);
   //
   //   const shareRatio = ONE;
   //   await vault
@@ -590,14 +590,14 @@ describe("OffChainAssetVault", async function () {
   //   const [receiptVault, asset, priceOracle] =
   //     await deployERC20PriceOracleVault();
   //
-  //   await vault.grantRole(await vault.CONFISCATOR(), alice.address);
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
   //
   //   const assets = ethers.BigNumber.from(100);
   //
   //   await asset.transfer(alice.address, assets);
   //
-  //   await asset.connect(alice).increaseAllowance(vault.address, assets);
+  //   await asset.connect(alice).increaseAllowance(vault.connect(alice).address, assets);
   //
   //   const shareRatio = ONE;
   //   await vault
@@ -638,15 +638,15 @@ describe("OffChainAssetVault", async function () {
   //   const blockNum = await ethers.provider.getBlockNumber();
   //   const block = await ethers.provider.getBlock(blockNum);
   //   const certifiedUntil = block.timestamp + 100;
-  //   await vault.grantRole(await vault.CERTIFIER(), alice.address);
-  //   await vault.certify(certifiedUntil, [], false);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+  //   await vault.connect(alice).certify(certifiedUntil, [], false);
   //
   //   await asset.transfer(alice.address, aliceAssets);
   //
   //   await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
   //
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
-  //   await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
   //
   //   const { id } = (await getEventArgs(
   //     await vault["deposit(uint256,address,uint256,bytes)"](
@@ -693,15 +693,15 @@ describe("OffChainAssetVault", async function () {
   //   const blockNum = await ethers.provider.getBlockNumber();
   //   const block = await ethers.provider.getBlock(blockNum);
   //   const certifiedUntil = block.timestamp + 100;
-  //   await vault.grantRole(await vault.CERTIFIER(), alice.address);
-  //   await vault.certify(certifiedUntil, [], false);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+  //   await vault.connect(alice).certify(certifiedUntil, [], false);
   //
   //   await asset.transfer(alice.address, aliceAssets);
   //
   //   await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
   //
-  //   await vault.grantRole(await vault.DEPOSITOR(), alice.address);
-  //   await vault.grantRole(await vault.CONFISCATOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
   //
   //   const { id } = (await getEventArgs(
   //     await vault["deposit(uint256,address,uint256,bytes)"](
@@ -754,7 +754,7 @@ describe("OffChainAssetVault", async function () {
   //     .connect(bob)
   //     .increaseAllowance(vault.address, assets);
   //
-  //   await vault.grantRole(await vault.DEPOSITOR(), bob.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), bob.address);
   //
   //   const shares = ethers.BigNumber.from(10);
   //   const shares2 = ethers.BigNumber.from(20);
@@ -769,7 +769,7 @@ describe("OffChainAssetVault", async function () {
   //     "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
   //   ];
   //   let iface = new ethers.utils.Interface(ABI);
-  //   await vault.grantRole(await vault.WITHDRAWER(), bob.address);
+  //   await vault.connect(alice).grantRole(await vault.connect(alice).WITHDRAWER(), bob.address);
   //
   //   let tx = await vault
   //     .connect(bob)

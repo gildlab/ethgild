@@ -56,7 +56,7 @@ export const deployOffChainAssetVault = async (): Promise<
   let childContract = new Contract(
       child,
       (await artifacts.readArtifact("OffchainAssetReceiptVault")).abi
-  );
+  ) as OffchainAssetReceiptVault;
 
   let {config} = (await getEventArgs(
       tx,
@@ -71,5 +71,5 @@ export const deployOffChainAssetVault = async (): Promise<
       (await artifacts.readArtifact("Receipt")).abi
   ) as Receipt;
 
-  return [child, receiptContract, config];
+  return [childContract, receiptContract, config];
 };
