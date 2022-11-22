@@ -2,7 +2,10 @@
 // @ts-ignore
 import { artifacts, ethers } from "hardhat";
 
-import { OffchainAssetReceiptVaultFactory, ReceiptFactory } from "../../typechain";
+import {
+  OffchainAssetReceiptVaultFactory,
+  ReceiptFactory,
+} from "../../typechain";
 
 async function main() {
   await deployOffChainAssetVaultFactory("Mumbai");
@@ -19,28 +22,28 @@ async function deployOffChainAssetVaultFactory(network: string) {
   console.log(network);
 
   const receiptFactoryFactory = await ethers.getContractFactory(
-      "ReceiptFactory"
+    "ReceiptFactory"
   );
   const receiptFactoryContract =
-      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
+    (await receiptFactoryFactory.deploy()) as ReceiptFactory;
   await receiptFactoryContract.deployed();
 
   console.log(
-      "receiptFactoryContract deployed to:",
-      receiptFactoryContract.address
+    "receiptFactoryContract deployed to:",
+    receiptFactoryContract.address
   );
 
   const offchainAssetReceiptVaultFactoryFactory =
-      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
+    await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
 
   const offchainAssetReceiptVaultFactory =
-      (await offchainAssetReceiptVaultFactoryFactory.deploy(
-          receiptFactoryContract.address
-      )) as OffchainAssetReceiptVaultFactory;
+    (await offchainAssetReceiptVaultFactoryFactory.deploy(
+      receiptFactoryContract.address
+    )) as OffchainAssetReceiptVaultFactory;
   await offchainAssetReceiptVaultFactory.deployed();
 
   console.log(
     "OffchainAssetVaultFactory deployed to:",
-      offchainAssetReceiptVaultFactory.address
+    offchainAssetReceiptVaultFactory.address
   );
 }

@@ -6,9 +6,10 @@ import type { OffchainAssetReceiptVaultFactory } from "../../typechain";
 
 async function main() {
   //receipt factory contract address 18/11/2022
-  let receiptFactoryContract = "0x066cd3d1f37c7156424610ec143b1402c8ae25fa" //000000000000000000000000066cd3d1f37c7156424610ec143b1402c8ae25fa
+  let receiptFactoryContract = "0x066cd3d1f37c7156424610ec143b1402c8ae25fa"; //000000000000000000000000066cd3d1f37c7156424610ec143b1402c8ae25fa
 
-  const abi = (await artifacts.readArtifact("OffchainAssetReceiptVaultFactory")).abi;
+  const abi = (await artifacts.readArtifact("OffchainAssetReceiptVaultFactory"))
+    .abi;
   const iface = new ethers.utils.Interface(abi);
   const constructorArgs = iface.encodeDeploy([receiptFactoryContract]);
 

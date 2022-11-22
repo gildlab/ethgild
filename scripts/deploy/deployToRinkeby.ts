@@ -21,7 +21,7 @@ async function main() {
     "Rinkeby",
     erc20ContractAddress,
     erc20PriceOracleVaultConfig,
-      receiptConfig
+    receiptConfig
   );
 }
 

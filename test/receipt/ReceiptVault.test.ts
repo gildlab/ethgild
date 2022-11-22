@@ -320,29 +320,29 @@ describe("Deposit", async () => {
         shares.eq(expectedShares),
         `Wrong alice ETHg ${expectedShares} ${shares}`
       );
-    })
-    it("Reverts if not enough assets to be transferred", async function () {
-      const signers = await ethers.getSigners();
-
-      const [vault, asset] = await deployERC20PriceOracleVault();
-
-      const alice = signers[1];
-
-      const totalTokenSupply = await asset.totalSupply();
-
-      const assets = totalTokenSupply.div(2);
-
-      await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-      await assertError(
-        async () =>
-          await vault
-            .connect(alice)
-            ["deposit(uint256,address)"](assets, alice.address),
-        "ERC20: transfer amount exceeds balance",
-        "failed to respect min price"
-      );
     });
+  it("Reverts if not enough assets to be transferred", async function () {
+    const signers = await ethers.getSigners();
+
+    const [vault, asset] = await deployERC20PriceOracleVault();
+
+    const alice = signers[1];
+
+    const totalTokenSupply = await asset.totalSupply();
+
+    const assets = totalTokenSupply.div(2);
+
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["deposit(uint256,address)"](assets, alice.address),
+      "ERC20: transfer amount exceeds balance",
+      "failed to respect min price"
+    );
+  });
   it("Receiver MAY be different user to depositor", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -659,36 +659,36 @@ describe("Overloaded `deposit`", async () => {
         shares.eq(expectedShares),
         `wrong alice ETHg ${expectedShares} ${shares}`
       );
-    })
-    it("Reverts if not enough assets to be transferred", async function () {
-      const signers = await ethers.getSigners();
-
-      const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-      const alice = signers[1];
-
-      const totalTokenSupply = await asset.totalSupply();
-
-      const assets = totalTokenSupply.div(2);
-
-      const shareRatio = await priceOracle.price();
-
-      await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-      await assertError(
-        async () =>
-          await vault
-            .connect(alice)
-            ["deposit(uint256,address,uint256,bytes)"](
-              assets,
-              alice.address,
-              shareRatio,
-              []
-            ),
-        "ERC20: transfer amount exceeds balance",
-        "failed to deposit"
-      );
     });
+  it("Reverts if not enough assets to be transferred", async function () {
+    const signers = await ethers.getSigners();
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
+    const alice = signers[1];
+
+    const totalTokenSupply = await asset.totalSupply();
+
+    const assets = totalTokenSupply.div(2);
+
+    const shareRatio = await priceOracle.price();
+
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["deposit(uint256,address,uint256,bytes)"](
+            assets,
+            alice.address,
+            shareRatio,
+            []
+          ),
+      "ERC20: transfer amount exceeds balance",
+      "failed to deposit"
+    );
+  });
   it("Receiver MAY be different user to depositor", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];

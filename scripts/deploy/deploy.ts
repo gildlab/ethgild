@@ -17,7 +17,7 @@ type Config = {
 };
 
 type ReceiptConfig = {
-  uri: string
+  uri: string;
 };
 
 export const deployERC20PriceOracleVault = async (
@@ -26,7 +26,8 @@ export const deployERC20PriceOracleVault = async (
   network: string,
   erc20ContractAddress: string,
   config: Config,
-  receiptConfig : ReceiptConfig) => {
+  receiptConfig: ReceiptConfig
+) => {
   console.log(network);
   const [deployer] = await ethers.getSigners();
   // 1 hour
@@ -141,9 +142,8 @@ export const deployERC20PriceOracleVault = async (
     deployer
   ) as ChainlinkFeedPriceOracle & Contract;
 
-  const erc20PriceOracleReceiptVaultFactoryFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleReceiptVaultFactory"
-  );
+  const erc20PriceOracleReceiptVaultFactoryFactory =
+    await ethers.getContractFactory("ERC20PriceOracleReceiptVaultFactory");
 
   const erc20PriceOracleVaultFactory =
     (await erc20PriceOracleReceiptVaultFactoryFactory.deploy()) as ERC20PriceOracleReceiptVaultFactory;
@@ -169,8 +169,8 @@ export const deployERC20PriceOracleVault = async (
 
   const erc20PriceOracleVaultTx =
     await erc20PriceOracleVaultFactory.createChildTyped(
-        receiptConfigValue,
-        erc20PriceOracleVaultConfig
+      receiptConfigValue,
+      erc20PriceOracleVaultConfig
     );
   const erc20PriceOracleVault = new ethers.Contract(
     ethers.utils.hexZeroPad(

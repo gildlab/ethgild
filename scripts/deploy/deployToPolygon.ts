@@ -22,7 +22,7 @@ async function main() {
     "Polygon",
     erc20ContractAddress,
     erc20PriceOracleVaultConfig,
-      receiptConfig
+    receiptConfig
   );
 }
 
