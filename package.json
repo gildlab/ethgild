@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^3.1.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@typechain/ethers-v5": "^7.0.1",
     "@typechain/hardhat": "^2.0.2",
@@ -26,6 +27,8 @@
   },
   "dependencies": {
     "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#d35c301661393f8aa70bc808d1f8fbeefe3c2a6a",
-    "@chainlink/contracts": "^0.3.1"
+    "@chainlink/contracts": "^0.3.1",
+    "@openzeppelin/contracts": "^4.8.0",
+    "solc": "^0.8.17"
   }
 }

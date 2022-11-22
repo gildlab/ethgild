@@ -25,6 +25,11 @@ async function deployOffChainAssetVaultFactory(network: string) {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
   await receiptFactoryContract.deployed();
 
+  console.log(
+      "receiptFactoryContract deployed to:",
+      receiptFactoryContract.address
+  );
+
   const offchainAssetReceiptVaultFactoryFactory =
       await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
 
