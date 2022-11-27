@@ -35,7 +35,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         bytes memory data_
     ) external onlyOwner {
         _mint(account_, id_, amount_, data_);
-        receiptInformation(id_, data_);
+        _receiptInformation(account_, id_, data_);
     }
 
     /// @inheritdoc IReceipt
@@ -78,12 +78,16 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
-    /// @inheritdoc IReceipt
-    function receiptInformation(uint256 id_, bytes memory data_) public {
+    function _receiptInformation(address account_, uint id_, bytes memory data_) internal {
         // No data is noop.
         if (data_.length > 0) {
-            IReceiptOwner(owner()).authorizeReceiptInformation(id_, data_);
-            emit ReceiptInformation(msg.sender, id_, data_);
+            IReceiptOwner(owner()).authorizeReceiptInformation(account_, id_, data_);
+            emit ReceiptInformation(account_, id_, data_);
         }
+    }
+
+    /// @inheritdoc IReceipt
+    function receiptInformation(uint256 id_, bytes memory data_) external {
+        _receiptInformation(msg.sender, id_, data_);
     }
 }

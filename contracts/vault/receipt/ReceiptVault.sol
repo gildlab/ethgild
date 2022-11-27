@@ -106,7 +106,7 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptOwner
-    function authorizeReceiptInformation(uint256 id_, bytes memory data_)
+    function authorizeReceiptInformation(address, uint256, bytes memory)
         external
         view
         virtual
