@@ -106,11 +106,11 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptOwner
-    function authorizeReceiptInformation(address, uint256, bytes memory)
-        external
-        view
-        virtual
-    // solhint-disable-next-line no-empty-blocks
+    function authorizeReceiptInformation(
+        address,
+        uint256,
+        bytes memory
+    ) external view virtual // solhint-disable-next-line no-empty-blocks
     {
         // Authorize all receipt information by default.
     }

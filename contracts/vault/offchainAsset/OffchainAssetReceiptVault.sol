@@ -316,12 +316,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         highwaterId = id_;
     }
 
-    function authorizeReceiptInformation(address account_, uint256 id_, bytes memory)
-        external
-        view
-        virtual
-        override
-    {
+    function authorizeReceiptInformation(
+        address account_,
+        uint256 id_,
+        bytes memory
+    ) external view virtual override {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
         require(

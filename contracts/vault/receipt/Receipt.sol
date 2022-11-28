@@ -78,10 +78,18 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
-    function _receiptInformation(address account_, uint id_, bytes memory data_) internal {
+    function _receiptInformation(
+        address account_,
+        uint256 id_,
+        bytes memory data_
+    ) internal {
         // No data is noop.
         if (data_.length > 0) {
-            IReceiptOwner(owner()).authorizeReceiptInformation(account_, id_, data_);
+            IReceiptOwner(owner()).authorizeReceiptInformation(
+                account_,
+                id_,
+                data_
+            );
             emit ReceiptInformation(account_, id_, data_);
         }
     }
