@@ -109,9 +109,8 @@ contract ReceiptVault is
     function authorizeReceiptInformation(
         address,
         uint256,
-        bytes memory
-    ) external view virtual // solhint-disable-next-line no-empty-blocks
-    {
+        bytes memory // solhint-disable-next-line no-empty-blocks
+    ) external view virtual {
         // Authorize all receipt information by default.
     }
 
