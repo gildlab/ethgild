@@ -14,7 +14,7 @@ import {
   Receipt,
 } from "../../typechain";
 import { BigNumber } from "ethers";
-import { WithdrawEvent } from "../../typechain/IERC4626";
+import { WithdrawEvent } from "../../typechain/IERC4626Upgradeable";
 
 chai.use(solidity);
 

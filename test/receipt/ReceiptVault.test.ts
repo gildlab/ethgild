@@ -10,7 +10,7 @@ import {
   expectedReferencePrice,
   getEvent,
 } from "../util";
-import { DepositEvent } from "../../typechain/IERC4626";
+import { DepositEvent } from "../../typechain/IERC4626Upgradeable";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   DepositWithReceiptEvent,
