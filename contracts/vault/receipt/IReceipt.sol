@@ -11,11 +11,7 @@ interface IReceipt is IERC1155 {
         bytes memory data
     ) external;
 
-    function ownerBurn(
-        address account,
-        uint256 id,
-        uint256 amount
-    ) external;
+    function ownerBurn(address account, uint256 id, uint256 amount) external;
 
     function ownerTransferFrom(
         address from,
