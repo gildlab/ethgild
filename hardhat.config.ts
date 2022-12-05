@@ -1,12 +1,19 @@
 import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-etherscan";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 
 require("dotenv").config();
 
-const { RINKEBY_URL, PRIVATE_KEY, POLYGON_URL, MUMBAI_URL } = process.env;
+const {
+  RINKEBY_URL,
+  PRIVATE_KEY,
+  POLYGON_URL,
+  MUMBAI_URL,
+  POLYGONSCAN_API_KEY,
+} = process.env;
 
 export const config = {
   networks: {
@@ -34,15 +41,20 @@ export const config = {
   solidity: {
     compilers: [
       {
-        version: "0.8.10",
+        version: "0.8.17",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 100,
+            runs: 100000,
           },
         },
       },
     ],
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    apiKey: POLYGONSCAN_API_KEY,
   },
   gasReporter: {
     currency: "USD",

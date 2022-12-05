@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Upgradeable as ERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 // solhint-disable-next-line max-line-length
 
@@ -17,7 +17,8 @@ contract TestErc20 is ERC20 {
     uint256 public constant TOTAL_SUPPLY = 10**(DECIMALS + 9);
 
     /// Define and mint the erc20 token.
-    constructor() ERC20("USD Classic", "USDCC") {
+    constructor() initializer {
+        __ERC20_init("USD Classic", "USDCC");
         _mint(msg.sender, TOTAL_SUPPLY);
     }
 }

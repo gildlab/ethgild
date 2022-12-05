@@ -1,11 +1,12 @@
 // scripts/deploy.js
+// @ts-ignore
 import { ethers, artifacts } from "hardhat";
 import type { ChainlinkFeedPriceOracleFactory } from "../../typechain";
 import type { ChainlinkFeedPriceOracle } from "../../typechain";
 import type { TwoPriceOracle } from "../../typechain";
 import type { TwoPriceOracleFactory } from "../../typechain";
-import type { ERC20PriceOracleVaultFactory } from "../../typechain";
-import type { ERC20PriceOracleVault } from "../../typechain";
+import type { ERC20PriceOracleReceiptVaultFactory } from "../../typechain";
+import type { ERC20PriceOracleReceiptVault } from "../../typechain";
 
 import type { Contract } from "ethers";
 import { getEventArgs } from "../../test/util";
@@ -13,6 +14,9 @@ import { getEventArgs } from "../../test/util";
 type Config = {
   name: string;
   symbol: string;
+};
+
+type ReceiptConfig = {
   uri: string;
 };
 
@@ -21,7 +25,8 @@ export const deployERC20PriceOracleVault = async (
   quote: string,
   network: string,
   erc20ContractAddress: string,
-  config: Config
+  config: Config,
+  receiptConfig: ReceiptConfig
 ) => {
   console.log(network);
   const [deployer] = await ethers.getSigners();
@@ -137,12 +142,11 @@ export const deployERC20PriceOracleVault = async (
     deployer
   ) as ChainlinkFeedPriceOracle & Contract;
 
-  const erc20PriceOracleVaultFactoryFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleVaultFactory"
-  );
+  const erc20PriceOracleReceiptVaultFactoryFactory =
+    await ethers.getContractFactory("ERC20PriceOracleReceiptVaultFactory");
 
   const erc20PriceOracleVaultFactory =
-    (await erc20PriceOracleVaultFactoryFactory.deploy()) as ERC20PriceOracleVaultFactory;
+    (await erc20PriceOracleReceiptVaultFactoryFactory.deploy()) as ERC20PriceOracleReceiptVaultFactory;
 
   await erc20PriceOracleVaultFactory.deployed();
   console.log(
@@ -150,18 +154,22 @@ export const deployERC20PriceOracleVault = async (
     erc20PriceOracleVaultFactory.address
   );
 
+  const receiptConfigValue = {
+    uri: receiptConfig.uri,
+  };
+
   const erc20PriceOracleVaultConfig = {
     priceOracle: twoPriceOracle.address,
-    receiptVaultConfig: {
+    vaultConfig: {
       asset: chainlinkFeedPriceOracleConfig.erc20ContractAddress,
       name: config.name,
       symbol: config.symbol,
-      uri: config.uri,
     },
   };
 
   const erc20PriceOracleVaultTx =
     await erc20PriceOracleVaultFactory.createChildTyped(
+      receiptConfigValue,
       erc20PriceOracleVaultConfig
     );
   const erc20PriceOracleVault = new ethers.Contract(
@@ -179,7 +187,7 @@ export const deployERC20PriceOracleVault = async (
     ),
     (await artifacts.readArtifact("ERC20PriceOracleVault")).abi,
     deployer
-  ) as ERC20PriceOracleVault & Contract;
+  ) as ERC20PriceOracleReceiptVault & Contract;
 
   await erc20PriceOracleVault.deployed();
   console.log(

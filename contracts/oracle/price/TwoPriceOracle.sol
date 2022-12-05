@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.10;
+pragma solidity =0.8.17;
 
 import "./IPriceOracle.sol";
 import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
 
-/// All config required for construction.
 /// @param base The base price of the merged pair, will be the numerator.
 /// @param quote The quote price of the merged pair, will be the denominator.
-struct TwoPriceOracleConstructionConfig {
+struct TwoPriceOracleConfig {
     address base;
     address quote;
 }
@@ -22,16 +21,15 @@ contract TwoPriceOracle is IPriceOracle {
     using FixedPointMath for uint256;
 
     /// Emitted upon deployment and construction.
-    event Construction(address sender, TwoPriceOracleConstructionConfig config);
+    event Construction(address sender, TwoPriceOracleConfig config);
 
     /// As per `ConstructionConfig.base`.
     IPriceOracle public immutable base;
     /// As per `ConstructionConfig.quote`.
     IPriceOracle public immutable quote;
 
-    /// Constructor.
-    /// @param config_ All configr required to construct.
-    constructor(TwoPriceOracleConstructionConfig memory config_) {
+    /// @param config_ Config required to construct.
+    constructor(TwoPriceOracleConfig memory config_) {
         base = IPriceOracle(config_.base);
         quote = IPriceOracle(config_.quote);
         emit Construction(msg.sender, config_);
@@ -39,7 +37,7 @@ contract TwoPriceOracle is IPriceOracle {
 
     /// Calculates the price as `base / quote`.
     /// @inheritdoc IPriceOracle
-    function price() external view override returns (uint256 price_) {
-        price_ = base.price().fixedPointDiv(quote.price());
+    function price() external view override returns (uint256) {
+        return base.price().fixedPointDiv(quote.price());
     }
 }

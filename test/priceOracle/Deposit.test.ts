@@ -32,27 +32,15 @@ describe("deposit", async function () {
 
     await assertError(
       async () =>
-        await vault["deposit(uint256,address)"](
-          ethers.BigNumber.from(0),
-          alice.address
-        ),
+        await vault
+          .connect(alice)
+          ["deposit(uint256,address)"](ethers.BigNumber.from(0), alice.address),
       "0_ASSETS",
       "failed to prevent a zero value deposit"
     );
   });
 
   it("should deposit a sensible reference price", async function () {
-    // At the time of writing
-    // Block number: 12666285
-    //
-    // Trading View ETHUSD: 2218.71
-    // Chainlink ETHUSD (8 decimals): 2228 25543758
-    //
-    // Trading View XAUUSD: 1763.95
-    // Chainlink XAUUSD (8 decimals): 1767 15500000
-    //
-    // ~ 1 ETH should buy 1.26092812321 XAU
-
     const signers = await ethers.getSigners();
 
     const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
@@ -96,7 +84,9 @@ describe("deposit", async function () {
       );
 
     const expectedShares = fixedPointMul(shareRatio, aliceDepositAmount);
-    const aliceShares = await vault["balanceOf(address)"](alice.address);
+    const aliceShares = await vault
+      .connect(alice)
+      ["balanceOf(address)"](alice.address);
     assert(
       aliceShares.eq(expectedShares),
       `wrong alice shares ${expectedShares} ${aliceShares}`
@@ -106,7 +96,8 @@ describe("deposit", async function () {
   it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
 
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [vault, asset, priceOracle, receipt] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -137,31 +128,33 @@ describe("deposit", async function () {
       aliceEthAmount,
       expectedReferencePrice
     );
-    const aliceBalance = await vault["balanceOf(address)"](alice.address);
+    const aliceBalance = await vault
+      .connect(alice)
+      ["balanceOf(address)"](alice.address);
     assert(
       aliceBalance.eq(expectedAliceBalance),
       `wrong ERC20 balance ${aliceBalance} ${expectedAliceBalance}`
     );
 
-    const bobErc20Balance = await vault["balanceOf(address)"](bob.address);
+    const bobErc20Balance = await vault
+      .connect(alice)
+      ["balanceOf(address)"](bob.address);
     assert(
       bobErc20Balance.eq(0),
       `wrong bob erc20 balance ${bobErc20Balance} 0`
     );
 
-    const erc1155Balance = await vault["balanceOf(address,uint256)"](
-      alice.address,
-      id1155
-    );
+    const erc1155Balance = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](alice.address, id1155);
     assert(
       erc1155Balance.eq(expectedAliceBalance),
       `wrong erc1155 balance ${erc1155Balance} ${expectedAliceBalance}`
     );
 
-    const bobErc1155Balance = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id1155
-    );
+    const bobErc1155Balance = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](bob.address, id1155);
     assert(
       bobErc1155Balance.eq(0),
       `wrong bob erc1155 balance ${bobErc1155Balance} 0`
@@ -188,16 +181,17 @@ describe("deposit", async function () {
       expectedReferencePrice,
       bobEthAmount
     );
-    const bobBalance = await vault["balanceOf(address)"](bob.address);
+    const bobBalance = await vault
+      .connect(alice)
+      ["balanceOf(address)"](bob.address);
     assert(
       bobBalance.eq(expectedBobBalance),
       `wrong bob erc20 balance ${bobBalance} ${expectedBobBalance}`
     );
 
-    const erc1155BobBalance = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id1155
-    );
+    const erc1155BobBalance = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](bob.address, id1155);
     assert(
       erc1155BobBalance.eq(expectedBobBalance),
       `wrong bob erc1155 balance ${erc1155BobBalance} ${expectedBobBalance}`
@@ -211,9 +205,9 @@ describe("deposit", async function () {
         alice.address,
         shareRatio
       );
-    const erc20AliceBalanceWithdraw = await vault["balanceOf(address)"](
-      alice.address
-    );
+    const erc20AliceBalanceWithdraw = await vault
+      .connect(alice)
+      ["balanceOf(address)"](alice.address);
 
     assert(
       erc20AliceBalanceWithdraw.eq(0),
@@ -235,10 +229,9 @@ describe("deposit", async function () {
       "failed to prevent shareRatio manipulation"
     );
 
-    const erc1155AliceBalanceRedeem = await vault["balanceOf(address,uint256)"](
-      alice.address,
-      id1155
-    );
+    const erc1155AliceBalanceRedeem = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](alice.address, id1155);
     assert(
       erc1155AliceBalanceRedeem.eq(0),
       `wrong alice erc1155 balance after redeem ${erc1155AliceBalanceRedeem} 0`
@@ -248,7 +241,8 @@ describe("deposit", async function () {
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
 
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+    const [vault, asset, priceOracle, receipt] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -274,7 +268,9 @@ describe("deposit", async function () {
       alice.address
     );
 
-    const aliceShareBalance = await vault["balanceOf(address)"](alice.address);
+    const aliceShareBalance = await vault
+      .connect(alice)
+      ["balanceOf(address)"](alice.address);
 
     const expectedAliceShareBalance = fixedPointMul(
       shareRatio,
@@ -286,13 +282,15 @@ describe("deposit", async function () {
     );
 
     // transfer all receipt from alice to bob.
-    await aliceVault.safeTransferFrom(
-      alice.address,
-      bob.address,
-      id1155,
-      aliceShareBalance,
-      []
-    );
+    await receipt
+      .connect(alice)
+      .safeTransferFrom(
+        alice.address,
+        bob.address,
+        id1155,
+        aliceShareBalance,
+        []
+      );
 
     // alice cannot withdraw after sending to bob.
     await assertError(
@@ -337,19 +335,17 @@ describe("deposit", async function () {
 
     // bob can redeem now
     const bobAssetBalanceBefore = await asset.balanceOf(bob.address);
-    const bobReceiptBalance = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id1155
-    );
+    const bobReceiptBalance = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](bob.address, id1155);
 
     const bobRedeemTx = await bobVault[
       "redeem(uint256,address,address,uint256)"
     ](bobReceiptBalance, bob.address, bob.address, shareRatio);
     await bobRedeemTx.wait();
-    const bobReceiptBalanceAfter = await vault["balanceOf(address,uint256)"](
-      bob.address,
-      id1155
-    );
+    const bobReceiptBalanceAfter = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](bob.address, id1155);
     const bobAssetBalanceAfter = await asset.balanceOf(bob.address);
     assert(
       bobReceiptBalanceAfter.eq(0),

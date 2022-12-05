@@ -3,7 +3,7 @@ import { solidity } from "ethereum-waffle";
 import { deployERC20PriceOracleVault, expectedReferencePrice } from "../util";
 
 chai.use(solidity);
-const { expect, assert } = chai;
+const { assert } = chai;
 
 describe("oracle", async function () {
   it("should have an oracle", async function () {

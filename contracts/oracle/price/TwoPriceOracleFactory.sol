@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.10;
+pragma solidity =0.8.17;
 
 import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
 import "./TwoPriceOracle.sol";
@@ -19,9 +19,7 @@ contract TwoPriceOracleFactory is Factory {
         // deployments.
         return
             address(
-                new TwoPriceOracle(
-                    abi.decode(data_, (TwoPriceOracleConstructionConfig))
-                )
+                new TwoPriceOracle(abi.decode(data_, (TwoPriceOracleConfig)))
             );
     }
 
@@ -29,9 +27,9 @@ contract TwoPriceOracleFactory is Factory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param config_ Construction config for the oracle.
+    /// @param config_ Config for the oracle.
     /// @return New `ChainlinkFeedPriceOracle` child contract address.
-    function createChildTyped(TwoPriceOracleConstructionConfig memory config_)
+    function createChildTyped(TwoPriceOracleConfig memory config_)
         external
         returns (TwoPriceOracle)
     {

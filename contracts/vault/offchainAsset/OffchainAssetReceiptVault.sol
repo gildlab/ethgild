@@ -1,10 +1,23 @@
 // SPDX-License-Identifier: UNLICENSE
-pragma solidity =0.8.10;
+pragma solidity =0.8.17;
 
-import {ReceiptVaultConstructionConfig, ReceiptVault, ERC1155} from "../ReceiptVault.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-
+import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "../receipt/IReceipt.sol";
 import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
+
+/// All data required to configure an offchain asset vault except the receipt.
+/// Typically the factory should build a receipt contract and transfer ownership
+/// to the vault atomically during initialization so there is no opportunity for
+/// an attacker to corrupt the initialzation process.
+/// @param admin as per `OffchainAssetReceiptVaultConfig`.
+/// @param vaultConfig MUST be used by the factory to build a
+/// `ReceiptVaultConfig` once the receipt address is known and ownership has been
+/// transferred to the vault contract (before initialization).
+struct OffchainAssetVaultConfig {
+    address admin;
+    VaultConfig vaultConfig;
+}
 
 /// All data required to construct `CertifiedAssetConnect`.
 /// @param admin The initial admin has ALL ROLES. It is up to the admin to
@@ -12,13 +25,13 @@ import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and many other things).
-/// @param receiptConstructionConfig Forwarded to construction ReceiptVault.
-struct OffchainAssetVaultConstructionConfig {
+/// @param receiptConfig Forwarded to ReceiptVault.
+struct OffchainAssetReceiptVaultConfig {
     address admin;
-    ReceiptVaultConstructionConfig receiptVaultConfig;
+    ReceiptVaultConfig receiptVaultConfig;
 }
 
-/// @title OffchainAssetVault
+/// @title OffchainAssetReceiptVault
 /// @notice Enables curators of offchain assets to create a token that they can
 /// arbitrage offchain assets against onchain assets. This allows them to
 /// maintain a peg between offchain and onchain markets.
@@ -36,7 +49,7 @@ struct OffchainAssetVaultConstructionConfig {
 /// In contrast to pure algorithmic tokens and sentiment based stablecoins, a
 /// competent custodian can profit "infinitely" to maintain the peg no matter
 /// how badly the peg breaks. As long as every token is fully collateralised by
-/// liquid offchain assets tokens can be profitably bought and burned by the
+/// liquid offchain assets, tokens can be profitably bought and burned by the
 /// custodian all the way to 0 token supply.
 ///
 /// This model is contingent on existing onchain and offchain liquidity
@@ -56,13 +69,13 @@ struct OffchainAssetVaultConstructionConfig {
 /// - ERC20 shares in the vault that can be traded minted/burned to track a peg
 /// - ERC4626 compliant vault interface (inherited from ReceiptVault)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetVault is ReceiptVault, AccessControl {
-    /// Contract has constructed.
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
+    /// Contract has initialized.
     /// @param caller The `msg.sender` constructing the contract.
-    /// @param config All construction config.
-    event OffchainAssetVaultConstruction(
+    /// @param config All initialization config.
+    event OffchainAssetVaultInitialized(
         address caller,
-        OffchainAssetVaultConstructionConfig config
+        OffchainAssetReceiptVaultConfig config
     );
 
     /// A new certification time has been set.
@@ -164,12 +177,16 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    constructor(OffchainAssetVaultConstructionConfig memory config_)
-        ReceiptVault(config_.receiptVaultConfig)
+    function initialize(OffchainAssetReceiptVaultConfig memory config_)
+        external
+        initializer
     {
+        __ReceiptVault_init(config_.receiptVaultConfig);
+        __AccessControl_init();
+
         // There is no asset, the asset is offchain.
         require(
-            config_.receiptVaultConfig.asset == address(0),
+            config_.receiptVaultConfig.vaultConfig.asset == address(0),
             "NONZERO_ASSET"
         );
 
@@ -206,7 +223,7 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
         _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
-        emit OffchainAssetVaultConstruction(msg.sender, config_);
+        emit OffchainAssetVaultInitialized(msg.sender, config_);
     }
 
     function _beforeDeposit(
@@ -299,15 +316,16 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         highwaterId = id_;
     }
 
-    function _beforeReceiptInformation(uint256 id_, bytes memory)
-        internal
-        view
-        override
-    {
+    function authorizeReceiptInformation(
+        address account_,
+        uint256 id_,
+        bytes memory
+    ) external view virtual override {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
         require(
-            balanceOf(msg.sender, id_) > 0 || hasRole(CERTIFIER, msg.sender),
+            IReceipt(_receipt).balanceOf(account_, id_) > 0 ||
+                hasRole(CERTIFIER, account_),
             "ASSET_INFORMATION_AUTH"
         );
     }
@@ -329,7 +347,11 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256 shares_) {
-        require(balanceOf(msg.sender, id_) > 0, "NOT_RECEIPT_HOLDER");
+        // This is stricter than the standard "or certifier" check.
+        require(
+            IReceipt(_receipt).balanceOf(msg.sender, id_) > 0,
+            "NOT_RECEIPT_HOLDER"
+        );
         _deposit(
             assets_,
             receiver_,
@@ -338,18 +360,6 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
             receiptInformation_
         );
         shares_ = assets_;
-    }
-
-    /// Needed here to fix Open Zeppelin implementing `supportsInterface` on
-    /// multiple base contracts.
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, AccessControl)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 
     function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
@@ -463,15 +473,12 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
         );
     }
 
-    // @inheritdoc ERC1155
-    function _beforeTokenTransfer(
-        address,
-        address from_,
-        address to_,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) internal view override {
+    function authorizeReceiptTransfer(address from_, address to_)
+        external
+        view
+        virtual
+        override
+    {
         enforceValidTransfer(
             erc1155Tier,
             erc1155MinimumTier,
@@ -519,9 +526,10 @@ contract OffchainAssetVault is ReceiptVault, AccessControl {
                 erc1155TierContext
             )
         ) {
-            confiscated_ = balanceOf(confiscatee_, id_);
+            IReceipt receipt_ = IReceipt(_receipt);
+            confiscated_ = IReceipt(receipt_).balanceOf(confiscatee_, id_);
             if (confiscated_ > 0) {
-                _safeTransferFrom(
+                receipt_.ownerTransferFrom(
                     confiscatee_,
                     msg.sender,
                     id_,
