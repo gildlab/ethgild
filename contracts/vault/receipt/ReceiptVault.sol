@@ -33,15 +33,15 @@ contract ReceiptVault is
     using SafeERC20 for IERC20;
 
     /// Similar to IERC4626 deposit but with receipt ID and information.
-    /// @param caller As per `IERC4626.Deposit`.
-    /// @param receiver As per `IERC4626.Deposit`.
+    /// @param sender As per `IERC4626.Deposit`.
+    /// @param owner As per `IERC4626.Deposit`.
     /// @param assets As per `IERC4626.Deposit`.
     /// @param shares As per `IERC4626.Deposit`.
     /// @param id As per `IERC1155.TransferSingle`.
     /// @param receiptInformation As per `ReceiptInformation`.
     event DepositWithReceipt(
-        address caller,
-        address receiver,
+        address sender,
+        address owner,
         uint256 assets,
         uint256 shares,
         uint256 id,
@@ -49,14 +49,14 @@ contract ReceiptVault is
     );
 
     /// Similar to IERC4626 withdraw but with receipt ID.
-    /// @param caller As per `IERC4626.Withdraw`.
+    /// @param sender As per `IERC4626.Withdraw`.
     /// @param receiver As per `IERC4626.Withdraw`.
     /// @param owner As per `IERC4626.Withdraw`.
     /// @param assets As per `IERC4626.Withdraw`.
     /// @param shares As per `IERC4626.Withdraw`.
     /// @param id As per `IERC1155.TransferSingle`.
     event WithdrawWithReceipt(
-        address caller,
+        address sender,
         address receiver,
         address owner,
         uint256 assets,

@@ -204,8 +204,8 @@ describe("Redeem", async function () {
       `wrong assets expected ${expectedAssets} got ${withdrawEvent.args.assets}`
     );
     assert(
-      withdrawEvent.args.caller === aliceAddress,
-      `wrong caller expected ${aliceAddress} got ${withdrawEvent.args.caller}`
+      withdrawEvent.args.sender === aliceAddress,
+      `wrong sender expected ${aliceAddress} got ${withdrawEvent.args.sender}`
     );
     assert(
       withdrawEvent.args.owner === aliceAddress,

@@ -543,8 +543,8 @@ describe("Deposit", async () => {
       `wrong shares expected ${depositEvent.args.shares} got ${expectedShares}`
     );
     assert(
-      depositEvent.args.caller === alice.address,
-      `wrong caller expected ${alice.address} got ${depositEvent.args.caller}`
+      depositEvent.args.sender === alice.address,
+      `wrong sender expected ${alice.address} got ${depositEvent.args.sender}`
     );
     assert(
       depositEvent.args.owner === alice.address,
@@ -926,8 +926,8 @@ describe("Overloaded `deposit`", async () => {
       `wrong shares expected ${depositEvent.args.shares} got ${expectedShares}`
     );
     assert(
-      depositEvent.args.caller === alice.address,
-      `wrong caller expected ${alice.address} got ${depositEvent.args.caller}`
+      depositEvent.args.sender === alice.address,
+      `wrong caller expected ${alice.address} got ${depositEvent.args.sender}`
     );
     assert(
       depositEvent.args.owner === alice.address,
@@ -956,7 +956,7 @@ describe("Overloaded `deposit`", async () => {
 
     const expectedShares = fixedPointMul(aliceAmount, shareRatio);
 
-    const { caller, receiver, assets, shares, id, receiptInformation } =
+    const { sender, owner, assets, shares, id, receiptInformation } =
       (await getEventArgs(
         await vault
           .connect(alice)
@@ -971,14 +971,14 @@ describe("Overloaded `deposit`", async () => {
       )) as DepositWithReceiptEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(id.eq(expectedId), `wrong id expected ${id} got ${expectedId}`);
 
     assert(
-      receiver === alice.address,
-      `wrong receiver expected ${alice.address} got ${receiver}`
+      owner === alice.address,
+      `wrong owner expected ${alice.address} got ${owner}`
     );
     assert(
       assets.eq(aliceAmount),
@@ -1069,7 +1069,7 @@ describe("Overloaded `deposit`", async () => {
       .connect(alice)
       ["balanceOf(address,uint256)"](alice.address, shareRatio);
 
-    const { caller, receiver, owner, assets, shares, id } = (await getEventArgs(
+    const { sender, receiver, owner, assets, shares, id } = (await getEventArgs(
       await vault
         .connect(alice)
         ["withdraw(uint256,address,address,uint256)"](
@@ -1085,8 +1085,8 @@ describe("Overloaded `deposit`", async () => {
     const expectedShares = fixedPointMul(assets, shareRatio).add(1);
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong caller expected ${alice.address} got ${sender}`
     );
 
     assert(
