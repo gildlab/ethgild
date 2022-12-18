@@ -690,9 +690,7 @@ export interface ERC20PriceOracleReceiptVault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    asset(
-      overrides?: CallOverrides
-    ): Promise<[string] & { assetTokenAddress_: string }>;
+    asset(overrides?: CallOverrides): Promise<[string]>;
 
     authorizeReceiptInformation(
       arg0: PromiseOrValue<string>,
@@ -721,12 +719,12 @@ export interface ERC20PriceOracleReceiptVault extends BaseContract {
     convertToAssets(
       shares_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { assets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     convertToShares(
       assets_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { shares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     decimals(overrides?: CallOverrides): Promise<[number]>;
 
@@ -764,34 +762,34 @@ export interface ERC20PriceOracleReceiptVault extends BaseContract {
     maxDeposit(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxAssets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     maxMint(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxShares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxRedeem(address,uint256)"(
       owner_: PromiseOrValue<string>,
       id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxShares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxRedeem(address)"(
       owner_: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxShares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxWithdraw(address,uint256)"(
       owner_: PromiseOrValue<string>,
       id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxAssets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxWithdraw(address)"(
       owner_: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxAssets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     minShareRatios(
       arg0: PromiseOrValue<string>,
@@ -822,34 +820,34 @@ export interface ERC20PriceOracleReceiptVault extends BaseContract {
     previewDeposit(
       assets_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { shares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     previewMint(
       shares_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { assets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "previewRedeem(uint256)"(
       shares_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { assets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "previewRedeem(uint256,uint256)"(
       shares_: PromiseOrValue<BigNumberish>,
       id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { assets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "previewWithdraw(uint256)"(
       assets_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { shares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "previewWithdraw(uint256,uint256)"(
       assets_: PromiseOrValue<BigNumberish>,
       id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { shares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     priceOracle(overrides?: CallOverrides): Promise<[string]>;
 

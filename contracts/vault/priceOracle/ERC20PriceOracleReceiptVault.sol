@@ -150,7 +150,11 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     function _shareRatio() internal view override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
-        try priceOracle.price() returns (uint256 price_) {
+        try priceOracle.price() returns (
+            // slither puts false positives on `try/catch/returns`.
+            //slither-disable-next-line unused-return
+            uint256 price_
+        ) {
             return price_;
         } catch {
             // Depositing assets while the price oracle is erroring will give 0
@@ -161,7 +165,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
 
     function _shareRatioForId(
         uint256 id_
-    ) internal pure override returns (uint256 shareRatio_) {
-        shareRatio_ = id_;
+    ) internal pure override returns (uint256) {
+        return id_;
     }
 }

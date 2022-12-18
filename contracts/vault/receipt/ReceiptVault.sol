@@ -121,13 +121,13 @@ contract ReceiptVault is
         uint256 assets_,
         uint256 shareRatio_,
         uint256 minShareRatio_
-    ) internal pure returns (uint256 shares_) {
+    ) internal pure returns (uint256) {
         require(shareRatio_ >= minShareRatio_, "MIN_SHARE_RATIO");
         // IRC4626:
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
         // round down.
-        shares_ = assets_.fixedPointMul(shareRatio_);
+        return assets_.fixedPointMul(shareRatio_);
     }
 
     /// Calculate how many assets_ are needed to mint shares_.
@@ -140,13 +140,13 @@ contract ReceiptVault is
         uint256 shares_,
         uint256 shareRatio_,
         uint256 minShareRatio_
-    ) internal pure returns (uint256 assets_) {
+    ) internal pure returns (uint256) {
         require(shareRatio_ >= minShareRatio_, "MIN_SHARE_RATIO");
         // IERC4626:
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
         // round up.
-        assets_ = shares_.fixedPointDiv(shareRatio_) + 1;
+        return shares_.fixedPointDiv(shareRatio_) + 1;
     }
 
     /// Calculate how many shares_ to burn to withdraw assets_.
@@ -156,11 +156,11 @@ contract ReceiptVault is
     function _calculateWithdraw(
         uint256 assets_,
         uint256 shareRatio_
-    ) internal pure returns (uint256 shares_) {
+    ) internal pure returns (uint256) {
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
-        shares_ = assets_.fixedPointMul(shareRatio_) + 1;
+        return assets_.fixedPointMul(shareRatio_) + 1;
     }
 
     /// Calculate how many assets_ to withdraw for burning shares_.
@@ -171,18 +171,18 @@ contract ReceiptVault is
     function _calculateRedeem(
         uint256 shares_,
         uint256 shareRatio_
-    ) internal pure returns (uint256 assets_) {
+    ) internal pure returns (uint256) {
         // IERC4626:
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
         // round down.
-        assets_ = shares_.fixedPointDiv(shareRatio_);
+        return shares_.fixedPointDiv(shareRatio_);
     }
 
     /// There is no onchain asset. The asset is offchain.
     /// @inheritdoc IERC4626
-    function asset() public view virtual returns (address assetTokenAddress_) {
-        assetTokenAddress_ = _asset;
+    function asset() public view virtual returns (address) {
+        return _asset;
     }
 
     /// Any address can set their own minimum share ratio.
@@ -212,6 +212,7 @@ contract ReceiptVault is
         // There are NO fees so the managed assets are the asset balance of the
         // vault.
         try IERC20(asset()).balanceOf(address(this)) returns (
+            // slither puts false positives on `try/catch/returns`.
             //slither-disable-next-line uninitialized-local-variables
             uint256 assetBalance_
         ) {
@@ -230,9 +231,9 @@ contract ReceiptVault is
     /// share ratio when all conditions are met.
     /// MUST NOT revert, instead return `0` and calling functions MUST revert or
     /// return values as appropriate.
-    function _shareRatio() internal view virtual returns (uint256 shareRatio_) {
+    function _shareRatio() internal view virtual returns (uint256) {
         // Default is 1:1 shares to assets.
-        shareRatio_ = 1e18;
+        return 1e18;
     }
 
     /// Define the share ratio that deposits convert to shares.
@@ -267,10 +268,8 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IERC4626
-    function convertToShares(
-        uint256 assets_
-    ) external view returns (uint256 shares_) {
-        shares_ = _calculateDeposit(assets_, _shareRatio(), 0);
+    function convertToShares(uint256 assets_) external view returns (uint256) {
+        return _calculateDeposit(assets_, _shareRatio(), 0);
     }
 
     /// This function is a bit weird because in reality everyone converts their
@@ -278,16 +277,12 @@ contract ReceiptVault is
     /// share ratio. But the spec demands that this function ignores per-user
     /// concerns.
     /// @inheritdoc IERC4626
-    function convertToAssets(
-        uint256 shares_
-    ) external view returns (uint256 assets_) {
-        assets_ = _calculateRedeem(shares_, _shareRatio());
+    function convertToAssets(uint256 shares_) external view returns (uint256) {
+        return _calculateRedeem(shares_, _shareRatio());
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(
-        address
-    ) external pure virtual returns (uint256 maxAssets_) {
+    function maxDeposit(address) external pure virtual returns (uint256) {
         // The spec states to return this if there is no deposit limit.
         // Technically a deposit this large would almost certainly overflow
         // somewhere in the process, but it isn't a limit imposed by the vault
@@ -295,64 +290,64 @@ contract ReceiptVault is
         // large entries on their internal balances. Given typical token
         // total supplies are smaller than this number, this would be a
         // theoretical point only.
-        maxAssets_ = type(uint256).max;
+        return type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(
-        address
-    ) external pure virtual returns (uint256 maxShares_) {
-        maxShares_ = type(uint256).max;
+    function maxMint(address) external pure virtual returns (uint256) {
+        return type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
     function previewDeposit(
         uint256 assets_
-    ) external view virtual returns (uint256 shares_) {
-        shares_ = _calculateDeposit(
-            assets_,
-            // Spec doesn't provide us with a receipient but wants a per-user
-            // preview so we assume that depositor = receipient.
-            _shareRatio(msg.sender, msg.sender),
-            // IERC4626:
-            // > MUST NOT revert due to vault specific user/global limits.
-            // > MAY revert due to other conditions that would also cause
-            // > deposit to revert.
-            // Unclear if the min share ratio set by the user for themselves is
-            // a "vault specific user limit" or "other conditions that would
-            // also cause deposit to revert".
-            // The conservative interpretation is that the user will WANT
-            // the preview calculation to revert according to their own
-            // preferences they set for themselves onchain.
-            // If the user did not set a min ratio then the min ratio will be 0
-            // and never revert.
-            minShareRatios[msg.sender]
-        );
+    ) external view virtual returns (uint256) {
+        return
+            _calculateDeposit(
+                assets_,
+                // Spec doesn't provide us with a receipient but wants a per-user
+                // preview so we assume that depositor = receipient.
+                _shareRatio(msg.sender, msg.sender),
+                // IERC4626:
+                // > MUST NOT revert due to vault specific user/global limits.
+                // > MAY revert due to other conditions that would also cause
+                // > deposit to revert.
+                // Unclear if the min share ratio set by the user for themselves is
+                // a "vault specific user limit" or "other conditions that would
+                // also cause deposit to revert".
+                // The conservative interpretation is that the user will WANT
+                // the preview calculation to revert according to their own
+                // preferences they set for themselves onchain.
+                // If the user did not set a min ratio then the min ratio will be 0
+                // and never revert.
+                minShareRatios[msg.sender]
+            );
     }
 
     /// @inheritdoc IERC4626
     function previewMint(
         uint256 shares_
-    ) public view virtual returns (uint256 assets_) {
-        assets_ = _calculateMint(
-            shares_,
-            // Spec doesn't provide us with a recipient but wants a per-user
-            // preview so we assume that depositor = recipient.
-            _shareRatio(msg.sender, msg.sender),
-            // IERC4626:
-            // > MUST NOT revert due to vault specific user/global limits.
-            // > MAY revert due to other conditions that would also cause mint
-            // > to revert.
-            // Unclear if the min share ratio set by the user for themselves is
-            // a "vault specific user limit" or "other conditions that would
-            // also cause mint to revert".
-            // The conservative interpretation is that the user will WANT
-            // the preview calculation to revert according to their own
-            // preferences they set for themselves onchain.
-            // If the user did not set a min ratio the min ratio will be 0 and
-            // never revert.
-            minShareRatios[msg.sender]
-        );
+    ) public view virtual returns (uint256) {
+        return
+            _calculateMint(
+                shares_,
+                // Spec doesn't provide us with a recipient but wants a per-user
+                // preview so we assume that depositor = recipient.
+                _shareRatio(msg.sender, msg.sender),
+                // IERC4626:
+                // > MUST NOT revert due to vault specific user/global limits.
+                // > MAY revert due to other conditions that would also cause mint
+                // > to revert.
+                // Unclear if the min share ratio set by the user for themselves is
+                // a "vault specific user limit" or "other conditions that would
+                // also cause mint to revert".
+                // The conservative interpretation is that the user will WANT
+                // the preview calculation to revert according to their own
+                // preferences they set for themselves onchain.
+                // If the user did not set a min ratio the min ratio will be 0 and
+                // never revert.
+                minShareRatios[msg.sender]
+            );
     }
 
     /// If the sender wants to use the ERC4626 `deposit` function and set a
@@ -363,8 +358,8 @@ contract ReceiptVault is
     function deposit(
         uint256 assets_,
         address receiver_
-    ) external returns (uint256 shares_) {
-        shares_ = deposit(assets_, receiver_, minShareRatios[msg.sender], "");
+    ) external returns (uint256) {
+        return deposit(assets_, receiver_, minShareRatios[msg.sender], "");
     }
 
     /// Overloaded `deposit` to allow `minShareRatio_` to be passed directly
@@ -382,12 +377,17 @@ contract ReceiptVault is
         address receiver_,
         uint256 minShareRatio_,
         bytes memory receiptInformation_
-    ) public returns (uint256 shares_) {
+    ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
         require(minShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
-        shares_ = _calculateDeposit(assets_, shareRatio_, minShareRatio_);
+        uint256 shares_ = _calculateDeposit(
+            assets_,
+            shareRatio_,
+            minShareRatio_
+        );
 
         _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
+        return shares_;
     }
 
     /// Handles minting and emitting events according to spec.
@@ -454,8 +454,8 @@ contract ReceiptVault is
     function mint(
         uint256 shares_,
         address receiver_
-    ) external returns (uint256 assets_) {
-        assets_ = mint(shares_, receiver_, minShareRatios[msg.sender], "");
+    ) external returns (uint256) {
+        return mint(shares_, receiver_, minShareRatios[msg.sender], "");
     }
 
     /// Overloaded version of IERC4626 `mint` that allows directly passing the
@@ -472,11 +472,12 @@ contract ReceiptVault is
         address receiver_,
         uint256 minShareRatio_,
         bytes memory receiptInformation_
-    ) public returns (uint256 assets_) {
+    ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
         require(minShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
-        assets_ = _calculateMint(shares_, shareRatio_, minShareRatio_);
+        uint256 assets_ = _calculateMint(shares_, shareRatio_, minShareRatio_);
         _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
+        return assets_;
     }
 
     /// As withdrawal requires a ID the vault deposits are non fungible. This
@@ -489,8 +490,8 @@ contract ReceiptVault is
     /// @inheritdoc IERC4626
     function maxWithdraw(
         address owner_
-    ) external view virtual returns (uint256 maxAssets_) {
-        maxAssets_ = maxWithdraw(owner_, withdrawIds[owner_]);
+    ) external view virtual returns (uint256) {
+        return maxWithdraw(owner_, withdrawIds[owner_]);
     }
 
     /// Overloaded `maxWithdraw` that allows passing a receipt id directly. The
@@ -507,14 +508,15 @@ contract ReceiptVault is
     function maxWithdraw(
         address owner_,
         uint256 id_
-    ) public view returns (uint256 maxAssets_) {
+    ) public view returns (uint256) {
         // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
-        maxAssets_ = _calculateRedeem(
-            IReceipt(_receipt).balanceOf(owner_, id_),
-            _shareRatioForId(id_)
-        );
+        return
+            _calculateRedeem(
+                IReceipt(_receipt).balanceOf(owner_, id_),
+                _shareRatioForId(id_)
+            );
     }
 
     /// Previewing withdrawal will only calculate the shares required to
@@ -523,10 +525,8 @@ contract ReceiptVault is
     /// easier to use the overloaded version that allows IDs to be passed in
     /// as arguments.
     /// @inheritdoc IERC4626
-    function previewWithdraw(
-        uint256 assets_
-    ) external view returns (uint256 shares_) {
-        shares_ = previewWithdraw(assets_, withdrawIds[msg.sender]);
+    function previewWithdraw(uint256 assets_) external view returns (uint256) {
+        return previewWithdraw(assets_, withdrawIds[msg.sender]);
     }
 
     /// Overloaded version of IERC4626 that allows caller to pass in the ID
@@ -538,8 +538,8 @@ contract ReceiptVault is
     function previewWithdraw(
         uint256 assets_,
         uint256 id_
-    ) public view virtual returns (uint256 shares_) {
-        shares_ = _calculateWithdraw(assets_, _shareRatioForId(id_));
+    ) public view virtual returns (uint256) {
+        return _calculateWithdraw(assets_, _shareRatioForId(id_));
     }
 
     /// Withdraws against the current withdraw ID set by the owner.
@@ -552,8 +552,8 @@ contract ReceiptVault is
         uint256 assets_,
         address receiver_,
         address owner_
-    ) external returns (uint256 shares_) {
-        shares_ = withdraw(assets_, receiver_, owner_, withdrawIds[owner_]);
+    ) external returns (uint256) {
+        return withdraw(assets_, receiver_, owner_, withdrawIds[owner_]);
     }
 
     /// Overloaded version of IERC4626 `withdraw` that allows the id to be
@@ -567,9 +567,10 @@ contract ReceiptVault is
         address receiver_,
         address owner_,
         uint256 id_
-    ) public returns (uint256 shares_) {
-        shares_ = _calculateWithdraw(assets_, _shareRatioForId(id_));
+    ) public returns (uint256) {
+        uint256 shares_ = _calculateWithdraw(assets_, _shareRatioForId(id_));
         _withdraw(assets_, receiver_, owner_, shares_, id_);
+        return shares_;
     }
 
     /// Handles burning shares, withdrawing assets and emitting events to spec.
@@ -644,10 +645,8 @@ contract ReceiptVault is
     /// transaction. The overloaded maxRedeem function allows the ID being
     /// checked against to be passed in directly.
     /// @inheritdoc IERC4626
-    function maxRedeem(
-        address owner_
-    ) external view returns (uint256 maxShares_) {
-        maxShares_ = maxRedeem(owner_, withdrawIds[owner_]);
+    function maxRedeem(address owner_) external view returns (uint256) {
+        return maxRedeem(owner_, withdrawIds[owner_]);
     }
 
     /// Overloaded maxRedeem function that allows the redemption ID to be
@@ -660,18 +659,16 @@ contract ReceiptVault is
     function maxRedeem(
         address owner_,
         uint256 id_
-    ) public view returns (uint256 maxShares_) {
-        maxShares_ = IReceipt(_receipt).balanceOf(owner_, id_);
+    ) public view returns (uint256) {
+        return IReceipt(_receipt).balanceOf(owner_, id_);
     }
 
     /// Preview redeem is only relevant to the currently set withdraw ID for
     /// the caller. The overloaded previewRedeem allows the ID to be passed
     /// directly which may avoid gas costs and additional transactions.
     /// @inheritdoc IERC4626
-    function previewRedeem(
-        uint256 shares_
-    ) external view returns (uint256 assets_) {
-        assets_ = _calculateRedeem(shares_, withdrawIds[msg.sender]);
+    function previewRedeem(uint256 shares_) external view returns (uint256) {
+        return _calculateRedeem(shares_, withdrawIds[msg.sender]);
     }
 
     /// Overloaded previewRedeem that allows ID to redeem for to be passed
@@ -681,8 +678,8 @@ contract ReceiptVault is
     function previewRedeem(
         uint256 shares_,
         uint256 id_
-    ) public view virtual returns (uint256 assets_) {
-        assets_ = _calculateRedeem(shares_, id_);
+    ) public view virtual returns (uint256) {
+        return _calculateRedeem(shares_, id_);
     }
 
     /// Redeems with the currently set withdraw ID for the owner. The
@@ -693,8 +690,8 @@ contract ReceiptVault is
         uint256 shares_,
         address receiver_,
         address owner_
-    ) external returns (uint256 assets_) {
-        assets_ = redeem(shares_, receiver_, owner_, withdrawIds[owner_]);
+    ) external returns (uint256) {
+        return redeem(shares_, receiver_, owner_, withdrawIds[owner_]);
     }
 
     /// Overloaded redeem that allows the ID to redeem with to be passed in.
@@ -708,8 +705,9 @@ contract ReceiptVault is
         address receiver_,
         address owner_,
         uint256 id_
-    ) public returns (uint256 assets_) {
-        assets_ = _calculateRedeem(shares_, _shareRatioForId(id_));
+    ) public returns (uint256) {
+        uint256 assets_ = _calculateRedeem(shares_, _shareRatioForId(id_));
         _withdraw(assets_, receiver_, owner_, shares_, id_);
+        return assets_;
     }
 }

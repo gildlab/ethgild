@@ -248,13 +248,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Assets aren't real so only way to report this is to return the total
     /// supply of shares.
     /// @inheritdoc ReceiptVault
-    function totalAssets()
-        external
-        view
-        override
-        returns (uint256 totalManagedAssets_)
-    {
-        totalManagedAssets_ = totalSupply();
+    function totalAssets() external view override returns (uint256) {
+        return totalSupply();
     }
 
     function _shareRatio(
@@ -334,7 +329,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         address receiver_,
         uint256 id_,
         bytes calldata receiptInformation_
-    ) external returns (uint256 shares_) {
+    ) external returns (uint256) {
         // This is stricter than the standard "or certifier" check.
         require(
             IReceipt(_receipt).balanceOf(msg.sender, id_) > 0,
@@ -347,7 +342,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             id_,
             receiptInformation_
         );
-        shares_ = assets_;
+        return assets_;
     }
 
     function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
@@ -476,12 +471,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     function confiscate(
         address confiscatee_
-    )
-        external
-        nonReentrant
-        onlyRole(CONFISCATOR)
-        returns (uint256 confiscated_)
-    {
+    ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
+        uint256 confiscated_;
         if (
             address(erc20Tier) == address(0) ||
             block.timestamp <
@@ -497,17 +488,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             }
         }
         emit ConfiscateShares(msg.sender, confiscatee_, confiscated_);
+        return confiscated_;
     }
 
     function confiscate(
         address confiscatee_,
         uint256 id_
-    )
-        external
-        nonReentrant
-        onlyRole(CONFISCATOR)
-        returns (uint256 confiscated_)
-    {
+    ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
+        uint256 confiscated_;
         if (
             address(erc1155Tier) == address(0) ||
             block.timestamp <
@@ -530,5 +518,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             }
         }
         emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);
+        return confiscated_;
     }
 }

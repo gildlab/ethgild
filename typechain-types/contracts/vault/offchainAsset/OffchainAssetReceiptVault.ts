@@ -1107,9 +1107,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    asset(
-      overrides?: CallOverrides
-    ): Promise<[string] & { assetTokenAddress_: string }>;
+    asset(overrides?: CallOverrides): Promise<[string]>;
 
     authorizeReceiptInformation(
       account_: PromiseOrValue<string>,
@@ -1156,12 +1154,12 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     convertToAssets(
       shares_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { assets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     convertToShares(
       assets_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { shares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     decimals(overrides?: CallOverrides): Promise<[number]>;
 
@@ -1216,34 +1214,34 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     maxDeposit(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxAssets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     maxMint(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxShares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxRedeem(address,uint256)"(
       owner_: PromiseOrValue<string>,
       id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxShares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxRedeem(address)"(
       owner_: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxShares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxWithdraw(address,uint256)"(
       owner_: PromiseOrValue<string>,
       id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxAssets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "maxWithdraw(address)"(
       owner_: PromiseOrValue<string>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { maxAssets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     minShareRatios(
       arg0: PromiseOrValue<string>,
@@ -1284,7 +1282,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "previewRedeem(uint256)"(
       shares_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { assets_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "previewRedeem(uint256,uint256)"(
       shares_: PromiseOrValue<BigNumberish>,
@@ -1295,7 +1293,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "previewWithdraw(uint256)"(
       assets_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber] & { shares_: BigNumber }>;
+    ): Promise<[BigNumber]>;
 
     "previewWithdraw(uint256,uint256)"(
       assets_: PromiseOrValue<BigNumberish>,
@@ -1373,9 +1371,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
-    totalAssets(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { totalManagedAssets_: BigNumber }>;
+    totalAssets(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
