@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
 import {ERC20Upgradeable as ERC20, ERC20SnapshotUpgradeable as ERC20Snapshot} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
