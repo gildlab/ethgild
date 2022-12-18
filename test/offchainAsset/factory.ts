@@ -1,4 +1,3 @@
-import { expect } from "chai";
 import { ethers } from "hardhat";
 import {
   OffchainAssetReceiptVaultFactory,
@@ -6,6 +5,7 @@ import {
 } from "../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expectedUri, getEventArgs } from "../util";
+const assert = require("assert");
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
 let alice: SignerWithAddress;
@@ -33,7 +33,9 @@ describe("OffchainAssetVaultFactory Test", () => {
   });
 
   it("Should deploy Factory correctly", async () => {
-    expect(offchainAssetReceiptVaultFactory.address).to.not.null;
+    assert(
+      offchainAssetReceiptVaultFactory.address !== ethers.constants.AddressZero
+    );
   });
 
   it("Should createChild", async () => {
@@ -60,7 +62,7 @@ describe("OffchainAssetVaultFactory Test", () => {
       "NewChild",
       offchainAssetReceiptVaultFactory
     );
-    expect(sender).to.equals(alice.address);
-    expect(child).to.not.null;
+    assert(sender === alice.address);
+    assert(child !== ethers.constants.AddressZero);
   });
 });

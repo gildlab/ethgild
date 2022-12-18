@@ -1,4 +1,3 @@
-import { assert } from "chai";
 import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
@@ -6,6 +5,7 @@ import {
   expectedSymbol,
   fixedPointMul,
 } from "../util";
+const assert = require("assert");
 
 describe("erc20 usage", async function () {
   it("should construct well", async function () {

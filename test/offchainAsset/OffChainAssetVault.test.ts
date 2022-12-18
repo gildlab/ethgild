@@ -1,4 +1,3 @@
-import chai from "chai";
 import { ReadWriteTier, TestErc20 } from "../../typechain";
 import { ethers } from "hardhat";
 

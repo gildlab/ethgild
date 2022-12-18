@@ -1,4 +1,3 @@
-import chai from "chai";
 import { artifacts, ethers } from "hardhat";
 import {
   basePrice,

@@ -1,4 +1,3 @@
-import chai from "chai";
 import { ethers } from "hardhat";
 import { deployERC20PriceOracleVault, assertError } from "./util";
 
