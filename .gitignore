@@ -5,3 +5,4 @@ typechain
 .env
 venv
 bin
+typechain-types
