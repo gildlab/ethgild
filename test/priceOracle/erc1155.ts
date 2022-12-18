@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
@@ -7,8 +5,7 @@ import {
   fixedPointMul,
 } from "../util";
 
-chai.use(solidity);
-const { assert } = chai;
+const assert = require("assert");
 
 describe("erc1155 usage", async function () {
   it("should initialize well", async function () {

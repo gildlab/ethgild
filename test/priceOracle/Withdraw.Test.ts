@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   assertError,
@@ -17,9 +15,7 @@ import {
 import { BigNumber } from "ethers";
 import { WithdrawEvent } from "../../typechain/IERC4626Upgradeable";
 
-chai.use(solidity);
-
-const { assert } = chai;
+const assert = require("assert");
 
 let vault: ERC20PriceOracleReceiptVault,
   asset: ERC20,
@@ -236,8 +232,8 @@ describe("Withdraw", async function () {
       `wrong assets expected ${withdrawBalance} got ${withdrawEvent.args.assets}`
     );
     assert(
-      withdrawEvent.args.caller === aliceAddress,
-      `wrong caller expected ${aliceAddress} got ${withdrawEvent.args.caller}`
+      withdrawEvent.args.sender === aliceAddress,
+      `wrong sender expected ${aliceAddress} got ${withdrawEvent.args.sender}`
     );
     assert(
       withdrawEvent.args.owner === aliceAddress,

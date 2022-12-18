@@ -3,11 +3,9 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      NIXPKGS_ALLOW_UNFREE: 1
     steps:
-      - uses: actions/checkout@v2.4.0
-      - uses: cachix/install-nix-action@v17
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v18
         with:
           nix_path: nixpkgs=
-      - run: nix-shell --run "hardhat compile && hardhat test"
+      - run: nix-shell --run "hardhat test"

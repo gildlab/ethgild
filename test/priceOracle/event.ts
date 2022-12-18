@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
@@ -8,8 +6,7 @@ import {
   getEventArgs,
 } from "../util";
 
-chai.use(solidity);
-const { assert } = chai;
+const assert = require("assert");
 
 describe("events", async function () {
   it("should emit events on deposit and withdraw", async function () {
@@ -49,7 +46,7 @@ describe("events", async function () {
       `incorrect balance before. expected ${aliceBalance} got ${alice1155BalanceBefore}`
     );
 
-    const { caller, receiver, assets, shares, id } = await getEventArgs(
+    const { sender, owner, assets, shares, id } = await getEventArgs(
       depositTx,
       "DepositWithReceipt",
       vault
@@ -60,12 +57,12 @@ describe("events", async function () {
       shareRatio
     );
     assert(
-      caller === alice.address,
-      `incorrect caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `incorrect sender expected ${alice.address} got ${sender}`
     );
     assert(
-      receiver === alice.address,
-      `incorrect receiver expected ${alice.address} got ${receiver}`
+      owner === alice.address,
+      `incorrect owner expected ${alice.address} got ${owner}`
     );
     assert(
       assets.eq(ethAmount),
@@ -113,8 +110,8 @@ describe("events", async function () {
     );
 
     assert(
-      withdrawEvent.caller === alice.address,
-      `incorrect caller expected ${alice.address} got ${withdrawEvent.caller}`
+      withdrawEvent.sender === alice.address,
+      `incorrect sender expected ${alice.address} got ${withdrawEvent.sender}`
     );
     assert(
       withdrawEvent.receiver === alice.address,

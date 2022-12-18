@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
 import "./IPriceOracle.sol";
@@ -12,8 +12,10 @@ struct TwoPriceOracleConfig {
 }
 
 /// @title TwoPriceOracle
-/// Any time we have two price feeds that share a denominator we can calculate
-/// a single price by dividing them.
+/// Any time we have two price feeds that share a denominator we can derive the
+/// price of the numerators by dividing the two ratios. We leverage the fixed
+/// point 18 decimal normalisation from `IPriceOracle.price` to simplify this
+/// logic to a single `fixedPointDiv` call here.
 ///
 /// For example, an ETH/USD (base) and an XAU/USD (quote) price can be combined
 /// to a single ETH/XAU price as (ETH/USD) / (XAU/USD).
@@ -35,7 +37,7 @@ contract TwoPriceOracle is IPriceOracle {
         emit Construction(msg.sender, config_);
     }
 
-    /// Calculates the price as `base / quote`.
+    /// Calculates the price as `base / quote` using fixed point 18 decimal math.
     /// @inheritdoc IPriceOracle
     function price() external view override returns (uint256) {
         return base.price().fixedPointDiv(quote.price());

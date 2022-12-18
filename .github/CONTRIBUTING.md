@@ -1,9 +1,8 @@
 # Contributing
 
-## UNLICENCE
+## LICENSE
 
-Everything in this repository is public domain and will stay that way.
+Everything in this repository is open source and will stay that way.
 
-Contributions are welcome provided they are the same.
-
-Ideally, add yourself to `CONTRIBUTORS` in the root.
+Contributions are welcome provided their contributor provides them under the same
+license.

@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { artifacts, ethers } from "hardhat";
 import {
   basePrice,
@@ -28,9 +26,7 @@ import {
 } from "../../typechain";
 import { Contract } from "ethers";
 
-chai.use(solidity);
-
-const { assert } = chai;
+const assert = require("assert");
 
 describe("config", async function () {
   it("Checks construction event", async function () {

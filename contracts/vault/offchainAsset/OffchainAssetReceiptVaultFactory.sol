@@ -18,6 +18,7 @@ contract OffchainAssetReceiptVaultFactory is Factory {
 
     /// Build the reference implementation to clone for each child.
     constructor(address receiptFactory_) {
+        require(receiptFactory_ != address(0), "0_RECEIPT_FACTORY");
         receiptFactory = receiptFactory_;
         emit SetReceiptFactory(msg.sender, receiptFactory_);
 
@@ -27,12 +28,9 @@ contract OffchainAssetReceiptVaultFactory is Factory {
     }
 
     /// @inheritdoc Factory
-    function _createChild(bytes memory data_)
-        internal
-        virtual
-        override
-        returns (address)
-    {
+    function _createChild(
+        bytes memory data_
+    ) internal virtual override returns (address) {
         (
             ReceiptConfig memory receiptConfig_,
             OffchainAssetVaultConfig memory offchainAssetVaultConfig_

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
 import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
@@ -11,13 +11,6 @@ struct ReceiptConfig {
 }
 
 contract Receipt is IReceipt, Ownable, ERC1155 {
-    /// Emitted when new information is provided for a receipt.
-    /// @param caller `msg.sender` emitting the information for the receipt.
-    /// @param id Receipt the information is for.
-    /// @param information Information for the receipt. MAY reference offchain
-    /// data where the payload is large.
-    event ReceiptInformation(address caller, uint256 id, bytes information);
-
     constructor() {
         _disableInitializers();
     }

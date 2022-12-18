@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   assertError,
@@ -9,9 +7,7 @@ import {
   fixedPointDiv,
 } from "../util";
 
-chai.use(solidity);
-
-const { assert } = chai;
+const assert = require("assert");
 
 describe("deposit", async function () {
   it("should not zero deposit", async function () {

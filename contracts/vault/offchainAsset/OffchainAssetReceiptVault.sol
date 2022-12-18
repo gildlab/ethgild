@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
@@ -177,10 +177,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    function initialize(OffchainAssetReceiptVaultConfig memory config_)
-        external
-        initializer
-    {
+    function initialize(
+        OffchainAssetReceiptVaultConfig memory config_
+    ) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
         __AccessControl_init();
 
@@ -249,71 +248,56 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Assets aren't real so only way to report this is to return the total
     /// supply of shares.
     /// @inheritdoc ReceiptVault
-    function totalAssets()
-        external
-        view
-        override
-        returns (uint256 totalManagedAssets_)
-    {
-        totalManagedAssets_ = totalSupply();
+    function totalAssets() external view override returns (uint256) {
+        return totalSupply();
     }
 
-    function _shareRatio(address depositor_, address)
-        internal
-        view
-        override
-        returns (uint256 shareRatio_)
-    {
-        shareRatio_ = hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
+    function _shareRatio(
+        address depositor_,
+        address
+    ) internal view override returns (uint256) {
+        return hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
     }
 
     /// Offchain assets are always deposited 1:1 with shares.
     /// @inheritdoc ReceiptVault
-    function previewDeposit(uint256 assets_)
-        external
-        view
-        override
-        returns (uint256 shares_)
-    {
-        shares_ = hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
+    function previewDeposit(
+        uint256 assets_
+    ) external view override returns (uint256) {
+        return hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
     }
 
-    function previewWithdraw(uint256 assets_, uint256 id_)
-        public
-        view
-        override
-        returns (uint256 shares_)
-    {
-        shares_ = hasRole(WITHDRAWER, msg.sender)
-            ? super.previewWithdraw(assets_, id_)
-            : 0;
+    function previewWithdraw(
+        uint256 assets_,
+        uint256 id_
+    ) public view override returns (uint256) {
+        return
+            hasRole(WITHDRAWER, msg.sender)
+                ? super.previewWithdraw(assets_, id_)
+                : 0;
     }
 
-    function previewMint(uint256 shares_)
-        public
-        view
-        override
-        returns (uint256 assets_)
-    {
-        assets_ = hasRole(DEPOSITOR, msg.sender)
-            ? super.previewMint(shares_)
-            : 0;
+    function previewMint(
+        uint256 shares_
+    ) public view override returns (uint256) {
+        return hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
     }
 
-    function previewRedeem(uint256 shares_, uint256 id_)
-        public
-        view
-        override
-        returns (uint256 assets_)
-    {
-        assets_ = hasRole(WITHDRAWER, msg.sender)
-            ? super.previewRedeem(shares_, id_)
-            : 0;
+    function previewRedeem(
+        uint256 shares_,
+        uint256 id_
+    ) public view override returns (uint256) {
+        return
+            hasRole(WITHDRAWER, msg.sender)
+                ? super.previewRedeem(shares_, id_)
+                : 0;
     }
 
-    function _nextId() internal override returns (uint256 id_) {
-        id_ = highwaterId + 1;
+    /// @inheritdoc ReceiptVault
+    function _nextId() internal override returns (uint256) {
+        uint256 id_ = highwaterId + 1;
         highwaterId = id_;
+        return id_;
     }
 
     function authorizeReceiptInformation(
@@ -346,7 +330,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         address receiver_,
         uint256 id_,
         bytes calldata receiptInformation_
-    ) external returns (uint256 shares_) {
+    ) external returns (uint256) {
         // This is stricter than the standard "or certifier" check.
         require(
             IReceipt(_receipt).balanceOf(msg.sender, id_) > 0,
@@ -359,7 +343,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             id_,
             receiptInformation_
         );
-        shares_ = assets_;
+        return assets_;
     }
 
     function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
@@ -473,12 +457,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
-    function authorizeReceiptTransfer(address from_, address to_)
-        external
-        view
-        virtual
-        override
-    {
+    function authorizeReceiptTransfer(
+        address from_,
+        address to_
+    ) external view virtual override {
         enforceValidTransfer(
             erc1155Tier,
             erc1155MinimumTier,
@@ -488,12 +470,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
-    function confiscate(address confiscatee_)
-        external
-        nonReentrant
-        onlyRole(CONFISCATOR)
-        returns (uint256 confiscated_)
-    {
+    /// Confiscators can confiscate ERC20 vault shares from `confiscatee_`.
+    function confiscateShares(
+        address confiscatee_
+    ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
+        uint256 confiscatedShares_ = 0;
         if (
             address(erc20Tier) == address(0) ||
             block.timestamp <
@@ -503,20 +484,20 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 erc20TierContext
             )
         ) {
-            confiscated_ = balanceOf(confiscatee_);
-            if (confiscated_ > 0) {
-                _transfer(confiscatee_, msg.sender, confiscated_);
+            confiscatedShares_ = balanceOf(confiscatee_);
+            if (confiscatedShares_ > 0) {
+                _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
         }
-        emit ConfiscateShares(msg.sender, confiscatee_, confiscated_);
+        emit ConfiscateShares(msg.sender, confiscatee_, confiscatedShares_);
+        return confiscatedShares_;
     }
 
-    function confiscate(address confiscatee_, uint256 id_)
-        external
-        nonReentrant
-        onlyRole(CONFISCATOR)
-        returns (uint256 confiscated_)
-    {
+    function confiscateReceipt(
+        address confiscatee_,
+        uint256 id_
+    ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
+        uint256 confiscatedReceiptAmount_ = 0;
         if (
             address(erc1155Tier) == address(0) ||
             block.timestamp <
@@ -527,17 +508,29 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             )
         ) {
             IReceipt receipt_ = IReceipt(_receipt);
-            confiscated_ = IReceipt(receipt_).balanceOf(confiscatee_, id_);
-            if (confiscated_ > 0) {
+            confiscatedReceiptAmount_ = IReceipt(receipt_).balanceOf(
+                confiscatee_,
+                id_
+            );
+            if (confiscatedReceiptAmount_ > 0) {
                 receipt_.ownerTransferFrom(
                     confiscatee_,
                     msg.sender,
                     id_,
-                    confiscated_,
+                    confiscatedReceiptAmount_,
                     ""
                 );
             }
         }
-        emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);
+        // Slither flags this as reentrant but this function has `nonReentrant`
+        // on it from `ReentrancyGuard`.
+        //slither-disable-next-line reentrancy-vulnerabilities-3
+        emit ConfiscateReceipt(
+            msg.sender,
+            confiscatee_,
+            id_,
+            confiscatedReceiptAmount_
+        );
+        return confiscatedReceiptAmount_;
     }
 }

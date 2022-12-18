@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -134,43 +134,39 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The price oracle used for all minting calculations.
     IPriceOracle public priceOracle;
 
-    function initialize(ERC20PriceOracleReceiptVaultConfig memory config_)
-        external
-        initializer
-    {
+    function initialize(
+        ERC20PriceOracleReceiptVaultConfig memory config_
+    ) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
         priceOracle = IPriceOracle(config_.priceOracle);
         emit ERC20PriceOracleReceiptVaultInitialized(msg.sender, config_);
     }
 
     /// @inheritdoc ReceiptVault
-    function _nextId() internal view override returns (uint256 id_) {
-        id_ = priceOracle.price();
+    function _nextId() internal view override returns (uint256) {
+        return priceOracle.price();
     }
 
-    function _shareRatio()
-        internal
-        view
-        override
-        returns (uint256 shareRatio_)
-    {
+    function _shareRatio() internal view override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
-        try priceOracle.price() returns (uint256 price_) {
-            shareRatio_ = price_;
+        try priceOracle.price() returns (
+            // slither puts false positives on `try/catch/returns`.
+            // https://github.com/crytic/slither/issues/511
+            //slither-disable-next-line
+            uint256 price_
+        ) {
+            return price_;
         } catch {
             // Depositing assets while the price oracle is erroring will give 0
             // shares (it will revert due to 0 ratio).
-            shareRatio_ = 0;
+            return 0;
         }
     }
 
-    function _shareRatioForId(uint256 id_)
-        internal
-        pure
-        override
-        returns (uint256 shareRatio_)
-    {
-        shareRatio_ = id_;
+    function _shareRatioForId(
+        uint256 id_
+    ) internal pure override returns (uint256) {
+        return id_;
     }
 }

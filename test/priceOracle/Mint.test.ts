@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   assertError,
@@ -10,9 +8,7 @@ import {
   ADDRESS_ZERO,
 } from "../util";
 
-chai.use(solidity);
-
-const { assert } = chai;
+const assert = require("assert");
 
 describe("Mint", async function () {
   it("Sets maxShares correctly", async function () {

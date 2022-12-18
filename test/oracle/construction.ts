@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import {
   expectedReferencePrice,
   deployERC20PriceOracleVault,
@@ -8,8 +6,7 @@ import {
   latestBlockNow,
 } from "../util";
 
-chai.use(solidity);
-const { assert } = chai;
+const assert = require("assert");
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;
