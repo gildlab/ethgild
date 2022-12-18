@@ -27,8 +27,8 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         uint256 amount_,
         bytes memory data_
     ) external onlyOwner {
-        _receiptInformation(account_, id_, data_);
         _mint(account_, id_, amount_, data_);
+        _receiptInformation(account_, id_, data_);
     }
 
     /// @inheritdoc IReceipt
