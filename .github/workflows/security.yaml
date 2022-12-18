@@ -1,4 +1,4 @@
-name: Slither tests
+name: Security tests
 on: [push]
 jobs:
   test:
