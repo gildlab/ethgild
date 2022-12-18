@@ -260,47 +260,48 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     function _shareRatio(
         address depositor_,
         address
-    ) internal view override returns (uint256 shareRatio_) {
-        shareRatio_ = hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
+    ) internal view override returns (uint256) {
+        return hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
     }
 
     /// Offchain assets are always deposited 1:1 with shares.
     /// @inheritdoc ReceiptVault
     function previewDeposit(
         uint256 assets_
-    ) external view override returns (uint256 shares_) {
-        shares_ = hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
+    ) external view override returns (uint256) {
+        return hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
     }
 
     function previewWithdraw(
         uint256 assets_,
         uint256 id_
-    ) public view override returns (uint256 shares_) {
-        shares_ = hasRole(WITHDRAWER, msg.sender)
-            ? super.previewWithdraw(assets_, id_)
-            : 0;
+    ) public view override returns (uint256) {
+        return
+            hasRole(WITHDRAWER, msg.sender)
+                ? super.previewWithdraw(assets_, id_)
+                : 0;
     }
 
     function previewMint(
         uint256 shares_
-    ) public view override returns (uint256 assets_) {
-        assets_ = hasRole(DEPOSITOR, msg.sender)
-            ? super.previewMint(shares_)
-            : 0;
+    ) public view override returns (uint256) {
+        return hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
     }
 
     function previewRedeem(
         uint256 shares_,
         uint256 id_
-    ) public view override returns (uint256 assets_) {
-        assets_ = hasRole(WITHDRAWER, msg.sender)
-            ? super.previewRedeem(shares_, id_)
-            : 0;
+    ) public view override returns (uint256) {
+        return
+            hasRole(WITHDRAWER, msg.sender)
+                ? super.previewRedeem(shares_, id_)
+                : 0;
     }
 
-    function _nextId() internal override returns (uint256 id_) {
-        id_ = highwaterId + 1;
+    function _nextId() internal override returns (uint256) {
+        uint id_ = highwaterId + 1;
         highwaterId = id_;
+        return id_;
     }
 
     function authorizeReceiptInformation(

@@ -208,18 +208,19 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IERC4626
-    function totalAssets() external view virtual returns (uint256 assets_) {
+    function totalAssets() external view virtual returns (uint256) {
         // There are NO fees so the managed assets are the asset balance of the
         // vault.
         try IERC20(asset()).balanceOf(address(this)) returns (
-            uint256 balance_
+            //slither-disable-next-line uninitialized-local-variables
+            uint256 assetBalance_
         ) {
-            assets_ = balance_;
+            return assetBalance_;
         } catch {
             // It's not clear what the balance should be if querying it is
             // throwing an error. The conservative error in most cases should
             // be 0.
-            assets_ = 0;
+            return 0;
         }
     }
 
@@ -241,20 +242,29 @@ contract ReceiptVault is
     function _shareRatio(
         address,
         address
-    ) internal view virtual returns (uint256 shareRatio_) {
+    ) internal view virtual returns (uint256) {
         // Default is to fallback to user agnostic share ratio.
-        shareRatio_ = _shareRatio();
+        return _shareRatio();
     }
 
-    function _shareRatioForId(
-        uint256
-    ) internal view virtual returns (uint256 shareRatio_) {
+    function _shareRatioForId(uint256) internal view virtual returns (uint256) {
         // Default is the same as share ratio with no id.
-        shareRatio_ = _shareRatio();
+        return _shareRatio();
     }
 
-    // solhint-disable-next-line no-empty-blocks
-    function _nextId() internal virtual returns (uint256) {}
+    /// Defines the next ID that a deposit will mint shares and receipts under.
+    /// This MUST NOT be set by `msg.sender` as the `ReceiptVault` itself is
+    /// responsible for managing the ID values that bind the minted shares and
+    /// the associated receipt. These ID values are NOT necessarily meaningful
+    /// to the asset depositor they purely bind mints to future potential burns.
+    /// ID values that are meaningful to the depositor can be encoded in the
+    /// receipt information that is emitted for offchain indexing via events.
+    /// The default behaviour is to bind every mint and burn to the same ID, i.e.
+    /// the ID is always `0`. This is almost certainly NOT desired behaviour so
+    /// inheriting contracts will need to provide an override.
+    function _nextId() internal virtual returns (uint256) {
+        return 0;
+    }
 
     /// @inheritdoc IERC4626
     function convertToShares(

@@ -143,24 +143,19 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     }
 
     /// @inheritdoc ReceiptVault
-    function _nextId() internal view override returns (uint256 id_) {
-        id_ = priceOracle.price();
+    function _nextId() internal view override returns (uint256) {
+        return priceOracle.price();
     }
 
-    function _shareRatio()
-        internal
-        view
-        override
-        returns (uint256 shareRatio_)
-    {
+    function _shareRatio() internal view override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
         try priceOracle.price() returns (uint256 price_) {
-            shareRatio_ = price_;
+            return price_;
         } catch {
             // Depositing assets while the price oracle is erroring will give 0
             // shares (it will revert due to 0 ratio).
-            shareRatio_ = 0;
+            return 0;
         }
     }
 
