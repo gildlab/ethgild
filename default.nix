@@ -51,7 +51,6 @@ pkgs.stdenv.mkDerivation {
   ci-test
   ci-lint
   ipfs-add
-  pkgs.ngrok
  ];
 
  shellHook = ''
