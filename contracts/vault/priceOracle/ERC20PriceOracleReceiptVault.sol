@@ -134,10 +134,9 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The price oracle used for all minting calculations.
     IPriceOracle public priceOracle;
 
-    function initialize(ERC20PriceOracleReceiptVaultConfig memory config_)
-        external
-        initializer
-    {
+    function initialize(
+        ERC20PriceOracleReceiptVaultConfig memory config_
+    ) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
         priceOracle = IPriceOracle(config_.priceOracle);
         emit ERC20PriceOracleReceiptVaultInitialized(msg.sender, config_);
@@ -165,12 +164,9 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         }
     }
 
-    function _shareRatioForId(uint256 id_)
-        internal
-        pure
-        override
-        returns (uint256 shareRatio_)
-    {
+    function _shareRatioForId(
+        uint256 id_
+    ) internal pure override returns (uint256 shareRatio_) {
         shareRatio_ = id_;
     }
 }

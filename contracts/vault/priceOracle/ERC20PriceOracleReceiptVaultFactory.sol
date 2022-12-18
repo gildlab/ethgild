@@ -27,12 +27,9 @@ contract ERC20PriceOracleReceiptVaultFactory is Factory {
     }
 
     /// @inheritdoc Factory
-    function _createChild(bytes memory data_)
-        internal
-        virtual
-        override
-        returns (address)
-    {
+    function _createChild(
+        bytes memory data_
+    ) internal virtual override returns (address) {
         (
             ReceiptConfig memory receiptConfig_,
             ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_

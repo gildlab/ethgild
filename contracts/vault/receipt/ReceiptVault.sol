@@ -83,10 +83,9 @@ contract ReceiptVault is
         _disableInitializers();
     }
 
-    function __ReceiptVault_init(ReceiptVaultConfig memory config_)
-        internal
-        virtual
-    {
+    function __ReceiptVault_init(
+        ReceiptVaultConfig memory config_
+    ) internal virtual {
         __Multicall_init();
         __ReentrancyGuard_init();
         __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
@@ -95,11 +94,10 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptOwner
-    function authorizeReceiptTransfer(address, address)
-        external
-        view
-        virtual
-    // solhint-disable-next-line no-empty-blocks
+    function authorizeReceiptTransfer(
+        address,
+        address
+    ) external view virtual // solhint-disable-next-line no-empty-blocks
 
     {
         // Authorize all receipt transfers by default.
@@ -156,11 +154,10 @@ contract ReceiptVault is
     /// @param assets_ Amount of assets being withdrawn.
     /// @param shareRatio_ Ratio of shares to assets to withdraw against.
     /// @return shares_ Amount of shares to burn for this withdrawal.
-    function _calculateWithdraw(uint256 assets_, uint256 shareRatio_)
-        internal
-        pure
-        returns (uint256 shares_)
-    {
+    function _calculateWithdraw(
+        uint256 assets_,
+        uint256 shareRatio_
+    ) internal pure returns (uint256 shares_) {
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
@@ -172,11 +169,10 @@ contract ReceiptVault is
     /// @param shareRatio_ Ratio of shares to assets being redeemed against.
     /// @return assets_ Amount of assets that will be redeemed for the given
     /// shares.
-    function _calculateRedeem(uint256 shares_, uint256 shareRatio_)
-        internal
-        pure
-        returns (uint256 assets_)
-    {
+    function _calculateRedeem(
+        uint256 shares_,
+        uint256 shareRatio_
+    ) internal pure returns (uint256 assets_) {
         // IERC4626:
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
@@ -243,22 +239,17 @@ contract ReceiptVault is
     /// This variant of `_shareRatio` MAY return different results dependant on
     /// the depositor and/or recipient as per `previewDeposit` and `deposit`.
     /// MUST NOT revert.
-    function _shareRatio(address, address)
-        internal
-        view
-        virtual
-        returns (uint256 shareRatio_)
-    {
+    function _shareRatio(
+        address,
+        address
+    ) internal view virtual returns (uint256 shareRatio_) {
         // Default is to fallback to user agnostic share ratio.
         shareRatio_ = _shareRatio();
     }
 
-    function _shareRatioForId(uint256)
-        internal
-        view
-        virtual
-        returns (uint256 shareRatio_)
-    {
+    function _shareRatioForId(
+        uint256
+    ) internal view virtual returns (uint256 shareRatio_) {
         // Default is the same as share ratio with no id.
         shareRatio_ = _shareRatio();
     }
@@ -267,11 +258,9 @@ contract ReceiptVault is
     function _nextId() internal virtual returns (uint256) {}
 
     /// @inheritdoc IERC4626
-    function convertToShares(uint256 assets_)
-        external
-        view
-        returns (uint256 shares_)
-    {
+    function convertToShares(
+        uint256 assets_
+    ) external view returns (uint256 shares_) {
         shares_ = _calculateDeposit(assets_, _shareRatio(), 0);
     }
 
@@ -280,21 +269,16 @@ contract ReceiptVault is
     /// share ratio. But the spec demands that this function ignores per-user
     /// concerns.
     /// @inheritdoc IERC4626
-    function convertToAssets(uint256 shares_)
-        external
-        view
-        returns (uint256 assets_)
-    {
+    function convertToAssets(
+        uint256 shares_
+    ) external view returns (uint256 assets_) {
         assets_ = _calculateRedeem(shares_, _shareRatio());
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address)
-        external
-        pure
-        virtual
-        returns (uint256 maxAssets_)
-    {
+    function maxDeposit(
+        address
+    ) external pure virtual returns (uint256 maxAssets_) {
         // The spec states to return this if there is no deposit limit.
         // Technically a deposit this large would almost certainly overflow
         // somewhere in the process, but it isn't a limit imposed by the vault
@@ -306,22 +290,16 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address)
-        external
-        pure
-        virtual
-        returns (uint256 maxShares_)
-    {
+    function maxMint(
+        address
+    ) external pure virtual returns (uint256 maxShares_) {
         maxShares_ = type(uint256).max;
     }
 
     /// @inheritdoc IERC4626
-    function previewDeposit(uint256 assets_)
-        external
-        view
-        virtual
-        returns (uint256 shares_)
-    {
+    function previewDeposit(
+        uint256 assets_
+    ) external view virtual returns (uint256 shares_) {
         shares_ = _calculateDeposit(
             assets_,
             // Spec doesn't provide us with a receipient but wants a per-user
@@ -344,12 +322,9 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc IERC4626
-    function previewMint(uint256 shares_)
-        public
-        view
-        virtual
-        returns (uint256 assets_)
-    {
+    function previewMint(
+        uint256 shares_
+    ) public view virtual returns (uint256 assets_) {
         assets_ = _calculateMint(
             shares_,
             // Spec doesn't provide us with a recipient but wants a per-user
@@ -376,10 +351,10 @@ contract ReceiptVault is
     /// call. Alternatively they can use the off-spec overloaded `deposit`
     /// method.
     /// @inheritdoc IERC4626
-    function deposit(uint256 assets_, address receiver_)
-        external
-        returns (uint256 shares_)
-    {
+    function deposit(
+        uint256 assets_,
+        address receiver_
+    ) external returns (uint256 shares_) {
         shares_ = deposit(assets_, receiver_, minShareRatios[msg.sender], "");
     }
 
@@ -467,10 +442,10 @@ contract ReceiptVault is
     /// separate call.
     /// Alternatively they can use the off-spec overloaded `mint` method.
     /// @inheritdoc IERC4626
-    function mint(uint256 shares_, address receiver_)
-        external
-        returns (uint256 assets_)
-    {
+    function mint(
+        uint256 shares_,
+        address receiver_
+    ) external returns (uint256 assets_) {
         assets_ = mint(shares_, receiver_, minShareRatios[msg.sender], "");
     }
 
@@ -503,12 +478,9 @@ contract ReceiptVault is
     /// overloaded `maxWithdraw` that has the withdraw ID paramaterised. This
     /// can be looped over to build a view over several withdraw IDs.
     /// @inheritdoc IERC4626
-    function maxWithdraw(address owner_)
-        external
-        view
-        virtual
-        returns (uint256 maxAssets_)
-    {
+    function maxWithdraw(
+        address owner_
+    ) external view virtual returns (uint256 maxAssets_) {
         maxAssets_ = maxWithdraw(owner_, withdrawIds[owner_]);
     }
 
@@ -523,11 +495,10 @@ contract ReceiptVault is
     /// for a specific receipt the owner presumably holds. Max withdrawal will
     /// be 0 if the user does not hold a receipt.
     /// @return maxAssets_ As per IERC4626 `maxWithdraw`.
-    function maxWithdraw(address owner_, uint256 id_)
-        public
-        view
-        returns (uint256 maxAssets_)
-    {
+    function maxWithdraw(
+        address owner_,
+        uint256 id_
+    ) public view returns (uint256 maxAssets_) {
         // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
@@ -543,11 +514,9 @@ contract ReceiptVault is
     /// easier to use the overloaded version that allows IDs to be passed in
     /// as arguments.
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 assets_)
-        external
-        view
-        returns (uint256 shares_)
-    {
+    function previewWithdraw(
+        uint256 assets_
+    ) external view returns (uint256 shares_) {
         shares_ = previewWithdraw(assets_, withdrawIds[msg.sender]);
     }
 
@@ -557,12 +526,10 @@ contract ReceiptVault is
     /// @param assets_ As per IERC4626 `previewWithdraw`.
     /// @param id_ The receipt to preview a withdrawal against.
     /// @return shares_ As per IERC4626 `previewWithdraw`.
-    function previewWithdraw(uint256 assets_, uint256 id_)
-        public
-        view
-        virtual
-        returns (uint256 shares_)
-    {
+    function previewWithdraw(
+        uint256 assets_,
+        uint256 id_
+    ) public view virtual returns (uint256 shares_) {
         shares_ = _calculateWithdraw(assets_, _shareRatioForId(id_));
     }
 
@@ -668,11 +635,9 @@ contract ReceiptVault is
     /// transaction. The overloaded maxRedeem function allows the ID being
     /// checked against to be passed in directly.
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner_)
-        external
-        view
-        returns (uint256 maxShares_)
-    {
+    function maxRedeem(
+        address owner_
+    ) external view returns (uint256 maxShares_) {
         maxShares_ = maxRedeem(owner_, withdrawIds[owner_]);
     }
 
@@ -683,11 +648,10 @@ contract ReceiptVault is
     /// @param owner_ As per IERC4626 `maxRedeem`.
     /// @param id_ The reference id to check the owner's 1155 balance for.
     /// @return maxShares_ As per IERC4626 `maxRedeem`.
-    function maxRedeem(address owner_, uint256 id_)
-        public
-        view
-        returns (uint256 maxShares_)
-    {
+    function maxRedeem(
+        address owner_,
+        uint256 id_
+    ) public view returns (uint256 maxShares_) {
         maxShares_ = IReceipt(_receipt).balanceOf(owner_, id_);
     }
 
@@ -695,11 +659,9 @@ contract ReceiptVault is
     /// the caller. The overloaded previewRedeem allows the ID to be passed
     /// directly which may avoid gas costs and additional transactions.
     /// @inheritdoc IERC4626
-    function previewRedeem(uint256 shares_)
-        external
-        view
-        returns (uint256 assets_)
-    {
+    function previewRedeem(
+        uint256 shares_
+    ) external view returns (uint256 assets_) {
         assets_ = _calculateRedeem(shares_, withdrawIds[msg.sender]);
     }
 
@@ -707,12 +669,10 @@ contract ReceiptVault is
     /// directly.
     /// @param shares_ As per IERC4626.
     /// @param id_ The receipt id_ to calculate redemption against.
-    function previewRedeem(uint256 shares_, uint256 id_)
-        public
-        view
-        virtual
-        returns (uint256 assets_)
-    {
+    function previewRedeem(
+        uint256 shares_,
+        uint256 id_
+    ) public view virtual returns (uint256 assets_) {
         assets_ = _calculateRedeem(shares_, id_);
     }
 

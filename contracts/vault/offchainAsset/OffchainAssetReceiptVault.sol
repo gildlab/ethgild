@@ -177,10 +177,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ITierV2 private erc1155Tier;
     uint256[] private erc1155TierContext;
 
-    function initialize(OffchainAssetReceiptVaultConfig memory config_)
-        external
-        initializer
-    {
+    function initialize(
+        OffchainAssetReceiptVaultConfig memory config_
+    ) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
         __AccessControl_init();
 
@@ -258,54 +257,42 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         totalManagedAssets_ = totalSupply();
     }
 
-    function _shareRatio(address depositor_, address)
-        internal
-        view
-        override
-        returns (uint256 shareRatio_)
-    {
+    function _shareRatio(
+        address depositor_,
+        address
+    ) internal view override returns (uint256 shareRatio_) {
         shareRatio_ = hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
     }
 
     /// Offchain assets are always deposited 1:1 with shares.
     /// @inheritdoc ReceiptVault
-    function previewDeposit(uint256 assets_)
-        external
-        view
-        override
-        returns (uint256 shares_)
-    {
+    function previewDeposit(
+        uint256 assets_
+    ) external view override returns (uint256 shares_) {
         shares_ = hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
     }
 
-    function previewWithdraw(uint256 assets_, uint256 id_)
-        public
-        view
-        override
-        returns (uint256 shares_)
-    {
+    function previewWithdraw(
+        uint256 assets_,
+        uint256 id_
+    ) public view override returns (uint256 shares_) {
         shares_ = hasRole(WITHDRAWER, msg.sender)
             ? super.previewWithdraw(assets_, id_)
             : 0;
     }
 
-    function previewMint(uint256 shares_)
-        public
-        view
-        override
-        returns (uint256 assets_)
-    {
+    function previewMint(
+        uint256 shares_
+    ) public view override returns (uint256 assets_) {
         assets_ = hasRole(DEPOSITOR, msg.sender)
             ? super.previewMint(shares_)
             : 0;
     }
 
-    function previewRedeem(uint256 shares_, uint256 id_)
-        public
-        view
-        override
-        returns (uint256 assets_)
-    {
+    function previewRedeem(
+        uint256 shares_,
+        uint256 id_
+    ) public view override returns (uint256 assets_) {
         assets_ = hasRole(WITHDRAWER, msg.sender)
             ? super.previewRedeem(shares_, id_)
             : 0;
@@ -473,12 +460,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
-    function authorizeReceiptTransfer(address from_, address to_)
-        external
-        view
-        virtual
-        override
-    {
+    function authorizeReceiptTransfer(
+        address from_,
+        address to_
+    ) external view virtual override {
         enforceValidTransfer(
             erc1155Tier,
             erc1155MinimumTier,
@@ -488,7 +473,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
-    function confiscate(address confiscatee_)
+    function confiscate(
+        address confiscatee_
+    )
         external
         nonReentrant
         onlyRole(CONFISCATOR)
@@ -511,7 +498,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit ConfiscateShares(msg.sender, confiscatee_, confiscated_);
     }
 
-    function confiscate(address confiscatee_, uint256 id_)
+    function confiscate(
+        address confiscatee_,
+        uint256 id_
+    )
         external
         nonReentrant
         onlyRole(CONFISCATOR)

@@ -46,18 +46,9 @@ contract TestChainlinkDataFeed is AggregatorV3Interface {
         return _description;
     }
 
-    function getRoundData(uint80 roundId_)
-        public
-        view
-        override
-        returns (
-            uint80,
-            int256,
-            uint256,
-            uint256,
-            uint80
-        )
-    {
+    function getRoundData(
+        uint80 roundId_
+    ) public view override returns (uint80, int256, uint256, uint256, uint80) {
         RoundData memory roundData_ = _roundData[roundId_];
         return (
             roundId_,
@@ -72,13 +63,7 @@ contract TestChainlinkDataFeed is AggregatorV3Interface {
         public
         view
         override
-        returns (
-            uint80,
-            int256,
-            uint256,
-            uint256,
-            uint80
-        )
+        returns (uint80, int256, uint256, uint256, uint80)
     {
         return getRoundData(_latestRoundId);
     }
