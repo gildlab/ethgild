@@ -523,8 +523,7 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-      async () =>
-        await vault.connect(alice)["confiscate(address)"](alice.address),
+      async () => await vault.connect(alice).confiscateShares(alice.address),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
         .connect(alice)
         .CONFISCATOR()}`,
@@ -541,7 +540,7 @@ describe("OffChainAssetVault", async function () {
       .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
     const { caller, confiscatee } = (await getEventArgs(
-      await vault.connect(alice)["confiscate(address)"](alice.address),
+      await vault.connect(alice).confiscateShares(alice.address),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -555,7 +554,7 @@ describe("OffChainAssetVault", async function () {
       `wrong confiscatee expected ${alice.address} got ${confiscatee}`
     );
   });
-  it("Confiscate overloaded - Checks ConfiscateShares is emitted", async function () {
+  it("Confiscate receipts - Checks ConfiscateReceipt is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
@@ -567,9 +566,7 @@ describe("OffChainAssetVault", async function () {
       .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
     const { caller, confiscatee, id } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        ["confiscate(address,uint256)"](alice.address, _id),
+      await vault.connect(alice).confiscateReceipt(alice.address, _id),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateReceiptEvent["args"];
@@ -622,7 +619,7 @@ describe("OffChainAssetVault", async function () {
       ["balanceOf(address)"](alice.address);
 
     const { confiscated } = (await getEventArgs(
-      await vault.connect(alice)["confiscate(address)"](alice.address),
+      await vault.connect(alice).confiscateShares(alice.address),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -665,7 +662,7 @@ describe("OffChainAssetVault", async function () {
       ["balanceOf(address)"](alice.address);
 
     const { confiscated } = (await getEventArgs(
-      await vault.connect(alice)["confiscate(address)"](bob.address),
+      await vault.connect(alice).confiscateShares(bob.address),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -728,9 +725,7 @@ describe("OffChainAssetVault", async function () {
       ["balanceOf(address,uint256)"](bob.address, id);
 
     const { confiscated } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        ["confiscate(address,uint256)"](bob.address, id),
+      await vault.connect(alice).confiscateReceipt(bob.address, id),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -790,9 +785,7 @@ describe("OffChainAssetVault", async function () {
       ["balanceOf(address,uint256)"](alice.address, id);
 
     const { confiscated } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        ["confiscate(address,uint256)"](bob.address, id),
+      await vault.connect(alice).confiscateReceipt(bob.address, id),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateSharesEvent["args"];

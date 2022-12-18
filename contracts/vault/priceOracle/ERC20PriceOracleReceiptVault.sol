@@ -152,7 +152,8 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         // requirement that calls MUST NOT revert.
         try priceOracle.price() returns (
             // slither puts false positives on `try/catch/returns`.
-            //slither-disable-next-line unused-return
+            // https://github.com/crytic/slither/issues/511
+            //slither-disable-next-line
             uint256 price_
         ) {
             return price_;

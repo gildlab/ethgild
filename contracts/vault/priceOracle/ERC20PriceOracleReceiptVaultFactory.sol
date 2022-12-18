@@ -18,6 +18,7 @@ contract ERC20PriceOracleReceiptVaultFactory is Factory {
 
     /// Build the reference implementation to clone for each child.
     constructor(address receiptFactory_) {
+        require(receiptFactory_ != address(0), "0_RECEIPT_FACTORY");
         receiptFactory = receiptFactory_;
         emit SetReceiptFactory(msg.sender, receiptFactory_);
 

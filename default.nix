@@ -27,7 +27,7 @@ let
     # Run slither against all our contracts.
     # Disable npx as nix-shell already handles availability of what we need.
     # Dependencies and tests are out of scope.
-    slither . --npx-disable --filter-paths="contracts/test" --exclude-dependencies
+    slither . --npx-disable --filter-paths="contracts/test" --exclude-dependencies --fail-high
   '';
 
  ci-test = pkgs.writeShellScriptBin "ci-test" ''

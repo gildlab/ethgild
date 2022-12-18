@@ -293,6 +293,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 : 0;
     }
 
+    /// @inheritdoc ReceiptVault
     function _nextId() internal override returns (uint256) {
         uint256 id_ = highwaterId + 1;
         highwaterId = id_;
@@ -469,10 +470,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
-    function confiscate(
+    /// Confiscators can confiscate ERC20 vault shares from `confiscatee_`.
+    function confiscateShares(
         address confiscatee_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
-        uint256 confiscated_;
+        uint256 confiscatedShares_ = 0;
         if (
             address(erc20Tier) == address(0) ||
             block.timestamp <
@@ -482,20 +484,20 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 erc20TierContext
             )
         ) {
-            confiscated_ = balanceOf(confiscatee_);
-            if (confiscated_ > 0) {
-                _transfer(confiscatee_, msg.sender, confiscated_);
+            confiscatedShares_ = balanceOf(confiscatee_);
+            if (confiscatedShares_ > 0) {
+                _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
         }
-        emit ConfiscateShares(msg.sender, confiscatee_, confiscated_);
-        return confiscated_;
+        emit ConfiscateShares(msg.sender, confiscatee_, confiscatedShares_);
+        return confiscatedShares_;
     }
 
-    function confiscate(
+    function confiscateReceipt(
         address confiscatee_,
         uint256 id_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
-        uint256 confiscated_;
+        uint256 confiscatedReceiptAmount_ = 0;
         if (
             address(erc1155Tier) == address(0) ||
             block.timestamp <
@@ -506,18 +508,29 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             )
         ) {
             IReceipt receipt_ = IReceipt(_receipt);
-            confiscated_ = IReceipt(receipt_).balanceOf(confiscatee_, id_);
-            if (confiscated_ > 0) {
+            confiscatedReceiptAmount_ = IReceipt(receipt_).balanceOf(
+                confiscatee_,
+                id_
+            );
+            if (confiscatedReceiptAmount_ > 0) {
                 receipt_.ownerTransferFrom(
                     confiscatee_,
                     msg.sender,
                     id_,
-                    confiscated_,
+                    confiscatedReceiptAmount_,
                     ""
                 );
             }
         }
-        emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscated_);
-        return confiscated_;
+        // Slither flags this as reentrant but this function has `nonReentrant`
+        // on it from `ReentrancyGuard`.
+        //slither-disable-next-line reentrancy-vulnerabilities-3
+        emit ConfiscateReceipt(
+            msg.sender,
+            confiscatee_,
+            id_,
+            confiscatedReceiptAmount_
+        );
+        return confiscatedReceiptAmount_;
     }
 }

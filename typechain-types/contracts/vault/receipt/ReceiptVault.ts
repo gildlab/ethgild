@@ -672,7 +672,7 @@ export interface ReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -735,7 +735,7 @@ export interface ReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -795,7 +795,7 @@ export interface ReceiptVault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -908,7 +908,7 @@ export interface ReceiptVault extends BaseContract {
   "deposit(uint256,address,uint256,bytes)"(
     assets_: PromiseOrValue<BigNumberish>,
     receiver_: PromiseOrValue<string>,
-    minShareRatio_: PromiseOrValue<BigNumberish>,
+    depositMinShareRatio_: PromiseOrValue<BigNumberish>,
     receiptInformation_: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -971,7 +971,7 @@ export interface ReceiptVault extends BaseContract {
   "mint(uint256,address,uint256,bytes)"(
     shares_: PromiseOrValue<BigNumberish>,
     receiver_: PromiseOrValue<string>,
-    minShareRatio_: PromiseOrValue<BigNumberish>,
+    mintMinShareRatio_: PromiseOrValue<BigNumberish>,
     receiptInformation_: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -1031,7 +1031,7 @@ export interface ReceiptVault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setMinShareRatio(
-    minShareRatio_: PromiseOrValue<BigNumberish>,
+    senderMinShareRatio_: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1144,7 +1144,7 @@ export interface ReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1207,7 +1207,7 @@ export interface ReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1267,7 +1267,7 @@ export interface ReceiptVault extends BaseContract {
     ): Promise<BigNumber>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1473,7 +1473,7 @@ export interface ReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -1536,7 +1536,7 @@ export interface ReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -1596,7 +1596,7 @@ export interface ReceiptVault extends BaseContract {
     ): Promise<BigNumber>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -1710,7 +1710,7 @@ export interface ReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
@@ -1773,7 +1773,7 @@ export interface ReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
@@ -1833,7 +1833,7 @@ export interface ReceiptVault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 

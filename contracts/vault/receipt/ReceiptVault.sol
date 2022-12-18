@@ -67,7 +67,7 @@ contract ReceiptVault is
     address internal _asset;
     address internal _receipt;
 
-    /// Users MAY OPTIONALLY set minimum share ratios for 4626 deposits.
+    /// Senders MAY OPTIONALLY set minimum share ratios for 4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
     /// the non-standard equivalent functions that take a minimum share ratio
     /// parameter.
@@ -114,15 +114,16 @@ contract ReceiptVault is
     /// Calculate how many shares_ will be minted in return for assets_.
     /// @param assets_ Amount of assets being deposited.
     /// @param shareRatio_ The ratio of shares to assets to deposit against.
-    /// @param minShareRatio_ The minimum share ratio required by the
-    /// depositor. Will error if `shareRatio_` is less than `minShareRatio_`.
+    /// @param depositMinShareRatio_ The minimum share ratio required by the
+    /// depositor. Will error if `shareRatio_` is less than
+    /// `depositMinShareRatio_`.
     /// @return shares_ Amount of shares to mint for this deposit.
     function _calculateDeposit(
         uint256 assets_,
         uint256 shareRatio_,
-        uint256 minShareRatio_
+        uint256 depositMinShareRatio_
     ) internal pure returns (uint256) {
-        require(shareRatio_ >= minShareRatio_, "MIN_SHARE_RATIO");
+        require(shareRatio_ >= depositMinShareRatio_, "MIN_SHARE_RATIO");
         // IRC4626:
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
@@ -133,15 +134,15 @@ contract ReceiptVault is
     /// Calculate how many assets_ are needed to mint shares_.
     /// @param shares_ Amount of shares desired to be minted.
     /// @param shareRatio_ The ratio shares are minted at per asset.
-    /// @param minShareRatio_ The minimum ratio required by the minter. Will
-    /// error if `shareRatio_` is less than `minShareRatio_`.
+    /// @param mintMinShareRatio_ The minimum ratio required by the minter. Will
+    /// error if `shareRatio_` is less than `mintMinShareRatio_`.
     /// @return assets_ Amount of assets that must be deposited for this mint.
     function _calculateMint(
         uint256 shares_,
         uint256 shareRatio_,
-        uint256 minShareRatio_
+        uint256 mintMinShareRatio_
     ) internal pure returns (uint256) {
-        require(shareRatio_ >= minShareRatio_, "MIN_SHARE_RATIO");
+        require(shareRatio_ >= mintMinShareRatio_, "MIN_SHARE_RATIO");
         // IERC4626:
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
@@ -189,10 +190,10 @@ contract ReceiptVault is
     /// This is optional as the non-standard 4626 equivalent functions accept
     /// a minimum share ratio parameter. This facilitates the 4626 interface by
     /// adding one additional initial transaction for the user.
-    /// @param minShareRatio_ The new minimum share ratio for the `msg.sender`
-    /// to be used in subsequent deposit calls.
-    function setMinShareRatio(uint256 minShareRatio_) external {
-        minShareRatios[msg.sender] = minShareRatio_;
+    /// @param senderMinShareRatio_ The new minimum share ratio for the
+    /// `msg.sender` to be used in subsequent deposit calls.
+    function setMinShareRatio(uint256 senderMinShareRatio_) external {
+        minShareRatios[msg.sender] = senderMinShareRatio_;
     }
 
     /// Any address can set their own ID for withdrawals.
@@ -213,7 +214,8 @@ contract ReceiptVault is
         // vault.
         try IERC20(asset()).balanceOf(address(this)) returns (
             // slither puts false positives on `try/catch/returns`.
-            //slither-disable-next-line uninitialized-local-variables
+            // https://github.com/crytic/slither/issues/511
+            //slither-disable-next-line
             uint256 assetBalance_
         ) {
             return assetBalance_;
@@ -263,6 +265,9 @@ contract ReceiptVault is
     /// The default behaviour is to bind every mint and burn to the same ID, i.e.
     /// the ID is always `0`. This is almost certainly NOT desired behaviour so
     /// inheriting contracts will need to provide an override.
+    // Not sure why slither flags this as dead code. It is used by both `deposit`
+    // and `mint`.
+    //slither-disable-next-line dead-code
     function _nextId() internal virtual returns (uint256) {
         return 0;
     }
@@ -362,28 +367,28 @@ contract ReceiptVault is
         return deposit(assets_, receiver_, minShareRatios[msg.sender], "");
     }
 
-    /// Overloaded `deposit` to allow `minShareRatio_` to be passed directly
-    /// without the additional `setMinShareRatio` call, which saves gas and can
-    /// provide a better UX overall.
+    /// Overloaded `deposit` to allow `depositMinShareRatio_` to be passed
+    /// directly without the additional `setMinShareRatio` call, which saves gas
+    /// and can provide a better UX overall.
     /// @param assets_ As per IERC4626 `deposit`.
     /// @param receiver_ As per IERC4626 `deposit`.
-    /// @param minShareRatio_ Caller can set the minimum share ratio they'll
-    /// accept from the oracle, otherwise the transaction is rolled back.
+    /// @param depositMinShareRatio_ Caller can set the minimum share ratio
+    /// they'll accept from the oracle, otherwise the transaction is rolled back.
     /// @param receiptInformation_ Forwarded to `receiptInformation` to
     /// optionally emit offchain context about this deposit.
     /// @return shares_ As per IERC4626 `deposit`.
     function deposit(
         uint256 assets_,
         address receiver_,
-        uint256 minShareRatio_,
+        uint256 depositMinShareRatio_,
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
-        require(minShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
+        require(depositMinShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
         uint256 shares_ = _calculateDeposit(
             assets_,
             shareRatio_,
-            minShareRatio_
+            depositMinShareRatio_
         );
 
         _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
@@ -424,6 +429,9 @@ contract ReceiptVault is
         _beforeDeposit(assets_, receiver_, shares_, id_);
 
         // erc20 mint.
+        // Slither flags this as reentrant but this function has `nonReentrant`
+        // on it from `ReentrancyGuard`.
+        //slither-disable-next-line reentrancy-vulnerabilities-3 reentrancy-vulnerabilities-2
         _mint(receiver_, shares_);
 
         // erc1155 mint.
@@ -462,7 +470,7 @@ contract ReceiptVault is
     /// minimum share ratio to avoid additional gas and transactions.
     /// @param shares_ As per IERC4626 `mint`.
     /// @param receiver_ As per IERC4626 `mint`.
-    /// @param minShareRatio_ Caller can set the minimum ratio they'll accept
+    /// @param mintMinShareRatio_ Caller can set the minimum ratio they'll accept
     /// minting shares at, otherwise the transaction is rolled back.
     /// @param receiptInformation_ Forwarded to `receiptInformation` to
     /// optionally emit offchain context about this deposit.
@@ -470,12 +478,16 @@ contract ReceiptVault is
     function mint(
         uint256 shares_,
         address receiver_,
-        uint256 minShareRatio_,
+        uint256 mintMinShareRatio_,
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
-        require(minShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
-        uint256 assets_ = _calculateMint(shares_, shareRatio_, minShareRatio_);
+        require(mintMinShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
+        uint256 assets_ = _calculateMint(
+            shares_,
+            shareRatio_,
+            mintMinShareRatio_
+        );
         _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
         return assets_;
     }

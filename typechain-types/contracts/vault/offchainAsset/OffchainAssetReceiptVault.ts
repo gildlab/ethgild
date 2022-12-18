@@ -86,8 +86,8 @@ export interface OffchainAssetReceiptVaultInterface extends utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "balanceOfAt(address,uint256)": FunctionFragment;
     "certify(uint32,bytes,bool)": FunctionFragment;
-    "confiscate(address)": FunctionFragment;
-    "confiscate(address,uint256)": FunctionFragment;
+    "confiscateReceipt(address,uint256)": FunctionFragment;
+    "confiscateShares(address)": FunctionFragment;
     "convertToAssets(uint256)": FunctionFragment;
     "convertToShares(uint256)": FunctionFragment;
     "decimals()": FunctionFragment;
@@ -165,8 +165,8 @@ export interface OffchainAssetReceiptVaultInterface extends utils.Interface {
       | "balanceOf"
       | "balanceOfAt"
       | "certify"
-      | "confiscate(address)"
-      | "confiscate(address,uint256)"
+      | "confiscateReceipt"
+      | "confiscateShares"
       | "convertToAssets"
       | "convertToShares"
       | "decimals"
@@ -314,12 +314,12 @@ export interface OffchainAssetReceiptVaultInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "confiscate(address)",
-    values: [PromiseOrValue<string>]
+    functionFragment: "confiscateReceipt",
+    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
   ): string;
   encodeFunctionData(
-    functionFragment: "confiscate(address,uint256)",
-    values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+    functionFragment: "confiscateShares",
+    values: [PromiseOrValue<string>]
   ): string;
   encodeFunctionData(
     functionFragment: "convertToAssets",
@@ -621,11 +621,11 @@ export interface OffchainAssetReceiptVaultInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "certify", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "confiscate(address)",
+    functionFragment: "confiscateReceipt",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "confiscate(address,uint256)",
+    functionFragment: "confiscateShares",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -1140,14 +1140,14 @@ export interface OffchainAssetReceiptVault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    "confiscate(address)"(
+    confiscateReceipt(
       confiscatee_: PromiseOrValue<string>,
+      id_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
-    "confiscate(address,uint256)"(
+    confiscateShares(
       confiscatee_: PromiseOrValue<string>,
-      id_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1172,7 +1172,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -1257,7 +1257,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
@@ -1351,7 +1351,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     ): Promise<ContractTransaction>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
@@ -1493,14 +1493,14 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  "confiscate(address)"(
+  confiscateReceipt(
     confiscatee_: PromiseOrValue<string>,
+    id_: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
-  "confiscate(address,uint256)"(
+  confiscateShares(
     confiscatee_: PromiseOrValue<string>,
-    id_: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1525,7 +1525,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
   "deposit(uint256,address,uint256,bytes)"(
     assets_: PromiseOrValue<BigNumberish>,
     receiver_: PromiseOrValue<string>,
-    minShareRatio_: PromiseOrValue<BigNumberish>,
+    depositMinShareRatio_: PromiseOrValue<BigNumberish>,
     receiptInformation_: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -1610,7 +1610,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
   "mint(uint256,address,uint256,bytes)"(
     shares_: PromiseOrValue<BigNumberish>,
     receiver_: PromiseOrValue<string>,
-    minShareRatio_: PromiseOrValue<BigNumberish>,
+    mintMinShareRatio_: PromiseOrValue<BigNumberish>,
     receiptInformation_: PromiseOrValue<BytesLike>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
@@ -1704,7 +1704,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setMinShareRatio(
-    minShareRatio_: PromiseOrValue<BigNumberish>,
+    senderMinShareRatio_: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
@@ -1846,14 +1846,14 @@ export interface OffchainAssetReceiptVault extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "confiscate(address)"(
+    confiscateReceipt(
       confiscatee_: PromiseOrValue<string>,
+      id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "confiscate(address,uint256)"(
+    confiscateShares(
       confiscatee_: PromiseOrValue<string>,
-      id_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1878,7 +1878,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1963,7 +1963,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -2057,7 +2057,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     ): Promise<void>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -2389,14 +2389,14 @@ export interface OffchainAssetReceiptVault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    "confiscate(address)"(
+    confiscateReceipt(
       confiscatee_: PromiseOrValue<string>,
+      id_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
-    "confiscate(address,uint256)"(
+    confiscateShares(
       confiscatee_: PromiseOrValue<string>,
-      id_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -2421,7 +2421,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -2506,7 +2506,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
@@ -2600,7 +2600,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     ): Promise<BigNumber>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
@@ -2749,14 +2749,14 @@ export interface OffchainAssetReceiptVault extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    "confiscate(address)"(
+    confiscateReceipt(
       confiscatee_: PromiseOrValue<string>,
+      id_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
-    "confiscate(address,uint256)"(
+    confiscateShares(
       confiscatee_: PromiseOrValue<string>,
-      id_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -2781,7 +2781,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "deposit(uint256,address,uint256,bytes)"(
       assets_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      depositMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
@@ -2866,7 +2866,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     "mint(uint256,address,uint256,bytes)"(
       shares_: PromiseOrValue<BigNumberish>,
       receiver_: PromiseOrValue<string>,
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      mintMinShareRatio_: PromiseOrValue<BigNumberish>,
       receiptInformation_: PromiseOrValue<BytesLike>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
@@ -2960,7 +2960,7 @@ export interface OffchainAssetReceiptVault extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setMinShareRatio(
-      minShareRatio_: PromiseOrValue<BigNumberish>,
+      senderMinShareRatio_: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
 
