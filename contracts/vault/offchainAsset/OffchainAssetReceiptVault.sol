@@ -299,7 +299,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     function _nextId() internal override returns (uint256) {
-        uint id_ = highwaterId + 1;
+        uint256 id_ = highwaterId + 1;
         highwaterId = id_;
         return id_;
     }

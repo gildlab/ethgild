@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   deployERC20PriceOracleVault,
@@ -8,8 +6,7 @@ import {
   getEventArgs,
 } from "../util";
 
-chai.use(solidity);
-const { assert } = chai;
+const assert = require("assert");
 
 describe("events", async function () {
   it("should emit events on deposit and withdraw", async function () {

@@ -1,5 +1,4 @@
 import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ReadWriteTier, TestErc20 } from "../../typechain";
 import { ethers } from "hardhat";
 
@@ -25,8 +24,7 @@ import {
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
 
-chai.use(solidity);
-const { assert } = chai;
+const assert = require("assert");
 
 let TierV2TestContract: ReadWriteTier;
 

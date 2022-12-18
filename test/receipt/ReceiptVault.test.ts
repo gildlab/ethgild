@@ -1,5 +1,3 @@
-import chai from "chai";
-import { solidity } from "ethereum-waffle";
 import { ethers } from "hardhat";
 import {
   assertError,
@@ -18,12 +16,9 @@ import {
 } from "../../typechain/ReceiptVault";
 
 import { getEventArgs } from "../util";
+const assert = require("assert");
 
 let owner: SignerWithAddress;
-
-chai.use(solidity);
-
-const { assert } = chai;
 
 describe("Receipt vault", async function () {
   it("Returns the address of the underlying asset that is deposited", async function () {
