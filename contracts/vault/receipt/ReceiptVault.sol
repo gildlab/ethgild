@@ -83,6 +83,7 @@ contract ReceiptVault is
         _disableInitializers();
     }
 
+    // solhint-disable-next-line func-name-mixedcase
     function __ReceiptVault_init(
         ReceiptVaultConfig memory config_
     ) internal virtual {
@@ -96,10 +97,8 @@ contract ReceiptVault is
     /// @inheritdoc IReceiptOwner
     function authorizeReceiptTransfer(
         address,
-        address
-    ) external view virtual // solhint-disable-next-line no-empty-blocks
-
-    {
+        address // solhint-disable-next-line no-empty-blocks
+    ) external view virtual {
         // Authorize all receipt transfers by default.
     }
 
