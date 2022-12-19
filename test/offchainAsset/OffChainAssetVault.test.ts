@@ -10,7 +10,7 @@ import {
   fixedPointMul,
   ONE,
   fixedPointDiv,
-  deployERC20PriceOracleVault,
+  deployERC20PriceOracleVault, fixedPointDivRound,
 } from "../util";
 
 import {
@@ -245,7 +245,7 @@ describe("OffChainAssetVault", async function () {
   });
   it("PreviewMint sets correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
-    const shares = ethers.BigNumber.from(100);
+    const shares = ethers.BigNumber.from(10);
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -256,8 +256,7 @@ describe("OffChainAssetVault", async function () {
       .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const assets = await vault.connect(alice).previewMint(shares);
-    const expectedAssets = fixedPointDiv(shares, ONE).add(1);
-
+    const expectedAssets = fixedPointDivRound(shares, ONE);
     assert(
       assets.eq(expectedAssets),
       `Wrong assets: expected ${expectedAssets} got ${assets}`
