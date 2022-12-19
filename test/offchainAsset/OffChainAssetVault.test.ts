@@ -284,7 +284,7 @@ describe("OffChainAssetVault", async function () {
   });
   it("PreviewWithdraw sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
-    const assets = ethers.BigNumber.from(100);
+    const assets = ethers.BigNumber.from(10);
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -297,7 +297,7 @@ describe("OffChainAssetVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
-    const expectedShares = fixedPointMul(assets, id).add(1);
+    const expectedShares = fixedPointMul(assets, id);
 
     const shares = await vault
       .connect(alice)
