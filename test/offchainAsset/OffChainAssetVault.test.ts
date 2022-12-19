@@ -260,7 +260,7 @@ describe("OffChainAssetVault", async function () {
 
     assert(
       assets.eq(expectedAssets),
-      `Wrong assets: expected ${expectedAssets} got ${assets} `
+      `Wrong assets: expected ${expectedAssets} got ${assets}`
     );
   });
   it("PreviewWithdraw sets 0 shares if no withdrawer role", async function () {
