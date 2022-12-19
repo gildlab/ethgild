@@ -21,35 +21,37 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
     }
 
     /// @inheritdoc IReceipt
-    function ownerMint(
+    function mint(
         address account_,
         uint256 id_,
         uint256 amount_,
         bytes memory data_
-    ) external onlyOwner {
+    ) external {
+        IReceiptAuthority(owner()).authorizeMint(account_, id_, amount_);
         _mint(account_, id_, amount_, data_);
         _receiptInformation(account_, id_, data_);
     }
 
     /// @inheritdoc IReceipt
-    function ownerBurn(
+    function burn(
         address account_,
         uint256 id_,
         uint256 amount_
-    ) external onlyOwner {
+    ) external {
+        IReceiptAuthority(owner()).authorizeBurn(msg.sender, account_, id_, amount_);
         _burn(account_, id_, amount_);
     }
 
-    /// @inheritdoc IReceipt
-    function ownerTransferFrom(
-        address from_,
-        address to_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory data_
-    ) external onlyOwner {
-        _safeTransferFrom(from_, to_, id_, amount_, data_);
-    }
+    // /// @inheritdoc IReceipt
+    // function ownerTransferFrom(
+    //     address from_,
+    //     address to_,
+    //     uint256 id_,
+    //     uint256 amount_,
+    //     bytes memory data_
+    // ) external onlyOwner {
+    //     _safeTransferFrom(from_, to_, id_, amount_, data_);
+    // }
 
     /// @inheritdoc ERC1155
     function _beforeTokenTransfer(
@@ -68,7 +70,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
             amounts_,
             data_
         );
-        IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
+        IReceiptOwner(owner()).authorizeTransferFrom(from_, to_);
     }
 
     function _receiptInformation(

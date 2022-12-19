@@ -436,7 +436,7 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        IReceipt(_receipt).ownerMint(
+        IReceipt(_receipt).mint(
             receiver_,
             id_,
             shares_,
