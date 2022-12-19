@@ -48,6 +48,14 @@ export const fixedPointMul = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(b).div(ONE);
 export const fixedPointDiv = (a: BigNumber, b: BigNumber): BigNumber =>
   a.mul(ONE).div(b);
+export const fixedPointDivRound = (a: BigNumber, b: BigNumber): BigNumber => {
+  let result = a.mul(ONE).div(b);
+
+  if (a.mul(ONE).mod(b).gt(0)) {
+    result = result.add(1);
+  }
+  return result;
+};
 
 export const RESERVE_ONE = ethers.BigNumber.from("1" + sixZeros);
 
