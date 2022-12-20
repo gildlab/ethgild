@@ -1,5 +1,0 @@
-{
-  "name": "NativeGild vault",
-  "decimals": 18,
-  "description": "A vault for a native token gilded against an oracle price."
-}

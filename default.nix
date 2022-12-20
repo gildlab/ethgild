@@ -17,6 +17,7 @@ let
     rm -rf cache
     rm -rf node_modules
     rm -rf typechain
+    rm -rf typechain-types
     rm -rf bin
   '';
 
@@ -30,13 +31,6 @@ let
     slither . --npx-disable --filter-paths="contracts/test" --exclude-dependencies --fail-high
   '';
 
- ci-test = pkgs.writeShellScriptBin "ci-test" ''
- flush-all
- ci-lint
- hardhat test
- security-check
- '';
-
  ipfs-add = pkgs.writeShellScriptBin "ipfs-add" ''
   ipfs add -r --pin --cid-version 1 erc1155Metadata
  '';
@@ -48,7 +42,6 @@ pkgs.stdenv.mkDerivation {
   pkgs.slither-analyzer
   security-check
   flush-all
-  ci-test
   ci-lint
   ipfs-add
  ];
