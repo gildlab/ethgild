@@ -150,8 +150,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
     priceOracle: twoPriceOracle.address,
     vaultConfig: {
       asset: asset.address,
-      name: "EthGild",
-      symbol: "ETHg",
+      name: "PriceOracleVault",
+      symbol: "POV",
     },
   };
 
@@ -225,8 +225,8 @@ export const assertError = async (f: Function, s: string, e: string) => {
   assert(didError, e);
 };
 
-export const expectedName = "EthGild";
-export const expectedSymbol = "ETHg";
+export const expectedName = "PriceOracleVault";
+export const expectedSymbol = "POV";
 export const expectedUri =
   "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4";
 
