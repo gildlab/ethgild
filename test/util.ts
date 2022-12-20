@@ -35,8 +35,7 @@ export const eighteenZeros = "000000000000000000";
 export const sixZeros = "000000";
 export const xauOne = "100000000";
 
-export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
-export const ONE = priceOne;
+export const ONE = ethers.BigNumber.from("1" + eighteenZeros);
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;
@@ -204,7 +203,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
 };
 
 export const expectedReferencePrice = ethers.BigNumber.from(basePrice)
-  .mul(priceOne)
+  .mul(ONE)
   .div(ethers.BigNumber.from(quotePrice));
 
 export const assertError = async (f: Function, s: string, e: string) => {
