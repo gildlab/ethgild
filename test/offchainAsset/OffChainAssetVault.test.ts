@@ -11,6 +11,7 @@ import {
   ONE,
   fixedPointDiv,
   deployERC20PriceOracleVault,
+  fixedPointDivRound,
 } from "../util";
 
 import {
@@ -245,7 +246,7 @@ describe("OffChainAssetVault", async function () {
   });
   it("PreviewMint sets correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
-    const shares = ethers.BigNumber.from(100);
+    const shares = ethers.BigNumber.from(10);
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -256,11 +257,10 @@ describe("OffChainAssetVault", async function () {
       .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const assets = await vault.connect(alice).previewMint(shares);
-    const expectedAssets = fixedPointDiv(shares, ONE).add(1);
-
+    const expectedAssets = fixedPointDivRound(shares, ONE);
     assert(
       assets.eq(expectedAssets),
-      `Wrong assets: expected ${expectedAssets} got ${assets} `
+      `Wrong assets: expected ${expectedAssets} got ${assets}`
     );
   });
   it("PreviewWithdraw sets 0 shares if no withdrawer role", async function () {
@@ -285,7 +285,7 @@ describe("OffChainAssetVault", async function () {
   });
   it("PreviewWithdraw sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
-    const assets = ethers.BigNumber.from(100);
+    const assets = ethers.BigNumber.from(10);
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -298,7 +298,7 @@ describe("OffChainAssetVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
-    const expectedShares = fixedPointMul(assets, id).add(1);
+    const expectedShares = fixedPointMul(assets, id);
 
     const shares = await vault
       .connect(alice)

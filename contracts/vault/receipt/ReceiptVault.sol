@@ -128,7 +128,7 @@ contract ReceiptVault is
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
         // round down.
-        return assets_.fixedPointMul(shareRatio_);
+        return assets_.fixedPointMul(shareRatio_, Math.Rounding.Down);
     }
 
     /// Calculate how many assets_ are needed to mint shares_.
@@ -147,7 +147,7 @@ contract ReceiptVault is
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
         // round up.
-        return shares_.fixedPointDiv(shareRatio_) + 1;
+        return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Up);
     }
 
     /// Calculate how many shares_ to burn to withdraw assets_.
@@ -161,7 +161,7 @@ contract ReceiptVault is
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
-        return assets_.fixedPointMul(shareRatio_) + 1;
+        return assets_.fixedPointMul(shareRatio_, Math.Rounding.Up);
     }
 
     /// Calculate how many assets_ to withdraw for burning shares_.
@@ -177,7 +177,7 @@ contract ReceiptVault is
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
         // round down.
-        return shares_.fixedPointDiv(shareRatio_);
+        return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Down);
     }
 
     /// There is no onchain asset. The asset is offchain.

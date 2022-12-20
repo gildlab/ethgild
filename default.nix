@@ -44,7 +44,7 @@ in
 pkgs.stdenv.mkDerivation {
  name = "shell";
  buildInputs = [
-  pkgs.nodejs-16_x
+  pkgs.nodejs-18_x
   pkgs.slither-analyzer
   security-check
   flush-all
