@@ -10,7 +10,8 @@ import {
   fixedPointMul,
   ONE,
   fixedPointDiv,
-  deployERC20PriceOracleVault, fixedPointDivRound,
+  deployERC20PriceOracleVault,
+  fixedPointDivRound,
 } from "../util";
 
 import {
