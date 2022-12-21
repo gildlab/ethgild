@@ -25,8 +25,8 @@ import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
 const assert = require("assert");
 
 let TierV2TestContract: ReadWriteTier;
-let  expectedName = "OffchainAssetVaul"
-let  expectedSymbol = "OAV"
+let expectedName = "OffchainAssetVaul";
+let expectedSymbol = "OAV";
 
 describe("OffChainAssetVault", async function () {
   beforeEach(async () => {
