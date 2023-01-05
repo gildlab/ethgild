@@ -1,5 +1,0 @@
-{
-  "name": "ERC20Gild vault",
-  "decimals": 18,
-  "description": "A vault for an ERC20 token gilded against an oracle price."
-}
