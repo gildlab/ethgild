@@ -13,8 +13,9 @@ Uses nixos.
 Install `nix-shell` - https://nixos.org/download.html.
 
 Run `nix-shell` in this repo to drop into the shell. Please ONLY use the nix
-shell version of `npm` for all development, no yarn or BYO npm, etc. as this helps
-avoid subtle corruption of lock files due to package manager version mismatch.
+shell version of `npm` for all development, no `yarn`, `npx` or BYO `npm`, etc.
+Nix shell helps avoid subtle corruption of lock files due to package manager
+incompatibilities.
 
 From here run [hardhat](https://hardhat.org/) as normal.
 
