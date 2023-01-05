@@ -3,8 +3,6 @@ import { ethers } from "hardhat";
 
 import {
   getEventArgs,
-  expectedName,
-  expectedSymbol,
   ADDRESS_ZERO,
   assertError,
   fixedPointMul,
@@ -27,6 +25,8 @@ import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
 const assert = require("assert");
 
 let TierV2TestContract: ReadWriteTier;
+let expectedName = "OffchainAssetVaul";
+let expectedSymbol = "OAV";
 
 describe("OffChainAssetVault", async function () {
   beforeEach(async () => {

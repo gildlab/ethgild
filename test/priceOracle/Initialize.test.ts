@@ -108,8 +108,8 @@ describe("config", async function () {
       priceOracle: twoPriceOracle.address,
       vaultConfig: {
         asset: asset.address,
-        name: "EthGild",
-        symbol: "ETHg",
+        name: "PriceOracleVault",
+        symbol: "POV",
       },
     };
 

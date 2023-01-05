@@ -35,8 +35,7 @@ export const eighteenZeros = "000000000000000000";
 export const sixZeros = "000000";
 export const xauOne = "100000000";
 
-export const priceOne = ethers.BigNumber.from("1" + eighteenZeros);
-export const ONE = priceOne;
+export const ONE = ethers.BigNumber.from("1" + eighteenZeros);
 
 export const usdDecimals = 8;
 export const xauDecimals = 8;
@@ -150,8 +149,8 @@ export const deployERC20PriceOracleVault = async (): Promise<
     priceOracle: twoPriceOracle.address,
     vaultConfig: {
       asset: asset.address,
-      name: "EthGild",
-      symbol: "ETHg",
+      name: "PriceOracleVault",
+      symbol: "POV",
     },
   };
 
@@ -204,7 +203,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
 };
 
 export const expectedReferencePrice = ethers.BigNumber.from(basePrice)
-  .mul(priceOne)
+  .mul(ONE)
   .div(ethers.BigNumber.from(quotePrice));
 
 export const assertError = async (f: Function, s: string, e: string) => {
@@ -225,8 +224,8 @@ export const assertError = async (f: Function, s: string, e: string) => {
   assert(didError, e);
 };
 
-export const expectedName = "EthGild";
-export const expectedSymbol = "ETHg";
+export const expectedName = "PriceOracleVault";
+export const expectedSymbol = "POV";
 export const expectedUri =
   "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4";
 

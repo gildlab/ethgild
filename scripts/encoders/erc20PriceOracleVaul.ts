@@ -10,8 +10,8 @@ async function main() {
 
   let erc20PriceOracleVaultConfig = {
     asset: erc20ContractAddress,
-    name: "EthGild",
-    symbol: "ETHg",
+    name: "PriceOracleVault",
+    symbol: "POV",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
     priceOracle: priceOracleAddress,
   };
