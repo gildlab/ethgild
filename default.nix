@@ -38,7 +38,6 @@ in
 pkgs.stdenv.mkDerivation {
   name = "shell";
   buildInputs = [
-    pkgs.bashInteractive
     pkgs.nodejs-18_x
     pkgs.slither-analyzer
     security-check
