@@ -36,8 +36,8 @@ export const deployOffChainAssetVault = async (): Promise<
     admin: alice.address,
     vaultConfig: {
       asset: ethers.constants.AddressZero,
-      name: "EthGild",
-      symbol: "ETHg",
+      name: "OffchainAssetVaul",
+      symbol: "OAV",
     },
   };
 

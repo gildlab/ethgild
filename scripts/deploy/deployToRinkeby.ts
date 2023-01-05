@@ -7,8 +7,8 @@ async function main() {
   const erc20ContractAddress = "0xc778417E063141139Fce010982780140Aa0cD5Ab";
 
   const erc20PriceOracleVaultConfig = {
-    name: "EthGild",
-    symbol: "ETHg",
+    name: "PriceOracleVault",
+    symbol: "POV",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
   };
   const receiptConfig = {
