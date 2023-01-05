@@ -20,7 +20,7 @@
     "typescript": "=4.9.4"
   },
   "dependencies": {
-    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#4a92da4bdb4e6a8f0d60d917fcd7cf1e0d6b077c",
+    "@beehiveinnovation/rain-protocol": "git://github.com/beehive-innovation/rain-protocol.git#d3bcd9bb55f2ad8bcd8e96adea492895ce94d742",
     "solc": "=0.8.17"
   }
 }
