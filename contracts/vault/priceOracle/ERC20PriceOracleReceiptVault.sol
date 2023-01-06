@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
-import "../../oracle/price/IPriceOracle.sol";
+import "../../oracle/price/IPriceOracleV1.sol";
 
 struct ERC20PriceOracleVaultConfig {
     address priceOracle;
@@ -14,7 +14,7 @@ struct ERC20PriceOracleVaultConfig {
 /// @param name `ERC20` name for `ERC4626` shares.
 /// @param symbol `ERC20` symbol for `ERC4626` shares.
 /// @param uri `ERC1155` uri for deposit receipts.
-/// @param address `IPriceOracle` oracle to define share mints upon deposit.
+/// @param address `IPriceOracleV1` oracle to define share mints upon deposit.
 struct ERC20PriceOracleReceiptVaultConfig {
     address priceOracle;
     ReceiptVaultConfig receiptVaultConfig;
@@ -95,7 +95,7 @@ struct ERC20PriceOracleReceiptVaultConfig {
 /// and start blocking deposits unnecessarily, for example.
 ///
 /// Mitigations:
-/// The `IPriceOracle` contracts do their best to guard against stale or
+/// The `IPriceOracleV1` contracts do their best to guard against stale or
 /// invalid data by erroring which would pause all new depositing, while still
 /// allowing withdrawing. The `ChainlinkFeedPriceOracle` also does its best to
 /// read the onchain data that does exist such as `decimals` before converting
@@ -132,13 +132,13 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     );
 
     /// The price oracle used for all minting calculations.
-    IPriceOracle public priceOracle;
+    IPriceOracleV1 public priceOracle;
 
     function initialize(
         ERC20PriceOracleReceiptVaultConfig memory config_
     ) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
-        priceOracle = IPriceOracle(config_.priceOracle);
+        priceOracle = IPriceOracleV1(config_.priceOracle);
         emit ERC20PriceOracleReceiptVaultInitialized(msg.sender, config_);
     }
 
