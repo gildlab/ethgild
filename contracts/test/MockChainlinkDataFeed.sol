@@ -16,26 +16,38 @@ struct RoundData {
     uint80 answeredInRound;
 }
 
-/// @title TestChainlinkDataFeed
+/// @title MockChainlinkDataFeed
 /// @notice Mock for a chainlink data feed.
 /// TODO Autogenerate mocks e.g. https://github.com/defi-wonderland/smock
-contract TestChainlinkDataFeed is AggregatorV3Interface {
-    /// @dev internal state so mock can set decimals externally.
+contract MockChainlinkDataFeed is AggregatorV3Interface {
+    /// @dev mock can set decimals.
     uint8 private _decimals;
+    /// @dev mock can set description.
     string private _description;
+    /// @dev mock can set rounds.
     mapping(uint80 => RoundData) private _roundData;
+    /// @dev mock can set latest round id.
     uint80 private _latestRoundId;
+    /// @dev mock can set version.
     uint256 private _version;
 
+    /// Setter for _decimals.
+    /// @param decimals_ The new value for _decimals.
     function setDecimals(uint8 decimals_) external {
         _decimals = decimals_;
     }
 
-    function setDescription(string memory description_) public {
+    /// Setter for _description.
+    /// @param description_ The new value for _description.
+    function setDescription(string memory description_) external {
         _description = description_;
     }
 
-    function setRoundData(uint80 roundId_, RoundData memory roundData_) public {
+    /// Upsert some round data.
+    /// Updates `_latestRoundId` if the round id is larger.
+    /// @param roundId_ The round id to set roundData_ for.
+    /// @param roundData_ The data for this round.
+    function setRoundData(uint80 roundId_, RoundData memory roundData_) external {
         _roundData[roundId_] = roundData_;
         // Treat this as the high water mark if appropriate.
         if (roundId_ > _latestRoundId) {
@@ -43,18 +55,23 @@ contract TestChainlinkDataFeed is AggregatorV3Interface {
         }
     }
 
-    function setVersion(uint256 version_) public {
+    /// Setter for _version.
+    /// @param version_ The new value for _version.
+    function setVersion(uint256 version_) external {
         _version = version_;
     }
 
-    function decimals() public view override returns (uint8) {
+    /// @inheritdoc AggregatorV3Interface
+    function decimals() external view override returns (uint8) {
         return _decimals;
     }
 
-    function description() public view override returns (string memory) {
+    /// @inheritdoc AggregatorV3Interface
+    function description() external view override returns (string memory) {
         return _description;
     }
 
+    /// @inheritdoc AggregatorV3Interface
     function getRoundData(
         uint80 roundId_
     ) public view override returns (uint80, int256, uint256, uint256, uint80) {
@@ -68,8 +85,9 @@ contract TestChainlinkDataFeed is AggregatorV3Interface {
         );
     }
 
+    /// @inheritdoc AggregatorV3Interface
     function latestRoundData()
-        public
+        external
         view
         override
         returns (uint80, int256, uint256, uint256, uint80)
@@ -77,7 +95,8 @@ contract TestChainlinkDataFeed is AggregatorV3Interface {
         return getRoundData(_latestRoundId);
     }
 
-    function version() public view override returns (uint256) {
+    /// @inheritdoc AggregatorV3Interface
+    function version() external view override returns (uint256) {
         return _version;
     }
 }

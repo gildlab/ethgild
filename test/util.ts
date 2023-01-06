@@ -11,7 +11,7 @@ import {
 import {
   Receipt,
   ReceiptFactory,
-  TestChainlinkDataFeed,
+  MockChainlinkDataFeed,
   TestErc20,
   TwoPriceOracle,
 } from "../typechain";
@@ -68,17 +68,17 @@ export const deployERC20PriceOracleVault = async (): Promise<
     TestErc20,
     TwoPriceOracle,
     Receipt,
-    TestChainlinkDataFeed,
-    TestChainlinkDataFeed
+    MockChainlinkDataFeed,
+    MockChainlinkDataFeed
   ]
 > => {
   const now = await latestBlockNow();
 
   const oracleFactory = await ethers.getContractFactory(
-    "TestChainlinkDataFeed"
+    "MockChainlinkDataFeed"
   );
   const basePriceOracle =
-    (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+    (await oracleFactory.deploy()) as MockChainlinkDataFeed;
   await basePriceOracle.deployed();
 
   await basePriceOracle.setDecimals(usdDecimals);
@@ -90,7 +90,7 @@ export const deployERC20PriceOracleVault = async (): Promise<
   });
 
   const quotePriceOracle =
-    (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+    (await oracleFactory.deploy()) as MockChainlinkDataFeed;
   await quotePriceOracle.deployed();
 
   await quotePriceOracle.setDecimals(xauDecimals);

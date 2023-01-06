@@ -20,7 +20,7 @@ import {
 import { getEventArgs } from "../util";
 import {
   ReceiptFactory,
-  TestChainlinkDataFeed,
+  MockChainlinkDataFeed,
   TestErc20,
   TwoPriceOracle,
 } from "../../typechain";
@@ -33,10 +33,10 @@ describe("config", async function () {
     const now = await latestBlockNow();
 
     const oracleFactory = await ethers.getContractFactory(
-      "TestChainlinkDataFeed"
+      "MockChainlinkDataFeed"
     );
     const basePriceOracle =
-      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as MockChainlinkDataFeed;
     await basePriceOracle.deployed();
     // ETHUSD as of 2022-06-30
 
@@ -49,7 +49,7 @@ describe("config", async function () {
     });
 
     const quotePriceOracle =
-      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as MockChainlinkDataFeed;
     await quotePriceOracle.deployed();
     // XAUUSD as of 2022-06-30
     await quotePriceOracle.setDecimals(xauDecimals);
