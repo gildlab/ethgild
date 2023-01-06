@@ -21,9 +21,6 @@ struct ChainlinkFeedPriceOracleConfig {
 /// - Fetching decimals from Chainlink
 /// - Rescaling Chainlink price data to target decimals if required.
 contract ChainlinkFeedPriceOracle is IPriceOracle {
-    using SafeCast for int256;
-    using FixedPointMath for uint256;
-
     /// Emitted upon deployment and construction of oracle.
     /// @param sender `msg.sender` that deploys the oracle.
     /// @param config All config used to construct the contract.
