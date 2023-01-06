@@ -6,6 +6,9 @@ import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts
 import "../receipt/IReceipt.sol";
 import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 
+/// Thrown when the account does NOT have the depositor role.
+error NotDepositor(address account);
+
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
 /// to the vault atomically during initialization so there is no opportunity for
@@ -62,13 +65,16 @@ struct OffchainAssetReceiptVaultConfig {
 /// it only seeks to provide baseline functionality that a competent custodian
 /// will need to tackle the problem. The implementation provides:
 ///
-/// - ReceiptVault base that allows a transparent onchain/offchain audit history
+/// - `ReceiptVault` base that allows transparent onchain/offchain audit history
 /// - Certifier role that allows for audits of offchain assets that can fail
-/// - KYC/membership lists that can restrict who can hold/transfer assets
+/// - KYC/membership lists that can restrict who can hold/transfer assets as
+///   any Rain `ITierV2` interface
 /// - Ability to comply with sanctions/regulators by confiscating assets
-/// - ERC20 shares in the vault that can be traded minted/burned to track a peg
-/// - ERC4626 compliant vault interface (inherited from ReceiptVault)
+/// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
+/// - `ERC4626` compliant vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
+/// - Snapshots from `ReceiptVault` exposed under a role to ease potential
+///   future migrations or disaster recovery plans.
 contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Contract has initialized.
     /// @param caller The `msg.sender` constructing the contract.
@@ -139,44 +145,89 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256[] context
     );
 
+    /// Rolename for depositors.
+    /// Depositor role is required to mint new shares and receipts.
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
+    /// Rolename for depositor admins.
     bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
+    /// Rolename for withdrawers.
+    /// Withdrawer role is required to burn shares and receipts.
     bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
+    /// Rolename for withdrawer admins.
     bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
+    /// Rolename for certifiers.
+    /// Certifier role is required to extend the `certifiedUntil` time.
     bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
+    /// Rolename for certifier admins.
     bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
 
+    /// Rolename for handlers.
+    /// Handler role is required to accept tokens during system freeze.
     bytes32 public constant HANDLER = keccak256("HANDLER");
+    /// Rolename for handler admins.
     bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
 
+    /// Rolename for ERC20 tierer.
+    /// ERC20 tierer role is required to modify the tier contract for shares.
     bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
+    /// Rolename for ERC20 tierer admins.
     bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
 
+    /// Rolename for ERC1155 tierer.
+    /// ERC1155 tierer role is required to modify the tier contract for receipts.
     bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
+    /// Rolename for ERC1155 tierer admins.
     bytes32 public constant ERC1155TIERER_ADMIN =
         keccak256("ERC1155TIERER_ADMIN");
 
+    /// Rolename for ERC20 snapshotter.
+    /// ERC20 snapshotter role is required to snapshot shares.
     bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
+    /// Rolename for ERC20 snapshotter admins.
     bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
+    /// Rolename for confiscator.
+    /// Confiscator role is required to confiscate shares and/or receipts.
     bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
+    /// Rolename for confiscator admins.
     bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
+    /// The largest issued id. The next id issued will be larger than this.
     uint256 private highwaterId;
 
+    /// The system is certified until this timestamp. If this is in the past then
+    /// general transfers of shares and receipts will fail until the system can
+    /// be certified to a future time.
     uint32 private certifiedUntil;
 
+    /// The minimum tier required for an address to receive shares.
     uint8 private erc20MinimumTier;
+    /// The `ITierV2` contract that defines the current tier of each address for
+    /// the purpose of receiving shares.
     ITierV2 private erc20Tier;
+    /// Optional context to provide to the `ITierV2` contract when calculating
+    /// any addresses' tier for the purpose of receiving shares. Global to all
+    /// addresses.
     uint256[] private erc20TierContext;
 
+    /// The minimum tier required for an address to receive receipts.
     uint8 private erc1155MinimumTier;
+    /// The `ITierV2` contract that defines the current tier of each address for
+    /// the purpose of receiving receipts.
     ITierV2 private erc1155Tier;
+    /// Optional context to provide to the `ITierV2` contract when calculating
+    /// any addresses' tier for the purpose of receiving receipts. Global to all
+    /// addresses.
     uint256[] private erc1155TierContext;
 
+    /// Initializes the initial admin and the underlying `ReceiptVault`.
+    /// The admin provided will be admin of all roles and can reassign and revoke
+    /// this as appropriate according to standard Open Zeppelin access control
+    /// logic.
+    /// @param config_ All config required to initialize.
     function initialize(
         OffchainAssetReceiptVaultConfig memory config_
     ) external initializer {
@@ -225,13 +276,16 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit OffchainAssetVaultInitialized(msg.sender, config_);
     }
 
+    /// Ensure that only callers with the depositor role can deposit.
     function _beforeDeposit(
         uint256,
         address,
         uint256,
         uint256
     ) internal view override {
-        require(hasRole(DEPOSITOR, msg.sender), "NOT_DEPOSITOR");
+        if (!hasRole(DEPOSITOR, msg.sender)) {
+            revert NotDepositor(msg.sender);
+        }
     }
 
     function _afterWithdraw(
