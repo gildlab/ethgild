@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import "./IPriceOracle.sol";
-import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
+import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
 
 /// @param base The base price of the merged pair, will be the numerator.
 /// @param quote The quote price of the merged pair, will be the denominator.

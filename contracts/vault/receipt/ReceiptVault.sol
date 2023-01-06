@@ -8,7 +8,7 @@ import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/t
 import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./IReceipt.sol";
-import "@beehiveinnovation/rain-protocol/contracts/math/FixedPointMath.sol";
+import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
 import "./IReceiptOwner.sol";
 
 struct VaultConfig {

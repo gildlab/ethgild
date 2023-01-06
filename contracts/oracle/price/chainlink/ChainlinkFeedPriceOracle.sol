@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import "@beehiveinnovation/rain-protocol/contracts/chainlink/LibChainlink.sol";
+import "@rainprotocol/rain-protocol/contracts/chainlink/LibChainlink.sol";
 
 import "../IPriceOracle.sol";
 

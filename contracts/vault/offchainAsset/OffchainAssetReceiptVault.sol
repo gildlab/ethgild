@@ -4,7 +4,7 @@ pragma solidity =0.8.17;
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "../receipt/IReceipt.sol";
-import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
+import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
