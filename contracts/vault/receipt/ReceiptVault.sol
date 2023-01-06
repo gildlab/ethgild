@@ -317,14 +317,14 @@ contract ReceiptVault is
                 // > MUST NOT revert due to vault specific user/global limits.
                 // > MAY revert due to other conditions that would also cause
                 // > deposit to revert.
-                // Unclear if the min share ratio set by the user for themselves is
-                // a "vault specific user limit" or "other conditions that would
-                // also cause deposit to revert".
+                // Unclear if the min share ratio set by the user for themselves
+                // is a "vault specific user limit" or "other conditions that
+                // would also cause deposit to revert".
                 // The conservative interpretation is that the user will WANT
                 // the preview calculation to revert according to their own
                 // preferences they set for themselves onchain.
-                // If the user did not set a min ratio then the min ratio will be 0
-                // and never revert.
+                // If the user did not set a min ratio then the min ratio will
+                // be 0 and never revert.
                 minShareRatios[msg.sender]
             );
     }

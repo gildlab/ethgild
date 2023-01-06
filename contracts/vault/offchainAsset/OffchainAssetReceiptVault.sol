@@ -314,19 +314,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return totalSupply();
     }
 
+    /// Reverts are disallowed so `0` for everyone who does not have the role
+    /// for depositing. Depositors all have the same global share ratio.
+    /// @inheritdoc ReceiptVault
     function _shareRatio(
         address depositor_,
         address
     ) internal view override returns (uint256) {
+        // Passthrough to global share ratio if account has correct role.
         return hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
-    }
-
-    /// Offchain assets are always deposited 1:1 with shares.
-    /// @inheritdoc ReceiptVault
-    function previewDeposit(
-        uint256 assets_
-    ) external view override returns (uint256) {
-        return hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
     }
 
     function previewWithdraw(
