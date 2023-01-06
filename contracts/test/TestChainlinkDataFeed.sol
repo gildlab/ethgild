@@ -4,6 +4,11 @@ pragma solidity ^0.8.0;
 // Chainlink imports.
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 
+/// Mimics round data for a chainlink oracle as a struct rather than tuple.
+/// @param answer As per `AggregatorV3Interface.getRoundData`.
+/// @param startedAt As per `AggregatorV3Interface.getRoundData`.
+/// @param updatedAt As per `AggregatorV3Interface.getRoundData`.
+/// @param answeredInRound As per `AggregatorV3Interface.getRoundData`.
 struct RoundData {
     int256 answer;
     uint256 startedAt;
@@ -11,14 +16,18 @@ struct RoundData {
     uint80 answeredInRound;
 }
 
+/// @title TestChainlinkDataFeed
+/// @notice Mock for a chainlink data feed.
+/// TODO Autogenerate mocks e.g. https://github.com/defi-wonderland/smock
 contract TestChainlinkDataFeed is AggregatorV3Interface {
+    /// @dev internal state so mock can set decimals externally.
     uint8 private _decimals;
     string private _description;
     mapping(uint80 => RoundData) private _roundData;
     uint80 private _latestRoundId;
     uint256 private _version;
 
-    function setDecimals(uint8 decimals_) public {
+    function setDecimals(uint8 decimals_) external {
         _decimals = decimals_;
     }
 

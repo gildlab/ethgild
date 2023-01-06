@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 /// Simplified interface into a price oracle.
 /// The intention is that some more complex oracle interface such as Chainlink
 /// `AggregatorV3Interface` is wrapped/adapted by a contract that implements
-/// `IPriceOracle` to produce a single final value.
+/// `IPriceOracle` to produce a single final price value. A price is defined as
+/// the best possible ratio between two assets for the purpose of a liquid trade.
 ///
 /// Prices from an `IPriceOracle` MUST be:
 /// - The latest available data/value
@@ -12,6 +13,7 @@ pragma solidity ^0.8.0;
 /// - Represented as `uint256` values or error (e.g. disallow negative values)
 /// - 18 decimal fixed point values representing a ratio (price) between "base"
 /// and "quote" token.
+/// - A positive integer, `0` prices are disallowed.
 ///
 /// By normalising all ratios to 18 decimal fixed point at their source we
 /// simplify downstream math that derives prices by combining several
