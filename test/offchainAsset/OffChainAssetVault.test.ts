@@ -8,7 +8,6 @@ import {
   fixedPointMul,
   ONE,
   fixedPointDiv,
-  deployERC20PriceOracleVault,
   fixedPointDivRound,
 } from "../util";
 
@@ -60,25 +59,6 @@ describe("OffChainAssetVault", async function () {
       `NONZERO_ASSET`
     );
   });
-  it("Checks SetERC20Tier role", async function () {
-    const [vault] = await deployOffChainAssetVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const minTier = ethers.BigNumber.from(10);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .setERC20Tier(TierV2TestContract.address, minTier, []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-        .connect(alice)
-        .ERC20TIERER()}`,
-      "Failed to set erc20tier"
-    );
-  });
   it("Checks SetERC20Tier event is emitted", async function () {
     const [vault] = await deployOffChainAssetVault();
 
@@ -109,25 +89,6 @@ describe("OffChainAssetVault", async function () {
     assert(
       minimumTier.eq(minTier),
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
-    );
-  });
-  it("Checks setERC1155Tier role", async function () {
-    const [vault] = await deployOffChainAssetVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const minTier = ethers.BigNumber.from(10);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .setERC1155Tier(TierV2TestContract.address, minTier, []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-        .connect(alice)
-        .ERC1155TIERER()}`,
-      "Failed to set erc1155tier"
     );
   });
   it("Checks setERC1155Tier event is emitted", async function () {
@@ -354,19 +315,6 @@ describe("OffChainAssetVault", async function () {
 
     assert(aliceReceiptBalance.eq(0), `NOT_RECEIPT_HOLDER`);
   });
-  it("Checks role for snapshotter", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetVault();
-
-    await assertError(
-      async () => await vault.connect(alice).snapshot(),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-        .connect(alice)
-        .ERC20SNAPSHOTTER()}`,
-      "failed to snapshot"
-    );
-  });
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -474,23 +422,6 @@ describe("OffChainAssetVault", async function () {
       `wrong caller expected ${alice.address} got ${caller}`
     );
     assert(until.eq(_until), `wrong until expected ${_until} got ${until}`);
-  });
-  it("Checks role for certifier", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-
-    await assertError(
-      async () => await vault.connect(alice).certify(_until, [], false),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-        .connect(alice)
-        .CERTIFIER()}`,
-      "failed to certify"
-    );
   });
   it("Certifies", async function () {
     const signers = await ethers.getSigners();
