@@ -3,8 +3,8 @@ pragma solidity =0.8.17;
 
 import {IERC1155Upgradeable as IERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
-/// @title IReceipt
-/// @notice IReceipt is an extension to IERC1155 that requires implementers to
+/// @title IReceiptV1
+/// @notice IReceiptV1 is an extension to IERC1155 that requires implementers to
 /// provide an interface to allow an owner to ARBITRARILY:
 ///
 /// - mint
@@ -12,7 +12,7 @@ import {IERC1155Upgradeable as IERC1155} from "@openzeppelin/contracts-upgradeab
 /// - transfer
 /// - emit data
 ///
-/// The owner MUST implement `IReceiptOwner` to authorize.
+/// The owner MUST implement `IReceiptOwnerV1` to authorize.
 interface IReceiptV1 is IERC1155 {
     /// Emitted when new information is provided for a receipt.
     /// @param sender `msg.sender` emitting the information for the receipt.
