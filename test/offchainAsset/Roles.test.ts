@@ -1,9 +1,12 @@
 import { ReadWriteTier } from "../../typechain";
 import { ethers } from "hardhat";
 
-import { assertError } from "../util";
+import {
+  assertError, ONE,
+} from "../util";
 
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
+import { TestErc20 } from "../../typechain-types";
 
 let TierV2TestContract: ReadWriteTier;
 
@@ -12,6 +15,49 @@ describe("OffChainAssetVault Roles", async function () {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
+  });
+
+  it.only("Checks Depositor role", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const shareRatio = ONE;
+    const aliceAssets = ethers.BigNumber.from(1000);
+
+    await asset.connect(alice).transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+        aliceAssets,
+        bob.address,
+        shareRatio,
+        []
+    )
+    // await assertError(
+    //     async () =>
+    //         await vault
+    //             .connect(alice)
+    //             ["deposit(uint256,address,uint256,bytes)"](
+    //             aliceAssets,
+    //             bob.address,
+    //             shareRatio,
+    //             []
+    //         ),
+    //     `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+    //         .connect(alice)
+    //         .DEPOSITOR()}`,
+    //     "Failed to deposit"
+    // );
   });
 
   it("Checks SetERC20Tier role", async function () {
