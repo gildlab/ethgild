@@ -6,8 +6,11 @@ import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts
 import "../receipt/IReceipt.sol";
 import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 
-/// Thrown when the account does NOT have the depositor role.
+/// Thrown when the account does NOT have the depositor role on mint.
 error NotDepositor(address account);
+
+/// Thrown when the account does NOT have the withdrawer role on burn.
+error NotWithdrawer(address account);
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
@@ -277,6 +280,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// Ensure that only callers with the depositor role can deposit.
+    /// @inheritdoc ReceiptVault
     function _beforeDeposit(
         uint256,
         address,
@@ -288,6 +292,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         }
     }
 
+    /// Ensure that only owners with the withdrawer role can withdraw.
+    /// @inheritdoc ReceiptVault
     function _afterWithdraw(
         uint256,
         address,
@@ -295,7 +301,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256,
         uint256
     ) internal view override {
-        require(hasRole(WITHDRAWER, owner_), "NOT_WITHDRAWER");
+        if (!hasRole(WITHDRAWER, owner_)) {
+            revert NotWithdrawer(owner_);
+        }
     }
 
     /// Shares total supply is 1:1 with offchain assets.

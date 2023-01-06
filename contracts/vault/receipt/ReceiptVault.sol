@@ -631,12 +631,13 @@ contract ReceiptVault is
             _spendAllowance(owner_, msg.sender, shares_);
         }
 
-        // erc20 burn.
+        // ERC20 burn.
         _burn(owner_, shares_);
 
-        // erc1155 burn.
+        // ERC1155 burn.
         IReceipt(_receipt).ownerBurn(owner_, id_, shares_);
 
+        // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
     }
 
