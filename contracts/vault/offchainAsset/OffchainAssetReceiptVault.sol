@@ -3,14 +3,21 @@ pragma solidity =0.8.17;
 
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "../receipt/IReceipt.sol";
 import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
+import "../receipt/IReceiptV1.sol";
 
 /// Thrown when the account does NOT have the depositor role on mint.
-error NotDepositor(address account);
+/// @param account the unauthorized depositor.
+error UnauthorizedDeposit(address account);
 
 /// Thrown when the account does NOT have the withdrawer role on burn.
-error NotWithdrawer(address account);
+/// @param account the unauthorized withdrawer.
+error UnauthorizedWithdraw(address account);
+
+/// Thrown when the account is NOT authorized to emit information about id.
+/// @param account the unauthorized information provider.
+/// @param id The id the information is not authorized for.
+error UnauthorizedReceiptInformation(address account, uint256 id);
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
@@ -286,9 +293,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         address,
         uint256,
         uint256
-    ) internal view override {
+    ) internal view virtual override {
         if (!hasRole(DEPOSITOR, msg.sender)) {
-            revert NotDepositor(msg.sender);
+            revert UnauthorizedDeposit(msg.sender);
         }
     }
 
@@ -300,9 +307,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         address owner_,
         uint256,
         uint256
-    ) internal view override {
+    ) internal view virtual override {
         if (!hasRole(WITHDRAWER, owner_)) {
-            revert NotWithdrawer(owner_);
+            revert UnauthorizedWithdraw(owner_);
         }
     }
 
@@ -310,7 +317,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Assets aren't real so only way to report this is to return the total
     /// supply of shares.
     /// @inheritdoc ReceiptVault
-    function totalAssets() external view override returns (uint256) {
+    function totalAssets() external view virtual override returns (uint256) {
         return totalSupply();
     }
 
@@ -320,44 +327,53 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     function _shareRatio(
         address depositor_,
         address
-    ) internal view override returns (uint256) {
+    ) internal view virtual override returns (uint256) {
         // Passthrough to global share ratio if account has correct role.
         return hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
     }
 
+    /// Reverts are disallowed so `0` for everyone who does not have the
+    /// withdrawer role. Withdrawers all have the same global share ratio.
+    /// @inheritdoc ReceiptVault
     function previewWithdraw(
         uint256 assets_,
         uint256 id_
-    ) public view override returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return
             hasRole(WITHDRAWER, msg.sender)
                 ? super.previewWithdraw(assets_, id_)
                 : 0;
     }
 
+    /// @inheritdoc ReceiptVault
     function previewMint(
         uint256 shares_
-    ) public view override returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
     }
 
+    /// @inheritdoc ReceiptVault
     function previewRedeem(
         uint256 shares_,
         uint256 id_
-    ) public view override returns (uint256) {
+    ) public view virtual override returns (uint256) {
         return
             hasRole(WITHDRAWER, msg.sender)
                 ? super.previewRedeem(shares_, id_)
                 : 0;
     }
 
+    /// IDs for offchain assets are merely autoincremented. If the minter wants
+    /// to track some external ID system as a foreign key they can emit this in
+    /// the associated receipt information.
     /// @inheritdoc ReceiptVault
-    function _nextId() internal override returns (uint256) {
+    function _nextId() internal virtual override returns (uint256) {
         uint256 id_ = highwaterId + 1;
         highwaterId = id_;
         return id_;
     }
 
+    /// @inheritdoc ReceiptVault
     function authorizeReceiptInformation(
         address account_,
         uint256 id_,
@@ -365,11 +381,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ) external view virtual override {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
-        require(
-            IReceipt(_receipt).balanceOf(account_, id_) > 0 ||
-                hasRole(CERTIFIER, account_),
-            "ASSET_INFORMATION_AUTH"
-        );
+        if (_receipt.balanceOf(account_, id_) == 0 && !hasRole(CERTIFIER, account_)) {
+            revert UnauthorizedReceiptInformation(account_, id_);
+        }
     }
 
     /// Receipt holders who are also depositors can increase the deposit amount
@@ -391,7 +405,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ) external returns (uint256) {
         // This is stricter than the standard "or certifier" check.
         require(
-            IReceipt(_receipt).balanceOf(msg.sender, id_) > 0,
+            _receipt.balanceOf(msg.sender, id_) > 0,
             "NOT_RECEIPT_HOLDER"
         );
         _deposit(
@@ -565,8 +579,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 erc1155TierContext
             )
         ) {
-            IReceipt receipt_ = IReceipt(_receipt);
-            confiscatedReceiptAmount_ = IReceipt(receipt_).balanceOf(
+            IReceiptV1 receipt_ = _receipt;
+            confiscatedReceiptAmount_ = receipt_.balanceOf(
                 confiscatee_,
                 id_
             );

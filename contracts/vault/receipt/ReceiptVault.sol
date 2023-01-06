@@ -7,9 +7,9 @@ import {ReentrancyGuardUpgradeable as ReentrancyGuard} from "@openzeppelin/contr
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "./IReceipt.sol";
+import "./IReceiptV1.sol";
 import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
-import "./IReceiptOwner.sol";
+import "./IReceiptOwnerV1.sol";
 
 struct VaultConfig {
     address asset;
@@ -23,7 +23,7 @@ struct ReceiptVaultConfig {
 }
 
 contract ReceiptVault is
-    IReceiptOwner,
+    IReceiptOwnerV1,
     Multicall,
     ReentrancyGuard,
     ERC20Snapshot,
@@ -64,8 +64,8 @@ contract ReceiptVault is
         uint256 id
     );
 
-    address internal _asset;
-    address internal _receipt;
+    IERC20 internal _asset;
+    IReceiptV1 internal _receipt;
 
     /// Senders MAY OPTIONALLY set minimum share ratios for 4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
@@ -90,11 +90,11 @@ contract ReceiptVault is
         __Multicall_init();
         __ReentrancyGuard_init();
         __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
-        _asset = config_.vaultConfig.asset;
-        _receipt = config_.receipt;
+        _asset = IERC20(config_.vaultConfig.asset);
+        _receipt = IReceiptV1(config_.receipt);
     }
 
-    /// @inheritdoc IReceiptOwner
+    /// @inheritdoc IReceiptOwnerV1
     function authorizeReceiptTransfer(
         address,
         address // solhint-disable-next-line no-empty-blocks
@@ -102,7 +102,7 @@ contract ReceiptVault is
         // Authorize all receipt transfers by default.
     }
 
-    /// @inheritdoc IReceiptOwner
+    /// @inheritdoc IReceiptOwnerV1
     function authorizeReceiptInformation(
         address,
         uint256,
@@ -183,7 +183,7 @@ contract ReceiptVault is
     /// There is no onchain asset. The asset is offchain.
     /// @inheritdoc IERC4626
     function asset() public view virtual returns (address) {
-        return _asset;
+        return address(_asset);
     }
 
     /// Any address can set their own minimum share ratio.
@@ -436,7 +436,7 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        IReceipt(_receipt).ownerMint(
+        _receipt.ownerMint(
             receiver_,
             id_,
             shares_,
@@ -526,7 +526,7 @@ contract ReceiptVault is
         // are attempting to reverse engineer from the owner's receipt balance.
         return
             _calculateRedeem(
-                IReceipt(_receipt).balanceOf(owner_, id_),
+                _receipt.balanceOf(owner_, id_),
                 _shareRatioForId(id_)
             );
     }
@@ -635,7 +635,7 @@ contract ReceiptVault is
         _burn(owner_, shares_);
 
         // ERC1155 burn.
-        IReceipt(_receipt).ownerBurn(owner_, id_, shares_);
+        _receipt.ownerBurn(owner_, id_, shares_);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
@@ -673,7 +673,7 @@ contract ReceiptVault is
         address owner_,
         uint256 id_
     ) public view returns (uint256) {
-        return IReceipt(_receipt).balanceOf(owner_, id_);
+        return _receipt.balanceOf(owner_, id_);
     }
 
     /// Preview redeem is only relevant to the currently set withdraw ID for

@@ -3,14 +3,14 @@ pragma solidity =0.8.17;
 
 import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./IReceiptOwner.sol";
-import "./IReceipt.sol";
+import "./IReceiptOwnerV1.sol";
+import "./IReceiptV1.sol";
 
 struct ReceiptConfig {
     string uri;
 }
 
-contract Receipt is IReceipt, Ownable, ERC1155 {
+contract Receipt is IReceiptV1, Ownable, ERC1155 {
     constructor() {
         _disableInitializers();
     }
@@ -20,7 +20,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         __ERC1155_init(config_.uri);
     }
 
-    /// @inheritdoc IReceipt
+    /// @inheritdoc IReceiptV1
     function ownerMint(
         address account_,
         uint256 id_,
@@ -31,7 +31,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         _receiptInformation(account_, id_, data_);
     }
 
-    /// @inheritdoc IReceipt
+    /// @inheritdoc IReceiptV1
     function ownerBurn(
         address account_,
         uint256 id_,
@@ -40,7 +40,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         _burn(account_, id_, amount_);
     }
 
-    /// @inheritdoc IReceipt
+    /// @inheritdoc IReceiptV1
     function ownerTransferFrom(
         address from_,
         address to_,
@@ -68,7 +68,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
             amounts_,
             data_
         );
-        IReceiptOwner(owner()).authorizeReceiptTransfer(from_, to_);
+        IReceiptOwnerV1(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
     function _receiptInformation(
@@ -78,7 +78,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
     ) internal {
         // No data is noop.
         if (data_.length > 0) {
-            IReceiptOwner(owner()).authorizeReceiptInformation(
+            IReceiptOwnerV1(owner()).authorizeReceiptInformation(
                 account_,
                 id_,
                 data_
@@ -87,7 +87,7 @@ contract Receipt is IReceipt, Ownable, ERC1155 {
         }
     }
 
-    /// @inheritdoc IReceipt
+    /// @inheritdoc IReceiptV1
     function receiptInformation(uint256 id_, bytes memory data_) external {
         _receiptInformation(msg.sender, id_, data_);
     }

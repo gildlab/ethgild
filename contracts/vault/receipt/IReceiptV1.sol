@@ -13,7 +13,7 @@ import {IERC1155Upgradeable as IERC1155} from "@openzeppelin/contracts-upgradeab
 /// - emit data
 ///
 /// The owner MUST implement `IReceiptOwner` to authorize.
-interface IReceipt is IERC1155 {
+interface IReceiptV1 is IERC1155 {
     /// Emitted when new information is provided for a receipt.
     /// @param sender `msg.sender` emitting the information for the receipt.
     /// @param id Receipt the information is for.
