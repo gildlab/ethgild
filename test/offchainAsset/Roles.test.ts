@@ -1,9 +1,7 @@
 import { ReadWriteTier } from "../../typechain";
 import { ethers } from "hardhat";
 
-import {
-  assertError,
-} from "../util";
+import { assertError } from "../util";
 
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 
@@ -25,14 +23,14 @@ describe("OffChainAssetVault Roles", async function () {
     const minTier = ethers.BigNumber.from(10);
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)
-                .setERC20Tier(TierV2TestContract.address, minTier, []),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-            .connect(alice)
-            .ERC20TIERER()}`,
-        "Failed to set erc20tier"
+      async () =>
+        await vault
+          .connect(alice)
+          .setERC20Tier(TierV2TestContract.address, minTier, []),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+        .connect(alice)
+        .ERC20TIERER()}`,
+      "Failed to set erc20tier"
     );
   });
   it("Checks setERC1155Tier role", async function () {
@@ -44,14 +42,14 @@ describe("OffChainAssetVault Roles", async function () {
     const minTier = ethers.BigNumber.from(10);
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)
-                .setERC1155Tier(TierV2TestContract.address, minTier, []),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-            .connect(alice)
-            .ERC1155TIERER()}`,
-        "Failed to set erc1155tier"
+      async () =>
+        await vault
+          .connect(alice)
+          .setERC1155Tier(TierV2TestContract.address, minTier, []),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+        .connect(alice)
+        .ERC1155TIERER()}`,
+      "Failed to set erc1155tier"
     );
   });
   it("Checks role for snapshotter", async function () {
@@ -60,11 +58,11 @@ describe("OffChainAssetVault Roles", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-        async () => await vault.connect(alice).snapshot(),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-            .connect(alice)
-            .ERC20SNAPSHOTTER()}`,
-        "failed to snapshot"
+      async () => await vault.connect(alice).snapshot(),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+        .connect(alice)
+        .ERC20SNAPSHOTTER()}`,
+      "failed to snapshot"
     );
   });
   it("Checks role for certifier", async function () {
@@ -77,12 +75,11 @@ describe("OffChainAssetVault Roles", async function () {
     const _until = block.timestamp + 100;
 
     await assertError(
-        async () => await vault.connect(alice).certify(_until, [], false),
-        `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-            .connect(alice)
-            .CERTIFIER()}`,
-        "failed to certify"
+      async () => await vault.connect(alice).certify(_until, [], false),
+      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+        .connect(alice)
+        .CERTIFIER()}`,
+      "failed to certify"
     );
   });
-
-})
+});

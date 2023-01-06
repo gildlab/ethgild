@@ -29,6 +29,25 @@ error FutureReferenceBlock(address account, uint256 referenceBlockNumber);
 /// @param account The certifier that attempted the certify.
 error ZeroCertifyUntil(address account);
 
+/// Thrown when the `from` of a token transfer does not have the minimum tier.
+/// @param from The token was transferred from this account.
+/// @param reportTime The from account had this time in the tier report.
+error UnauthorizedSenderTier(address from, uint256 reportTime);
+
+/// Thrown when the `to` of a token transfer does not have the minimum tier.
+/// @param to The token was transferred to this account.
+/// @param reportTime The to account had this time in the tier report.
+error UnauthorizedRecipientTier(address to, uint256 reportTime);
+
+/// Thrown when a transfer is attempted by an unpriviledged account during system
+/// freeze due to certification lapse.
+error CertificationExpired(
+    address from,
+    address to,
+    uint256 certifiedUntil,
+    uint256 timestamp
+);
+
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
 /// to the vault atomically during initialization so there is no opportunity for
@@ -544,6 +563,32 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
+    /// Reverts if some transfer is disallowed. Handles both share and receipt
+    /// transfers. Standard logic reverts any transfer that is EITHER to or from
+    /// an address that does not have the required tier OR the system is no
+    /// longer certified therefore ALL unpriviledged transfers MUST revert.
+    ///
+    /// Certain exemptions to transfer restrictions apply:
+    /// - If a tier contract is not set OR the minimum tier is 0 then tier
+    ///   restrictions are ignored.
+    /// - Any handler role MAY SEND AND RECEIVE TOKENS AT ALL TIMES BETWEEN
+    ///   THEMSELVES AND ANYONE ELSE. Tier and certification restrictions are
+    ///   ignored for both sender and receiver when either is a handler. Handlers
+    ///   exist to _repair_ certification issues, so MUST be able to transfer
+    ///   unhindered.
+    /// - `address(0)` is treated as a handler for the purposes of any minting
+    ///   and burning that may be required to repair certification blockers.
+    /// - Transfers TO a confiscator are treated as handler-like at all times,
+    ///   but transfers FROM confiscators are treated as unpriviledged. This is
+    ///   to allow potential legal requirements on confiscation during system
+    ///   freeze, without assigning unnecessary priviledges to confiscators.
+    ///
+    /// @param tier_ The tier contract to check reports against.
+    /// MAY be `address(0)`.
+    /// @param minimumTier_ The minimum tier to check `from_` and `to_` against.
+    /// @param tierContext_ Additional context to pass to `tier_` for the report.
+    /// @param from_ The token is being transferred from this account.
+    /// @param to_ The token is being transferred to this account.
     function enforceValidTransfer(
         ITierV2 tier_,
         uint256 minimumTier_,
@@ -575,26 +620,39 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
         // Everyone else can only transfer while the certification is valid.
         //solhint-disable-next-line not-rely-on-time
-        require(block.timestamp <= certifiedUntil, "CERTIFICATION_EXPIRED");
+        if (block.timestamp > certifiedUntil) {
+            revert CertificationExpired(
+                from_,
+                to_,
+                certifiedUntil,
+                block.timestamp
+            );
+        }
 
         // If there is a tier contract we enforce it.
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             // The sender must have a valid tier.
-            require(
-                block.timestamp >=
-                    tier_.reportTimeForTier(from_, minimumTier_, tierContext_),
-                "SENDER_TIER"
+            uint256 fromReportTime_ = tier_.reportTimeForTier(
+                from_,
+                minimumTier_,
+                tierContext_
             );
+            if (block.timestamp < fromReportTime_) {
+                revert UnauthorizedSenderTier(from_, fromReportTime_);
+            }
             // The recipient must have a valid tier.
-            require(
-                block.timestamp >=
-                    tier_.reportTimeForTier(to_, minimumTier_, tierContext_),
-                "RECIPIENT_TIER"
+            uint256 toReportTime_ = tier_.reportTimeForTier(
+                to_,
+                minimumTier_,
+                tierContext_
             );
+            if (block.timestamp < toReportTime_) {
+                revert UnauthorizedRecipientTier(to_, toReportTime_);
+            }
         }
     }
 
-    // @inheritdoc ERC20
+    /// @inheritdoc ERC20
     function _beforeTokenTransfer(
         address from_,
         address to_,
@@ -609,6 +667,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
+    /// @inheritdoc IReceiptOwnerV1
     function authorizeReceiptTransfer(
         address from_,
         address to_
@@ -623,6 +682,24 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// Confiscators can confiscate ERC20 vault shares from `confiscatee_`.
+    /// Confiscation BYPASSES TRANSFER RESTRICTIONS due to system freeze and
+    /// IGNORES ALLOWANCES set by the confiscatee.
+    ///
+    /// The LIMITATION ON CONFISCATION is that the confiscatee MUST NOT have the
+    /// minimum tier for transfers. I.e. confiscation is a two step process.
+    /// First the tokens must be frozen according to due process by the token
+    /// issuer (which may be an individual, organisation or many entities), THEN
+    /// the confiscation can clear. This prevents rogue/compromised confiscators
+    /// from being able to arbitrarily take tokens from users to themselves. At
+    /// the least, assuming separate private keys managing the tiers and
+    /// confiscation, the two steps require at least two critical security
+    /// breaches per attack rather than one.
+    ///
+    /// Confiscation is a binary event. All shares or zero shares are
+    /// confiscated from the confiscatee.
+    ///
+    /// @param confiscatee_ The address that shares are being confiscated from.
+    /// @return The amount of shares confiscated.
     function confiscateShares(
         address confiscatee_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
@@ -645,6 +722,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return confiscatedShares_;
     }
 
+    /// Confiscators can confiscate ERC1155 vault receipts from `confiscatee_`.
+    /// The process, limitations and logic is identical to share confiscation
+    /// except that receipt confiscation is performed per-ID.
+    ///
+    /// @param confiscatee_ The address that receipts are being confiscated from.
+    /// @param id_ The ID of the receipt to confiscate.
+    /// @return The amount of receipt confiscated.
     function confiscateReceipt(
         address confiscatee_,
         uint256 id_
