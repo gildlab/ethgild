@@ -47,7 +47,10 @@ contract MockChainlinkDataFeed is AggregatorV3Interface {
     /// Updates `_latestRoundId` if the round id is larger.
     /// @param roundId_ The round id to set roundData_ for.
     /// @param roundData_ The data for this round.
-    function setRoundData(uint80 roundId_, RoundData memory roundData_) external {
+    function setRoundData(
+        uint80 roundId_,
+        RoundData memory roundData_
+    ) external {
         _roundData[roundId_] = roundData_;
         // Treat this as the high water mark if appropriate.
         if (roundId_ > _latestRoundId) {

@@ -19,6 +19,16 @@ error UnauthorizedWithdraw(address account);
 /// @param id The id the information is not authorized for.
 error UnauthorizedReceiptInformation(address account, uint256 id);
 
+/// Thrown when a certification reference a block number in the future that
+/// cannot possibly have been seen yet.
+/// @param account The certifier that attempted the certify.
+/// @param referenceBlockNumber The future block number.
+error FutureReferenceBlock(address account, uint256 referenceBlockNumber);
+
+/// Thrown when a 0 certification time is attempted.
+/// @param account The certifier that attempted the certify.
+error ZeroCertifyUntil(address account);
+
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
 /// to the vault atomically during initialization so there is no opportunity for
@@ -96,12 +106,21 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// A new certification time has been set.
     /// @param caller The certifier setting the new time.
-    /// @param until The time the system is certified until. Normally this will
-    /// be a future time but certifiers MAY set it to a time in the past which
-    /// will immediately freeze all transfers.
+    /// @param certifyUntil The time the system is newly certified until.
+    /// Normally this will be a future time but certifiers MAY set it to a time
+    /// in the past which will immediately freeze all transfers.
+    /// @param referenceBlockNumber The block number that the auditor referenced
+    /// to justify the certification.
+    /// @param forceUntil Whether the certifier forced the certification time.
     /// @param data The certifier MAY provide additional supporting data such
     /// as an auditor's report/comments etc.
-    event Certify(address caller, uint256 until, bytes data);
+    event Certify(
+        address caller,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        bool forceUntil,
+        bytes data
+    );
 
     /// Shares have been confiscated from a user who is not currently meeting
     /// the ERC20 tier contract minimum requirements.
@@ -215,19 +234,20 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// The minimum tier required for an address to receive shares.
     uint8 private erc20MinimumTier;
+    /// The minimum tier required for an address to receive receipts.
+    uint8 private erc1155MinimumTier;
+
     /// The `ITierV2` contract that defines the current tier of each address for
     /// the purpose of receiving shares.
     ITierV2 private erc20Tier;
+    /// The `ITierV2` contract that defines the current tier of each address for
+    /// the purpose of receiving receipts.
+    ITierV2 private erc1155Tier;
+
     /// Optional context to provide to the `ITierV2` contract when calculating
     /// any addresses' tier for the purpose of receiving shares. Global to all
     /// addresses.
     uint256[] private erc20TierContext;
-
-    /// The minimum tier required for an address to receive receipts.
-    uint8 private erc1155MinimumTier;
-    /// The `ITierV2` contract that defines the current tier of each address for
-    /// the purpose of receiving receipts.
-    ITierV2 private erc1155Tier;
     /// Optional context to provide to the `ITierV2` contract when calculating
     /// any addresses' tier for the purpose of receiving receipts. Global to all
     /// addresses.
@@ -381,16 +401,19 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ) external view virtual override {
         // Only receipt holders and certifiers can assert things about offchain
         // assets.
-        if (_receipt.balanceOf(account_, id_) == 0 && !hasRole(CERTIFIER, account_)) {
+        if (
+            _receipt.balanceOf(account_, id_) == 0 &&
+            !hasRole(CERTIFIER, account_)
+        ) {
             revert UnauthorizedReceiptInformation(account_, id_);
         }
     }
 
-    /// Receipt holders who are also depositors can increase the deposit amount
+    /// Receipt holders who are also depositors can increase the deposited assets
     /// for the existing id of this receipt. It is STRONGLY RECOMMENDED the
     /// redepositor also provides data to be forwarded to asset information to
     /// justify the additional deposit. New offchain assets MUST NOT redeposit
-    /// under existing IDs, deposit under a new id instead.
+    /// under existing IDs, they MUST be deposited under a new id instead.
     /// @param assets_ As per IERC4626 `deposit`.
     /// @param receiver_ As per IERC4626 `deposit`.
     /// @param id_ The existing receipt to despoit additional assets under. Will
@@ -403,11 +426,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256) {
-        // This is stricter than the standard "or certifier" check.
-        require(
-            _receipt.balanceOf(msg.sender, id_) > 0,
-            "NOT_RECEIPT_HOLDER"
-        );
+        // This is stricter than the standard "or certifier" check for emitting
+        // receipt information. Certifiers cannot redeposit assets, ONLY share
+        // holders can redeposit.
+        if (_receipt.balanceOf(msg.sender, id_) == 0) {
+            revert UnauthorizedReceiptInformation(msg.sender, id_);
+        }
         _deposit(
             assets_,
             receiver_,
@@ -418,13 +442,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return assets_;
     }
 
+    /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
     function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
         return _snapshot();
     }
 
-    /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
-    /// disable report checking.
+    /// @param tier_ `ITier` contract to check when receiving shares. MAY be
+    /// `address(0)` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
+    /// @param context_ Global context to be forwarded with tier checks.
     function setERC20Tier(
         address tier_,
         uint8 minimumTier_,
@@ -436,9 +462,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
-    /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
-    /// disable report checking.
+    /// @param tier_ `ITier` contract to check when receiving receipts. MAY be
+    /// `0` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
+    /// @param context_ Global context to be forwarded with tier checks.
     function setERC1155Tier(
         address tier_,
         uint8 minimumTier_,
@@ -450,18 +477,71 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
+    /// Certifiers MAY EXTEND OR REDUCE the `certifiedUntil` time. If there are
+    /// many certifiers, any certifier can modify the certifiation at any time.
+    /// It is STRONGLY RECOMMENDED that certifiers DO NOT set the `forceUntil_`
+    /// flag to `true` unless they want to:
+    ///
+    /// - Potentially override another certifier's concurrent certification
+    /// - Reduce the certification time
+    ///
+    /// The certifier is STRONGLY RECOMMENDED to submit a summary report of the
+    /// process and findings used to justify the modified `certifiedUntil` time.
+    ///
+    /// The certifier MUST provide the block number containing the information
+    /// they used to perform the certification. It is entirely possible that
+    /// new mints/burns and receipt information becomes available after the
+    /// certification process begins, so the certifier MUST specify THEIR highest
+    /// seen block at the moment they made their decision. This block cannot be
+    /// in the future relative to the moment of certification.
+    ///
+    /// The certifier is STRONGLY RECOMMENDED to ONLY use publicly available
+    /// documents directly referenced by `ReceiptInformation` events to make
+    /// their decision. The certifier MUST specify if, when and why private data
+    /// was used to inform their certification decision. This is critical for
+    /// share holders who inform themselves on the quality of their tokens not
+    /// only by the overall audit outcome, but by the integrity of the sum of its
+    /// parts in the form of receipt and associated visible information.
+    ///
+    /// The certifier SHOULD NOT provide a certification time that predates the
+    /// timestamp of the reference block, although this is NOT enforced onchain.
+    /// This would imply that the system was certified until a time before the
+    /// data that informed the certification even existed. DO NOT certify until
+    /// a `0` time, any time in the past relative to the current time will have
+    /// the same effect on the system (freezing it immediately).
+    ///
+    /// @param certifyUntil_ The new `certifiedUntil` time.
+    /// @param referenceBlockNumber_ The highest block number that the certifier
+    /// has seen at the moment they decided to certify the system.
+    /// @param forceUntil_ Whether to force the new certification time even if it
+    /// is in the past relative to the existing certification time.
+    /// @param data_ Arbitrary data justifying the certification. MAY reference
+    /// data available offchain e.g. on IPFS.
     function certify(
-        uint32 until_,
-        bytes calldata data_,
-        bool forceUntil_
+        uint256 certifyUntil_,
+        uint256 referenceBlockNumber_,
+        bool forceUntil_,
+        bytes calldata data_
     ) external onlyRole(CERTIFIER) {
+        if (certifyUntil_ == 0) {
+            revert ZeroCertifyUntil(msg.sender);
+        }
+        if (referenceBlockNumber_ > block.number) {
+            revert FutureReferenceBlock(msg.sender, referenceBlockNumber_);
+        }
         // A certifier can set `forceUntil_` to true to force a _decrease_ in
         // the `certifiedUntil` time, which is unusual but MAY need to be done
         // in the case of rectifying a prior mistake.
-        if (forceUntil_ || until_ > certifiedUntil) {
-            certifiedUntil = until_;
+        if (forceUntil_ || certifyUntil_ > certifiedUntil) {
+            certifiedUntil = uint32(certifyUntil_);
         }
-        emit Certify(msg.sender, until_, data_);
+        emit Certify(
+            msg.sender,
+            certifyUntil_,
+            referenceBlockNumber_,
+            forceUntil_,
+            data_
+        );
     }
 
     function enforceValidTransfer(
@@ -580,10 +660,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             )
         ) {
             IReceiptV1 receipt_ = _receipt;
-            confiscatedReceiptAmount_ = receipt_.balanceOf(
-                confiscatee_,
-                id_
-            );
+            confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscatedReceiptAmount_ > 0) {
                 receipt_.ownerTransferFrom(
                     confiscatee_,
