@@ -652,12 +652,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         }
     }
 
-    /// @inheritdoc ERC20
+    /// Apply standard transfer restrictions to share transfers.
     function _beforeTokenTransfer(
         address from_,
         address to_,
-        uint256
-    ) internal view override {
+        uint256 amount_
+    ) internal virtual override {
         enforceValidTransfer(
             erc20Tier,
             erc20MinimumTier,
@@ -665,9 +665,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             from_,
             to_
         );
+        super._beforeTokenTransfer(from_, to_, amount_);
     }
 
-    /// @inheritdoc IReceiptOwnerV1
+    /// Apply standard transfer restrictions to receipt transfers.
+    /// @inheritdoc ReceiptVault
     function authorizeReceiptTransfer(
         address from_,
         address to_
