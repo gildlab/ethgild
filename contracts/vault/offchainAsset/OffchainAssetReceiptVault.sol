@@ -61,7 +61,7 @@ struct OffchainAssetVaultConfig {
     VaultConfig vaultConfig;
 }
 
-/// All data required to construct `CertifiedAssetConnect`.
+/// All data required to construct `OffchainAssetReceiptVault`.
 /// @param admin The initial admin has ALL ROLES. It is up to the admin to
 /// appropriately delegate and renounce roles or to be a smart contract with
 /// formal governance processes. In general a single EOA holding all admin roles

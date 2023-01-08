@@ -1,30 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {Factory} from "@rainprotocol/rain-protocol/contracts/factory/Factory.sol";
+import "../receipt/ReceiptVaultFactory.sol";
 import {ERC20PriceOracleReceiptVault, ERC20PriceOracleReceiptVaultConfig, ERC20PriceOracleVaultConfig, ReceiptVaultConfig} from "./ERC20PriceOracleReceiptVault.sol";
 import {Receipt, ReceiptFactory, ReceiptConfig} from "../receipt/ReceiptFactory.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 /// @title ERC20PriceOracleReceiptVaultFactory
 /// @notice Factory for creating and deploying `ERC20PriceOracleReceiptVault`.
-contract ERC20PriceOracleReceiptVaultFactory is Factory {
-    event SetReceiptFactory(address caller, address receiptFactory);
+contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
 
-    /// Template contract to clone.
-    /// Deployed by the constructor.
-    address public immutable implementation;
-    address public immutable receiptFactory;
+    constructor(address receiptFactory_) ReceiptVaultFactory(receiptFactory_) {
 
-    /// Build the reference implementation to clone for each child.
-    constructor(address receiptFactory_) {
-        require(receiptFactory_ != address(0), "0_RECEIPT_FACTORY");
-        receiptFactory = receiptFactory_;
-        emit SetReceiptFactory(msg.sender, receiptFactory_);
+    }
 
-        address implementation_ = address(new ERC20PriceOracleReceiptVault());
-        emit Implementation(msg.sender, implementation_);
-        implementation = implementation_;
+    /// @inheritdoc ReceiptVaultFactory
+    function _createImplementation() internal virtual override returns (address) {
+        return address(new ERC20PriceOracleReceiptVault());
     }
 
     /// @inheritdoc Factory

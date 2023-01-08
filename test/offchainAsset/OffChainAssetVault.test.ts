@@ -1,4 +1,4 @@
-import { ReadWriteTier, TestErc20 } from "../../typechain";
+import { ReadWriteTier, TestErc20 } from "../../typechain-types";
 import { ethers } from "hardhat";
 
 import {
@@ -17,9 +17,9 @@ import {
   SnapshotEvent,
   ConfiscateSharesEvent,
   ConfiscateReceiptEvent,
-} from "../../typechain/OffchainAssetReceiptVault";
+} from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
-import { DepositWithReceiptEvent } from "../../typechain/ReceiptVault";
+import { DepositWithReceiptEvent } from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
 
 const assert = require("assert");
 
@@ -244,7 +244,8 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
-  it("PreviewWithdraw sets correct shares", async function () {
+
+  it.only("PreviewWithdraw sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(10);
 
@@ -270,6 +271,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
+
   it("PreviewRedeem sets correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);

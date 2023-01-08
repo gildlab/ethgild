@@ -1,13 +1,13 @@
 import { artifacts, ethers } from "hardhat";
 
-import type { OffchainAssetReceiptVault } from "../../typechain";
-import type { Receipt } from "../../typechain";
-import { OffchainAssetVaultInitializedEvent } from "../../typechain/OffchainAssetReceiptVault";
+import type { OffchainAssetReceiptVault } from "../../typechain-types";
+import type { Receipt } from "../../typechain-types";
+import { OffchainAssetVaultInitializedEvent } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
 import { expectedUri, getEventArgs } from "../util";
 import {
   OffchainAssetReceiptVaultFactory,
   ReceiptFactory,
-} from "../../typechain";
+} from "../../typechain-types";
 import { Contract } from "ethers";
 
 export const deployOffChainAssetVault = async (): Promise<
@@ -55,6 +55,8 @@ export const deployOffChainAssetVault = async (): Promise<
     "NewChild",
     offchainAssetReceiptVaultFactory
   );
+
+  console.log(child)
 
   let childContract = new Contract(
     child,

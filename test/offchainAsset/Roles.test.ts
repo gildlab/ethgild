@@ -17,7 +17,7 @@ describe("OffChainAssetVault Roles", async function () {
     await TierV2TestContract.deployed();
   });
 
-  it.only("Checks Depositor role", async function () {
+  it("Checks Depositor role", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetVault();
 
