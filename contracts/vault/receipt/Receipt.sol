@@ -1,23 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import {OwnableUpgradeable as Ownable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./IReceiptOwnerV1.sol";
 import "./IReceiptV1.sol";
 
-struct ReceiptConfig {
-    string uri;
-}
+import {ERC1155Upgradeable as ERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {OwnableUpgradeable as Ownable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+/// @dev the ERC1155 URI is always the pinned metadata on ipfs.
+string constant RECEIPT_METADATA_URI = "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley";
+
+/// @title Receipt
+/// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows
+/// receipt information to be emitted and mints/burns according to ownership and
+/// owner authorization.
 contract Receipt is IReceiptV1, Ownable, ERC1155 {
+    /// Disables initializers so that the clonable implementation cannot be
+    /// initialized and used directly outside a factory deployment.
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(ReceiptConfig memory config_) external initializer {
+    /// Initializes the `Receipt` so that it is usable as a clonable
+    /// implementation in `ReceiptFactory`.
+    function initialize() external initializer {
         __Ownable_init();
-        __ERC1155_init(config_.uri);
+        __ERC1155_init(RECEIPT_METADATA_URI);
     }
 
     /// @inheritdoc IReceiptV1
@@ -71,6 +79,11 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
         IReceiptOwnerV1(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
+    /// Emits `ReceiptInformation` if there is any data after checking with the
+    /// receipt owner for authorization.
+    /// @param account_ The account that is emitting receipt information.
+    /// @param id_ The id of the receipt this information is for.
+    /// @param data_ The data being emitted as information for the receipt.
     function _receiptInformation(
         address account_,
         uint256 id_,

@@ -11,9 +11,6 @@ async function main() {
     symbol: "POV",
     uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
   };
-  const receiptConfig = {
-    uri: "https://example.com",
-  };
 
   await deployERC20PriceOracleVault(
     ethUsd,
@@ -21,7 +18,6 @@ async function main() {
     "Rinkeby",
     erc20ContractAddress,
     erc20PriceOracleVaultConfig,
-    receiptConfig
   );
 }
 

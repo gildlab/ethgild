@@ -14,7 +14,7 @@ let alice: SignerWithAddress;
 
 describe("OffchainAssetVaultFactory Test", () => {
   before(async () => {
-    offchainAssetReceiptVaultFactory = await deployOffchainAssetVaultFactory()
+    offchainAssetReceiptVaultFactory = await deployOffchainAssetVaultFactory();
   });
 
   it("Should deploy Factory correctly", async () => {
@@ -33,12 +33,7 @@ describe("OffchainAssetVaultFactory Test", () => {
       },
     };
 
-    const receiptConfig = {
-      uri: expectedUri,
-    };
-
     let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
-      receiptConfig,
       constructionConfig
     );
 

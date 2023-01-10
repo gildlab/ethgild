@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {Factory} from "@rainprotocol/rain-protocol/contracts/factory/Factory.sol";
-import {Receipt, ReceiptFactory, ReceiptConfig} from "../receipt/ReceiptFactory.sol";
+import {Receipt, ReceiptFactory} from "../receipt/ReceiptFactory.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
 /// Thrown when the provided implementation is address zero.

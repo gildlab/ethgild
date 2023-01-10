@@ -70,7 +70,7 @@ struct OffchainAssetVaultConfig {
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and many other things).
-/// @param receiptConfig Forwarded to ReceiptVault.
+/// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfig {
     address admin;
     ReceiptVaultConfig receiptVaultConfig;

@@ -16,17 +16,12 @@ type Config = {
   symbol: string;
 };
 
-type ReceiptConfig = {
-  uri: string;
-};
-
 export const deployERC20PriceOracleVault = async (
   base: string,
   quote: string,
   network: string,
   erc20ContractAddress: string,
   config: Config,
-  receiptConfig: ReceiptConfig
 ) => {
   console.log(network);
   const [deployer] = await ethers.getSigners();
@@ -154,10 +149,6 @@ export const deployERC20PriceOracleVault = async (
     erc20PriceOracleVaultFactory.address
   );
 
-  const receiptConfigValue = {
-    uri: receiptConfig.uri,
-  };
-
   const erc20PriceOracleVaultConfig = {
     priceOracle: twoPriceOracle.address,
     vaultConfig: {
@@ -169,7 +160,6 @@ export const deployERC20PriceOracleVault = async (
 
   const erc20PriceOracleVaultTx =
     await erc20PriceOracleVaultFactory.createChildTyped(
-      receiptConfigValue,
       erc20PriceOracleVaultConfig
     );
   const erc20PriceOracleVault = new ethers.Contract(

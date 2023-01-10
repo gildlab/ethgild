@@ -134,10 +134,10 @@ export const deployERC20PriceOracleVault = async (): Promise<
     quote: chainlinkFeedPriceOracleQuote.address,
   })) as TwoPriceOracle;
 
-  const ERC20PriceOracleReceiptVaultImplementationFactory = await ethers.getContractFactory(
-    "ERC20PriceOracleReceiptVault"
-  );
-  const ERC20PriceOracleReceiptVaultImplementation = (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
+  const ERC20PriceOracleReceiptVaultImplementationFactory =
+    await ethers.getContractFactory("ERC20PriceOracleReceiptVault");
+  const ERC20PriceOracleReceiptVaultImplementation =
+    (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
 
   const receiptFactoryFactory = await ethers.getContractFactory(
     "ReceiptFactory"
@@ -145,10 +145,6 @@ export const deployERC20PriceOracleVault = async (): Promise<
   const receiptFactoryContract =
     (await receiptFactoryFactory.deploy()) as ReceiptFactory;
   await receiptFactoryContract.deployed();
-
-  const receiptConfig = {
-    uri: "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4",
-  };
 
   const erc20PriceOracleVaultConfig = {
     priceOracle: twoPriceOracle.address,
@@ -164,16 +160,13 @@ export const deployERC20PriceOracleVault = async (): Promise<
   );
 
   let erc20PriceOracleReceiptVaultFactory =
-    (await erc20PriceOracleVaultFactoryFactory.deploy(
-      {
-        implementation: ERC20PriceOracleReceiptVaultImplementation.address,
-        receiptFactory: receiptFactoryContract.address
-      }
-    )) as ERC20PriceOracleReceiptVaultFactory;
+    (await erc20PriceOracleVaultFactoryFactory.deploy({
+      implementation: ERC20PriceOracleReceiptVaultImplementation.address,
+      receiptFactory: receiptFactoryContract.address,
+    })) as ERC20PriceOracleReceiptVaultFactory;
   await erc20PriceOracleReceiptVaultFactory.deployed();
 
   let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(
-    receiptConfig,
     erc20PriceOracleVaultConfig
   );
   let { child } = (await getEventArgs(

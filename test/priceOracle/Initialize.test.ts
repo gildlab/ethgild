@@ -100,10 +100,6 @@ describe("config", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    const receiptConfig = {
-      uri: "https://example.com",
-    };
-
     const erc20PriceOracleVaultConfig = {
       priceOracle: twoPriceOracle.address,
       vaultConfig: {
@@ -124,7 +120,6 @@ describe("config", async function () {
     await erc20PriceOracleReceiptVaultFactory.deployed();
 
     let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(
-      receiptConfig,
       erc20PriceOracleVaultConfig
     );
     let { child } = (await getEventArgs(

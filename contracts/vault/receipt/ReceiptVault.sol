@@ -116,7 +116,10 @@ contract ReceiptVault is
     }
 
     /// Standard check to enforce the minimum share ratio.
-    function checkMinShareRatio(uint256 minShareRatio_, uint256 shareRatio_) internal pure {
+    function checkMinShareRatio(
+        uint256 minShareRatio_,
+        uint256 shareRatio_
+    ) internal pure {
         if (shareRatio_ < minShareRatio_) {
             revert MinShareRatio(minShareRatio_, shareRatio_);
         }

@@ -51,10 +51,7 @@ describe("Receipt vault", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    const receiptConfig = {
-      uri: "example.com",
-    };
-    let tx = await receiptFactoryContract.createChildTyped(receiptConfig);
+    let tx = await receiptFactoryContract.createChild("");
 
     const { child } = await getEventArgs(
       tx,
@@ -84,10 +81,7 @@ describe("Receipt vault", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    const receiptConfig = {
-      uri: "example.com",
-    };
-    let tx = await receiptFactoryContract.createChildTyped(receiptConfig);
+    let tx = await receiptFactoryContract.createChild("");
 
     const { child } = await getEventArgs(
       tx,
@@ -132,10 +126,7 @@ describe("Receipt vault", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    const receiptConfig = {
-      uri: "example.com",
-    };
-    let tx = await receiptFactoryContract.createChildTyped(receiptConfig);
+    let tx = await receiptFactoryContract.createChild("");
 
     const { child } = await getEventArgs(
       tx,
