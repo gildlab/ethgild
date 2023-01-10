@@ -34,17 +34,17 @@ describe("OffChainAssetVault Roles", async function () {
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)
-                ["deposit(uint256,address,uint256,bytes)"](
-                aliceAssets,
-                bob.address,
-                shareRatio,
-                []
-            ),
-        `MinShareRatio`,
-        "Failed to deposit"
+      async () =>
+        await vault
+          .connect(alice)
+          ["deposit(uint256,address,uint256,bytes)"](
+            aliceAssets,
+            bob.address,
+            shareRatio,
+            []
+          ),
+      `MinShareRatio`,
+      "Failed to deposit"
     );
   });
 

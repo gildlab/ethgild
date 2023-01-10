@@ -29,7 +29,7 @@ import { Contract } from "ethers";
 const assert = require("assert");
 
 describe("PriceOracle construction", async function () {
-  it.only("Checks construction event", async function () {
+  it("Checks construction event", async function () {
     const now = await latestBlockNow();
 
     const oracleFactory = await ethers.getContractFactory(
@@ -94,9 +94,9 @@ describe("PriceOracle construction", async function () {
     })) as TwoPriceOracle;
 
     const ERC20PriceOracleReceiptVaultImplementationFactory =
-        await ethers.getContractFactory("ERC20PriceOracleReceiptVault");
+      await ethers.getContractFactory("ERC20PriceOracleReceiptVault");
     const ERC20PriceOracleReceiptVaultImplementation =
-        (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
+      (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
 
     const receiptFactoryFactory = await ethers.getContractFactory(
       "ReceiptFactory"
@@ -119,10 +119,10 @@ describe("PriceOracle construction", async function () {
     );
 
     let erc20PriceOracleReceiptVaultFactory =
-        (await erc20PriceOracleVaultFactoryFactory.deploy({
-          implementation: ERC20PriceOracleReceiptVaultImplementation.address,
-          receiptFactory: receiptFactoryContract.address,
-        })) as ERC20PriceOracleReceiptVaultFactory;
+      (await erc20PriceOracleVaultFactoryFactory.deploy({
+        implementation: ERC20PriceOracleReceiptVaultImplementation.address,
+        receiptFactory: receiptFactoryContract.address,
+      })) as ERC20PriceOracleReceiptVaultFactory;
     await erc20PriceOracleReceiptVaultFactory.deployed();
 
     let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(
