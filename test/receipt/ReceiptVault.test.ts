@@ -8,12 +8,12 @@ import {
   expectedReferencePrice,
   getEvent,
 } from "../util";
-import { DepositEvent } from "../../typechain/IERC4626Upgradeable";
+import { DepositEvent } from "../../typechain-types/@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   DepositWithReceiptEvent,
   WithdrawWithReceiptEvent,
-} from "../../typechain/ReceiptVault";
+} from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
 
 import { getEventArgs } from "../util";
 const assert = require("assert");
@@ -200,7 +200,7 @@ describe("Receipt vault", async function () {
 
     await assertError(
       async () => await vault.connect(alice).previewDeposit(assets),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min share ratio"
     );
   });
@@ -244,7 +244,7 @@ describe("Deposit", async () => {
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](assets, bob.address),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min price"
     );
   }),
@@ -501,7 +501,7 @@ describe("Deposit", async () => {
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](aliceReserveBalance, ADDRESS_ZERO),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent deposit to zero address"
     );
   });
@@ -573,7 +573,7 @@ describe("Overloaded `deposit`", async () => {
             shareRatio.add(1),
             []
           ),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min shareRatio"
     );
   }),
@@ -879,7 +879,7 @@ describe("Overloaded `deposit`", async () => {
             shareRatio,
             []
           ),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent deposit to zero address"
     );
   });
@@ -1137,7 +1137,7 @@ describe("Mint", async function () {
 
     await assertError(
       async () => await vault.connect(alice).previewMint(shares),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min shareRatio"
     );
   });

@@ -1,5 +1,11 @@
 import { artifacts, ethers } from "hardhat";
-import { fixedPointDiv, fixedPointMul, getEventArgs, ONE } from "../util";
+import {
+  expectedUri,
+  fixedPointDiv,
+  fixedPointMul,
+  getEventArgs,
+  ONE,
+} from "../util";
 import { deployOffChainAssetVault } from "../offchainAsset/deployOffchainAssetVault";
 import { Receipt, ReceiptFactory, TestErc20 } from "../../typechain-types";
 import { Contract } from "ethers";
@@ -51,7 +57,7 @@ describe("Receipt vault", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    let tx = await receiptFactoryContract.createChild("");
+    let tx = await receiptFactoryContract.createChild([]);
 
     const { child } = await getEventArgs(
       tx,
@@ -65,10 +71,7 @@ describe("Receipt vault", async function () {
     ) as Receipt;
 
     let uri = await childContract.connect(alice).uri(1);
-    assert(
-      uri === receiptConfig.uri,
-      `wrong uri expected ${receiptConfig.uri} got ${uri}`
-    );
+    assert(uri === expectedUri, `wrong uri expected ${expectedUri} got ${uri}`);
   });
   it("check owner", async function () {
     const signers = await ethers.getSigners();
@@ -81,7 +84,7 @@ describe("Receipt vault", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    let tx = await receiptFactoryContract.createChild("");
+    let tx = await receiptFactoryContract.createChild([]);
 
     const { child } = await getEventArgs(
       tx,
@@ -126,7 +129,7 @@ describe("Receipt vault", async function () {
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
 
-    let tx = await receiptFactoryContract.createChild("");
+    let tx = await receiptFactoryContract.createChild([]);
 
     const { child } = await getEventArgs(
       tx,
