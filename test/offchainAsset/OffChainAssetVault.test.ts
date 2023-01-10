@@ -408,13 +408,14 @@ describe("OffChainAssetVault", async function () {
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
     const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
 
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
-    const { caller, until } = (await getEventArgs(
-      await vault.connect(alice).certify(_until, [], false),
+    const { caller, certifyUntil, referenceBlockNumber} = (await getEventArgs(
+      await vault.connect(alice).certify(_until, _referenceBlockNumber,false, []),
       "Certify",
       vault
     )) as CertifyEvent["args"];
@@ -423,7 +424,8 @@ describe("OffChainAssetVault", async function () {
       caller === alice.address,
       `wrong caller expected ${alice.address} got ${caller}`
     );
-    assert(until.eq(_until), `wrong until expected ${_until} got ${until}`);
+    assert(certifyUntil.eq(_until), `wrong until expected ${_until} got ${certifyUntil}`);
+    assert(referenceBlockNumber.eq(_referenceBlockNumber), `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`);
   });
   it("Certifies", async function () {
     const signers = await ethers.getSigners();
