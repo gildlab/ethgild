@@ -434,21 +434,22 @@ describe("OffChainAssetVault", async function () {
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const certifiedUntil = block.timestamp + 100;
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
 
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
-    const { until } = (await getEventArgs(
-      await vault.connect(alice).certify(certifiedUntil, [], false),
+    const { certifyUntil } = (await getEventArgs(
+      await vault.connect(alice).certify(_certifiedUntil, _referenceBlockNumber,false, []),
       "Certify",
       vault
     )) as CertifyEvent["args"];
 
     assert(
-      until.eq(certifiedUntil),
-      `wrong until expected ${certifiedUntil} got ${until}`
+        certifyUntil.eq(_certifiedUntil),
+      `wrong until expected ${_certifiedUntil} got ${certifyUntil}`
     );
   });
   it("Confiscate - Checks role CONFISCATOR", async function () {
