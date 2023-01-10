@@ -117,9 +117,10 @@ describe("OffChainAssetVault Roles", async function () {
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
     const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
 
     await assertError(
-      async () => await vault.connect(alice).certify(_until, [], false),
+      async () => await vault.connect(alice).certify(_until, _referenceBlockNumber, false, []),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
         .connect(alice)
         .CERTIFIER()}`,
