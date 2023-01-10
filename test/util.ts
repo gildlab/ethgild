@@ -2,11 +2,11 @@ import { artifacts, ethers } from "hardhat";
 import {
   ERC20PriceOracleReceiptVault,
   ERC20PriceOracleReceiptVaultInitializedEvent,
-} from "../typechain/ERC20PriceOracleReceiptVault";
+} from "../typechain-types/contracts/vault/priceOracle/ERC20PriceOracleReceiptVault";
 import {
   ERC20PriceOracleReceiptVaultFactory,
   NewChildEvent,
-} from "../typechain/ERC20PriceOracleReceiptVaultFactory";
+} from "../typechain-types/contracts/vault/priceOracle/ERC20PriceOracleReceiptVaultFactory";
 
 import {
   Receipt,

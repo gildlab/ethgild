@@ -11,11 +11,11 @@ import {
 import {
   ERC20PriceOracleReceiptVault,
   ERC20PriceOracleReceiptVaultInitializedEvent,
-} from "../../typechain/ERC20PriceOracleReceiptVault";
+} from "../../typechain-types/contracts/vault/priceOracle/ERC20PriceOracleReceiptVault";
 import {
   ERC20PriceOracleReceiptVaultFactory,
   NewChildEvent,
-} from "../../typechain/ERC20PriceOracleReceiptVaultFactory";
+} from "../../typechain-types/contracts/vault/priceOracle/ERC20PriceOracleReceiptVaultFactory";
 
 import { getEventArgs } from "../util";
 import {
@@ -23,13 +23,13 @@ import {
   MockChainlinkDataFeed,
   TestErc20,
   TwoPriceOracle,
-} from "../../typechain";
+} from "../../typechain-types";
 import { Contract } from "ethers";
 
 const assert = require("assert");
 
-describe("config", async function () {
-  it("Checks construction event", async function () {
+describe("PriceOracle construction", async function () {
+  it.only("Checks construction event", async function () {
     const now = await latestBlockNow();
 
     const oracleFactory = await ethers.getContractFactory(
@@ -93,6 +93,11 @@ describe("config", async function () {
       quote: chainlinkFeedPriceOracleQuote.address,
     })) as TwoPriceOracle;
 
+    const ERC20PriceOracleReceiptVaultImplementationFactory =
+        await ethers.getContractFactory("ERC20PriceOracleReceiptVault");
+    const ERC20PriceOracleReceiptVaultImplementation =
+        (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
+
     const receiptFactoryFactory = await ethers.getContractFactory(
       "ReceiptFactory"
     );
@@ -114,9 +119,10 @@ describe("config", async function () {
     );
 
     let erc20PriceOracleReceiptVaultFactory =
-      (await erc20PriceOracleVaultFactoryFactory.deploy(
-        receiptFactoryContract.address
-      )) as ERC20PriceOracleReceiptVaultFactory;
+        (await erc20PriceOracleVaultFactoryFactory.deploy({
+          implementation: ERC20PriceOracleReceiptVaultImplementation.address,
+          receiptFactory: receiptFactoryContract.address,
+        })) as ERC20PriceOracleReceiptVaultFactory;
     await erc20PriceOracleReceiptVaultFactory.deployed();
 
     let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(

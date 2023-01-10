@@ -15,6 +15,7 @@ describe("OffChainAssetVault Roles", async function () {
   });
 
   it("Checks Depositor role", async function () {
+    //Need Review
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetVault();
 
@@ -32,29 +33,19 @@ describe("OffChainAssetVault Roles", async function () {
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        aliceAssets,
-        bob.address,
-        shareRatio,
-        []
-      );
-    // await assertError(
-    //     async () =>
-    //         await vault
-    //             .connect(alice)
-    //             ["deposit(uint256,address,uint256,bytes)"](
-    //             aliceAssets,
-    //             bob.address,
-    //             shareRatio,
-    //             []
-    //         ),
-    //     `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-    //         .connect(alice)
-    //         .DEPOSITOR()}`,
-    //     "Failed to deposit"
-    // );
+    await assertError(
+        async () =>
+            await vault
+                .connect(alice)
+                ["deposit(uint256,address,uint256,bytes)"](
+                aliceAssets,
+                bob.address,
+                shareRatio,
+                []
+            ),
+        `MinShareRatio`,
+        "Failed to deposit"
+    );
   });
 
   it("Checks SetERC20Tier role", async function () {
