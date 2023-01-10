@@ -11,6 +11,24 @@ import "./IReceiptV1.sol";
 import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
 import "./IReceiptOwnerV1.sol";
 
+/// Thrown when the share ratio does not meet the minimum share ratio.
+error MinShareRatio(uint256 minShareRatio, uint256 shareRatio);
+
+/// Thrown when depositing 0 asset amount.
+error ZeroAssetsAmount();
+
+/// Thrown when minting 0 shares amount.
+error ZeroSharesAmount();
+
+/// Thrown when receiver of minted shares is address zero.
+error ZeroReceiver();
+
+/// Thrown when owner of shares withdrawn is address zero.
+error ZeroOwner();
+
+/// Thrown when depositing assets under ID zero.
+error ZeroID();
+
 struct VaultConfig {
     address asset;
     string name;
@@ -97,6 +115,13 @@ contract ReceiptVault is
         _receipt = IReceiptV1(config_.receipt);
     }
 
+    /// Standard check to enforce the minimum share ratio.
+    function checkMinShareRatio(uint256 minShareRatio_, uint256 shareRatio_) internal pure {
+        if (shareRatio_ < minShareRatio_) {
+            revert MinShareRatio(minShareRatio_, shareRatio_);
+        }
+    }
+
     /// @inheritdoc IReceiptOwnerV1
     function authorizeReceiptTransfer(
         address,
@@ -126,7 +151,8 @@ contract ReceiptVault is
         uint256 shareRatio_,
         uint256 depositMinShareRatio_
     ) internal pure returns (uint256) {
-        require(shareRatio_ >= depositMinShareRatio_, "MIN_SHARE_RATIO");
+        checkMinShareRatio(depositMinShareRatio_, shareRatio_);
+
         // IRC4626:
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
@@ -145,7 +171,8 @@ contract ReceiptVault is
         uint256 shareRatio_,
         uint256 mintMinShareRatio_
     ) internal pure returns (uint256) {
-        require(shareRatio_ >= mintMinShareRatio_, "MIN_SHARE_RATIO");
+        checkMinShareRatio(mintMinShareRatio_, shareRatio_);
+
         // IERC4626:
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
@@ -387,7 +414,8 @@ contract ReceiptVault is
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
-        require(depositMinShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
+        checkMinShareRatio(depositMinShareRatio_, shareRatio_);
+
         uint256 shares_ = _calculateDeposit(
             assets_,
             shareRatio_,
@@ -416,10 +444,19 @@ contract ReceiptVault is
         uint256 id_,
         bytes memory receiptInformation_
     ) internal nonReentrant {
-        require(assets_ > 0, "0_ASSETS");
-        require(receiver_ != address(0), "0_RECEIVER");
-        require(shares_ > 0, "0_SHARES");
-        require(id_ > 0, "0_ID");
+        if (assets_ == 0) {
+            revert ZeroAssetsAmount();
+        }
+        if (shares_ == 0) {
+            revert ZeroSharesAmount();
+        }
+        if (receiver_ == address(0)) {
+            revert ZeroReceiver();
+        }
+        if (id_ == 0) {
+            revert ZeroID();
+        }
+
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
         emit DepositWithReceipt(
             msg.sender,
@@ -480,7 +517,8 @@ contract ReceiptVault is
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
-        require(mintMinShareRatio_ <= shareRatio_, "MIN_SHARE_RATIO");
+        checkMinShareRatio(mintMinShareRatio_, shareRatio_);
+
         uint256 assets_ = _calculateMint(
             shares_,
             shareRatio_,
@@ -604,10 +642,18 @@ contract ReceiptVault is
         uint256 shares_,
         uint256 id_
     ) internal nonReentrant {
-        require(assets_ > 0, "0_ASSETS");
-        require(receiver_ != address(0), "0_RECEIVER");
-        require(owner_ != address(0), "0_OWNER");
-        require(shares_ > 0, "0_SHARES");
+        if (assets_ == 0) {
+            revert ZeroAssetsAmount();
+        }
+        if (shares_ == 0) {
+            revert ZeroSharesAmount();
+        }
+        if (receiver_ == address(0)) {
+            revert ZeroReceiver();
+        }
+        if (owner_ == address(0)) {
+            revert ZeroOwner();
+        }
 
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
         emit WithdrawWithReceipt(
