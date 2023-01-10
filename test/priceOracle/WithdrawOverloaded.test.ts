@@ -11,9 +11,9 @@ import {
   ERC20Upgradeable as ERC20,
   ERC20PriceOracleReceiptVault,
   Receipt,
-} from "../../typechain";
+} from "../../typechain-types";
 import { BigNumber } from "ethers";
-import { WithdrawEvent } from "../../typechain/IERC4626Upgradeable";
+import { WithdrawEvent } from "../../typechain-types/@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable";
 
 const assert = require("assert");
 
@@ -92,7 +92,7 @@ describe("Overloaded Withdraw", async function () {
             aliceAddress,
             shareRatio
           ),
-      "0_ASSETS",
+      "ZeroAssetsAmount",
       "failed to prevent a zero asset withdraw"
     );
   });
@@ -114,7 +114,7 @@ describe("Overloaded Withdraw", async function () {
             aliceAddress,
             shareRatio
           ),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent a zero address receiver withdraw"
     );
   });
@@ -136,7 +136,7 @@ describe("Overloaded Withdraw", async function () {
             ADDRESS_ZERO,
             shareRatio
           ),
-      "0_OWNER",
+      "ZeroOwner",
       "failed to prevent a zero address owner withdraw"
     );
   });
