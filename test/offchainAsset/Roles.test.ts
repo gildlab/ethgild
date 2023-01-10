@@ -1,9 +1,7 @@
 import { ReadWriteTier } from "../../typechain";
 import { ethers } from "hardhat";
 
-import {
-  assertError, ONE,
-} from "../util";
+import { assertError, ONE } from "../util";
 
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
 import { TestErc20 } from "../../typechain-types";
@@ -36,13 +34,13 @@ describe("OffChainAssetVault Roles", async function () {
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
         aliceAssets,
         bob.address,
         shareRatio,
         []
-    )
+      );
     // await assertError(
     //     async () =>
     //         await vault

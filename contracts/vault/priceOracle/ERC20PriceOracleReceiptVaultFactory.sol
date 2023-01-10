@@ -9,15 +9,9 @@ import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/p
 /// @title ERC20PriceOracleReceiptVaultFactory
 /// @notice Factory for creating and deploying `ERC20PriceOracleReceiptVault`.
 contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
-
-    constructor(address receiptFactory_) ReceiptVaultFactory(receiptFactory_) {
-
-    }
-
-    /// @inheritdoc ReceiptVaultFactory
-    function _createImplementation() internal virtual override returns (address) {
-        return address(new ERC20PriceOracleReceiptVault());
-    }
+    constructor(
+        ReceiptVaultFactoryConfig memory config_
+    ) ReceiptVaultFactory(config_) {}
 
     /// @inheritdoc Factory
     function _createChild(

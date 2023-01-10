@@ -79,6 +79,9 @@ contract ReceiptVault is
     /// the non-standard equivalent functions that take a ID parameter.
     mapping(address => uint256) public withdrawIds;
 
+    /// `ReceiptVault` is intended to be cloned and initialized by a
+    /// `ReceiptVaultFactory` so is an implementation contract that can't itself
+    /// be initialized.
     constructor() {
         _disableInitializers();
     }

@@ -6,14 +6,12 @@ import {OffchainAssetReceiptVault, OffchainAssetReceiptVaultConfig, OffchainAsse
 import {Receipt, ReceiptFactory, ReceiptConfig} from "../receipt/ReceiptFactory.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 /// @title OffchainAssetReceiptVaultFactory
 /// @notice Factory for creating and deploying `OffchainAssetReceiptVault`.
 contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
-
-    constructor(address receiptFactory_) ReceiptVaultFactory(receiptFactory_) {
-    }
+    constructor(
+        ReceiptVaultFactoryConfig memory config_
+    ) ReceiptVaultFactory(config_) {}
 
     /// @inheritdoc Factory
     function _createChild(
@@ -39,7 +37,6 @@ contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
                 )
             )
         );
-        console.log(clone_);
         return clone_;
     }
 

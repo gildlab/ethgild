@@ -134,6 +134,11 @@ export const deployERC20PriceOracleVault = async (): Promise<
     quote: chainlinkFeedPriceOracleQuote.address,
   })) as TwoPriceOracle;
 
+  const ERC20PriceOracleReceiptVaultImplementationFactory = await ethers.getContractFactory(
+    "ERC20PriceOracleReceiptVault"
+  );
+  const ERC20PriceOracleReceiptVaultImplementation = (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
+
   const receiptFactoryFactory = await ethers.getContractFactory(
     "ReceiptFactory"
   );
@@ -160,7 +165,10 @@ export const deployERC20PriceOracleVault = async (): Promise<
 
   let erc20PriceOracleReceiptVaultFactory =
     (await erc20PriceOracleVaultFactoryFactory.deploy(
-      receiptFactoryContract.address
+      {
+        implementation: ERC20PriceOracleReceiptVaultImplementation.address,
+        receiptFactory: receiptFactoryContract.address
+      }
     )) as ERC20PriceOracleReceiptVaultFactory;
   await erc20PriceOracleReceiptVaultFactory.deployed();
 
@@ -238,11 +246,11 @@ export const getEventArgs = async (
   eventName: string,
   contract: Contract
 ): Promise<Result> => {
+  const eventObj = await getEvent(tx, eventName, contract);
   return await contract.interface.decodeEventLog(
     eventName,
-    (
-      await getEvent(tx, eventName, contract)
-    ).data
+    eventObj.data,
+    eventObj.topics
   );
 };
 
@@ -263,3 +271,38 @@ export const getEvent = async (
 
   return eventObj;
 };
+
+// /**
+//  *
+//  * @param tx - transaction where event occurs
+//  * @param eventName - name of event
+//  * @param contract - contract object holding the address, filters, interface
+//  * @param contractAddressOverride - (optional) override the contract address which emits this event
+//  * @returns Event arguments of first matching event, can be deconstructed by array index or by object key
+//  */
+// export const getEventArgs = async (
+//   tx: ContractTransaction,
+//   eventName: string,
+//   contract: Contract,
+//   contractAddressOverride: string = null
+// ): Promise<Result> => {
+//   const address = contractAddressOverride
+//     ? contractAddressOverride
+//     : contract.address;
+
+//   const eventObj = (await tx.wait()).events.find(
+//     (x) =>
+//       x.topics[0] == contract.filters[eventName]().topics[0] &&
+//       x.address == address
+//   );
+
+//   if (!eventObj) {
+//     throw new Error(`Could not find event ${eventName} at address ${address}`);
+//   }
+
+//   return contract.interface.decodeEventLog(
+//     eventName,
+//     eventObj.data,
+//     eventObj.topics
+//   );
+// };

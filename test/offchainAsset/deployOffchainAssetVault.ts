@@ -10,11 +10,11 @@ import {
 } from "../../typechain-types";
 import { Contract } from "ethers";
 
-export const deployOffChainAssetVault = async (): Promise<
-  [OffchainAssetReceiptVault, Receipt, any]
-> => {
-  const signers = await ethers.getSigners();
-  const alice = signers[0];
+export const deployOffchainAssetVaultFactory = async (): Promise<OffchainAssetReceiptVaultFactory> => {
+  const offchainAssetReceiptVaultImplementationFactory = await ethers.getContractFactory(
+    "OffchainAssetReceiptVault"
+  );
+  const offchainAssetReceiptVaultImplementation = (await offchainAssetReceiptVaultImplementationFactory.deploy()) as OffchainAssetReceiptVault;
 
   const receiptFactoryFactory = await ethers.getContractFactory(
     "ReceiptFactory"
@@ -28,9 +28,23 @@ export const deployOffChainAssetVault = async (): Promise<
 
   const offchainAssetReceiptVaultFactory =
     (await offchainAssetReceiptVaultFactoryFactory.deploy(
-      receiptFactoryContract.address
+      {
+        implementation: offchainAssetReceiptVaultImplementation.address,
+        receiptFactory: receiptFactoryContract.address
+      }
     )) as OffchainAssetReceiptVaultFactory;
   await offchainAssetReceiptVaultFactory.deployed();
+
+  return offchainAssetReceiptVaultFactory;
+}
+
+export const deployOffChainAssetVault = async (): Promise<
+  [OffchainAssetReceiptVault, Receipt, any]
+> => {
+  const signers = await ethers.getSigners();
+  const alice = signers[0];
+
+  const offchainAssetReceiptVaultFactory = await deployOffchainAssetVaultFactory()
 
   const constructionConfig = {
     admin: alice.address,
@@ -55,8 +69,6 @@ export const deployOffChainAssetVault = async (): Promise<
     "NewChild",
     offchainAssetReceiptVaultFactory
   );
-
-  console.log(child)
 
   let childContract = new Contract(
     child,

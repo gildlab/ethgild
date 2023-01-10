@@ -2,9 +2,11 @@ import { ethers } from "hardhat";
 import {
   OffchainAssetReceiptVaultFactory,
   ReceiptFactory,
-} from "../../typechain";
+} from "../../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expectedUri, getEventArgs } from "../util";
+import { deployOffchainAssetVaultFactory } from "./deployOffchainAssetVault";
+
 const assert = require("assert");
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
@@ -12,24 +14,7 @@ let alice: SignerWithAddress;
 
 describe("OffchainAssetVaultFactory Test", () => {
   before(async () => {
-    const signers = await ethers.getSigners();
-    alice = signers[0];
-
-    const receiptFactoryFactory = await ethers.getContractFactory(
-      "ReceiptFactory"
-    );
-    const receiptFactoryContract =
-      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
-    await receiptFactoryContract.deployed();
-
-    const offchainAssetReceiptVaultFactoryFactory =
-      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
-
-    offchainAssetReceiptVaultFactory =
-      (await offchainAssetReceiptVaultFactoryFactory.deploy(
-        receiptFactoryContract.address
-      )) as OffchainAssetReceiptVaultFactory;
-    await offchainAssetReceiptVaultFactory.deployed();
+    offchainAssetReceiptVaultFactory = await deployOffchainAssetVaultFactory()
   });
 
   it("Should deploy Factory correctly", async () => {

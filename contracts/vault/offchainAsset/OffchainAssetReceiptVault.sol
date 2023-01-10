@@ -6,6 +6,9 @@ import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts
 import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 import "../receipt/IReceiptV1.sol";
 
+/// Thrown when the asset is NOT address zero.
+error NonZeroAsset();
+
 /// Thrown when the account does NOT have the depositor role on mint.
 /// @param account the unauthorized depositor.
 error UnauthorizedDeposit(address account);
@@ -284,10 +287,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         __AccessControl_init();
 
         // There is no asset, the asset is offchain.
-        require(
-            config_.receiptVaultConfig.vaultConfig.asset == address(0),
-            "NONZERO_ASSET"
-        );
+        if (config_.receiptVaultConfig.vaultConfig.asset != address(0)) {
+            revert NonZeroAsset();
+        }
 
         _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
         _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);

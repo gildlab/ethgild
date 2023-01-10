@@ -245,7 +245,7 @@ describe("OffChainAssetVault", async function () {
     );
   });
 
-  it.only("PreviewWithdraw sets correct shares", async function () {
+  it("PreviewWithdraw sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(10);
 

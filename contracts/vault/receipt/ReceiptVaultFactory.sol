@@ -5,26 +5,41 @@ import {Factory} from "@rainprotocol/rain-protocol/contracts/factory/Factory.sol
 import {Receipt, ReceiptFactory, ReceiptConfig} from "../receipt/ReceiptFactory.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
 
-abstract contract ReceiptVaultFactory is Factory {
-    event SetReceiptFactory(address caller, address receiptFactory);
+/// Thrown when the provided implementation is address zero.
+error ZeroImplementation();
 
-    /// Template contract to clone.
-    /// Deployed by the constructor.
+/// Thrown when the provided receipt factory is address zero.
+error ZeroReceiptFactory();
+
+/// All config required to construct the `ReceiptVaultFactory`.
+/// @param implementation Template contract to clone for each child.
+/// @param receiptFactory `ReceiptFactory` to produce receipts for each child.
+struct ReceiptVaultFactoryConfig {
+    address implementation;
+    address receiptFactory;
+}
+
+abstract contract ReceiptVaultFactory is Factory {
+    event Construction(address caller, ReceiptVaultFactoryConfig config);
+
+    /// Template contract to clone for each child.
     address public immutable implementation;
+    /// Factory that produces receipts for the receipt vault.
     address public immutable receiptFactory;
 
     /// Build the reference implementation to clone for each child.
-    constructor(address receiptFactory_) {
-        require(receiptFactory_ != address(0), "0_RECEIPT_FACTORY");
-        receiptFactory = receiptFactory_;
-        emit SetReceiptFactory(msg.sender, receiptFactory_);
+    constructor(ReceiptVaultFactoryConfig memory config_) {
+        if (config_.implementation == address(0)) {
+            revert ZeroImplementation();
+        }
+        if (config_.receiptFactory == address(0)) {
+            revert ZeroReceiptFactory();
+        }
 
-        address implementation_ = _createImplementation();
-        emit Implementation(msg.sender, implementation_);
-        implementation = implementation_;
-    }
+        implementation = config_.implementation;
+        receiptFactory = config_.receiptFactory;
 
-    function _createImplementation() internal virtual returns (address) {
-
+        emit Implementation(msg.sender, config_.implementation);
+        emit Construction(msg.sender, config_);
     }
 }

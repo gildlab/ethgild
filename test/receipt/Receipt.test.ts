@@ -1,7 +1,7 @@
 import { artifacts, ethers } from "hardhat";
 import { fixedPointDiv, fixedPointMul, getEventArgs, ONE } from "../util";
 import { deployOffChainAssetVault } from "../offchainAsset/deployOffchainAssetVault";
-import { Receipt, ReceiptFactory, TestErc20 } from "../../typechain";
+import { Receipt, ReceiptFactory, TestErc20 } from "../../typechain-types";
 import { Contract } from "ethers";
 
 const assert = require("assert");
