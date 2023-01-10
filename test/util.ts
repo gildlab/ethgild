@@ -14,7 +14,7 @@ import {
   MockChainlinkDataFeed,
   TestErc20,
   TwoPriceOracle,
-} from "../typechain";
+} from "../typechain-types";
 import { ContractTransaction, Contract, BigNumber, Event } from "ethers";
 import { Result } from "ethers/lib/utils";
 
@@ -228,7 +228,7 @@ export const assertError = async (f: Function, s: string, e: string) => {
 export const expectedName = "PriceOracleVault";
 export const expectedSymbol = "POV";
 export const expectedUri =
-  "ipfs://bafkreiahuttak2jvjzsd4r62xoxb4e2mhphb66o4cl2ntegnjridtyqnz4";
+  "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley";
 
 /// @param tx - transaction where event occurs
 /// @param eventName - name of event
