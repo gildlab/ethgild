@@ -635,11 +635,14 @@ describe("OffChainAssetVault", async function () {
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const certifiedUntil = block.timestamp + 100;
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-    await vault.connect(alice).certify(certifiedUntil, [], false);
+    await vault
+      .connect(alice)
+      .certify(_certifiedUntil, _referenceBlockNumber, false, []);
 
     await asset.transfer(alice.address, aliceAssets);
 
@@ -695,11 +698,14 @@ describe("OffChainAssetVault", async function () {
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const certifiedUntil = block.timestamp + 100;
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-    await vault.connect(alice).certify(certifiedUntil, [], false);
+    await vault
+      .connect(alice)
+      .certify(_certifiedUntil, _referenceBlockNumber, false, []);
 
     await asset.transfer(alice.address, aliceAssets);
 
