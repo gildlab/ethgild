@@ -1,10 +1,9 @@
-import { ReadWriteTier } from "../../typechain";
 import { ethers } from "hardhat";
 
 import { assertError, ONE } from "../util";
 
 import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
-import { TestErc20 } from "../../typechain-types";
+import { TestErc20, ReadWriteTier } from "../../typechain-types";
 
 let TierV2TestContract: ReadWriteTier;
 

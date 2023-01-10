@@ -10,7 +10,6 @@ import { deployOffchainAssetVaultFactory } from "./deployOffchainAssetVault";
 const assert = require("assert");
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
-let alice: SignerWithAddress;
 
 describe("OffchainAssetVaultFactory Test", () => {
   before(async () => {
@@ -24,6 +23,9 @@ describe("OffchainAssetVaultFactory Test", () => {
   });
 
   it("Should createChild", async () => {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
     const constructionConfig = {
       admin: alice.address,
       vaultConfig: {
