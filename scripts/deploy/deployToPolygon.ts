@@ -17,7 +17,7 @@ async function main() {
     xauUsd,
     "Polygon",
     erc20ContractAddress,
-    erc20PriceOracleVaultConfig,
+    erc20PriceOracleVaultConfig
   );
 }
 

@@ -21,7 +21,7 @@ export const deployERC20PriceOracleVault = async (
   quote: string,
   network: string,
   erc20ContractAddress: string,
-  config: Config,
+  config: Config
 ) => {
   console.log(network);
   const [deployer] = await ethers.getSigners();

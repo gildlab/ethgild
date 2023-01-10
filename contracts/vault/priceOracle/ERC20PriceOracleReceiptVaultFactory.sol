@@ -17,11 +17,11 @@ contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
     function _createChild(
         bytes memory data_
     ) internal virtual override returns (address) {
-        (
-            ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_
-        ) = abi.decode(data_, (ERC20PriceOracleVaultConfig));
-        Receipt receipt_ = Receipt(ReceiptFactory(receiptFactory).createChild(""
-        ));
+        ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_ = abi
+            .decode(data_, (ERC20PriceOracleVaultConfig));
+        Receipt receipt_ = Receipt(
+            ReceiptFactory(receiptFactory).createChild("")
+        );
 
         address clone_ = Clones.clone(implementation);
         receipt_.transferOwnership(clone_);
@@ -49,9 +49,7 @@ contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
     ) external returns (ERC20PriceOracleReceiptVault) {
         return
             ERC20PriceOracleReceiptVault(
-                createChild(
-                    abi.encode(erc20PriceOracleVaultConfig_)
-                )
+                createChild(abi.encode(erc20PriceOracleVaultConfig_))
             );
     }
 }

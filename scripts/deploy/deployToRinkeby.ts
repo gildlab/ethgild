@@ -17,7 +17,7 @@ async function main() {
     xauUsd,
     "Rinkeby",
     erc20ContractAddress,
-    erc20PriceOracleVaultConfig,
+    erc20PriceOracleVaultConfig
   );
 }
 

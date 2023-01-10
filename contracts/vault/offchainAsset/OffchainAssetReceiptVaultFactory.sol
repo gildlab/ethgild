@@ -17,10 +17,13 @@ contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
     function _createChild(
         bytes memory data_
     ) internal virtual override returns (address) {
-        (
-            OffchainAssetVaultConfig memory offchainAssetVaultConfig_
-        ) = abi.decode(data_, (OffchainAssetVaultConfig));
-        Receipt receipt_ = Receipt(ReceiptFactory(receiptFactory).createChild(""));
+        OffchainAssetVaultConfig memory offchainAssetVaultConfig_ = abi.decode(
+            data_,
+            (OffchainAssetVaultConfig)
+        );
+        Receipt receipt_ = Receipt(
+            ReceiptFactory(receiptFactory).createChild("")
+        );
 
         address clone_ = Clones.clone(implementation);
         receipt_.transferOwnership(clone_);
@@ -48,9 +51,7 @@ contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
     ) external returns (OffchainAssetReceiptVault) {
         return
             OffchainAssetReceiptVault(
-                createChild(
-                    abi.encode(offchainAssetVaultConfig_)
-                )
+                createChild(abi.encode(offchainAssetVaultConfig_))
             );
     }
 }
