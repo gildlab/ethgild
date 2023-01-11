@@ -17,10 +17,10 @@ error UnauthorizedDeposit(address account);
 /// @param account the unauthorized withdrawer.
 error UnauthorizedWithdraw(address account);
 
-/// Thrown when the account is NOT authorized to emit information about id.
-/// @param account the unauthorized information provider.
-/// @param id The id the information is not authorized for.
-error UnauthorizedReceiptInformation(address account, uint256 id);
+/// Thrown when a non-holder attempts to redeposit under an existing ID.
+/// @param account the unauthorized redepositor.
+/// @param id the ID of the unauthorized redeposit.
+error UnauthorizedRedeposit(address account, uint256 id);
 
 /// Thrown when a certification reference a block number in the future that
 /// cannot possibly have been seen yet.
@@ -414,22 +414,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return id_;
     }
 
-    /// @inheritdoc ReceiptVault
-    function authorizeReceiptInformation(
-        address account_,
-        uint256 id_,
-        bytes memory
-    ) external view virtual override {
-        // Only receipt holders and certifiers can assert things about offchain
-        // assets.
-        if (
-            _receipt.balanceOf(account_, id_) == 0 &&
-            !hasRole(CERTIFIER, account_)
-        ) {
-            revert UnauthorizedReceiptInformation(account_, id_);
-        }
-    }
-
     /// Receipt holders who are also depositors can increase the deposited assets
     /// for the existing id of this receipt. It is STRONGLY RECOMMENDED the
     /// redepositor also provides data to be forwarded to asset information to
@@ -447,11 +431,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256) {
-        // This is stricter than the standard "or certifier" check for emitting
-        // receipt information. Certifiers cannot redeposit assets, ONLY share
-        // holders can redeposit.
         if (_receipt.balanceOf(msg.sender, id_) == 0) {
-            revert UnauthorizedReceiptInformation(msg.sender, id_);
+            revert UnauthorizedRedeposit(msg.sender, id_);
         }
         _deposit(
             assets_,

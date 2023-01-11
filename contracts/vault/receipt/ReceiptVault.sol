@@ -29,11 +29,25 @@ error ZeroOwner();
 /// Thrown when depositing assets under ID zero.
 error ZeroID();
 
+/// Thrown when the receipt vault does not own the receipt.
+error WrongOwner(address vault, address receipt);
+
+/// All config required to initialize `ReceiptVault` except the receipt address.
+/// Included as a field on `ReceiptVaultConfig` which is the full initialization
+/// config struct. This is used by the `ReceiptVaultFactory` which will create a
+/// new receipt in the same transaction and build the full `ReceiptVaultConfig`.
+/// @param asset As per ERC4626.
+/// @param name As per ERC20.
+/// @param symbol As per ERC20.
 struct VaultConfig {
     address asset;
     string name;
     string symbol;
 }
+
+/// All config required to initialize `ReceiptVault`.
+/// @param receipt The `Receipt` e.g. built by `ReceiptVaultFactory` that is
+/// owned by the `ReceiptVault` as an `IReceiptOwnerV1`.
 
 struct ReceiptVaultConfig {
     address receipt;
@@ -112,7 +126,13 @@ contract ReceiptVault is
         __ReentrancyGuard_init();
         __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
         _asset = IERC20(config_.vaultConfig.asset);
-        _receipt = IReceiptV1(config_.receipt);
+
+        IReceiptV1 receipt_ = IReceiptV1(config_.receipt);
+        address receiptOwner_ = receipt_.owner();
+        if (receiptOwner_ != address(this)) {
+            revert WrongOwner(address(this), receiptOwner_);
+        }
+        _receipt = receipt_;
     }
 
     /// Standard check to enforce the minimum share ratio.
@@ -131,15 +151,6 @@ contract ReceiptVault is
         address // solhint-disable-next-line no-empty-blocks
     ) external view virtual {
         // Authorize all receipt transfers by default.
-    }
-
-    /// @inheritdoc IReceiptOwnerV1
-    function authorizeReceiptInformation(
-        address,
-        uint256,
-        bytes memory // solhint-disable-next-line no-empty-blocks
-    ) external view virtual {
-        // Authorize all receipt information by default.
     }
 
     /// Calculate how many shares_ will be minted in return for assets_.
