@@ -48,54 +48,62 @@ describe("OffChainAssetVault Roles", async function () {
       "Failed to deposit"
     );
   });
-  // it("Checks withdraw without depositor role", async function () {
-  //   const signers = await ethers.getSigners();
-  //   const [vault, receipt] = await deployOffChainAssetVault();
-  //
-  //   const testErc20 = await ethers.getContractFactory("TestErc20");
-  //   const asset = (await testErc20.deploy()) as TestErc20;
-  //   await asset.deployed();
-  //
-  //   const alice = signers[0];
-  //   const bob = signers[1];
-  //
-  //   const shareRatio = ethers.BigNumber.from(1);
-  //   const aliceAssets = ethers.BigNumber.from(10);
-  //
-  //   await asset.connect(alice).transfer(alice.address, aliceAssets);
-  //
-  //   await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-  //
-  //   await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-  //
-  //   await vault
-  //       .connect(alice)
-  //       ["deposit(uint256,address,uint256,bytes)"](
-  //       aliceAssets,
-  //       bob.address,
-  //       shareRatio,
-  //       []
-  //   )
-  //
-  //   const balance = await receipt.connect(alice).balanceOf(bob.address, shareRatio);
-  //
-  //   await vault.connect(alice).grantRole(await vault.connect(alice).WITHDRAWER(), bob.address);
-  //   await vault
-  //       .connect(bob)
-  //       ["redeem(uint256,address,address,uint256)"](
-  //       balance,
-  //       bob.address,
-  //       bob.address,
-  //       shareRatio
-  //   )
-  //
-  //   const balanceAfter = await receipt.connect(alice).balanceOf(bob.address, shareRatio);
-  //
-  //   assert(
-  //       balanceAfter.isZero(),
-  //       `wrong assets. expected ${ethers.BigNumber.from(0)} got ${balanceAfter}`
-  //   );
-  // });
+  it("Checks withdraw without depositor role", async function () {
+    const signers = await ethers.getSigners();
+    const [vault, receipt] = await deployOffChainAssetVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const shareRatio = ethers.BigNumber.from(1);
+    const aliceAssets = ethers.BigNumber.from(10);
+
+    await asset.connect(alice).transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+        aliceAssets,
+        bob.address,
+        shareRatio,
+        []
+      );
+
+    const balance = await receipt
+      .connect(alice)
+      .balanceOf(bob.address, shareRatio);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).WITHDRAWER(), bob.address);
+    await vault
+      .connect(bob)
+      ["redeem(uint256,address,address,uint256)"](
+        balance,
+        bob.address,
+        bob.address,
+        shareRatio
+      );
+
+    const balanceAfter = await receipt
+      .connect(alice)
+      .balanceOf(bob.address, shareRatio);
+
+    assert(
+      balanceAfter.isZero(),
+      `wrong assets. expected ${ethers.BigNumber.from(0)} got ${balanceAfter}`
+    );
+  });
   it("Checks Withdrawer role", async function () {
     //Need Review
     const signers = await ethers.getSigners();
@@ -114,31 +122,35 @@ describe("OffChainAssetVault Roles", async function () {
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
-    await vault.connect(alice).grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
         aliceAssets,
         alice.address,
         shareRatio,
         []
-    )
+      );
 
-    const balance = await receipt.connect(alice).balanceOf(alice.address, shareRatio);
+    const balance = await receipt
+      .connect(alice)
+      .balanceOf(alice.address, shareRatio);
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)
-                ["redeem(uint256,address,address,uint256)"](
-                balance,
-                alice.address,
-                alice.address,
-                shareRatio
-            ),
-        `UnauthorizedWithdraw`,
-        "Failed to withdraw"
+      async () =>
+        await vault
+          .connect(alice)
+          ["redeem(uint256,address,address,uint256)"](
+            balance,
+            alice.address,
+            alice.address,
+            shareRatio
+          ),
+      `UnauthorizedWithdraw`,
+      "Failed to withdraw"
     );
   });
 
