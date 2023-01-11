@@ -36,7 +36,6 @@ describe("OffChainAssetVault", async function () {
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
   });
-
   it("Check asset is address zero", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -62,7 +61,6 @@ describe("OffChainAssetVault", async function () {
       "Failed to initialize"
     );
   });
-
   it("Constructs well", async function () {
     const [vault, receipt, config] = await deployOffChainAssetVault();
 
@@ -334,6 +332,25 @@ describe("OffChainAssetVault", async function () {
     assert(
       assets.eq(expectedAssets),
       `Wrong assets: expected ${expectedAssets} got ${assets} `
+    );
+  });
+  it("PreviewRedeem sets 0 shares if no withdrawer role", async function () {
+    const [vault] = await deployOffChainAssetVault();
+    const shares = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const id = ONE;
+
+    const expectedAssets =  ethers.BigNumber.from(0);
+    const assets = await vault
+        .connect(alice)
+        ["previewRedeem(uint256,uint256)"](shares, id);
+
+    assert(
+        assets.eq(expectedAssets),
+        `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
   it("Redeposit - should be receipt holder", async function () {
