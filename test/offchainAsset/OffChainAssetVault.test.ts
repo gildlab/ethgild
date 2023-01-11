@@ -80,6 +80,17 @@ describe("OffChainAssetVault", async function () {
       `wrong symbol expected ${expectedSymbol} got ${config.receiptVaultConfig.vaultConfig.symbol}`
     );
   });
+  it("Check vault is the owner of its receipt", async function () {
+    const [vault, receipt] = await deployOffChainAssetVault();
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const owner  = await receipt.connect(alice).owner();
+    assert(
+        vault.address === await receipt.connect(alice).owner(),
+      `wrong owner expected ${vault.address} got ${owner}`
+    );
+  });
   it("Checks SetERC20Tier event is emitted", async function () {
     const [vault] = await deployOffChainAssetVault();
 
