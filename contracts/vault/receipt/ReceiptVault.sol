@@ -48,12 +48,17 @@ struct VaultConfig {
 /// All config required to initialize `ReceiptVault`.
 /// @param receipt The `Receipt` e.g. built by `ReceiptVaultFactory` that is
 /// owned by the `ReceiptVault` as an `IReceiptOwnerV1`.
-
+/// @param vaultConfig all the vault configuration as `VaultConfig`.
 struct ReceiptVaultConfig {
     address receipt;
     VaultConfig vaultConfig;
 }
 
+/// @title ReceiptVault
+/// @notice The workhorse that binds several abstract concepts together into the
+/// specific concrete implemenation of our working system.
+///
+/// - Imp
 contract ReceiptVault is
     IReceiptOwnerV1,
     Multicall,
@@ -118,6 +123,7 @@ contract ReceiptVault is
         _disableInitializers();
     }
 
+    /// Initialize the `ReceiptVault`.
     // solhint-disable-next-line func-name-mixedcase
     function __ReceiptVault_init(
         ReceiptVaultConfig memory config_
