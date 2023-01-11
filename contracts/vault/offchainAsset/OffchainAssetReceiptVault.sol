@@ -409,11 +409,24 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return id_;
     }
 
-    /// Receipt holders who are also depositors can increase the deposited assets
-    /// for the existing id of this receipt. It is STRONGLY RECOMMENDED the
-    /// redepositor also provides data to be forwarded to asset information to
-    /// justify the additional deposit. New offchain assets MUST NOT redeposit
-    /// under existing IDs, they MUST be deposited under a new id instead.
+    /// Depositors can increase the deposited assets for the existing id of this
+    /// receipt. It is STRONGLY RECOMMENDED the redepositor also provides data to
+    /// be forwarded to asset information to justify the additional deposit. New
+    /// offchain assets MUST NOT redeposit under existing IDs, they MUST be
+    /// deposited under a new id instead. The ID preservation provided by
+    /// `redeposit` is intended to ensure a consistent audit trail for the
+    /// lifecycle of any asset. We do not need a corresponding "rewithdraw"
+    /// function because withdrawals already target an ID.
+    ///
+    /// Note that the existence of `redeposit` and `withdraw` both allow the
+    /// potential of two different depositor/withdrawer accounts to apply the
+    /// same mint/burn concurrently to the mempool and have both included in a
+    /// block inappropriately. Features like this, as well as more fundamental
+    /// trust assumptions/limitations offchain, make it impossible to fully
+    /// decouple depositors and withdrawers from each other _per token_. The
+    /// model is that there are many decoupled tokens each with their own "team"
+    /// that can be expected to coordinate to prevent double-mint/burn.
+    ///
     /// @param assets_ As per IERC4626 `deposit`.
     /// @param receiver_ As per IERC4626 `deposit`.
     /// @param id_ The existing receipt to despoit additional assets under. Will
