@@ -244,7 +244,6 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
-
   it("PreviewWithdraw sets correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(10);
@@ -271,7 +270,6 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
-
   it("PreviewRedeem sets correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
@@ -819,6 +817,49 @@ describe("OffChainAssetVault", async function () {
       balance1.eq(ethers.BigNumber.from(0)) &&
         balance2.eq(ethers.BigNumber.from(0)),
       `Shares has not been redeemed`
+    );
+  });
+  it.only("Should not withdraw on more than balance", async function () {
+    const [vault, receipt, config] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const id = ethers.BigNumber.from(1);
+
+    //grant depositor role to alice
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
+    await testErc20Contract.deployed();
+
+    const assets = ethers.BigNumber.from(30);
+    await testErc20Contract.transfer(alice.address, assets);
+    await testErc20Contract
+      .connect(alice)
+      .increaseAllowance(vault.address, assets);
+
+    const shares = ethers.BigNumber.from(10);
+    await vault
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, 1, []);
+
+    const balance = await receipt.connect(alice).balanceOf(alice.address, id);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          ["redeem(uint256,address,address,uint256)"](
+            balance.add(1),
+            alice.address,
+            alice.address,
+            id
+          ),
+      "ERC20: burn amount exceeds balance",
+      "failed to prevent withdraw on more than balance"
     );
   });
 });
