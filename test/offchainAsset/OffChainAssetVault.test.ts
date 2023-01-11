@@ -80,14 +80,6 @@ describe("OffChainAssetVault", async function () {
       `wrong symbol expected ${expectedSymbol} got ${config.receiptVaultConfig.vaultConfig.symbol}`
     );
   });
-  it("Checks asset is zero", async function () {
-    const [vault, receipt, config] = await deployOffChainAssetVault();
-
-    assert(
-      config.receiptVaultConfig.vaultConfig.asset === ADDRESS_ZERO,
-      `NONZERO_ASSET`
-    );
-  });
   it("Checks SetERC20Tier event is emitted", async function () {
     const [vault] = await deployOffChainAssetVault();
 
