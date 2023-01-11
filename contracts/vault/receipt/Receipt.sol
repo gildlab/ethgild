@@ -109,7 +109,10 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
     }
 
     /// @inheritdoc IReceiptV1
-    function receiptInformation(uint256 id_, bytes memory data_) external virtual {
+    function receiptInformation(
+        uint256 id_,
+        bytes memory data_
+    ) external virtual {
         _receiptInformation(msg.sender, id_, data_);
     }
 }
