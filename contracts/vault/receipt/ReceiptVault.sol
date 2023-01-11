@@ -58,7 +58,38 @@ struct ReceiptVaultConfig {
 /// @notice The workhorse that binds several abstract concepts together into the
 /// specific concrete implemenation of our working system.
 ///
-/// - Imp
+/// - Implementing an ERC4626 standard vault with assets and shares
+/// - where the shares are minted 1:1 with an ERC1155 receipt NFT across many IDs
+/// - and each ID is associated with a specific deposit event
+/// - that records arbitrary offchain data for decentralised commentary per-ID
+/// - such that shares can be freely treated as standard onchain fungible assets
+/// - and can be burned at any time, but only 1:1 with their creation event
+/// - by forcing the burner to hold and burn both a receipt and some shares for
+///   every burn.
+///
+/// The specifics of share/asset ratios on mints/burns, additional authorization
+/// logic, transfer restrictions, etc. are all extensible and overridable through
+/// inheritance and standard Open Zeppelin hooks from the underlying contracts.
+///
+/// Note that the receipt implementation is a separate contract as we found
+/// during development that combining ERC20 and ERC1155 on a single contract
+/// resulted in poor tooling/wallet support offchain (e.g. MetaMask).
+/// Conceptually it is reasonable to consider the minted shares and receipts as
+/// a single unit, forming a singular hybrid token model.
+///
+/// Note also that neither the receipt nor the shares are intended to represent
+/// "ownership", whatever that means in your local legal/cultural bubble. The
+/// receipt merely represents a right (or perhaps even responsibility) to burn
+/// shares, and the shares only represent an expectation that assets associated
+/// with the shares' mint event DO NOT MOVE (whatever that means) until/unless
+/// those shares are burned.
+///
+/// Each vault is deployed from a factory as a clone from a reference
+/// implementation, allowing for the model to cheaply and freedomly scale
+/// horizontally. This allows for some trust/permissioned concessions to be made
+/// per-vault as new competing vaults can always be deployed and traded against
+/// each other in parallel, allowing trust to be "policed" at the liquidity and
+/// free market layer.
 contract ReceiptVault is
     IReceiptOwnerV1,
     Multicall,
@@ -101,10 +132,13 @@ contract ReceiptVault is
         uint256 id
     );
 
+    /// Underlying ERC4626 asset.
     IERC20 internal _asset;
+    /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
+    /// mints and enforcing integrity of subsequent burns.
     IReceiptV1 internal _receipt;
 
-    /// Senders MAY OPTIONALLY set minimum share ratios for 4626 deposits.
+    /// Senders MAY OPTIONALLY set minimum share ratios for ERC4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
     /// the non-standard equivalent functions that take a minimum share ratio
     /// parameter.
@@ -123,7 +157,8 @@ contract ReceiptVault is
         _disableInitializers();
     }
 
-    /// Initialize the `ReceiptVault`.
+    /// Initialize the `ReceiptVault` and .
+    /// @param config_ All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase
     function __ReceiptVault_init(
         ReceiptVaultConfig memory config_
@@ -131,6 +166,7 @@ contract ReceiptVault is
         __Multicall_init();
         __ReentrancyGuard_init();
         __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
+        __ERC20Snapshot_init();
         _asset = IERC20(config_.vaultConfig.asset);
 
         IReceiptV1 receipt_ = IReceiptV1(config_.receipt);
@@ -141,7 +177,10 @@ contract ReceiptVault is
         _receipt = receipt_;
     }
 
-    /// Standard check to enforce the minimum share ratio.
+    /// Standard check to enforce the minimum share ratio. If the share ratio is
+    /// less than the minimum the transaction will revert with `MinShareRatio`.
+    /// @param minShareRatio_ The share ratio must be at least this.
+    /// @param shareRatio_ The actual share ratio.
     function checkMinShareRatio(
         uint256 minShareRatio_,
         uint256 shareRatio_
@@ -159,7 +198,8 @@ contract ReceiptVault is
         // Authorize all receipt transfers by default.
     }
 
-    /// Calculate how many shares_ will be minted in return for assets_.
+    /// Calculate how many shares_ will be minted in return for assets_ as per
+    /// ERC4626 deposit logic.
     /// @param assets_ Amount of assets being deposited.
     /// @param shareRatio_ The ratio of shares to assets to deposit against.
     /// @param depositMinShareRatio_ The minimum share ratio required by the
@@ -180,7 +220,8 @@ contract ReceiptVault is
         return assets_.fixedPointMul(shareRatio_, Math.Rounding.Down);
     }
 
-    /// Calculate how many assets_ are needed to mint shares_.
+    /// Calculate how many assets_ are needed to mint shares_ a per ERC4626 mint
+    /// logic.
     /// @param shares_ Amount of shares desired to be minted.
     /// @param shareRatio_ The ratio shares are minted at per asset.
     /// @param mintMinShareRatio_ The minimum ratio required by the minter. Will
@@ -200,7 +241,8 @@ contract ReceiptVault is
         return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Up);
     }
 
-    /// Calculate how many shares_ to burn to withdraw assets_.
+    /// Calculate how many shares_ to burn to withdraw assets_ as per ERC4626
+    /// withdraw logic.
     /// @param assets_ Amount of assets being withdrawn.
     /// @param shareRatio_ Ratio of shares to assets to withdraw against.
     /// @return shares_ Amount of shares to burn for this withdrawal.
@@ -214,7 +256,8 @@ contract ReceiptVault is
         return assets_.fixedPointMul(shareRatio_, Math.Rounding.Up);
     }
 
-    /// Calculate how many assets_ to withdraw for burning shares_.
+    /// Calculate how many assets_ to withdraw for burning shares_ as per
+    /// ERC4626 redeem logic.
     /// @param shares_ Amount of shares being burned for redemption.
     /// @param shareRatio_ Ratio of shares to assets being redeemed against.
     /// @return assets_ Amount of assets that will be redeemed for the given
@@ -230,16 +273,15 @@ contract ReceiptVault is
         return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Down);
     }
 
-    /// There is no onchain asset. The asset is offchain.
     /// @inheritdoc IERC4626
     function asset() public view virtual returns (address) {
         return address(_asset);
     }
 
     /// Any address can set their own minimum share ratio.
-    /// This is optional as the non-standard 4626 equivalent functions accept
-    /// a minimum share ratio parameter. This facilitates the 4626 interface by
-    /// adding one additional initial transaction for the user.
+    /// This is optional as the non-standard ERC4626 equivalent functions accept
+    /// a minimum share ratio parameter. This facilitates the ERC4626 interface
+    /// by adding one additional initial transaction for the user.
     /// @param senderMinShareRatio_ The new minimum share ratio for the
     /// `msg.sender` to be used in subsequent deposit calls.
     function setMinShareRatio(uint256 senderMinShareRatio_) external {
@@ -247,8 +289,8 @@ contract ReceiptVault is
     }
 
     /// Any address can set their own ID for withdrawals.
-    /// This is optional as the non-standard 4626 equivalent functions accept
-    /// a withdrawal ID parameter. This facilitates the 4626 interface
+    /// This is optional as the non-standard ERC4626 equivalent functions accept
+    /// a withdrawal ID parameter. This facilitates the ERC4626 interface
     /// by adding one initial transaction for the user.
     /// @param id_ The new withdrawal id_ for the `msg.sender` to be used
     /// in subsequent withdrawal calls. If the ID does NOT match the ID of a
