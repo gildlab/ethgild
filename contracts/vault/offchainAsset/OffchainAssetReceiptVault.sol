@@ -17,11 +17,6 @@ error UnauthorizedDeposit(address account);
 /// @param account the unauthorized withdrawer.
 error UnauthorizedWithdraw(address account);
 
-/// Thrown when a non-holder attempts to redeposit under an existing ID.
-/// @param account the unauthorized redepositor.
-/// @param id the ID of the unauthorized redeposit.
-error UnauthorizedRedeposit(address account, uint256 id);
-
 /// Thrown when a certification reference a block number in the future that
 /// cannot possibly have been seen yet.
 /// @param account The certifier that attempted the certify.
@@ -431,9 +426,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256) {
-        if (_receipt.balanceOf(msg.sender, id_) == 0) {
-            revert UnauthorizedRedeposit(msg.sender, id_);
-        }
         _deposit(
             assets_,
             receiver_,
