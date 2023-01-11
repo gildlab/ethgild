@@ -18,7 +18,10 @@ import {
   ConfiscateSharesEvent,
   ConfiscateReceiptEvent,
 } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
-import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
+import {
+  deployOffChainAssetVault,
+  deployOffchainAssetVaultFactory,
+} from "./deployOffchainAssetVault";
 import { DepositWithReceiptEvent } from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
 
 const assert = require("assert");
@@ -32,6 +35,32 @@ describe("OffChainAssetVault", async function () {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
+  });
+
+  it("Check asset is address zero", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetVaultFactory();
+
+    const constructionConfig = {
+      admin: alice.address,
+      vaultConfig: {
+        asset: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        name: "OffchainAssetVaul",
+        symbol: "OAV",
+      },
+    };
+
+    await assertError(
+      async () =>
+        await offchainAssetReceiptVaultFactory.createChildTyped(
+          constructionConfig
+        ),
+      `NonZeroAsset`,
+      "Failed to initialize"
+    );
   });
 
   it("Constructs well", async function () {
