@@ -14,35 +14,77 @@ describe("OffChainAssetVault Roles", async function () {
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
 
-    const DEPOSITOR_ADMIN = await vault.connect(alice).DEPOSITOR_ADMIN()
-    const WITHDRAWER_ADMIN = await vault.connect(alice).WITHDRAWER_ADMIN()
-    const CERTIFIER_ADMIN = await vault.connect(alice).CERTIFIER_ADMIN()
-    const HANDLER_ADMIN = await vault.connect(alice).HANDLER_ADMIN()
-    const ERC20TIERER_ADMIN = await vault.connect(alice).ERC20TIERER_ADMIN()
-    const ERC1155TIERER_ADMIN = await vault.connect(alice).ERC1155TIERER_ADMIN()
-    const ERC20SNAPSHOTTER_ADMIN = await vault.connect(alice).ERC20SNAPSHOTTER_ADMIN()
-    const CONFISCATOR_ADMIN = await vault.connect(alice).CONFISCATOR_ADMIN()
+    const DEPOSITOR_ADMIN = await vault.connect(alice).DEPOSITOR_ADMIN();
+    const WITHDRAWER_ADMIN = await vault.connect(alice).WITHDRAWER_ADMIN();
+    const CERTIFIER_ADMIN = await vault.connect(alice).CERTIFIER_ADMIN();
+    const HANDLER_ADMIN = await vault.connect(alice).HANDLER_ADMIN();
+    const ERC20TIERER_ADMIN = await vault.connect(alice).ERC20TIERER_ADMIN();
+    const ERC1155TIERER_ADMIN = await vault
+      .connect(alice)
+      .ERC1155TIERER_ADMIN();
+    const ERC20SNAPSHOTTER_ADMIN = await vault
+      .connect(alice)
+      .ERC20SNAPSHOTTER_ADMIN();
+    const CONFISCATOR_ADMIN = await vault.connect(alice).CONFISCATOR_ADMIN();
 
-    const DEPOSITOR_ADMIN_Granted = await vault.connect(alice).hasRole(DEPOSITOR_ADMIN, alice.address)
-    const WITHDRAWER_ADMIN_Granted = await vault.connect(alice).hasRole(WITHDRAWER_ADMIN, alice.address)
-    const CERTIFIER_ADMIN_Granted = await vault.connect(alice).hasRole(CERTIFIER_ADMIN, alice.address)
-    const HANDLER_ADMIN_Granted = await vault.connect(alice).hasRole(HANDLER_ADMIN, alice.address)
-    const ERC20TIERER_ADMIN_Granted = await vault.connect(alice).hasRole(ERC20TIERER_ADMIN, alice.address)
-    const ERC1155TIERER_ADMIN_Granted = await vault.connect(alice).hasRole(ERC1155TIERER_ADMIN, alice.address)
-    const ERC20SNAPSHOTTER_ADMIN_Granted = await vault.connect(alice).hasRole(ERC20SNAPSHOTTER_ADMIN, alice.address)
-    const CONFISCATOR_ADMIN_Granted = await vault.connect(alice).hasRole(CONFISCATOR_ADMIN, alice.address)
+    const DEPOSITOR_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(DEPOSITOR_ADMIN, alice.address);
+    const WITHDRAWER_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(WITHDRAWER_ADMIN, alice.address);
+    const CERTIFIER_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(CERTIFIER_ADMIN, alice.address);
+    const HANDLER_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(HANDLER_ADMIN, alice.address);
+    const ERC20TIERER_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(ERC20TIERER_ADMIN, alice.address);
+    const ERC1155TIERER_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(ERC1155TIERER_ADMIN, alice.address);
+    const ERC20SNAPSHOTTER_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(ERC20SNAPSHOTTER_ADMIN, alice.address);
+    const CONFISCATOR_ADMIN_Granted = await vault
+      .connect(alice)
+      .hasRole(CONFISCATOR_ADMIN, alice.address);
 
-
-    assert( DEPOSITOR_ADMIN_Granted === true, `No ${DEPOSITOR_ADMIN_Granted} role granted` )
-    assert( WITHDRAWER_ADMIN_Granted === true, `No ${WITHDRAWER_ADMIN_Granted} role granted` )
-    assert( CERTIFIER_ADMIN_Granted === true, `No ${CERTIFIER_ADMIN_Granted} role granted` )
-    assert( HANDLER_ADMIN_Granted === true, `No ${HANDLER_ADMIN_Granted} role granted` )
-    assert( ERC20TIERER_ADMIN_Granted === true, `No ${ERC20TIERER_ADMIN_Granted} role granted` )
-    assert( ERC1155TIERER_ADMIN_Granted === true, `No ${ERC1155TIERER_ADMIN_Granted} role granted` )
-    assert( ERC20SNAPSHOTTER_ADMIN_Granted === true, `No ${ERC20SNAPSHOTTER_ADMIN_Granted} role granted` )
-    assert( CONFISCATOR_ADMIN_Granted === true, `No ${CONFISCATOR_ADMIN_Granted} role granted` )
-
-  })
+    assert(
+      DEPOSITOR_ADMIN_Granted === true,
+      `No ${DEPOSITOR_ADMIN_Granted} role granted`
+    );
+    assert(
+      WITHDRAWER_ADMIN_Granted === true,
+      `No ${WITHDRAWER_ADMIN_Granted} role granted`
+    );
+    assert(
+      CERTIFIER_ADMIN_Granted === true,
+      `No ${CERTIFIER_ADMIN_Granted} role granted`
+    );
+    assert(
+      HANDLER_ADMIN_Granted === true,
+      `No ${HANDLER_ADMIN_Granted} role granted`
+    );
+    assert(
+      ERC20TIERER_ADMIN_Granted === true,
+      `No ${ERC20TIERER_ADMIN_Granted} role granted`
+    );
+    assert(
+      ERC1155TIERER_ADMIN_Granted === true,
+      `No ${ERC1155TIERER_ADMIN_Granted} role granted`
+    );
+    assert(
+      ERC20SNAPSHOTTER_ADMIN_Granted === true,
+      `No ${ERC20SNAPSHOTTER_ADMIN_Granted} role granted`
+    );
+    assert(
+      CONFISCATOR_ADMIN_Granted === true,
+      `No ${CONFISCATOR_ADMIN_Granted} role granted`
+    );
+  });
   it("Checks Depositor role", async function () {
     //Need Review
     const signers = await ethers.getSigners();
