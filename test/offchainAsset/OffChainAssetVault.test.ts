@@ -482,7 +482,7 @@ describe("OffChainAssetVault", async function () {
       `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
     );
   });
-  it("Certifies", async function () {
+  it("Checks certifiedUntil is not zero", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
@@ -506,6 +506,28 @@ describe("OffChainAssetVault", async function () {
     );
 
 
+  });
+  it.only("Checks referenceBlockNumber is less than block number ", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _certifiedUntil =  block.timestamp + 100;
+    const _referenceBlockNumber = blockNum + 1
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+
+    await assertError(
+        async () => await vault
+            .connect(alice)
+            .certify(_certifiedUntil, _referenceBlockNumber, false, []),
+        `FutureReferenceBlock`,
+        "failed to certify"
+    );
   });
   it("Certifies", async function () {
     const signers = await ethers.getSigners();
