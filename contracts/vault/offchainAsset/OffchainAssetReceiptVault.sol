@@ -517,6 +517,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// a `0` time, any time in the past relative to the current time will have
     /// the same effect on the system (freezing it immediately).
     ///
+    /// Note that redundant certifications MAY be submitted. Regardless of the
+    /// `forceUntil_` flag the transaction WILL NOT REVERT and the `Certify`
+    /// event will be emitted for any valid `certifyUntil_` time. If certifier A
+    /// certifies until time X and certifier B certifies until time X - Y then
+    /// both certifications will emit an event and time X is the certifiation
+    /// date of the system. This encouranges multiple certifications to be sought
+    /// in parallel if it helps maintain trust in the overall system.
+    ///
     /// @param certifyUntil_ The new `certifiedUntil` time.
     /// @param referenceBlockNumber_ The highest block number that the certifier
     /// has seen at the moment they decided to certify the system.
