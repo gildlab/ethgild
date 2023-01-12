@@ -561,11 +561,12 @@ describe("OffChainAssetVault", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     await assertError(
-        async () => await vault
-            .connect(alice)
-            .authorizeReceiptTransfer(alice.address, alice.address),
-        `CertificationExpired`,
-        "failed to AuthorizeReceiptTransfer"
+      async () =>
+        await vault
+          .connect(alice)
+          .authorizeReceiptTransfer(alice.address, alice.address),
+      `CertificationExpired`,
+      "failed to AuthorizeReceiptTransfer"
     );
   });
   it("Confiscate - Checks role CONFISCATOR", async function () {
