@@ -83,9 +83,9 @@ describe("OffChainAssetVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const owner  = await receipt.connect(alice).owner();
+    const owner = await receipt.connect(alice).owner();
     assert(
-        vault.address === await receipt.connect(alice).owner(),
+      vault.address === (await receipt.connect(alice).owner()),
       `wrong owner expected ${vault.address} got ${owner}`
     );
   });
@@ -343,14 +343,14 @@ describe("OffChainAssetVault", async function () {
 
     const id = ONE;
 
-    const expectedAssets =  ethers.BigNumber.from(0);
+    const expectedAssets = ethers.BigNumber.from(0);
     const assets = await vault
-        .connect(alice)
-        ["previewRedeem(uint256,uint256)"](shares, id);
+      .connect(alice)
+      ["previewRedeem(uint256,uint256)"](shares, id);
 
     assert(
-        assets.eq(expectedAssets),
-        `Wrong assets: expected ${expectedAssets} got ${assets} `
+      assets.eq(expectedAssets),
+      `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
   it("Redeposit - should be receipt holder", async function () {
@@ -493,19 +493,17 @@ describe("OffChainAssetVault", async function () {
     const _referenceBlockNumber = block.number;
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
     await assertError(
-        async () => await vault
-            .connect(alice)
-            .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-        `ZeroCertifyUntil`,
-        "failed to certify"
+      async () =>
+        await vault
+          .connect(alice)
+          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
+      `ZeroCertifyUntil`,
+      "failed to certify"
     );
-
-
   });
   it.only("Checks referenceBlockNumber is less than block number ", async function () {
     const signers = await ethers.getSigners();
@@ -514,19 +512,20 @@ describe("OffChainAssetVault", async function () {
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil =  block.timestamp + 100;
-    const _referenceBlockNumber = blockNum + 1
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = blockNum + 1;
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
     await assertError(
-        async () => await vault
-            .connect(alice)
-            .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-        `FutureReferenceBlock`,
-        "failed to certify"
+      async () =>
+        await vault
+          .connect(alice)
+          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
+      `FutureReferenceBlock`,
+      "failed to certify"
     );
   });
   it("Certifies", async function () {
