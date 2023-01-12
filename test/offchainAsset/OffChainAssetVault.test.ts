@@ -505,7 +505,7 @@ describe("OffChainAssetVault", async function () {
       "failed to certify"
     );
   });
-  it.only("Checks referenceBlockNumber is less than block number ", async function () {
+  it("Checks referenceBlockNumber is less than block number ", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
@@ -513,7 +513,7 @@ describe("OffChainAssetVault", async function () {
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
     const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = blockNum + 1;
+    const _referenceBlockNumber = blockNum + 10;
 
     await vault
       .connect(alice)
