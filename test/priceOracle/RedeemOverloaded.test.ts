@@ -76,6 +76,29 @@ describe("Overloaded Redeem", async function () {
       `alice did not redeem all 1155 receipt amounts`
     );
   });
+  it("Redeems half of tokens", async function () {
+    const receiptBalance = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](aliceAddress, shareRatio);
+
+    await vault
+      .connect(alice)
+      ["redeem(uint256,address,address,uint256)"](
+        receiptBalance.div(2),
+        aliceAddress,
+        aliceAddress,
+        shareRatio
+      );
+
+    const receiptBalanceAfter = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](aliceAddress, shareRatio);
+
+    assert(
+      receiptBalanceAfter.eq(receiptBalance.div(2)),
+      `alice did not redeem all 1155 receipt amounts`
+    );
+  });
   it("Should not redeem on zero assets", async function () {
     await assertError(
       async () =>
