@@ -225,6 +225,10 @@ describe("OffChainAssetVault Roles", async function () {
   });
 
   it("Checks SetERC20Tier role", async function () {
+    const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
+    await TierV2TestContract.deployed();
+
     const [vault] = await deployOffChainAssetVault();
 
     const signers = await ethers.getSigners();
@@ -244,6 +248,9 @@ describe("OffChainAssetVault Roles", async function () {
     );
   });
   it("Checks setERC1155Tier role", async function () {
+    const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
+    await TierV2TestContract.deployed();
     const [vault] = await deployOffChainAssetVault();
 
     const signers = await ethers.getSigners();
