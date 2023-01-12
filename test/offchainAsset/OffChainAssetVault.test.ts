@@ -508,18 +508,17 @@ describe("OffChainAssetVault", async function () {
     const _untilPast = certifyUntil.sub(100);
 
     const eventArgs = (await getEventArgs(
-        await vault
-            .connect(alice)
-            .certify(_untilPast, _referenceBlockNumber, false, []),
-        "Certify",
-        vault
+      await vault
+        .connect(alice)
+        .certify(_untilPast, _referenceBlockNumber, false, []),
+      "Certify",
+      vault
     )) as CertifyEvent["args"];
 
-  assert(
+    assert(
       eventArgs.certifyUntil.eq(certifyUntil),
-    `wrong until expected ${certifyUntil} got ${eventArgs.certifyUntil}`
-  );
-
+      `wrong until expected ${certifyUntil} got ${eventArgs.certifyUntil}`
+    );
   });
   it("Checks certifiedUntil is not zero", async function () {
     const signers = await ethers.getSigners();
