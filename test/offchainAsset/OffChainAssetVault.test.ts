@@ -192,7 +192,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong total assets. Expected ${totalSupply} got ${totalAssets}`
     );
   });
-  it("PreviewDeposit sets correct shares", async function () {
+  it("PreviewDeposit returns correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(100);
 
@@ -221,7 +221,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${assets} got ${shares} `
     );
   });
-  it("PreviewMint sets 0 if not DEPOSITOR", async function () {
+  it("PreviewMint returns 0 if not DEPOSITOR", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
     const signers = await ethers.getSigners();
@@ -235,7 +235,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
-  it("PreviewMint sets correct assets", async function () {
+  it("PreviewMint returns correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(10);
 
@@ -254,7 +254,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets}`
     );
   });
-  it("PreviewWithdraw sets 0 shares if no withdrawer role", async function () {
+  it("PreviewWithdraw returns 0 shares if no withdrawer role", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(100);
 
@@ -274,7 +274,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
-  it("PreviewWithdraw sets correct shares", async function () {
+  it("PreviewWithdraw returns correct shares", async function () {
     const [vault] = await deployOffChainAssetVault();
     const assets = ethers.BigNumber.from(10);
 
@@ -300,7 +300,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong shares: expected ${expectedShares} got ${shares} `
     );
   });
-  it("PreviewRedeem sets correct assets", async function () {
+  it("PreviewRedeem returns correct assets", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
 
@@ -334,7 +334,7 @@ describe("OffChainAssetVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
-  it("PreviewRedeem sets 0 shares if no withdrawer role", async function () {
+  it("PreviewRedeem returns 0 shares if no withdrawer role", async function () {
     const [vault] = await deployOffChainAssetVault();
     const shares = ethers.BigNumber.from(100);
 
@@ -481,6 +481,45 @@ describe("OffChainAssetVault", async function () {
       referenceBlockNumber.eq(_referenceBlockNumber),
       `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
     );
+  });
+  it.only("Certify in the past relative to the existing certification time", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+
+    const { certifyUntil } = (await getEventArgs(
+      await vault
+        .connect(alice)
+        .certify(_until, _referenceBlockNumber, false, []),
+      "Certify",
+      vault
+    )) as CertifyEvent["args"];
+
+    const _untilPast = certifyUntil.sub(100);
+
+    const eventArgs = (await getEventArgs(
+        await vault
+            .connect(alice)
+            .certify(_untilPast, _referenceBlockNumber, false, []),
+        "Certify",
+        vault
+    )) as CertifyEvent["args"];
+
+  assert(
+      eventArgs.certifyUntil.eq(certifyUntil),
+    `wrong until expected ${certifyUntil} got ${eventArgs.certifyUntil}`
+  );
+
   });
   it("Checks certifiedUntil is not zero", async function () {
     const signers = await ethers.getSigners();
@@ -971,7 +1010,6 @@ describe("OffChainAssetVault", async function () {
       "failed to prevent withdraw on more than balance"
     );
   });
-
   it("User not being able to withdraw someone else's share", async function () {
     const [vault, receipt] = await deployOffChainAssetVault();
 
