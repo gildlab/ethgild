@@ -505,7 +505,7 @@ describe("OffChainAssetVault", async function () {
       "failed to certify"
     );
   });
-  it("Checks referenceBlockNumber is less than block number ", async function () {
+  it("Checks referenceBlockNumber is less than block number", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetVault();
@@ -553,6 +553,19 @@ describe("OffChainAssetVault", async function () {
     assert(
       certifyUntil.eq(_certifiedUntil),
       `wrong until expected ${_certifiedUntil} got ${certifyUntil}`
+    );
+  });
+  it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetVault();
+
+    await assertError(
+        async () => await vault
+            .connect(alice)
+            .authorizeReceiptTransfer(alice.address, alice.address),
+        `CertificationExpired`,
+        "failed to AuthorizeReceiptTransfer"
     );
   });
   it("Confiscate - Checks role CONFISCATOR", async function () {
