@@ -482,7 +482,7 @@ describe("OffChainAssetVault", async function () {
       `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
     );
   });
-  it.only("Certify in the past relative to the existing certification time", async function () {
+  it("Certify in the past relative to the existing certification time with forceUntil true", async function () {
     const [vault] = await deployOffChainAssetVault();
 
     const signers = await ethers.getSigners();
@@ -510,14 +510,14 @@ describe("OffChainAssetVault", async function () {
     const eventArgs = (await getEventArgs(
       await vault
         .connect(alice)
-        .certify(_untilPast, _referenceBlockNumber, false, []),
+        .certify(_untilPast, _referenceBlockNumber, true, []),
       "Certify",
       vault
     )) as CertifyEvent["args"];
 
     assert(
-      eventArgs.certifyUntil.eq(certifyUntil),
-      `wrong until expected ${certifyUntil} got ${eventArgs.certifyUntil}`
+      eventArgs.certifyUntil.eq(_untilPast),
+      `wrong until expected ${_untilPast} got ${eventArgs.certifyUntil}`
     );
   });
   it("Checks certifiedUntil is not zero", async function () {
