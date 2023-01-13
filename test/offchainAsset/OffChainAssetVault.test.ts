@@ -482,6 +482,47 @@ describe("OffChainAssetVault", async function () {
       `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
     );
   });
+  it("Certifies with data", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    //get block timestamp and add 100 to get _until
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+
+    const { caller, certifyUntil, referenceBlockNumber, data } = (await getEventArgs(
+      await vault
+        .connect(alice)
+        .certify(_until, _referenceBlockNumber, false, [1,7]),
+      "Certify",
+      vault
+    )) as CertifyEvent["args"];
+
+    assert(
+      caller === alice.address,
+      `wrong caller expected ${alice.address} got ${caller}`
+    );
+    assert(
+      data === "0x0107",
+      `wrong data expected 0x0107 got ${data}`
+    );
+    assert(
+      certifyUntil.eq(_until),
+      `wrong until expected ${_until} got ${certifyUntil}`
+    );
+    assert(
+      referenceBlockNumber.eq(_referenceBlockNumber),
+      `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
+    );
+  });
   it("Certify in the past relative to the existing certification time with forceUntil true", async function () {
     const [vault] = await deployOffChainAssetVault();
 
