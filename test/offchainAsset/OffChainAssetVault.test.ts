@@ -856,7 +856,7 @@ describe("OffChainAssetVault", async function () {
       .connect(alice)
       ["balanceOf(address,uint256)"](bob.address, id);
 
-    const erc220balanceBef = await vault.connect(alice).balanceOf(bob.address);
+    const erc20balanceBef = await vault.connect(alice).balanceOf(bob.address);
 
     const { confiscated } = (await getEventArgs(
       await vault.connect(alice).confiscateReceipt(bob.address, id),
@@ -864,7 +864,7 @@ describe("OffChainAssetVault", async function () {
       vault
     )) as ConfiscateSharesEvent["args"];
 
-    const erc220balanceAft = await vault.connect(alice).balanceOf(bob.address);
+    const erc20balanceAft = await vault.connect(alice).balanceOf(bob.address);
 
     assert(
       confiscated.eq(bobReceiptBalance),
@@ -872,8 +872,8 @@ describe("OffChainAssetVault", async function () {
     );
     //Check erc20 balance did not change
     assert(
-        erc220balanceAft.eq(erc220balanceBef),
-        `wrong erc20 expected ${erc220balanceBef} got ${erc220balanceAft}`
+        erc20balanceAft.eq(erc20balanceBef),
+        `wrong erc20 expected ${erc20balanceBef} got ${erc20balanceAft}`
     );
   });
   it("Checks confiscated amount is transferred", async function () {
