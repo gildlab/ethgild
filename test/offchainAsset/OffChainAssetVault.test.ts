@@ -804,7 +804,7 @@ describe("OffChainAssetVault", async function () {
       `Shares has not been confiscated`
     );
   });
-  it.only("Checks confiscated is same as receipt balance", async function () {
+  it("Checks confiscated is same as receipt balance", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetVault();
 
@@ -872,8 +872,8 @@ describe("OffChainAssetVault", async function () {
     );
     //Check erc20 balance did not change
     assert(
-        erc20balanceAft.eq(erc20balanceBef),
-        `wrong erc20 expected ${erc20balanceBef} got ${erc20balanceAft}`
+      erc20balanceAft.eq(erc20balanceBef),
+      `wrong erc20 expected ${erc20balanceBef} got ${erc20balanceAft}`
     );
   });
   it("Checks confiscated amount is transferred", async function () {
