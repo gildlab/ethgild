@@ -804,7 +804,7 @@ describe("OffChainAssetVault", async function () {
       `Shares has not been confiscated`
     );
   });
-  it("Checks confiscated is same as receipt balance", async function () {
+  it.only("Checks confiscated is same as receipt balance", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetVault();
 
@@ -856,15 +856,24 @@ describe("OffChainAssetVault", async function () {
       .connect(alice)
       ["balanceOf(address,uint256)"](bob.address, id);
 
+    const erc220balanceBef = await vault.connect(alice).balanceOf(bob.address);
+
     const { confiscated } = (await getEventArgs(
       await vault.connect(alice).confiscateReceipt(bob.address, id),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateSharesEvent["args"];
 
+    const erc220balanceAft = await vault.connect(alice).balanceOf(bob.address);
+
     assert(
       confiscated.eq(bobReceiptBalance),
       `wrong confiscated expected ${bobReceiptBalance} got ${confiscated}`
+    );
+    //Check erc20 balance did not change
+    assert(
+        erc220balanceAft.eq(erc220balanceBef),
+        `wrong erc20 expected ${erc220balanceBef} got ${erc220balanceAft}`
     );
   });
   it("Checks confiscated amount is transferred", async function () {
