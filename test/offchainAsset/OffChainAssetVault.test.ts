@@ -498,22 +498,20 @@ describe("OffChainAssetVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
-    const { caller, certifyUntil, referenceBlockNumber, data } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_until, _referenceBlockNumber, false, [1,7]),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
+    const { caller, certifyUntil, referenceBlockNumber, data } =
+      (await getEventArgs(
+        await vault
+          .connect(alice)
+          .certify(_until, _referenceBlockNumber, false, [1, 7]),
+        "Certify",
+        vault
+      )) as CertifyEvent["args"];
 
     assert(
       caller === alice.address,
       `wrong caller expected ${alice.address} got ${caller}`
     );
-    assert(
-      data === "0x0107",
-      `wrong data expected 0x0107 got ${data}`
-    );
+    assert(data === "0x0107", `wrong data expected 0x0107 got ${data}`);
     assert(
       certifyUntil.eq(_until),
       `wrong until expected ${_until} got ${certifyUntil}`
