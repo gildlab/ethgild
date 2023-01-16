@@ -408,9 +408,14 @@ describe("OffChainAssetVault", async function () {
       .connect(alice)
       .balanceOf(alice.address, receiptId);
 
-
-    assert(aliceReceiptBalanceAfterRedeposit.eq(aliceReceiptBalance.add(assetToReDeposit)), `Incorrect balance ${aliceReceiptBalance.add(assetToReDeposit)} got ${aliceReceiptBalanceAfterRedeposit }`);
-
+    assert(
+      aliceReceiptBalanceAfterRedeposit.eq(
+        aliceReceiptBalance.add(assetToReDeposit)
+      ),
+      `Incorrect balance ${aliceReceiptBalance.add(
+        assetToReDeposit
+      )} got ${aliceReceiptBalanceAfterRedeposit}`
+    );
   });
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();

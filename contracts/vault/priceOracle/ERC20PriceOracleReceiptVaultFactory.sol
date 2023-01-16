@@ -11,7 +11,10 @@ import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/p
 contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
     constructor(
         ReceiptVaultFactoryConfig memory config_
-    ) ReceiptVaultFactory(config_) {}
+    ) ReceiptVaultFactory(config_) //solhint-disable-next-line no-empty-blocks
+    {
+
+    }
 
     /// @inheritdoc Factory
     function _createChild(
