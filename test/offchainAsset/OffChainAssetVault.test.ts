@@ -364,6 +364,54 @@ describe("OffChainAssetVault", async function () {
 
     assert(aliceReceiptBalance.eq(0), `NOT_RECEIPT_HOLDER`);
   });
+  it.only("Redeposits", async function () {
+    const signers = await ethers.getSigners();
+    const [vault, receipt] = await deployOffChainAssetVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+
+    const receiptId = ethers.BigNumber.from(1);
+    const aliceAssets = ethers.BigNumber.from(20);
+
+    await asset.connect(alice).transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const assetToDeposit = aliceAssets.div(2);
+    const assetToReDeposit = ethers.BigNumber.from(10);
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+        assetToDeposit,
+        alice.address,
+        receiptId,
+        []
+      );
+
+    const aliceReceiptBalance = await receipt
+      .connect(alice)
+      .balanceOf(alice.address, receiptId);
+
+    await vault
+      .connect(alice)
+      .redeposit(assetToReDeposit, alice.address, 1, [1]);
+
+    const aliceReceiptBalanceAfterRedeposit = await receipt
+      .connect(alice)
+      .balanceOf(alice.address, receiptId);
+
+
+    assert(aliceReceiptBalanceAfterRedeposit.eq(aliceReceiptBalance.add(assetToReDeposit)), `Incorrect balance ${aliceReceiptBalance.add(assetToReDeposit)} got ${aliceReceiptBalanceAfterRedeposit }`);
+
+  });
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
