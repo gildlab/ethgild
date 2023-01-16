@@ -442,7 +442,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _deposit(
             assets_,
             receiver_,
-            _shareRatio(msg.sender, receiver_),
+            _calculateDeposit(assets_, _shareRatio(msg.sender, receiver_), 0),
             id_,
             receiptInformation_
         );

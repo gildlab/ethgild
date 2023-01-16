@@ -476,7 +476,6 @@ contract ReceiptVault is
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
-        checkMinShareRatio(depositMinShareRatio_, shareRatio_);
 
         uint256 shares_ = _calculateDeposit(
             assets_,
@@ -579,7 +578,6 @@ contract ReceiptVault is
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
-        checkMinShareRatio(mintMinShareRatio_, shareRatio_);
 
         uint256 assets_ = _calculateMint(
             shares_,

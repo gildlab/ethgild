@@ -364,7 +364,7 @@ describe("OffChainAssetVault", async function () {
 
     assert(aliceReceiptBalance.eq(0), `NOT_RECEIPT_HOLDER`);
   });
-  it.only("Redeposits", async function () {
+  it("Redeposits", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetVault();
 
