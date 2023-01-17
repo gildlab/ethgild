@@ -23,6 +23,8 @@ struct ReceiptVaultFactoryConfig {
 abstract contract ReceiptVaultFactory is Factory {
     /// Emitted when `ReceiptVaultFactory` is constructed with the immutable
     /// config shared for all children.
+    /// @param caller `msg.sender` that constructed the factory.
+    /// @param config All construction config for the `ReceiptVaultFactory`.
     event Construction(address caller, ReceiptVaultFactoryConfig config);
 
     /// Template contract to clone for each child.
@@ -30,7 +32,9 @@ abstract contract ReceiptVaultFactory is Factory {
     /// Factory that produces receipts for the receipt vault.
     ReceiptFactory public immutable receiptFactory;
 
-    /// Build the reference implementation to clone for each child.
+    /// Record the reference implementation to clone for each child and the
+    /// `ReceiptFactory` to produce new receipts.
+    /// @param config_ All construction config for the factory.
     constructor(ReceiptVaultFactoryConfig memory config_) {
         if (config_.implementation == address(0)) {
             revert ZeroImplementation();
