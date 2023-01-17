@@ -36,7 +36,8 @@ contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param erc20PriceOracleVaultConfig_ Config for the `ERC20PriceOracleReceiptVault`.
+    /// @param erc20PriceOracleVaultConfig_ Config for the
+    /// `ERC20PriceOracleReceiptVault`.
     /// @return New `ERC20PriceOracleReceiptVault` child contract address.
     function createChildTyped(
         ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_

@@ -120,7 +120,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Contract has initialized.
     /// @param caller The `msg.sender` constructing the contract.
     /// @param config All initialization config.
-    event OffchainAssetVaultInitialized(
+    event OffchainAssetReceiptVaultInitialized(
         address caller,
         OffchainAssetReceiptVaultConfig config
     );
@@ -323,7 +323,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
         _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
-        emit OffchainAssetVaultInitialized(msg.sender, config_);
+        emit OffchainAssetReceiptVaultInitialized(msg.sender, config_);
     }
 
     /// Enforce that the ID being deposited or withdrawn is valid. Any ID larger

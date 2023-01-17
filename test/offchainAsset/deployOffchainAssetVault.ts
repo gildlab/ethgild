@@ -2,7 +2,7 @@ import { artifacts, ethers } from "hardhat";
 
 import type { OffchainAssetReceiptVault } from "../../typechain-types";
 import type { Receipt } from "../../typechain-types";
-import { OffchainAssetVaultInitializedEvent } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
+import { OffchainAssetReceiptVaultInitializedEvent } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
 import { expectedUri, getEventArgs } from "../util";
 import {
   OffchainAssetReceiptVaultFactory,
@@ -72,9 +72,9 @@ export const deployOffChainAssetVault = async (): Promise<
 
   let { config } = (await getEventArgs(
     tx,
-    "OffchainAssetVaultInitialized",
+    "OffchainAssetReceiptVaultInitialized",
     childContract
-  )) as OffchainAssetVaultInitializedEvent["args"];
+  )) as OffchainAssetReceiptVaultInitializedEvent["args"];
 
   let receiptContractAddress = config.receiptVaultConfig.receipt;
 

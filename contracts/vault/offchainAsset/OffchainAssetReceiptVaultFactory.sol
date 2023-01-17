@@ -38,8 +38,9 @@ contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///
-    /// @param offchainAssetVaultConfig_ Config for the `OffchainAssetReceiptVault`.
-    /// @return New `OffchainAssetVault` child contract address.
+    /// @param offchainAssetVaultConfig_ Config for the
+    /// `OffchainAssetReceiptVault`.
+    /// @return New `OffchainAssetReceiptVault` child contract address.
     function createChildTyped(
         OffchainAssetVaultConfig memory offchainAssetVaultConfig_
     ) external returns (OffchainAssetReceiptVault) {
