@@ -994,7 +994,8 @@ describe("Overloaded `deposit`", async () => {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const [vault, asset, priceOracle, receipt] = await deployERC20PriceOracleVault();
+    const [vault, asset, priceOracle, receipt] =
+      await deployERC20PriceOracleVault();
 
     const shareRatio = await priceOracle.price();
 
@@ -1011,18 +1012,20 @@ describe("Overloaded `deposit`", async () => {
       "0x" + informationBytes.map((num) => num.toString(16)).join("");
 
     const { sender, id, information } = (await getEventArgs(
-      await vault.connect(alice)["deposit(uint256,address,uint256,bytes)"](
-        aliceAmount,
-        alice.address,
-        shareRatio,
-        informationBytes
-      ),
+      await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+          aliceAmount,
+          alice.address,
+          shareRatio,
+          informationBytes
+        ),
       "ReceiptInformation",
       receipt
     )) as ReceiptInformationEvent["args"];
 
     assert(
-        sender === alice.address,
+      sender === alice.address,
       `wrong assets expected ${alice.address} got ${sender}`
     );
     assert(id.eq(expectedId), `wrong shares expected ${id} got ${expectedId}`);

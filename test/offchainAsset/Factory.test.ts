@@ -13,7 +13,8 @@ let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
 
 describe("OffchainAssetReceiptVaultFactory Test", () => {
   before(async () => {
-    offchainAssetReceiptVaultFactory = await deployOffchainAssetReceiptVaultFactory();
+    offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetReceiptVaultFactory();
   });
 
   it("Should deploy Factory correctly", async () => {
