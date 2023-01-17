@@ -433,14 +433,13 @@ describe("OffChainAssetVault", async function () {
     const id = 1;
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)
-                .redeposit(assetToReDeposit, alice.address, id, [1]),
-        `UnexpectedId`,
-        "Failed to redeposit"
+      async () =>
+        await vault
+          .connect(alice)
+          .redeposit(assetToReDeposit, alice.address, id, [1]),
+      `UnexpectedId`,
+      "Failed to redeposit"
     );
-
   });
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();
