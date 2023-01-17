@@ -21,20 +21,12 @@ contract ERC20PriceOracleReceiptVaultFactory is ReceiptVaultFactory {
     ) internal virtual override returns (address) {
         ERC20PriceOracleVaultConfig memory erc20PriceOracleVaultConfig_ = abi
             .decode(data_, (ERC20PriceOracleVaultConfig));
-        Receipt receipt_ = Receipt(
-            ReceiptFactory(receiptFactory).createChild("")
-        );
 
         address clone_ = Clones.clone(implementation);
-        receipt_.transferOwnership(clone_);
-
         ERC20PriceOracleReceiptVault(clone_).initialize(
             ERC20PriceOracleReceiptVaultConfig(
                 erc20PriceOracleVaultConfig_.priceOracle,
-                ReceiptVaultConfig(
-                    address(receipt_),
-                    erc20PriceOracleVaultConfig_.vaultConfig
-                )
+                _createReceipt(clone_, erc20PriceOracleVaultConfig_.vaultConfig)
             )
         );
         return clone_;

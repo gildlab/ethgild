@@ -23,20 +23,12 @@ contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
             data_,
             (OffchainAssetVaultConfig)
         );
-        Receipt receipt_ = Receipt(
-            ReceiptFactory(receiptFactory).createChild("")
-        );
 
         address clone_ = Clones.clone(implementation);
-        receipt_.transferOwnership(clone_);
-
         OffchainAssetReceiptVault(clone_).initialize(
             OffchainAssetReceiptVaultConfig(
                 offchainAssetVaultConfig_.admin,
-                ReceiptVaultConfig(
-                    address(receipt_),
-                    offchainAssetVaultConfig_.vaultConfig
-                )
+                _createReceipt(clone_, offchainAssetVaultConfig_.vaultConfig)
             )
         );
         return clone_;

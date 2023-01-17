@@ -4,6 +4,7 @@ pragma solidity =0.8.17;
 import {Factory} from "@rainprotocol/rain-protocol/contracts/factory/Factory.sol";
 import {Receipt, ReceiptFactory} from "../receipt/ReceiptFactory.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
+import "./ReceiptVault.sol";
 
 /// Thrown when the provided implementation is address zero.
 error ZeroImplementation();
@@ -20,12 +21,14 @@ struct ReceiptVaultFactoryConfig {
 }
 
 abstract contract ReceiptVaultFactory is Factory {
+    /// Emitted when `ReceiptVaultFactory` is constructed with the immutable
+    /// config shared for all children.
     event Construction(address caller, ReceiptVaultFactoryConfig config);
 
     /// Template contract to clone for each child.
     address public immutable implementation;
     /// Factory that produces receipts for the receipt vault.
-    address public immutable receiptFactory;
+    ReceiptFactory public immutable receiptFactory;
 
     /// Build the reference implementation to clone for each child.
     constructor(ReceiptVaultFactoryConfig memory config_) {
@@ -37,9 +40,26 @@ abstract contract ReceiptVaultFactory is Factory {
         }
 
         implementation = config_.implementation;
-        receiptFactory = config_.receiptFactory;
+        receiptFactory = ReceiptFactory(config_.receiptFactory);
 
         emit Implementation(msg.sender, config_.implementation);
         emit Construction(msg.sender, config_);
+    }
+
+    /// Create the receipt for the vault and ensure ownership, then build the
+    /// `ReceiptVaultConfig` from the `VaultConfig` with the new receipt merged
+    /// in.
+    /// @param receiptVault_ The address of the receipt vault the new receipt
+    /// will be created for and owned by.
+    /// @param config_ Vault config to be merged into the final
+    /// `ReceiptVaultConfig`.
+    /// @return The config merged with the newly created receipt.
+    function _createReceipt(
+        address receiptVault_,
+        VaultConfig memory config_
+    ) internal virtual returns (ReceiptVaultConfig memory) {
+        Receipt receipt_ = Receipt(receiptFactory.createChild(""));
+        receipt_.transferOwnership(receiptVault_);
+        return ReceiptVaultConfig(address(receipt_), config_);
     }
 }
