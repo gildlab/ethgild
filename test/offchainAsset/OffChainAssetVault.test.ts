@@ -417,6 +417,31 @@ describe("OffChainAssetVault", async function () {
       )} got ${aliceReceiptBalanceAfterRedeposit}`
     );
   });
+  it("Redeposit on non-existing receipt", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+
+    const assetToReDeposit = ethers.BigNumber.from(10);
+
+    //there are no any mints yet. so id= 1 should be unexpected
+    const id = 1;
+
+    await assertError(
+        async () =>
+            await vault
+                .connect(alice)
+                .redeposit(assetToReDeposit, alice.address, id, [1]),
+        `UnexpectedId`,
+        "Failed to redeposit"
+    );
+
+  });
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
