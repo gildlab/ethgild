@@ -20,6 +20,11 @@ struct ReceiptVaultFactoryConfig {
     address receiptFactory;
 }
 
+/// @title ReceiptVaultFactory
+/// @notice Extends `Factory` with affordances for deploying a receipt and
+/// transferring ownership to a `ReceiptVault`. Marked as abstract so that
+/// specific receipt vault factories can inherit this with concrete receipt vault
+/// child types.
 abstract contract ReceiptVaultFactory is Factory {
     /// Emitted when `ReceiptVaultFactory` is constructed with the immutable
     /// config shared for all children.
@@ -46,6 +51,7 @@ abstract contract ReceiptVaultFactory is Factory {
         implementation = config_.implementation;
         receiptFactory = ReceiptFactory(config_.receiptFactory);
 
+        // Implementation is inherited from `Factory`.
         emit Implementation(msg.sender, config_.implementation);
         emit Construction(msg.sender, config_);
     }
