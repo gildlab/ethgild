@@ -17,6 +17,7 @@ import {
   SnapshotEvent,
   ConfiscateSharesEvent,
   ConfiscateReceiptEvent,
+  SetERC1155TierEvent,
 } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
 import {
   deployOffChainAssetVault,
@@ -138,7 +139,7 @@ describe("OffChainAssetVault", async function () {
         .setERC1155Tier(TierV2TestContract.address, minTier, []),
       "SetERC1155Tier",
       vault
-    )) as SetERC20TierEvent["args"];
+    )) as SetERC1155TierEvent["args"];
 
     assert(
       caller === alice.address,
@@ -1187,9 +1188,50 @@ describe("OffChainAssetVault", async function () {
 
     await assertError(
       async () =>
-          await vault.connect(alice).authorizeReceiptTransfer(alice.address, bob.address),
+        await vault
+          .connect(alice)
+          .authorizeReceiptTransfer(alice.address, bob.address),
       "CertificationExpired",
       "failed to prevent authorizeReceiptTransfer"
+    );
+  });
+  it("Prevent authorizeReceiptTransfer if unauthorizedSenderTier", async function () {
+    const [vault] = await deployOffChainAssetVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+
+    const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+
+    await vault
+      .connect(alice)
+      .certify(_until, _referenceBlockNumber, false, []);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(1);
+
+    await vault
+      .connect(alice)
+      .setERC1155Tier(TierV2TestContract.address, minTier, []);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          .authorizeReceiptTransfer(alice.address, bob.address),
+      "UnauthorizedSenderTier",
+      "failed to prevent UnauthorizedSenderTier"
     );
   });
 });
