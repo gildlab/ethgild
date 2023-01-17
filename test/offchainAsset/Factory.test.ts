@@ -5,15 +5,15 @@ import {
 } from "../../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expectedUri, getEventArgs } from "../util";
-import { deployOffchainAssetVaultFactory } from "./deployOffchainAssetVault";
+import { deployOffchainAssetReceiptVaultFactory } from "./deployOffchainAssetReceiptVault";
 
 const assert = require("assert");
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
 
-describe("OffchainAssetVaultFactory Test", () => {
+describe("OffchainAssetReceiptVaultFactory Test", () => {
   before(async () => {
-    offchainAssetReceiptVaultFactory = await deployOffchainAssetVaultFactory();
+    offchainAssetReceiptVaultFactory = await deployOffchainAssetReceiptVaultFactory();
   });
 
   it("Should deploy Factory correctly", async () => {
@@ -30,7 +30,7 @@ describe("OffchainAssetVaultFactory Test", () => {
       admin: alice.address,
       vaultConfig: {
         asset: ethers.constants.AddressZero,
-        name: "OffchainAssetVault",
+        name: "OffchainAssetReceiptVault",
         symbol: "OAV",
       },
     };

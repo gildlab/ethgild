@@ -6,7 +6,7 @@ import {
   getEventArgs,
   ONE,
 } from "../util";
-import { deployOffChainAssetVault } from "../offchainAsset/deployOffchainAssetVault";
+import { deployOffChainAssetReceiptVault } from "../offchainAsset/deployOffchainAssetReceiptVault";
 import { Receipt, ReceiptFactory, TestErc20 } from "../../typechain-types";
 import { Contract } from "ethers";
 
@@ -14,7 +14,7 @@ const assert = require("assert");
 
 describe("Receipt vault", async function () {
   it("Mints with data", async function () {
-    const [vault, receipt] = await deployOffChainAssetVault();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
 

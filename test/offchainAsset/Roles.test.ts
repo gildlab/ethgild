@@ -2,17 +2,17 @@ import { ethers } from "hardhat";
 
 import { assertError, ONE } from "../util";
 
-import { deployOffChainAssetVault } from "./deployOffchainAssetVault";
+import { deployOffChainAssetReceiptVault } from "./deployOffchainAssetReceiptVault";
 import { TestErc20, ReadWriteTier } from "../../typechain-types";
 import assert from "assert";
 
 let TierV2TestContract: ReadWriteTier;
 
-describe("OffChainAssetVault Roles", async function () {
+describe("OffChainAssetReceiptVault Roles", async function () {
   it("Checks Admin roles granted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
-    const [vault] = await deployOffChainAssetVault();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const DEPOSITOR_ADMIN = await vault.connect(alice).DEPOSITOR_ADMIN();
     const WITHDRAWER_ADMIN = await vault.connect(alice).WITHDRAWER_ADMIN();
@@ -88,7 +88,7 @@ describe("OffChainAssetVault Roles", async function () {
   it("Checks Depositor role", async function () {
     //Need Review
     const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetVault();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -120,7 +120,7 @@ describe("OffChainAssetVault Roles", async function () {
   });
   it("Checks withdraw without depositor role", async function () {
     const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetVault();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -177,7 +177,7 @@ describe("OffChainAssetVault Roles", async function () {
   it("Checks Withdrawer role", async function () {
     //Need Review
     const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetVault();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -229,7 +229,7 @@ describe("OffChainAssetVault Roles", async function () {
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
 
-    const [vault] = await deployOffChainAssetVault();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -251,7 +251,7 @@ describe("OffChainAssetVault Roles", async function () {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
-    const [vault] = await deployOffChainAssetVault();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -272,7 +272,7 @@ describe("OffChainAssetVault Roles", async function () {
   it("Checks role for snapshotter", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
-    const [vault] = await deployOffChainAssetVault();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     await assertError(
       async () => await vault.connect(alice).snapshot(),
@@ -285,7 +285,7 @@ describe("OffChainAssetVault Roles", async function () {
   it("Checks role for certifier", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
-    const [vault] = await deployOffChainAssetVault();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);

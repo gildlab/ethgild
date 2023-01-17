@@ -10,7 +10,7 @@ import {
 } from "../../typechain-types";
 import { Contract } from "ethers";
 
-export const deployOffchainAssetVaultFactory =
+export const deployOffchainAssetReceiptVaultFactory =
   async (): Promise<OffchainAssetReceiptVaultFactory> => {
     const offchainAssetReceiptVaultImplementationFactory =
       await ethers.getContractFactory("OffchainAssetReceiptVault");
@@ -37,14 +37,14 @@ export const deployOffchainAssetVaultFactory =
     return offchainAssetReceiptVaultFactory;
   };
 
-export const deployOffChainAssetVault = async (): Promise<
+export const deployOffChainAssetReceiptVault = async (): Promise<
   [OffchainAssetReceiptVault, Receipt, any]
 > => {
   const signers = await ethers.getSigners();
   const alice = signers[0];
 
   const offchainAssetReceiptVaultFactory =
-    await deployOffchainAssetVaultFactory();
+    await deployOffchainAssetReceiptVaultFactory();
 
   const constructionConfig = {
     admin: alice.address,
