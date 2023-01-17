@@ -101,7 +101,7 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
-    const { caller, tier, minimumTier } = (await getEventArgs(
+    const { sender, tier, minimumTier } = (await getEventArgs(
       await vault
         .connect(alice)
         .setERC20Tier(TierV2TestContract.address, minTier, []),
@@ -110,8 +110,8 @@ describe("OffChainAssetReceiptVault", async function () {
     )) as SetERC20TierEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(
       tier === TierV2TestContract.address,
@@ -133,7 +133,7 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(100);
 
-    const { caller, tier, minimumTier } = (await getEventArgs(
+    const { sender, tier, minimumTier } = (await getEventArgs(
       await vault
         .connect(alice)
         .setERC1155Tier(TierV2TestContract.address, minTier, []),
@@ -142,8 +142,8 @@ describe("OffChainAssetReceiptVault", async function () {
     )) as SetERC1155TierEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(
       tier === TierV2TestContract.address,
@@ -539,7 +539,7 @@ describe("OffChainAssetReceiptVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
-    const { caller, certifyUntil, referenceBlockNumber } = (await getEventArgs(
+    const { sender, certifyUntil, referenceBlockNumber } = (await getEventArgs(
       await vault
         .connect(alice)
         .certify(_until, _referenceBlockNumber, false, []),
@@ -548,8 +548,8 @@ describe("OffChainAssetReceiptVault", async function () {
     )) as CertifyEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(
       certifyUntil.eq(_until),
@@ -576,7 +576,7 @@ describe("OffChainAssetReceiptVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
 
-    const { caller, certifyUntil, referenceBlockNumber, data } =
+    const { sender, certifyUntil, referenceBlockNumber, data } =
       (await getEventArgs(
         await vault
           .connect(alice)
@@ -586,8 +586,8 @@ describe("OffChainAssetReceiptVault", async function () {
       )) as CertifyEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(data === "0x0107", `wrong data expected 0x0107 got ${data}`);
     assert(
@@ -746,15 +746,15 @@ describe("OffChainAssetReceiptVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
-    const { caller, confiscatee } = (await getEventArgs(
+    const { sender, confiscatee } = (await getEventArgs(
       await vault.connect(alice).confiscateShares(alice.address),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(
       confiscatee === alice.address,
@@ -772,15 +772,15 @@ describe("OffChainAssetReceiptVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
-    const { caller, confiscatee, id } = (await getEventArgs(
+    const { sender, confiscatee, id } = (await getEventArgs(
       await vault.connect(alice).confiscateReceipt(alice.address, _id),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateReceiptEvent["args"];
 
     assert(
-      caller === alice.address,
-      `wrong caller expected ${alice.address} got ${caller}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
     assert(
       confiscatee === alice.address,

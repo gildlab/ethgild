@@ -1009,7 +1009,7 @@ describe("Overloaded `deposit`", async () => {
   //   const expectedInformation =
   //     "0x" + informationBytes.map((num) => num.toString(16)).join("");
   //
-  //   const { caller, id, information } = (await getEventArgs(
+  //   const { sender, id, information } = (await getEventArgs(
   //     await vault.connect(alice)["deposit(uint256,address,uint256,bytes)"](
   //       aliceAmount,
   //       alice.address,

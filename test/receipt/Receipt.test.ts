@@ -111,11 +111,11 @@ describe("Receipt vault", async function () {
     // await receipt.connect(alice).ownerMint(alice.address, 1,shares,[])
 
     let owner = await receipt.connect(alice).owner();
-    let caller = await receipt.connect(alice).signer.getAddress();
+    let sender = await receipt.connect(alice).signer.getAddress();
 
     assert(
-      owner === caller,
-      `Ownable: caller is not the owner. owner ${owner}, caller ${caller}`
+      owner === sender,
+      `Ownable: sender is not the owner. owner ${owner}, sender ${sender}`
     );
   });
 });

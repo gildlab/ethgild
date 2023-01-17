@@ -118,15 +118,15 @@ struct OffchainAssetReceiptVaultConfig {
 ///   future migrations or disaster recovery plans.
 contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Contract has initialized.
-    /// @param caller The `msg.sender` constructing the contract.
+    /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
     event OffchainAssetReceiptVaultInitialized(
-        address caller,
+        address sender,
         OffchainAssetReceiptVaultConfig config
     );
 
     /// A new certification time has been set.
-    /// @param caller The certifier setting the new time.
+    /// @param sender The certifier setting the new time.
     /// @param certifyUntil The time the system is newly certified until.
     /// Normally this will be a future time but certifiers MAY set it to a time
     /// in the past which will immediately freeze all transfers.
@@ -136,7 +136,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param data The certifier MAY provide additional supporting data such
     /// as an auditor's report/comments etc.
     event Certify(
-        address caller,
+        address sender,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
         bool forceUntil,
@@ -145,51 +145,51 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// Shares have been confiscated from a user who is not currently meeting
     /// the ERC20 tier contract minimum requirements.
-    /// @param caller The confiscator who is confiscating the shares.
+    /// @param sender The confiscator who is confiscating the shares.
     /// @param confiscatee The user who had their shares confiscated.
     /// @param confiscated The amount of shares that were confiscated.
     event ConfiscateShares(
-        address caller,
+        address sender,
         address confiscatee,
         uint256 confiscated
     );
 
     /// A receipt has been confiscated from a user who is not currently meeting
     /// the ERC1155 tier contract minimum requirements.
-    /// @param caller The confiscator who is confiscating the receipt.
+    /// @param sender The confiscator who is confiscating the receipt.
     /// @param confiscatee The user who had their receipt confiscated.
     /// @param id The receipt ID that was confiscated.
     /// @param confiscated The amount of the receipt that was confiscated.
     event ConfiscateReceipt(
-        address caller,
+        address sender,
         address confiscatee,
         uint256 id,
         uint256 confiscated
     );
 
     /// A new ERC20 tier contract has been set.
-    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param sender `msg.sender` who set the new tier contract.
     /// @param tier New tier contract used for all ERC20 transfers and
     /// confiscations.
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     event SetERC20Tier(
-        address caller,
+        address sender,
         address tier,
         uint256 minimumTier,
         uint256[] context
     );
 
     /// A new ERC1155 tier contract has been set.
-    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param sender `msg.sender` who set the new tier contract.
     /// @param tier New tier contract used for all ERC1155 transfers and
     /// confiscations.
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     event SetERC1155Tier(
-        address caller,
+        address sender,
         address tier,
         uint256 minimumTier,
         uint256[] context

@@ -34,7 +34,7 @@ contract OffchainAssetReceiptVaultFactory is ReceiptVaultFactory {
         return clone_;
     }
 
-    /// Typed wrapper for `createChild` with Source.
+    /// Typed wrapper for `createChild`.
     /// Use original `Factory` `createChild` function signature if function
     /// parameters are already encoded.
     ///

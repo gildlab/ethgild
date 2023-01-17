@@ -116,10 +116,10 @@ struct ERC20PriceOracleReceiptVaultConfig {
 /// migration path is NOT implemented.
 contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// Emitted when deployed and constructed.
-    /// @param caller `msg.sender` that deployed the contract.
+    /// @param sender `msg.sender` that deployed the contract.
     /// @param config All construction config.
     event ERC20PriceOracleReceiptVaultInitialized(
-        address caller,
+        address sender,
         ERC20PriceOracleReceiptVaultConfig config
     );
 

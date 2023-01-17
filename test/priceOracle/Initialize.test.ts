@@ -145,14 +145,14 @@ describe("PriceOracle construction", async function () {
       (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi
     );
 
-    let { caller, config } = (await getEventArgs(
+    let { sender, config } = (await getEventArgs(
       tx,
       "ERC20PriceOracleReceiptVaultInitialized",
       childContract
     )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
 
     assert(
-      caller === erc20PriceOracleReceiptVaultFactory.address,
+      sender === erc20PriceOracleReceiptVaultFactory.address,
       "wrong deploy sender"
     );
     assert(

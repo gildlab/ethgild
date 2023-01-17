@@ -2,9 +2,8 @@
 pragma solidity =0.8.17;
 
 /// @title IReceiptOwnerV1
-/// @notice Owner of an `IReceiptV1` MUST authorize transfers and receipt
-/// information calls in addition to being directly responsible for `ownerX`
-/// calls.
+/// @notice Owner of an `IReceiptV1` MUST authorize transfers between peers in
+/// addition to being directly responsible for `ownerX` calls.
 interface IReceiptOwnerV1 {
     /// Authorise a receipt transfer. `IReceiptOwnerV1` contract MUST REVERT if
     /// the transfer is unauthorized. NOT reverting means the transfer is
