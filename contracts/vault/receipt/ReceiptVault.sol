@@ -504,7 +504,7 @@ contract ReceiptVault is
         uint256 shares_,
         uint256 id_,
         bytes memory receiptInformation_
-    ) internal nonReentrant {
+    ) internal virtual nonReentrant {
         if (assets_ == 0) {
             revert ZeroAssetsAmount();
         }

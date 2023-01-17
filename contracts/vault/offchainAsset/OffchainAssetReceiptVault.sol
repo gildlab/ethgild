@@ -37,6 +37,10 @@ error UnauthorizedSenderTier(address from, uint256 reportTime);
 /// @param reportTime The to account had this time in the tier report.
 error UnauthorizedRecipientTier(address to, uint256 reportTime);
 
+/// Thrown when an ID can't be deposited or withdrawn.
+/// @param id The unexpected ID.
+error UnexpectedId(uint256 id);
+
 /// Thrown when a transfer is attempted by an unpriviledged account during system
 /// freeze due to certification lapse.
 error CertificationExpired(
@@ -322,28 +326,41 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit OffchainAssetVaultInitialized(msg.sender, config_);
     }
 
+    /// Enforce that the ID being deposited or withdrawn is valid. Any ID larger
+    /// than highwater is invalid, and ID 0 is not allowed.
+    /// @param id_ The ID to validate.
+    modifier onlyValidId(uint256 id_) {
+        // Can only redeposit IDs that were first deposited.
+        if (id_ > highwaterId || id_ == 0) {
+            revert UnexpectedId(id_);
+        }
+        _;
+    }
+
     /// Ensure that only callers with the depositor role can deposit.
+    /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// @inheritdoc ReceiptVault
     function _beforeDeposit(
         uint256,
         address,
         uint256,
-        uint256
-    ) internal view virtual override {
+        uint256 id_
+    ) internal view virtual override onlyValidId(id_) {
         if (!hasRole(DEPOSITOR, msg.sender)) {
             revert UnauthorizedDeposit(msg.sender);
         }
     }
 
     /// Ensure that only owners with the withdrawer role can withdraw.
+    /// DO NOT call super `_afterWithdraw` as there are no assets to move.
     /// @inheritdoc ReceiptVault
     function _afterWithdraw(
         uint256,
         address,
         address owner_,
         uint256,
-        uint256
-    ) internal view virtual override {
+        uint256 id_
+    ) internal view virtual override onlyValidId(id_) {
         if (!hasRole(WITHDRAWER, owner_)) {
             revert UnauthorizedWithdraw(owner_);
         }
