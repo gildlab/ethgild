@@ -398,15 +398,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return highwaterId + 1;
     }
 
-    /// Enforce the highwater ID in addition to base valid ID check.
-    /// @inheritdoc ReceiptVault
-    function _checkValidId(uint256 id_) internal view virtual override {
-        super._checkValidId(id_);
-        if (id_ > highwaterId) {
-            revert InvalidId(id_);
-        }
-    }
-
     /// Depositors can increase the deposited assets for the existing id of this
     /// receipt. It is STRONGLY RECOMMENDED the redepositor also provides data to
     /// be forwarded to asset information to justify the additional deposit. New
@@ -437,6 +428,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256) {
+        // Only allow redepositing for IDs that exist.
+        if (id_ > highwaterId) {
+            revert InvalidId(id_);
+        }
         _deposit(
             assets_,
             receiver_,

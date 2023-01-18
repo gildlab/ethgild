@@ -242,7 +242,7 @@ contract ReceiptVault is
         uint256 shares_,
         uint256 shareRatio_,
         uint256 mintMinShareRatio_
-    ) internal pure virtual returns (uint256) {
+    ) internal view virtual returns (uint256) {
         checkMinShareRatio(mintMinShareRatio_, shareRatio_);
 
         // IERC4626:
@@ -388,16 +388,6 @@ contract ReceiptVault is
     //slither-disable-next-line dead-code
     function _nextId() internal view virtual returns (uint256) {
         return 1;
-    }
-
-    /// Reverts if the ID provided is not valid. Default is that ID 0 is never
-    /// valid but additional constraints my be implemented by overriding this.
-    /// ID validity is checked on both deposit and withdraw.
-    /// @param id_ The ID to check validity for.
-    function _checkValidId(uint256 id_) internal view virtual {
-        if (id_ == 0) {
-            revert InvalidId(id_);
-        }
     }
 
     /// The spec demands this function ignores per-user concerns. It seems to
@@ -582,6 +572,9 @@ contract ReceiptVault is
         if (receiver_ == address(0)) {
             revert ZeroReceiver();
         }
+        if (id_ == 0) {
+            revert InvalidId(0);
+        }
 
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
         emit DepositWithReceipt(
@@ -593,10 +586,6 @@ contract ReceiptVault is
             receiptInformation_
         );
         _beforeDeposit(assets_, msg.sender, receiver_, shares_, id_);
-
-        // Check valid ID after `_beforeDeposit` to allow storage changes that
-        // may impact the ID validity first.
-        _checkValidId(id_);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
@@ -808,6 +797,9 @@ contract ReceiptVault is
         if (owner_ == address(0)) {
             revert ZeroOwner();
         }
+        if (id_ == 0) {
+            revert InvalidId(id_);
+        }
 
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
         emit WithdrawWithReceipt(
@@ -837,10 +829,6 @@ contract ReceiptVault is
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
-
-        // Check valid ID after `_afterWithdraw` to allow storage to be updated
-        // first.
-        _checkValidId(id_);
     }
 
     function _afterWithdraw(

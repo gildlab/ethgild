@@ -223,7 +223,7 @@ describe("OffChainAssetReceiptVault", async function () {
       `Wrong shares: expected ${assets} got ${shares} `
     );
   });
-  it.only("PreviewMint returns 0 if not DEPOSITOR", async function () {
+  it("PreviewMint returns 0 if not DEPOSITOR", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
     const shares = ethers.BigNumber.from(100);
     const signers = await ethers.getSigners();
@@ -469,7 +469,7 @@ describe("OffChainAssetReceiptVault", async function () {
       "Failed to redeposit"
     );
   });
-  it.only("Prevents Redeposit on non-existing receipt", async function () {
+  it("Prevents Redeposit on non-existing receipt", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetReceiptVault();
 
@@ -492,8 +492,8 @@ describe("OffChainAssetReceiptVault", async function () {
         await vault
           .connect(alice)
           .redeposit(assetToReDeposit, alice.address, id, [1]),
-      `InvalidId`,
-      "Failed to redeposit"
+      `InvalidId(${id})`,
+      "Failed to prevent redeposit"
     );
   });
   it("Snapshot event is emitted", async function () {
