@@ -359,7 +359,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         address,
         address owner_,
         uint256,
-        uint256 id_
+        uint256 id_ //solhint-disable-next-line no-empty-blocks
     ) internal view virtual override {}
 
     /// Shares total supply is 1:1 with offchain assets.
@@ -378,9 +378,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         ShareAction shareAction_
     ) internal view virtual override returns (uint256) {
         if (shareAction_ == ShareAction.Mint) {
-            return hasRole(DEPOSITOR, owner_) ? _shareRatioUserAgnostic(id_, shareAction_) : 0;
+            return
+                hasRole(DEPOSITOR, owner_)
+                    ? _shareRatioUserAgnostic(id_, shareAction_)
+                    : 0;
         } else {
-            return hasRole(WITHDRAWER, owner_) ? _shareRatioUserAgnostic(id_, shareAction_) : 0;
+            return
+                hasRole(WITHDRAWER, owner_)
+                    ? _shareRatioUserAgnostic(id_, shareAction_)
+                    : 0;
         }
     }
 
