@@ -85,8 +85,7 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       `No ${CONFISCATOR_ADMIN_Granted} role granted`
     );
   });
-  it("Checks Depositor role", async function () {
-    //Need Review
+  it("Gets 0 shares for deposit without depositor role", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetReceiptVault();
 
