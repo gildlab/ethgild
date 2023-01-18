@@ -198,8 +198,8 @@ contract ReceiptVault is
         }
     }
 
-    /// Calculate how many shares_ will be minted in return for assets_ as per
-    /// ERC4626 deposit logic.
+    /// Calculate how many `shares_` will be minted in return for `assets_` as
+    /// per ERC4626 deposit logic.
     /// @param assets_ Amount of assets being deposited.
     /// @param shareRatio_ The ratio of shares to assets to deposit against.
     /// @param depositMinShareRatio_ The minimum share ratio required by the
@@ -210,7 +210,7 @@ contract ReceiptVault is
         uint256 assets_,
         uint256 shareRatio_,
         uint256 depositMinShareRatio_
-    ) internal pure returns (uint256) {
+    ) internal virtual pure returns (uint256) {
         checkMinShareRatio(depositMinShareRatio_, shareRatio_);
 
         // IRC4626:
@@ -220,8 +220,8 @@ contract ReceiptVault is
         return assets_.fixedPointMul(shareRatio_, Math.Rounding.Down);
     }
 
-    /// Calculate how many assets_ are needed to mint shares_ a per ERC4626 mint
-    /// logic.
+    /// Calculate how many `assets_` are needed to mint `shares_` as per ERC4626
+    /// mint logic.
     /// @param shares_ Amount of shares desired to be minted.
     /// @param shareRatio_ The ratio shares are minted at per asset.
     /// @param mintMinShareRatio_ The minimum ratio required by the minter. Will
@@ -231,7 +231,7 @@ contract ReceiptVault is
         uint256 shares_,
         uint256 shareRatio_,
         uint256 mintMinShareRatio_
-    ) internal pure returns (uint256) {
+    ) internal virtual pure returns (uint256) {
         checkMinShareRatio(mintMinShareRatio_, shareRatio_);
 
         // IERC4626:
@@ -241,7 +241,7 @@ contract ReceiptVault is
         return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Up);
     }
 
-    /// Calculate how many shares_ to burn to withdraw assets_ as per ERC4626
+    /// Calculate how many `shares_` to burn to withdraw `assets_` as per ERC4626
     /// withdraw logic.
     /// @param assets_ Amount of assets being withdrawn.
     /// @param shareRatio_ Ratio of shares to assets to withdraw against.
@@ -249,14 +249,14 @@ contract ReceiptVault is
     function _calculateWithdraw(
         uint256 assets_,
         uint256 shareRatio_
-    ) internal pure returns (uint256) {
+    ) internal virtual pure returns (uint256) {
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
         return assets_.fixedPointMul(shareRatio_, Math.Rounding.Up);
     }
 
-    /// Calculate how many assets_ to withdraw for burning shares_ as per
+    /// Calculate how many `assets_` to withdraw for burning `shares_` as per
     /// ERC4626 redeem logic.
     /// @param shares_ Amount of shares being burned for redemption.
     /// @param shareRatio_ Ratio of shares to assets being redeemed against.
@@ -265,7 +265,7 @@ contract ReceiptVault is
     function _calculateRedeem(
         uint256 shares_,
         uint256 shareRatio_
-    ) internal pure returns (uint256) {
+    ) internal virtual pure returns (uint256) {
         // IERC4626:
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
@@ -300,6 +300,9 @@ contract ReceiptVault is
         withdrawIds[msg.sender] = id_;
     }
 
+    /// This is external NOT public. It is NOT allowed to revert BUT if we were
+    /// to calculate anything important internally with this we'd need it to
+    /// revert if there was an issue reading total assets.
     /// @inheritdoc IERC4626
     function totalAssets() external view virtual returns (uint256) {
         // There are NO fees so the managed assets are the asset balance of the
@@ -334,8 +337,9 @@ contract ReceiptVault is
     /// This variant of `_shareRatio` MAY return different results dependant on
     /// the depositor and/or recipient as per `previewDeposit` and `deposit`.
     /// MUST NOT revert.
+    /// @param depositor_ The
     function _shareRatio(
-        address,
+        address depositor_,
         address
     ) internal view virtual returns (uint256) {
         // Default is to fallback to user agnostic share ratio.
