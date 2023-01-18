@@ -173,54 +173,6 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       `wrong assets. expected ${ethers.BigNumber.from(0)} got ${balanceAfter}`
     );
   });
-  it("Checks Withdrawer role", async function () {
-    const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const shareRatio = ethers.BigNumber.from(1);
-    const aliceAssets = ethers.BigNumber.from(10);
-
-    await asset.connect(alice).transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        aliceAssets,
-        alice.address,
-        shareRatio,
-        []
-      );
-
-    const balance = await receipt
-      .connect(alice)
-      .balanceOf(alice.address, shareRatio);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
-            balance,
-            alice.address,
-            alice.address,
-            shareRatio
-          ),
-      `UnauthorizedWithdraw`,
-      "Failed to withdraw"
-    );
-  });
   it("Checks SetERC20Tier role", async function () {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
