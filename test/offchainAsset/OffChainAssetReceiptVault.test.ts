@@ -469,6 +469,33 @@ describe("OffChainAssetReceiptVault", async function () {
       "Failed to redeposit"
     );
   });
+  it.only("Prevents Redeposit on non-existing receipt", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+
+    const assetToReDeposit = ethers.BigNumber.from(10);
+
+    const id = 2;
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    await assertError(
+      async () =>
+        await vault
+          .connect(alice)
+          .redeposit(assetToReDeposit, alice.address, id, [1]),
+      `InvalidId`,
+      "Failed to redeposit"
+    );
+  });
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
