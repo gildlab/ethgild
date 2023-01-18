@@ -386,7 +386,7 @@ contract ReceiptVault is
     // Not sure why slither flags this as dead code. It is used by both `deposit`
     // and `mint`.
     //slither-disable-next-line dead-code
-    function _nextId() internal virtual view returns (uint256) {
+    function _nextId() internal view virtual returns (uint256) {
         return 1;
     }
 
