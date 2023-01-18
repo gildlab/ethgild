@@ -223,23 +223,19 @@ describe("OffChainAssetReceiptVault", async function () {
       `Wrong shares: expected ${assets} got ${shares} `
     );
   });
-  // it("PreviewMint returns 0 if not DEPOSITOR", async function () {
-  //   const [vault] = await deployOffChainAssetReceiptVault();
-  //   const shares = ethers.BigNumber.from(100);
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //   await vault
-  //       .connect(alice)
-  //       .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-  //
-  //   const assets = await vault.connect(alice).previewMint(shares);
-  //   const expectedAssets = ethers.BigNumber.from(0);
-  //
-  //   assert(
-  //     assets.eq(expectedAssets),
-  //     `Wrong assets: expected ${expectedAssets} got ${assets} `
-  //   );
-  // });
+  it.only("PreviewMint returns 0 if not DEPOSITOR", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+    const shares = ethers.BigNumber.from(100);
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const assets = await vault.connect(alice).previewMint(shares);
+    const expectedAssets = ethers.BigNumber.from(0);
+    // assert(
+    //   assets.eq(expectedAssets),
+    //   `Wrong assets: expected ${expectedAssets} got ${assets} `
+    // );
+  });
   it("PreviewMint returns correct assets", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
     const shares = ethers.BigNumber.from(10);
