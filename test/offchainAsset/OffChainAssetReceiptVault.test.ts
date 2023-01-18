@@ -354,24 +354,23 @@ describe("OffChainAssetReceiptVault", async function () {
 
     const shares = fixedPointMul(aliceAssets, receiptId);
 
-
     await asset.connect(alice).transfer(alice.address, aliceAssets);
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const assetToDeposit = aliceAssets.div(2);
     await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
         assetToDeposit,
         alice.address,
         receiptId,
         []
-    );
+      );
 
     const expectedAssets = ethers.BigNumber.from(0);
     const assets = await vault
@@ -462,8 +461,8 @@ describe("OffChainAssetReceiptVault", async function () {
     const id = 0;
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     await assertError(
       async () =>
@@ -1154,8 +1153,8 @@ describe("OffChainAssetReceiptVault", async function () {
     const balance = await receipt.connect(alice).balanceOf(alice.address, id);
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
     await assertError(
       async () =>
@@ -1202,8 +1201,8 @@ describe("OffChainAssetReceiptVault", async function () {
     const balance = await receipt.connect(alice).balanceOf(alice.address, id);
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
     await assertError(
       async () =>
