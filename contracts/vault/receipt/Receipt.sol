@@ -45,7 +45,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
         uint256 id_,
         uint256 amount_,
         bytes memory data_
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         _mint(account_, id_, amount_, data_);
         _receiptInformation(account_, id_, data_);
     }
@@ -55,7 +55,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
         address account_,
         uint256 id_,
         uint256 amount_
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         _burn(account_, id_, amount_);
     }
 
@@ -66,7 +66,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
         uint256 id_,
         uint256 amount_,
         bytes memory data_
-    ) external onlyOwner {
+    ) external virtual onlyOwner {
         _safeTransferFrom(from_, to_, id_, amount_, data_);
     }
 
