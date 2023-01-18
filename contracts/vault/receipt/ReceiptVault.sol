@@ -582,7 +582,6 @@ contract ReceiptVault is
         if (receiver_ == address(0)) {
             revert ZeroReceiver();
         }
-        _checkValidId(id_);
 
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
         emit DepositWithReceipt(
@@ -594,6 +593,10 @@ contract ReceiptVault is
             receiptInformation_
         );
         _beforeDeposit(assets_, msg.sender, receiver_, shares_, id_);
+
+        // Check valid ID after `_beforeDeposit` to allow storage changes that
+        // may impact the ID validity first.
+        _checkValidId(id_);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
@@ -805,7 +808,6 @@ contract ReceiptVault is
         if (owner_ == address(0)) {
             revert ZeroOwner();
         }
-        _checkValidId(id_);
 
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
         emit WithdrawWithReceipt(
@@ -835,6 +837,10 @@ contract ReceiptVault is
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
+
+        // Check valid ID after `_afterWithdraw` to allow storage to be updated
+        // first.
+        _checkValidId(id_);
     }
 
     function _afterWithdraw(
