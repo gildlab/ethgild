@@ -256,7 +256,7 @@ contract ReceiptVault is
         return assets_.fixedPointMul(shareRatio_, Math.Rounding.Up);
     }
 
-    /// Calculate how many assets_ to withdraw for burning shares_ as per
+    /// Calculate how many `assets_` to withdraw for burning `shares_` as per
     /// ERC4626 redeem logic.
     /// @param shares_ Amount of shares being burned for redemption.
     /// @param shareRatio_ Ratio of shares to assets being redeemed against.
@@ -300,6 +300,9 @@ contract ReceiptVault is
         withdrawIds[msg.sender] = id_;
     }
 
+    /// This is external NOT public. It is NOT allowed to revert BUT if we were
+    /// to calculate anything important internally with this we'd need it to
+    /// revert if there was an issue reading total assets.
     /// @inheritdoc IERC4626
     function totalAssets() external view virtual returns (uint256) {
         // There are NO fees so the managed assets are the asset balance of the
@@ -334,8 +337,9 @@ contract ReceiptVault is
     /// This variant of `_shareRatio` MAY return different results dependant on
     /// the depositor and/or recipient as per `previewDeposit` and `deposit`.
     /// MUST NOT revert.
+    /// @param depositor_ The
     function _shareRatio(
-        address,
+        address depositor_,
         address
     ) internal view virtual returns (uint256) {
         // Default is to fallback to user agnostic share ratio.
