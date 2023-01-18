@@ -117,6 +117,45 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       "Failed to deposit"
     );
   });
+  it.only("Checks depositor role", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const shareRatio = ONE;
+    const aliceAssets = ethers.BigNumber.from(1000);
+
+    await asset.connect(alice).transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+    await vault
+        .connect(alice)
+        ["mint(uint256,address,uint256,bytes)"](
+        aliceAssets,
+        bob.address,
+        shareRatio,
+        []
+    )
+    // await assertError(
+    //   async () =>
+    //     await vault
+    //       .connect(alice)
+    //       ["deposit(uint256,address,uint256,bytes)"](
+    //         aliceAssets,
+    //         bob.address,
+    //         shareRatio,
+    //         []
+    //       ),
+    //   `MinShareRatio`,
+    //   "Failed to deposit"
+    // );
+  });
   it("Checks withdraw without depositor role", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
