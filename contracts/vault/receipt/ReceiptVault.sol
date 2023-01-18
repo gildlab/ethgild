@@ -177,6 +177,14 @@ contract ReceiptVault is
         _receipt = receipt_;
     }
 
+    /// @inheritdoc IReceiptOwnerV1
+    function authorizeReceiptTransfer(
+        address,
+        address // solhint-disable-next-line no-empty-blocks
+    ) external view virtual {
+        // Authorize all receipt transfers by default.
+    }
+
     /// Standard check to enforce the minimum share ratio. If the share ratio is
     /// less than the minimum the transaction will revert with `MinShareRatio`.
     /// @param minShareRatio_ The share ratio must be at least this.
@@ -188,14 +196,6 @@ contract ReceiptVault is
         if (shareRatio_ < minShareRatio_) {
             revert MinShareRatio(minShareRatio_, shareRatio_);
         }
-    }
-
-    /// @inheritdoc IReceiptOwnerV1
-    function authorizeReceiptTransfer(
-        address,
-        address // solhint-disable-next-line no-empty-blocks
-    ) external view virtual {
-        // Authorize all receipt transfers by default.
     }
 
     /// Calculate how many shares_ will be minted in return for assets_ as per

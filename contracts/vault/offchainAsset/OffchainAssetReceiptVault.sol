@@ -337,6 +337,21 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _;
     }
 
+    /// Apply standard transfer restrictions to receipt transfers.
+    /// @inheritdoc ReceiptVault
+    function authorizeReceiptTransfer(
+        address from_,
+        address to_
+    ) external view virtual override {
+        enforceValidTransfer(
+            erc1155Tier,
+            erc1155MinimumTier,
+            erc1155TierContext,
+            from_,
+            to_
+        );
+    }
+
     /// Ensure that only callers with the depositor role can deposit.
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// @inheritdoc ReceiptVault
@@ -679,21 +694,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             to_
         );
         super._beforeTokenTransfer(from_, to_, amount_);
-    }
-
-    /// Apply standard transfer restrictions to receipt transfers.
-    /// @inheritdoc ReceiptVault
-    function authorizeReceiptTransfer(
-        address from_,
-        address to_
-    ) external view virtual override {
-        enforceValidTransfer(
-            erc1155Tier,
-            erc1155MinimumTier,
-            erc1155TierContext,
-            from_,
-            to_
-        );
     }
 
     /// Confiscators can confiscate ERC20 vault shares from `confiscatee_`.
