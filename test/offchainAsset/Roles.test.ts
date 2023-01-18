@@ -174,7 +174,6 @@ describe("OffChainAssetReceiptVault Roles", async function () {
     );
   });
   it("Checks Withdrawer role", async function () {
-    //Need Review
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
@@ -222,7 +221,6 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       "Failed to withdraw"
     );
   });
-
   it("Checks SetERC20Tier role", async function () {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
