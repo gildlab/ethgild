@@ -2,7 +2,7 @@
 pragma solidity =0.8.17;
 
 import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction} from "../receipt/ReceiptVault.sol";
 import "../../oracle/price/IPriceOracleV1.sol";
 
 /// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
@@ -138,16 +138,8 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The ID is the current oracle price always, even if this ID has already
     /// been issued for some other receipt, it will simply result in multiple
     /// holders of receipts with amounts of the same ID.
-    /// Note that as the price oracle MAY revert, this MAY also revert.
     /// @inheritdoc ReceiptVault
     function _nextId() internal view virtual override returns (uint256) {
-        return priceOracle.price();
-    }
-
-    /// The ID-less share ratio is the current oracle price, which will be the
-    /// ID in the case of a real deposit.
-    /// @inheritdoc ReceiptVault
-    function _shareRatio() internal view virtual override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
         try priceOracle.price() returns (
@@ -164,12 +156,10 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         }
     }
 
-    /// The share ratio _is_ the ID. This is the case for both deposits and
-    /// withdrawals.
+    /// The ID-less share ratio is the current oracle price, which will be the
+    /// ID in the case of a real deposit.
     /// @inheritdoc ReceiptVault
-    function _shareRatioForId(
-        uint256 id_
-    ) internal pure virtual override returns (uint256) {
+    function _shareRatioUserAgnostic(uint256 id_, ShareAction) internal view virtual override returns (uint256) {
         return id_;
     }
 }

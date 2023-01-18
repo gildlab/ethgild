@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 import "../receipt/IReceiptV1.sol";
+import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
@@ -36,10 +37,6 @@ error UnauthorizedSenderTier(address from, uint256 reportTime);
 /// @param to The token was transferred to this account.
 /// @param reportTime The to account had this time in the tier report.
 error UnauthorizedRecipientTier(address to, uint256 reportTime);
-
-/// Thrown when an ID can't be deposited or withdrawn.
-/// @param id The unexpected ID.
-error UnexpectedId(uint256 id);
 
 /// Thrown when a transfer is attempted by an unpriviledged account during system
 /// freeze due to certification lapse.
@@ -117,6 +114,8 @@ struct OffchainAssetReceiptVaultConfig {
 /// - Snapshots from `ReceiptVault` exposed under a role to ease potential
 ///   future migrations or disaster recovery plans.
 contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
+    using Math for uint256;
+
     /// Contract has initialized.
     /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
@@ -326,17 +325,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit OffchainAssetReceiptVaultInitialized(msg.sender, config_);
     }
 
-    /// Enforce that the ID being deposited or withdrawn is valid. Any ID larger
-    /// than highwater is invalid, and ID 0 is not allowed.
-    /// @param id_ The ID to validate.
-    modifier onlyValidId(uint256 id_) {
-        // Can only redeposit IDs that were first deposited.
-        if (id_ > highwaterId || id_ == 0) {
-            revert UnexpectedId(id_);
-        }
-        _;
-    }
-
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
     function authorizeReceiptTransfer(
@@ -352,21 +340,18 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         );
     }
 
-    /// Ensure that only callers with the depositor role can deposit.
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// @inheritdoc ReceiptVault
     function _beforeDeposit(
         uint256,
         address,
+        address,
         uint256,
         uint256 id_
-    ) internal view virtual override onlyValidId(id_) {
-        if (!hasRole(DEPOSITOR, msg.sender)) {
-            revert UnauthorizedDeposit(msg.sender);
-        }
+    ) internal virtual override {
+        highwaterId = highwaterId.max(id_);
     }
 
-    /// Ensure that only owners with the withdrawer role can withdraw.
     /// DO NOT call super `_afterWithdraw` as there are no assets to move.
     /// @inheritdoc ReceiptVault
     function _afterWithdraw(
@@ -375,11 +360,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         address owner_,
         uint256,
         uint256 id_
-    ) internal view virtual override onlyValidId(id_) {
-        if (!hasRole(WITHDRAWER, owner_)) {
-            revert UnauthorizedWithdraw(owner_);
-        }
-    }
+    ) internal view virtual override {}
 
     /// Shares total supply is 1:1 with offchain assets.
     /// Assets aren't real so only way to report this is to return the total
@@ -389,56 +370,35 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return totalSupply();
     }
 
-    /// Reverts are disallowed so `0` for everyone who does not have the role
-    /// for depositing. Depositors all have the same global share ratio.
     /// @inheritdoc ReceiptVault
     function _shareRatio(
-        address depositor_,
-        address
+        address owner_,
+        address,
+        uint256 id_,
+        ShareAction shareAction_
     ) internal view virtual override returns (uint256) {
-        // Passthrough to global share ratio if account has correct role.
-        return hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
-    }
-
-    /// Reverts are disallowed so `0` for everyone who does not have the
-    /// withdrawer role. Withdrawers all have the same global share ratio.
-    /// @inheritdoc ReceiptVault
-    function previewWithdraw(
-        uint256 assets_,
-        uint256 id_
-    ) public view virtual override returns (uint256) {
-        return
-            hasRole(WITHDRAWER, msg.sender)
-                ? super.previewWithdraw(assets_, id_)
-                : 0;
-    }
-
-    /// @inheritdoc ReceiptVault
-    function previewMint(
-        uint256 shares_
-    ) public view virtual override returns (uint256) {
-        return hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
-    }
-
-    /// @inheritdoc ReceiptVault
-    function previewRedeem(
-        uint256 shares_,
-        uint256 id_
-    ) public view virtual override returns (uint256) {
-        return
-            hasRole(WITHDRAWER, msg.sender)
-                ? super.previewRedeem(shares_, id_)
-                : 0;
+        if (shareAction_ == ShareAction.Mint) {
+            return hasRole(DEPOSITOR, owner_) ? _shareRatioUserAgnostic(id_, shareAction_) : 0;
+        } else {
+            return hasRole(WITHDRAWER, owner_) ? _shareRatioUserAgnostic(id_, shareAction_) : 0;
+        }
     }
 
     /// IDs for offchain assets are merely autoincremented. If the minter wants
     /// to track some external ID system as a foreign key they can emit this in
     /// the associated receipt information.
     /// @inheritdoc ReceiptVault
-    function _nextId() internal virtual override returns (uint256) {
-        uint256 id_ = highwaterId + 1;
-        highwaterId = id_;
-        return id_;
+    function _nextId() internal view virtual override returns (uint256) {
+        return highwaterId + 1;
+    }
+
+    /// Enforce the highwater ID in addition to base valid ID check.
+    /// @inheritdoc ReceiptVault
+    function _checkValidId(uint256 id_) internal view virtual override {
+        super._checkValidId(id_);
+        if (id_ > highwaterId) {
+            revert InvalidId(id_);
+        }
     }
 
     /// Depositors can increase the deposited assets for the existing id of this
@@ -474,7 +434,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _deposit(
             assets_,
             receiver_,
-            _calculateDeposit(assets_, _shareRatio(msg.sender, receiver_), 0),
+            _calculateDeposit(
+                assets_,
+                _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
+                0
+            ),
             id_,
             receiptInformation_
         );

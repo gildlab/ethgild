@@ -11,6 +11,10 @@ import "./IReceiptV1.sol";
 import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
 import "./IReceiptOwnerV1.sol";
 
+/// Thrown when an ID can't be deposited or withdrawn.
+/// @param id The invalid ID.
+error InvalidId(uint256 id);
+
 /// Thrown when the share ratio does not meet the minimum share ratio.
 error MinShareRatio(uint256 minShareRatio, uint256 shareRatio);
 
@@ -31,6 +35,13 @@ error ZeroID();
 
 /// Thrown when the receipt vault does not own the receipt.
 error WrongOwner(address vault, address receipt);
+
+/// Represents the action being taken on shares, ostensibly for calculating a
+/// ratio.
+enum ShareAction {
+    Mint,
+    Burn
+}
 
 /// All config required to initialize `ReceiptVault` except the receipt address.
 /// Included as a field on `ReceiptVaultConfig` which is the full initialization
@@ -210,7 +221,7 @@ contract ReceiptVault is
         uint256 assets_,
         uint256 shareRatio_,
         uint256 depositMinShareRatio_
-    ) internal virtual pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         checkMinShareRatio(depositMinShareRatio_, shareRatio_);
 
         // IRC4626:
@@ -231,7 +242,7 @@ contract ReceiptVault is
         uint256 shares_,
         uint256 shareRatio_,
         uint256 mintMinShareRatio_
-    ) internal virtual pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         checkMinShareRatio(mintMinShareRatio_, shareRatio_);
 
         // IERC4626:
@@ -249,7 +260,7 @@ contract ReceiptVault is
     function _calculateWithdraw(
         uint256 assets_,
         uint256 shareRatio_
-    ) internal virtual pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
@@ -265,7 +276,7 @@ contract ReceiptVault is
     function _calculateRedeem(
         uint256 shares_,
         uint256 shareRatio_
-    ) internal virtual pure returns (uint256) {
+    ) internal pure virtual returns (uint256) {
         // IERC4626:
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
@@ -322,33 +333,41 @@ contract ReceiptVault is
         }
     }
 
-    /// Define the share ratio that assets are converted to shares on deposit.
-    /// This variant of `_shareRatio` MUST return the same result for all users.
-    /// As per IERC4626 `convertToShares` it should reflect the "average-user's"
-    /// share ratio when all conditions are met.
-    /// MUST NOT revert, instead return `0` and calling functions MUST revert or
-    /// return values as appropriate.
-    function _shareRatio() internal view virtual returns (uint256) {
+    /// Define the ratio that shares are minted and burned per asset for both
+    /// deposit/mint and withdraw/redeem. The rounding will be function specific
+    /// as per ERC4626 when the ratio is applied to an absolute value, but the
+    /// ratio is defined in terms of who and what is being minted/burned. Sender
+    /// is available as `msg.sender` so is NOT an argument to this function.
+    /// Share ratios are always number of shares per unit of assets in both mint
+    /// and burn scenarios, and are 18 decimal fixed point numbers.
+    ///
+    /// !param owner_ The owner of assets deposited on deposit and owner of
+    /// shares burned on withdraw.
+    /// !param receiver_ The receiver of new shares minted on deposit and of
+    /// withdrawn assets on withdraw.
+    /// @param id_ The receipt ID being minted/burned in tandem with the shares.
+    /// @param shareAction_ Encodes whether shares are being minted or burned
+    /// (hypothetically or actually) for this ratio calculation.
+    /// @return
+    function _shareRatio(
+        address, // owner_
+        address, // receiver_
+        uint256 id_,
+        ShareAction shareAction_
+    ) internal view virtual returns (uint256) {
+        return _shareRatioUserAgnostic(id_, shareAction_);
+    }
+
+    /// Some functions in ERC4626 mandate the share ratio ignore the user.
+    /// Otherwise identical to `_shareRatio`.
+    /// !param id_ As per `_shareRatio`.
+    /// !param shareAction_ As per `_shareRatio`.
+    function _shareRatioUserAgnostic(
+        uint256, // id_
+        ShareAction // shareAction_
+    ) internal view virtual returns (uint256) {
         // Default is 1:1 shares to assets.
         return 1e18;
-    }
-
-    /// Define the share ratio that deposits convert to shares.
-    /// This variant of `_shareRatio` MAY return different results dependant on
-    /// the depositor and/or recipient as per `previewDeposit` and `deposit`.
-    /// MUST NOT revert.
-    /// @param depositor_ The
-    function _shareRatio(
-        address depositor_,
-        address
-    ) internal view virtual returns (uint256) {
-        // Default is to fallback to user agnostic share ratio.
-        return _shareRatio();
-    }
-
-    function _shareRatioForId(uint256) internal view virtual returns (uint256) {
-        // Default is the same as share ratio with no id.
-        return _shareRatio();
     }
 
     /// Defines the next ID that a deposit will mint shares and receipts under.
@@ -359,27 +378,56 @@ contract ReceiptVault is
     /// ID values that are meaningful to the depositor can be encoded in the
     /// receipt information that is emitted for offchain indexing via events.
     /// The default behaviour is to bind every mint and burn to the same ID, i.e.
-    /// the ID is always `0`. This is almost certainly NOT desired behaviour so
+    /// the ID is always `1`. This is almost certainly NOT desired behaviour so
     /// inheriting contracts will need to provide an override.
+    /// Used inside ERC4626 functions that MUST NOT REVERT therefore this also
+    /// MUST NOT REVERT. However, ID 0 is treated as invalid by default so
+    /// returning 0 will revert where it needs to in the default implementation.
     // Not sure why slither flags this as dead code. It is used by both `deposit`
     // and `mint`.
     //slither-disable-next-line dead-code
-    function _nextId() internal virtual returns (uint256) {
-        return 0;
+    function _nextId() internal virtual view returns (uint256) {
+        return 1;
     }
 
+    /// Reverts if the ID provided is not valid. Default is that ID 0 is never
+    /// valid but additional constraints my be implemented by overriding this.
+    /// ID validity is checked on both deposit and withdraw.
+    /// @param id_ The ID to check validity for.
+    function _checkValidId(uint256 id_) internal view virtual {
+        if (id_ == 0) {
+            revert InvalidId(id_);
+        }
+    }
+
+    /// The spec demands this function ignores per-user concerns. It seems to
+    /// imply minting but doesn't provide a sibling conversion for burning.
+    /// > The amount of shares that the Vault would exchange for the amount of
+    /// > assets provided
     /// @inheritdoc IERC4626
     function convertToShares(uint256 assets_) external view returns (uint256) {
-        return _calculateDeposit(assets_, _shareRatio(), 0);
+        return
+            _calculateDeposit(
+                assets_,
+                _shareRatioUserAgnostic(_nextId(), ShareAction.Mint),
+                0
+            );
     }
 
-    /// This function is a bit weird because in reality everyone converts their
-    /// shares to assets at the share ratio they minted at, NOT the current
-    /// share ratio. But the spec demands that this function ignores per-user
-    /// concerns.
+    /// The spec demands that this function ignores per-user concerns. It seems
+    /// to imply burning but doesn't provide a sibling conversion for minting.
+    /// > The amount of assets that the Vault would exchange for the amount of
+    /// > shares provided
     /// @inheritdoc IERC4626
     function convertToAssets(uint256 shares_) external view returns (uint256) {
-        return _calculateRedeem(shares_, _shareRatio());
+        return
+            _calculateRedeem(
+                shares_,
+                // Not clear what a good ID for a hypothetical context free burn
+                // should be. Next ID is technically nonsense but we don't have
+                // any other ID to prefer either.
+                _shareRatioUserAgnostic(_nextId(), ShareAction.Burn)
+            );
     }
 
     /// @inheritdoc IERC4626
@@ -408,7 +456,12 @@ contract ReceiptVault is
                 assets_,
                 // Spec doesn't provide us with a receipient but wants a per-user
                 // preview so we assume that depositor = receipient.
-                _shareRatio(msg.sender, msg.sender),
+                _shareRatio(
+                    msg.sender,
+                    msg.sender,
+                    _nextId(),
+                    ShareAction.Mint
+                ),
                 // IERC4626:
                 // > MUST NOT revert due to vault specific user/global limits.
                 // > MAY revert due to other conditions that would also cause
@@ -434,7 +487,12 @@ contract ReceiptVault is
                 shares_,
                 // Spec doesn't provide us with a recipient but wants a per-user
                 // preview so we assume that depositor = recipient.
-                _shareRatio(msg.sender, msg.sender),
+                _shareRatio(
+                    msg.sender,
+                    msg.sender,
+                    _nextId(),
+                    ShareAction.Mint
+                ),
                 // IERC4626:
                 // > MUST NOT revert due to vault specific user/global limits.
                 // > MAY revert due to other conditions that would also cause mint
@@ -479,7 +537,13 @@ contract ReceiptVault is
         uint256 depositMinShareRatio_,
         bytes memory receiptInformation_
     ) public returns (uint256) {
-        uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
+        uint256 id_ = _nextId();
+        uint256 shareRatio_ = _shareRatio(
+            msg.sender,
+            receiver_,
+            id_,
+            ShareAction.Mint
+        );
 
         uint256 shares_ = _calculateDeposit(
             assets_,
@@ -487,7 +551,7 @@ contract ReceiptVault is
             depositMinShareRatio_
         );
 
-        _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
+        _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
         return shares_;
     }
 
@@ -518,9 +582,7 @@ contract ReceiptVault is
         if (receiver_ == address(0)) {
             revert ZeroReceiver();
         }
-        if (id_ == 0) {
-            revert ZeroID();
-        }
+        _checkValidId(id_);
 
         emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
         emit DepositWithReceipt(
@@ -531,7 +593,7 @@ contract ReceiptVault is
             id_,
             receiptInformation_
         );
-        _beforeDeposit(assets_, receiver_, shares_, id_);
+        _beforeDeposit(assets_, msg.sender, receiver_, shares_, id_);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
@@ -544,14 +606,24 @@ contract ReceiptVault is
         _receipt.ownerMint(receiver_, id_, shares_, receiptInformation_);
     }
 
+    /// Hook for additional actions that MUST complete or revert before deposit
+    /// is complete. This hook is responsible for any transfer of assets from
+    /// the asset owner to the receipt vault IN ADDITION to any other checks that
+    /// may revert.
+    /// @param assets_ Number of assets being deposited.
+    /// @param owner_ The owner of the assets being deposited.
+    /// !param receiver_ Receiver of shares that will be minted.
+    /// !param shares_ Amount of shares that will be minted.
+    /// !param id_ Recipt ID that will be minted for this deposit.
     function _beforeDeposit(
         uint256 assets_,
-        address,
-        uint256,
-        uint256
+        address owner_,
+        address, // receiver_
+        uint256, // shares_
+        uint256 // id_
     ) internal virtual {
         // Default behaviour is to move assets before minting shares.
-        IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets_);
+        IERC20(asset()).safeTransferFrom(owner_, address(this), assets_);
     }
 
     /// If the sender wants to use the ERC4626 `mint` function and set a
@@ -581,14 +653,20 @@ contract ReceiptVault is
         uint256 mintMinShareRatio_,
         bytes memory receiptInformation_
     ) public returns (uint256) {
-        uint256 shareRatio_ = _shareRatio(msg.sender, receiver_);
+        uint256 id_ = _nextId();
+        uint256 shareRatio_ = _shareRatio(
+            msg.sender,
+            receiver_,
+            id_,
+            ShareAction.Mint
+        );
 
         uint256 assets_ = _calculateMint(
             shares_,
             shareRatio_,
             mintMinShareRatio_
         );
-        _deposit(assets_, receiver_, shares_, _nextId(), receiptInformation_);
+        _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
         return assets_;
     }
 
@@ -627,7 +705,8 @@ contract ReceiptVault is
         return
             _calculateRedeem(
                 _receipt.balanceOf(owner_, id_),
-                _shareRatioForId(id_)
+                // Assume the owner is hypothetically withdrawing for themselves.
+                _shareRatio(owner_, owner_, id_, ShareAction.Burn)
             );
     }
 
@@ -651,7 +730,12 @@ contract ReceiptVault is
         uint256 assets_,
         uint256 id_
     ) public view virtual returns (uint256) {
-        return _calculateWithdraw(assets_, _shareRatioForId(id_));
+        return
+            _calculateWithdraw(
+                assets_,
+                // Assume that owner and receiver are the sender for a preview
+                _shareRatio(msg.sender, msg.sender, id_, ShareAction.Burn)
+            );
     }
 
     /// Withdraws against the current withdraw ID set by the owner.
@@ -680,7 +764,10 @@ contract ReceiptVault is
         address owner_,
         uint256 id_
     ) public returns (uint256) {
-        uint256 shares_ = _calculateWithdraw(assets_, _shareRatioForId(id_));
+        uint256 shares_ = _calculateWithdraw(
+            assets_,
+            _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
+        );
         _withdraw(assets_, receiver_, owner_, shares_, id_);
         return shares_;
     }
@@ -718,6 +805,7 @@ contract ReceiptVault is
         if (owner_ == address(0)) {
             revert ZeroOwner();
         }
+        _checkValidId(id_);
 
         emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
         emit WithdrawWithReceipt(
@@ -827,7 +915,10 @@ contract ReceiptVault is
         address owner_,
         uint256 id_
     ) public returns (uint256) {
-        uint256 assets_ = _calculateRedeem(shares_, _shareRatioForId(id_));
+        uint256 assets_ = _calculateRedeem(
+            shares_,
+            _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
+        );
         _withdraw(assets_, receiver_, owner_, shares_, id_);
         return assets_;
     }

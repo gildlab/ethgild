@@ -117,7 +117,7 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       "Failed to deposit"
     );
   });
-  it.only("Checks depositor role", async function () {
+  it("Checks depositor role", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetReceiptVault();
 
@@ -135,13 +135,13 @@ describe("OffChainAssetReceiptVault Roles", async function () {
 
     await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
     await vault
-        .connect(alice)
-        ["mint(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](
         aliceAssets,
         bob.address,
         shareRatio,
         []
-    )
+      );
     // await assertError(
     //   async () =>
     //     await vault
