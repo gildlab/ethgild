@@ -10,7 +10,7 @@ import "../vault/receipt/IReceiptOwnerV1.sol";
 error UnauthorizedTransfer(address from, address to);
 
 /// @title TestReceiptOwner
-/// @notice A TEST contract that can be the owner of an `IReceiptV1` and forward
+/// @notice TEST contract that can be the owner of an `IReceiptV1` and forward
 /// function calls to the owner restricted functions on the receipt. Completely
 /// insecure, intended for use only by the test harness to drive ownership tests.
 contract TestReceiptOwner is IReceiptOwnerV1 {
