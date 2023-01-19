@@ -11,7 +11,7 @@ import {
   Receipt,
   ReceiptFactory,
   TestErc20,
-  TestReceipt,
+  TestReceipt, TestReceiptOwner,
 } from "../../typechain-types";
 import { Contract } from "ethers";
 
@@ -113,6 +113,7 @@ describe("Receipt vault", async function () {
   it.only("Check OwnerMint", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const bob = signers[1];
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -122,16 +123,24 @@ describe("Receipt vault", async function () {
     const receipt = (await testReceipt.deploy()) as TestReceipt;
     await receipt.deployed();
 
-    await receipt.setOwner(alice.address);
+    const testReceiptOwner = await ethers.getContractFactory("TestReceiptOwner");
+    const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
+    await receiptOwner.deployed();
 
-    // let owner = await receipt.connect(alice).owner();
-    // let sender = await receipt.connect(alice).signer.getAddress();
+    await receipt.setOwner(receiptOwner.address)
+
+    await receiptOwner.setFrom(alice.address)
+    await receiptOwner.setTo(alice.address)
 
     const assets = ethers.BigNumber.from(30);
     await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(receipt.address, assets);
+    await asset
+        .connect(alice)
+        .increaseAllowance(receiptOwner.address, assets);
 
+    // await receiptOwner.authorizeReceiptTransfer(alice.address, alice.address)
     const shares = ethers.BigNumber.from(10);
-    await receipt.connect(alice).ownerMint(alice.address, 1, shares, []);
+    await receiptOwner.connect(alice).ownerMint(receipt.address, alice.address, 1,shares,[])
+
   });
 });
