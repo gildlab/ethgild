@@ -7,7 +7,7 @@ import {
   ONE,
 } from "../util";
 import { deployOffChainAssetReceiptVault } from "../offchainAsset/deployOffchainAssetReceiptVault";
-import { Receipt, ReceiptFactory, TestErc20 } from "../../typechain-types";
+import { Receipt, ReceiptFactory, TestErc20, TestReceipt } from "../../typechain-types";
 import { Contract } from "ethers";
 
 const assert = require("assert");
@@ -73,7 +73,7 @@ describe("Receipt vault", async function () {
     let uri = await childContract.connect(alice).uri(1);
     assert(uri === expectedUri, `wrong uri expected ${expectedUri} got ${uri}`);
   });
-  it("check owner", async function () {
+  it("Check owner", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -97,18 +97,6 @@ describe("Receipt vault", async function () {
       (await artifacts.readArtifact("Receipt")).abi
     ) as Receipt;
 
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
-    await testErc20Contract.deployed();
-
-    const assets = ethers.BigNumber.from(30);
-    await testErc20Contract.transfer(alice.address, assets);
-    await testErc20Contract
-      .connect(alice)
-      .increaseAllowance(receipt.address, assets);
-
-    // const shares = ethers.BigNumber.from(10);
-    // await receipt.connect(alice).ownerMint(alice.address, 1,shares,[])
 
     let owner = await receipt.connect(alice).owner();
     let sender = await receipt.connect(alice).signer.getAddress();
@@ -117,5 +105,32 @@ describe("Receipt vault", async function () {
       owner === sender,
       `Ownable: sender is not the owner. owner ${owner}, sender ${sender}`
     );
+  });
+  it.only("Check OwnerMint", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const testReceipt = await ethers.getContractFactory("TestReceipt");
+    const receipt = (await testReceipt.deploy()) as TestReceipt;
+    await receipt.deployed();
+
+    await receipt.setOwner(alice.address)
+
+    // let owner = await receipt.connect(alice).owner();
+    // let sender = await receipt.connect(alice).signer.getAddress();
+
+    const assets = ethers.BigNumber.from(30);
+    await asset.transfer(alice.address, assets);
+    await asset
+        .connect(alice)
+        .increaseAllowance(receipt.address, assets);
+
+    const shares = ethers.BigNumber.from(10);
+    await receipt.connect(alice).ownerMint(alice.address, 1,shares,[])
+
   });
 });
