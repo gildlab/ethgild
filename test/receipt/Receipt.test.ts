@@ -81,6 +81,29 @@ describe("Receipt vault", async function () {
     let uri = await childContract.connect(alice).uri(1);
     assert(uri === expectedUri, `wrong uri expected ${expectedUri} got ${uri}`);
   });
+  it("Sets owner", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const testReceipt = await ethers.getContractFactory("TestReceipt");
+    const receipt = (await testReceipt.deploy()) as TestReceipt;
+    await receipt.deployed();
+
+    const testReceiptOwner = await ethers.getContractFactory(
+      "TestReceiptOwner"
+    );
+    const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
+    await receiptOwner.deployed();
+
+    await receipt.setOwner(receiptOwner.address);
+
+    const owner = await receipt.connect(alice).owner();
+
+    assert(
+      owner === receiptOwner.address,
+      `Wrong owner. Expected ${receiptOwner.address}, got ${owner}`
+    );
+  });
   it("Check owner", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
