@@ -7,7 +7,12 @@ import {
   ONE,
 } from "../util";
 import { deployOffChainAssetReceiptVault } from "../offchainAsset/deployOffchainAssetReceiptVault";
-import { Receipt, ReceiptFactory, TestErc20, TestReceipt } from "../../typechain-types";
+import {
+  Receipt,
+  ReceiptFactory,
+  TestErc20,
+  TestReceipt,
+} from "../../typechain-types";
 import { Contract } from "ethers";
 
 const assert = require("assert");
@@ -97,7 +102,6 @@ describe("Receipt vault", async function () {
       (await artifacts.readArtifact("Receipt")).abi
     ) as Receipt;
 
-
     let owner = await receipt.connect(alice).owner();
     let sender = await receipt.connect(alice).signer.getAddress();
 
@@ -118,19 +122,16 @@ describe("Receipt vault", async function () {
     const receipt = (await testReceipt.deploy()) as TestReceipt;
     await receipt.deployed();
 
-    await receipt.setOwner(alice.address)
+    await receipt.setOwner(alice.address);
 
     // let owner = await receipt.connect(alice).owner();
     // let sender = await receipt.connect(alice).signer.getAddress();
 
     const assets = ethers.BigNumber.from(30);
     await asset.transfer(alice.address, assets);
-    await asset
-        .connect(alice)
-        .increaseAllowance(receipt.address, assets);
+    await asset.connect(alice).increaseAllowance(receipt.address, assets);
 
     const shares = ethers.BigNumber.from(10);
-    await receipt.connect(alice).ownerMint(alice.address, 1,shares,[])
-
+    await receipt.connect(alice).ownerMint(alice.address, 1, shares, []);
   });
 });
