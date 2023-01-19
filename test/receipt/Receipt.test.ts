@@ -269,7 +269,7 @@ describe("Receipt vault", async function () {
     await receipt.deployed();
 
     const testReceiptOwner = await ethers.getContractFactory(
-        "TestReceiptOwner"
+      "TestReceiptOwner"
     );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
@@ -291,12 +291,19 @@ describe("Receipt vault", async function () {
     await receiptOwner.setTo(bob.address);
 
     await assertError(
-        async () =>
-            await receiptOwner
-                .connect(alice)
-                .ownerTransferFrom(receipt.address, alice.address, bob.address, receiptId, transferAmount, []),
-        "ERC1155: insufficient balance for transfer",
-        "failed to transfer"
+      async () =>
+        await receiptOwner
+          .connect(alice)
+          .ownerTransferFrom(
+            receipt.address,
+            alice.address,
+            bob.address,
+            receiptId,
+            transferAmount,
+            []
+          ),
+      "ERC1155: insufficient balance for transfer",
+      "failed to transfer"
     );
   });
   it("OwnerTransferFrom - transforms balances", async function () {
@@ -313,7 +320,7 @@ describe("Receipt vault", async function () {
     await receipt.deployed();
 
     const testReceiptOwner = await ethers.getContractFactory(
-        "TestReceiptOwner"
+      "TestReceiptOwner"
     );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
@@ -331,8 +338,8 @@ describe("Receipt vault", async function () {
     const transferAmount = ethers.BigNumber.from(10);
 
     await receiptOwner
-        .connect(alice)
-        .ownerMint(receipt.address, alice.address, receiptId, transferAmount, []);
+      .connect(alice)
+      .ownerMint(receipt.address, alice.address, receiptId, transferAmount, []);
 
     const balanceBefore = await receipt.balanceOf(alice.address, receiptId);
     const balanceBeforeBob = await receipt.balanceOf(bob.address, receiptId);
@@ -341,24 +348,31 @@ describe("Receipt vault", async function () {
     await receiptOwner.setTo(bob.address);
 
     await receiptOwner
-        .connect(alice)
-        .ownerTransferFrom(receipt.address, alice.address, bob.address, receiptId, transferAmount, []);
+      .connect(alice)
+      .ownerTransferFrom(
+        receipt.address,
+        alice.address,
+        bob.address,
+        receiptId,
+        transferAmount,
+        []
+      );
 
     const balanceAfter = await receipt.balanceOf(alice.address, receiptId);
     const balanceAfterBob = await receipt.balanceOf(bob.address, receiptId);
 
     assert(
-        balanceAfterBob.eq(balanceBeforeBob.add(transferAmount)),
-        `Wrong balance for bob. Expected ${balanceBeforeBob.add(
-            transferAmount
-        )}, got ${balanceAfterBob}`
+      balanceAfterBob.eq(balanceBeforeBob.add(transferAmount)),
+      `Wrong balance for bob. Expected ${balanceBeforeBob.add(
+        transferAmount
+      )}, got ${balanceAfterBob}`
     );
 
     assert(
-        balanceAfter.eq(balanceBefore.sub(transferAmount)),
-        `Wrong balance for alice. Expected ${balanceBefore.sub(
-            transferAmount
-        )}, got ${balanceAfter}`
+      balanceAfter.eq(balanceBefore.sub(transferAmount)),
+      `Wrong balance for alice. Expected ${balanceBefore.sub(
+        transferAmount
+      )}, got ${balanceAfter}`
     );
   });
   it("OwnerTransferFrom - checks if transfer is authorized", async function () {
@@ -375,7 +389,7 @@ describe("Receipt vault", async function () {
     await receipt.deployed();
 
     const testReceiptOwner = await ethers.getContractFactory(
-        "TestReceiptOwner"
+      "TestReceiptOwner"
     );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
@@ -393,16 +407,23 @@ describe("Receipt vault", async function () {
     const transferAmount = ethers.BigNumber.from(10);
 
     await receiptOwner
-        .connect(alice)
-        .ownerMint(receipt.address, alice.address, receiptId, transferAmount, []);
+      .connect(alice)
+      .ownerMint(receipt.address, alice.address, receiptId, transferAmount, []);
 
     await assertError(
-        async () =>
-            await receiptOwner
-                .connect(alice)
-                .ownerTransferFrom(receipt.address, alice.address, bob.address, receiptId, transferAmount, []),
-        `UnauthorizedTransfer("${alice.address}", "${bob.address}")`,
-        "failed to prevent ownerBurn"
+      async () =>
+        await receiptOwner
+          .connect(alice)
+          .ownerTransferFrom(
+            receipt.address,
+            alice.address,
+            bob.address,
+            receiptId,
+            transferAmount,
+            []
+          ),
+      `UnauthorizedTransfer("${alice.address}", "${bob.address}")`,
+      "failed to prevent ownerBurn"
     );
   });
 });
