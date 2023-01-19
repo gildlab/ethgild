@@ -256,6 +256,9 @@ describe("Receipt vault", async function () {
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
 
+    await receiptOwner.setFrom(ADDRESS_ZERO);
+    await receiptOwner.setTo(alice.address);
+
     const receiptId = ethers.BigNumber.from(1);
     const toMint = ethers.BigNumber.from(10);
     await receiptOwner
