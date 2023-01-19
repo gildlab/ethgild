@@ -1,6 +1,7 @@
 import { artifacts, ethers } from "hardhat";
 import {
-  ADDRESS_ZERO, assertError,
+  ADDRESS_ZERO,
+  assertError,
   expectedUri,
   fixedPointDiv,
   fixedPointMul,
@@ -12,7 +13,8 @@ import {
   Receipt,
   ReceiptFactory,
   TestErc20,
-  TestReceipt, TestReceiptOwner,
+  TestReceipt,
+  TestReceiptOwner,
 } from "../../typechain-types";
 import { Contract } from "ethers";
 
@@ -123,32 +125,36 @@ describe("Receipt vault", async function () {
     const receipt = (await testReceipt.deploy()) as TestReceipt;
     await receipt.deployed();
 
-    const testReceiptOwner = await ethers.getContractFactory("TestReceiptOwner");
+    const testReceiptOwner = await ethers.getContractFactory(
+      "TestReceiptOwner"
+    );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
 
-    await receipt.setOwner(receiptOwner.address)
+    await receipt.setOwner(receiptOwner.address);
 
-    await receiptOwner.setFrom(ADDRESS_ZERO)
-    await receiptOwner.setTo(alice.address)
+    await receiptOwner.setFrom(ADDRESS_ZERO);
+    await receiptOwner.setTo(alice.address);
 
     const assets = ethers.BigNumber.from(30);
     await asset.transfer(alice.address, assets);
-    await asset
-        .connect(alice)
-        .increaseAllowance(receiptOwner.address, assets);
+    await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
 
-    const receiptId  = ethers.BigNumber.from(1)
+    const receiptId = ethers.BigNumber.from(1);
 
-    const balanceBefore = await receipt.balanceOf(alice.address, receiptId)
+    const balanceBefore = await receipt.balanceOf(alice.address, receiptId);
     const shares = ethers.BigNumber.from(10);
-    await receiptOwner.connect(alice).ownerMint(receipt.address, alice.address, receiptId,shares,[])
+    await receiptOwner
+      .connect(alice)
+      .ownerMint(receipt.address, alice.address, receiptId, shares, []);
 
-    const balanceAfter = await receipt.balanceOf(alice.address, receiptId)
+    const balanceAfter = await receipt.balanceOf(alice.address, receiptId);
 
     assert(
-        balanceAfter.eq(balanceBefore.add(shares)),
-        `Wrong balance. Expected ${balanceBefore.add(shares)}, got ${balanceAfter}`
+      balanceAfter.eq(balanceBefore.add(shares)),
+      `Wrong balance. Expected ${balanceBefore.add(
+        shares
+      )}, got ${balanceAfter}`
     );
   });
   it("Check OwnerBurn burns correct amount", async function () {
@@ -163,39 +169,44 @@ describe("Receipt vault", async function () {
     const receipt = (await testReceipt.deploy()) as TestReceipt;
     await receipt.deployed();
 
-    const testReceiptOwner = await ethers.getContractFactory("TestReceiptOwner");
+    const testReceiptOwner = await ethers.getContractFactory(
+      "TestReceiptOwner"
+    );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
 
-    await receipt.setOwner(receiptOwner.address)
+    await receipt.setOwner(receiptOwner.address);
 
-    await receiptOwner.setFrom(ADDRESS_ZERO)
-    await receiptOwner.setTo(alice.address)
+    await receiptOwner.setFrom(ADDRESS_ZERO);
+    await receiptOwner.setTo(alice.address);
 
     const assets = ethers.BigNumber.from(30);
     await asset.transfer(alice.address, assets);
-    await asset
-        .connect(alice)
-        .increaseAllowance(receiptOwner.address, assets);
+    await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
 
-    const receiptId  = ethers.BigNumber.from(1)
+    const receiptId = ethers.BigNumber.from(1);
     const toMint = ethers.BigNumber.from(10);
-    await receiptOwner.connect(alice).ownerMint(receipt.address, alice.address, receiptId,toMint,[])
+    await receiptOwner
+      .connect(alice)
+      .ownerMint(receipt.address, alice.address, receiptId, toMint, []);
 
     const toBurn = ethers.BigNumber.from(5);
-    await receiptOwner.setFrom(alice.address)
-    await receiptOwner.setTo(ADDRESS_ZERO)
+    await receiptOwner.setFrom(alice.address);
+    await receiptOwner.setTo(ADDRESS_ZERO);
 
-    const balanceBefore = await receipt.balanceOf(alice.address, receiptId)
+    const balanceBefore = await receipt.balanceOf(alice.address, receiptId);
 
-    await receiptOwner.connect(alice).ownerBurn(receipt.address, alice.address, receiptId, toBurn)
+    await receiptOwner
+      .connect(alice)
+      .ownerBurn(receipt.address, alice.address, receiptId, toBurn);
 
-    const balanceAfter = await receipt.balanceOf(alice.address, receiptId)
+    const balanceAfter = await receipt.balanceOf(alice.address, receiptId);
 
-
-    assert (
-        balanceAfter.eq(balanceBefore.sub(toBurn)),
-        `Wrong balance. Expected ${balanceBefore.add(toBurn)}, got ${balanceAfter}`
+    assert(
+      balanceAfter.eq(balanceBefore.sub(toBurn)),
+      `Wrong balance. Expected ${balanceBefore.add(
+        toBurn
+      )}, got ${balanceAfter}`
     );
   });
   it("OwnerBurn fails while not enough balance to burn", async function () {
@@ -210,37 +221,41 @@ describe("Receipt vault", async function () {
     const receipt = (await testReceipt.deploy()) as TestReceipt;
     await receipt.deployed();
 
-    const testReceiptOwner = await ethers.getContractFactory("TestReceiptOwner");
+    const testReceiptOwner = await ethers.getContractFactory(
+      "TestReceiptOwner"
+    );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
 
-    await receipt.setOwner(receiptOwner.address)
+    await receipt.setOwner(receiptOwner.address);
 
-    await receiptOwner.setFrom(ADDRESS_ZERO)
-    await receiptOwner.setTo(alice.address)
+    await receiptOwner.setFrom(ADDRESS_ZERO);
+    await receiptOwner.setTo(alice.address);
 
     const assets = ethers.BigNumber.from(30);
     await asset.transfer(alice.address, assets);
-    await asset
-        .connect(alice)
-        .increaseAllowance(receiptOwner.address, assets);
+    await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
 
-    const receiptId  = ethers.BigNumber.from(1)
+    const receiptId = ethers.BigNumber.from(1);
     const toMint = ethers.BigNumber.from(10);
-    await receiptOwner.connect(alice).ownerMint(receipt.address, alice.address, receiptId,toMint,[])
+    await receiptOwner
+      .connect(alice)
+      .ownerMint(receipt.address, alice.address, receiptId, toMint, []);
 
-    await receiptOwner.setFrom(alice.address)
-    await receiptOwner.setTo(ADDRESS_ZERO)
+    await receiptOwner.setFrom(alice.address);
+    await receiptOwner.setTo(ADDRESS_ZERO);
 
-    const balanceBefore = await receipt.balanceOf(alice.address, receiptId)
+    const balanceBefore = await receipt.balanceOf(alice.address, receiptId);
 
     const toBurn = balanceBefore.add(1);
 
     await assertError(
-        async () =>
-            await receiptOwner.connect(alice).ownerBurn(receipt.address, alice.address, receiptId, toBurn),
-        "ERC1155: burn amount exceeds balance",
-        "failed to prevent ownerBurn"
+      async () =>
+        await receiptOwner
+          .connect(alice)
+          .ownerBurn(receipt.address, alice.address, receiptId, toBurn),
+      "ERC1155: burn amount exceeds balance",
+      "failed to prevent ownerBurn"
     );
   });
 });
