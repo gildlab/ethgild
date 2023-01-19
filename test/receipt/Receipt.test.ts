@@ -1,5 +1,6 @@
 import { artifacts, ethers } from "hardhat";
 import {
+  ADDRESS_ZERO,
   expectedUri,
   fixedPointDiv,
   fixedPointMul,
@@ -110,10 +111,9 @@ describe("Receipt vault", async function () {
       `Ownable: sender is not the owner. owner ${owner}, sender ${sender}`
     );
   });
-  it.only("Check OwnerMint", async function () {
+  it("Check OwnerMint", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
-    const bob = signers[1];
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -129,7 +129,7 @@ describe("Receipt vault", async function () {
 
     await receipt.setOwner(receiptOwner.address)
 
-    await receiptOwner.setFrom(alice.address)
+    await receiptOwner.setFrom(ADDRESS_ZERO)
     await receiptOwner.setTo(alice.address)
 
     const assets = ethers.BigNumber.from(30);
@@ -138,9 +138,17 @@ describe("Receipt vault", async function () {
         .connect(alice)
         .increaseAllowance(receiptOwner.address, assets);
 
-    // await receiptOwner.authorizeReceiptTransfer(alice.address, alice.address)
-    const shares = ethers.BigNumber.from(10);
-    await receiptOwner.connect(alice).ownerMint(receipt.address, alice.address, 1,shares,[])
+    const receiptId  = ethers.BigNumber.from(1)
 
+    const balanceBefore = await receipt.balanceOf(alice.address, receiptId)
+    const shares = ethers.BigNumber.from(10);
+    await receiptOwner.connect(alice).ownerMint(receipt.address, alice.address, receiptId,shares,[])
+
+    const balanceAfter = await receipt.balanceOf(alice.address, receiptId)
+
+    assert(
+        balanceAfter.eq(balanceBefore.add(shares)),
+        `Wrong balance. Expected ${balanceBefore.add(shares)}, got ${balanceAfter}`
+    );
   });
 });
