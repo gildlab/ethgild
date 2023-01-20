@@ -203,9 +203,10 @@ export const deployERC20PriceOracleVault = async (): Promise<
   ];
 };
 
-export const expectedReferencePrice = ethers.BigNumber.from(basePrice)
-  .mul(ONE)
-  .div(ethers.BigNumber.from(quotePrice));
+export const expectedReferencePrice = fixedPointDivRound(
+  ethers.BigNumber.from(basePrice),
+  ethers.BigNumber.from(quotePrice)
+);
 
 export const assertError = async (f: Function, s: string, e: string) => {
   let didError = false;
