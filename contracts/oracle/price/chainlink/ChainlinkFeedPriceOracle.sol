@@ -5,6 +5,7 @@ import "@rainprotocol/rain-protocol/contracts/chainlink/LibChainlink.sol";
 
 import "../IPriceOracleV1.sol";
 
+/// Config for construction of `ChainlinkFeedPriceOracle`.
 /// @param feed The address of the underlying Chainlink oracle.
 /// @param staleAfter The duration in seconds after which price data will be
 /// considered too stale for use and error.

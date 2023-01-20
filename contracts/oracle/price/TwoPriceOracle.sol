@@ -4,6 +4,7 @@ pragma solidity =0.8.17;
 import "./IPriceOracleV1.sol";
 import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
 
+/// Construction config for `TwoPriceOracle`.
 /// @param base The base price of the merged pair, will be the numerator.
 /// @param quote The quote price of the merged pair, will be the denominator.
 struct TwoPriceOracleConfig {
@@ -38,8 +39,10 @@ contract TwoPriceOracle is IPriceOracleV1 {
     }
 
     /// Calculates the price as `base / quote` using fixed point 18 decimal math.
+    /// Round UP to avoid edge cases that could return `0` which is disallowed
+    /// by `IPriceOracleV1` despite compliant sub-oracles.
     /// @inheritdoc IPriceOracleV1
     function price() external view override returns (uint256) {
-        return base.price().fixedPointDiv(quote.price());
+        return base.price().fixedPointDiv(quote.price(), Math.Rounding.Up);
     }
 }
