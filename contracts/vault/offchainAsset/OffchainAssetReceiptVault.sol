@@ -345,7 +345,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     function _beforeDeposit(
         uint256,
         address,
-        address,
         uint256,
         uint256 id_
     ) internal virtual override {

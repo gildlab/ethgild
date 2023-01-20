@@ -585,7 +585,7 @@ contract ReceiptVault is
             id_,
             receiptInformation_
         );
-        _beforeDeposit(assets_, msg.sender, receiver_, shares_, id_);
+        _beforeDeposit(assets_, receiver_, shares_, id_);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
@@ -600,22 +600,21 @@ contract ReceiptVault is
 
     /// Hook for additional actions that MUST complete or revert before deposit
     /// is complete. This hook is responsible for any transfer of assets from
-    /// the asset owner to the receipt vault IN ADDITION to any other checks that
-    /// may revert.
+    /// the `msg.sender` to the receipt vault IN ADDITION to any other checks that
+    /// may revert. As per 4626 the owner of the assets being deposited is always
+    /// the `msg.sender`.
     /// @param assets_ Number of assets being deposited.
-    /// @param owner_ The owner of the assets being deposited.
     /// !param receiver_ Receiver of shares that will be minted.
     /// !param shares_ Amount of shares that will be minted.
     /// !param id_ Recipt ID that will be minted for this deposit.
     function _beforeDeposit(
         uint256 assets_,
-        address owner_,
         address, // receiver_
         uint256, // shares_
         uint256 // id_
     ) internal virtual {
         // Default behaviour is to move assets before minting shares.
-        IERC20(asset()).safeTransferFrom(owner_, address(this), assets_);
+        IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets_);
     }
 
     /// If the sender wants to use the ERC4626 `mint` function and set a
