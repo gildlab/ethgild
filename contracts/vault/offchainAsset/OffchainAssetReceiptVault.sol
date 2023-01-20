@@ -1,10 +1,51 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {ReceiptVaultConfig, VaultConfig, ReceiptVault} from "../receipt/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "../receipt/IReceipt.sol";
-import "@beehiveinnovation/rain-protocol/contracts/tier/ITierV2.sol";
+import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
+import "../receipt/IReceiptV1.sol";
+import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+
+/// Thrown when the asset is NOT address zero.
+error NonZeroAsset();
+
+/// Thrown when the account does NOT have the depositor role on mint.
+/// @param account the unauthorized depositor.
+error UnauthorizedDeposit(address account);
+
+/// Thrown when the account does NOT have the withdrawer role on burn.
+/// @param account the unauthorized withdrawer.
+error UnauthorizedWithdraw(address account);
+
+/// Thrown when a certification reference a block number in the future that
+/// cannot possibly have been seen yet.
+/// @param account The certifier that attempted the certify.
+/// @param referenceBlockNumber The future block number.
+error FutureReferenceBlock(address account, uint256 referenceBlockNumber);
+
+/// Thrown when a 0 certification time is attempted.
+/// @param account The certifier that attempted the certify.
+error ZeroCertifyUntil(address account);
+
+/// Thrown when the `from` of a token transfer does not have the minimum tier.
+/// @param from The token was transferred from this account.
+/// @param reportTime The from account had this time in the tier report.
+error UnauthorizedSenderTier(address from, uint256 reportTime);
+
+/// Thrown when the `to` of a token transfer does not have the minimum tier.
+/// @param to The token was transferred to this account.
+/// @param reportTime The to account had this time in the tier report.
+error UnauthorizedRecipientTier(address to, uint256 reportTime);
+
+/// Thrown when a transfer is attempted by an unpriviledged account during system
+/// freeze due to certification lapse.
+error CertificationExpired(
+    address from,
+    address to,
+    uint256 certifiedUntil,
+    uint256 timestamp
+);
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
@@ -19,13 +60,13 @@ struct OffchainAssetVaultConfig {
     VaultConfig vaultConfig;
 }
 
-/// All data required to construct `CertifiedAssetConnect`.
+/// All data required to construct `OffchainAssetReceiptVault`.
 /// @param admin The initial admin has ALL ROLES. It is up to the admin to
 /// appropriately delegate and renounce roles or to be a smart contract with
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and many other things).
-/// @param receiptConfig Forwarded to ReceiptVault.
+/// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfig {
     address admin;
     ReceiptVaultConfig receiptVaultConfig;
@@ -62,121 +103,181 @@ struct OffchainAssetReceiptVaultConfig {
 /// it only seeks to provide baseline functionality that a competent custodian
 /// will need to tackle the problem. The implementation provides:
 ///
-/// - ReceiptVault base that allows a transparent onchain/offchain audit history
+/// - `ReceiptVault` base that allows transparent onchain/offchain audit history
 /// - Certifier role that allows for audits of offchain assets that can fail
-/// - KYC/membership lists that can restrict who can hold/transfer assets
+/// - KYC/membership lists that can restrict who can hold/transfer assets as
+///   any Rain `ITierV2` interface
 /// - Ability to comply with sanctions/regulators by confiscating assets
-/// - ERC20 shares in the vault that can be traded minted/burned to track a peg
-/// - ERC4626 compliant vault interface (inherited from ReceiptVault)
+/// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
+/// - `ERC4626` compliant vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
+/// - Snapshots from `ReceiptVault` exposed under a role to ease potential
+///   future migrations or disaster recovery plans.
 contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
+    using Math for uint256;
+
     /// Contract has initialized.
-    /// @param caller The `msg.sender` constructing the contract.
+    /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
-    event OffchainAssetVaultInitialized(
-        address caller,
+    event OffchainAssetReceiptVaultInitialized(
+        address sender,
         OffchainAssetReceiptVaultConfig config
     );
 
     /// A new certification time has been set.
-    /// @param caller The certifier setting the new time.
-    /// @param until The time the system is certified until. Normally this will
-    /// be a future time but certifiers MAY set it to a time in the past which
-    /// will immediately freeze all transfers.
+    /// @param sender The certifier setting the new time.
+    /// @param certifyUntil The time the system is newly certified until.
+    /// Normally this will be a future time but certifiers MAY set it to a time
+    /// in the past which will immediately freeze all transfers.
+    /// @param referenceBlockNumber The block number that the auditor referenced
+    /// to justify the certification.
+    /// @param forceUntil Whether the certifier forced the certification time.
     /// @param data The certifier MAY provide additional supporting data such
     /// as an auditor's report/comments etc.
-    event Certify(address caller, uint256 until, bytes data);
+    event Certify(
+        address sender,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        bool forceUntil,
+        bytes data
+    );
 
     /// Shares have been confiscated from a user who is not currently meeting
     /// the ERC20 tier contract minimum requirements.
-    /// @param caller The confiscator who is confiscating the shares.
+    /// @param sender The confiscator who is confiscating the shares.
     /// @param confiscatee The user who had their shares confiscated.
     /// @param confiscated The amount of shares that were confiscated.
     event ConfiscateShares(
-        address caller,
+        address sender,
         address confiscatee,
         uint256 confiscated
     );
 
     /// A receipt has been confiscated from a user who is not currently meeting
     /// the ERC1155 tier contract minimum requirements.
-    /// @param caller The confiscator who is confiscating the receipt.
+    /// @param sender The confiscator who is confiscating the receipt.
     /// @param confiscatee The user who had their receipt confiscated.
     /// @param id The receipt ID that was confiscated.
     /// @param confiscated The amount of the receipt that was confiscated.
     event ConfiscateReceipt(
-        address caller,
+        address sender,
         address confiscatee,
         uint256 id,
         uint256 confiscated
     );
 
     /// A new ERC20 tier contract has been set.
-    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param sender `msg.sender` who set the new tier contract.
     /// @param tier New tier contract used for all ERC20 transfers and
     /// confiscations.
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     event SetERC20Tier(
-        address caller,
+        address sender,
         address tier,
         uint256 minimumTier,
         uint256[] context
     );
 
     /// A new ERC1155 tier contract has been set.
-    /// @param caller `msg.sender` who set the new tier contract.
+    /// @param sender `msg.sender` who set the new tier contract.
     /// @param tier New tier contract used for all ERC1155 transfers and
     /// confiscations.
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     event SetERC1155Tier(
-        address caller,
+        address sender,
         address tier,
         uint256 minimumTier,
         uint256[] context
     );
 
+    /// Rolename for depositors.
+    /// Depositor role is required to mint new shares and receipts.
     bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
+    /// Rolename for depositor admins.
     bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
+    /// Rolename for withdrawers.
+    /// Withdrawer role is required to burn shares and receipts.
     bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
+    /// Rolename for withdrawer admins.
     bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
+    /// Rolename for certifiers.
+    /// Certifier role is required to extend the `certifiedUntil` time.
     bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
+    /// Rolename for certifier admins.
     bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
 
+    /// Rolename for handlers.
+    /// Handler role is required to accept tokens during system freeze.
     bytes32 public constant HANDLER = keccak256("HANDLER");
+    /// Rolename for handler admins.
     bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
 
+    /// Rolename for ERC20 tierer.
+    /// ERC20 tierer role is required to modify the tier contract for shares.
     bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
+    /// Rolename for ERC20 tierer admins.
     bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
 
+    /// Rolename for ERC1155 tierer.
+    /// ERC1155 tierer role is required to modify the tier contract for receipts.
     bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
+    /// Rolename for ERC1155 tierer admins.
     bytes32 public constant ERC1155TIERER_ADMIN =
         keccak256("ERC1155TIERER_ADMIN");
 
+    /// Rolename for ERC20 snapshotter.
+    /// ERC20 snapshotter role is required to snapshot shares.
     bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
+    /// Rolename for ERC20 snapshotter admins.
     bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
+    /// Rolename for confiscator.
+    /// Confiscator role is required to confiscate shares and/or receipts.
     bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
+    /// Rolename for confiscator admins.
     bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
+    /// The largest issued id. The next id issued will be larger than this.
     uint256 private highwaterId;
 
+    /// The system is certified until this timestamp. If this is in the past then
+    /// general transfers of shares and receipts will fail until the system can
+    /// be certified to a future time.
     uint32 private certifiedUntil;
 
+    /// The minimum tier required for an address to receive shares.
     uint8 private erc20MinimumTier;
-    ITierV2 private erc20Tier;
-    uint256[] private erc20TierContext;
-
+    /// The minimum tier required for an address to receive receipts.
     uint8 private erc1155MinimumTier;
+
+    /// The `ITierV2` contract that defines the current tier of each address for
+    /// the purpose of receiving shares.
+    ITierV2 private erc20Tier;
+    /// The `ITierV2` contract that defines the current tier of each address for
+    /// the purpose of receiving receipts.
     ITierV2 private erc1155Tier;
+
+    /// Optional context to provide to the `ITierV2` contract when calculating
+    /// any addresses' tier for the purpose of receiving shares. Global to all
+    /// addresses.
+    uint256[] private erc20TierContext;
+    /// Optional context to provide to the `ITierV2` contract when calculating
+    /// any addresses' tier for the purpose of receiving receipts. Global to all
+    /// addresses.
     uint256[] private erc1155TierContext;
 
+    /// Initializes the initial admin and the underlying `ReceiptVault`.
+    /// The admin provided will be admin of all roles and can reassign and revoke
+    /// this as appropriate according to standard Open Zeppelin access control
+    /// logic.
+    /// @param config_ All config required to initialize.
     function initialize(
         OffchainAssetReceiptVaultConfig memory config_
     ) external initializer {
@@ -184,10 +285,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         __AccessControl_init();
 
         // There is no asset, the asset is offchain.
-        require(
-            config_.receiptVaultConfig.vaultConfig.asset == address(0),
-            "NONZERO_ASSET"
-        );
+        if (config_.receiptVaultConfig.vaultConfig.asset != address(0)) {
+            revert NonZeroAsset();
+        }
 
         _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
         _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);
@@ -222,103 +322,99 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
         _grantRole(CONFISCATOR_ADMIN, config_.admin);
 
-        emit OffchainAssetVaultInitialized(msg.sender, config_);
+        emit OffchainAssetReceiptVaultInitialized(msg.sender, config_);
     }
 
+    /// Apply standard transfer restrictions to receipt transfers.
+    /// @inheritdoc ReceiptVault
+    function authorizeReceiptTransfer(
+        address from_,
+        address to_
+    ) external view virtual override {
+        enforceValidTransfer(
+            erc1155Tier,
+            erc1155MinimumTier,
+            erc1155TierContext,
+            from_,
+            to_
+        );
+    }
+
+    /// DO NOT call super `_beforeDeposit` as there are no assets to move.
+    /// @inheritdoc ReceiptVault
     function _beforeDeposit(
         uint256,
         address,
         uint256,
-        uint256
-    ) internal view override {
-        require(hasRole(DEPOSITOR, msg.sender), "NOT_DEPOSITOR");
+        uint256 id_
+    ) internal virtual override {
+        highwaterId = highwaterId.max(id_);
     }
 
+    /// DO NOT call super `_afterWithdraw` as there are no assets to move.
+    /// @inheritdoc ReceiptVault
     function _afterWithdraw(
         uint256,
         address,
         address owner_,
         uint256,
-        uint256
-    ) internal view override {
-        require(hasRole(WITHDRAWER, owner_), "NOT_WITHDRAWER");
-    }
+        uint256 id_ //solhint-disable-next-line no-empty-blocks
+    ) internal view virtual override {}
 
     /// Shares total supply is 1:1 with offchain assets.
     /// Assets aren't real so only way to report this is to return the total
     /// supply of shares.
     /// @inheritdoc ReceiptVault
-    function totalAssets() external view override returns (uint256) {
+    function totalAssets() external view virtual override returns (uint256) {
         return totalSupply();
     }
 
+    /// @inheritdoc ReceiptVault
     function _shareRatio(
-        address depositor_,
-        address
-    ) internal view override returns (uint256) {
-        return hasRole(DEPOSITOR, depositor_) ? _shareRatio() : 0;
-    }
-
-    /// Offchain assets are always deposited 1:1 with shares.
-    /// @inheritdoc ReceiptVault
-    function previewDeposit(
-        uint256 assets_
-    ) external view override returns (uint256) {
-        return hasRole(DEPOSITOR, msg.sender) ? assets_ : 0;
-    }
-
-    function previewWithdraw(
-        uint256 assets_,
-        uint256 id_
-    ) public view override returns (uint256) {
-        return
-            hasRole(WITHDRAWER, msg.sender)
-                ? super.previewWithdraw(assets_, id_)
-                : 0;
-    }
-
-    function previewMint(
-        uint256 shares_
-    ) public view override returns (uint256) {
-        return hasRole(DEPOSITOR, msg.sender) ? super.previewMint(shares_) : 0;
-    }
-
-    function previewRedeem(
-        uint256 shares_,
-        uint256 id_
-    ) public view override returns (uint256) {
-        return
-            hasRole(WITHDRAWER, msg.sender)
-                ? super.previewRedeem(shares_, id_)
-                : 0;
-    }
-
-    /// @inheritdoc ReceiptVault
-    function _nextId() internal override returns (uint256) {
-        uint256 id_ = highwaterId + 1;
-        highwaterId = id_;
-        return id_;
-    }
-
-    function authorizeReceiptInformation(
-        address account_,
+        address owner_,
+        address,
         uint256 id_,
-        bytes memory
-    ) external view virtual override {
-        // Only receipt holders and certifiers can assert things about offchain
-        // assets.
-        require(
-            IReceipt(_receipt).balanceOf(account_, id_) > 0 ||
-                hasRole(CERTIFIER, account_),
-            "ASSET_INFORMATION_AUTH"
-        );
+        ShareAction shareAction_
+    ) internal view virtual override returns (uint256) {
+        if (shareAction_ == ShareAction.Mint) {
+            return
+                hasRole(DEPOSITOR, owner_)
+                    ? _shareRatioUserAgnostic(id_, shareAction_)
+                    : 0;
+        } else {
+            return
+                hasRole(WITHDRAWER, owner_)
+                    ? _shareRatioUserAgnostic(id_, shareAction_)
+                    : 0;
+        }
     }
 
-    /// Receipt holders who are also depositors can increase the deposit amount
-    /// for the existing id of this receipt. It is STRONGLY RECOMMENDED the
-    /// redepositor also provides data to be forwarded to asset information to
-    /// justify the additional deposit. New offchain assets MUST NOT redeposit
-    /// under existing IDs, deposit under a new id instead.
+    /// IDs for offchain assets are merely autoincremented. If the minter wants
+    /// to track some external ID system as a foreign key they can emit this in
+    /// the associated receipt information.
+    /// @inheritdoc ReceiptVault
+    function _nextId() internal view virtual override returns (uint256) {
+        return highwaterId + 1;
+    }
+
+    /// Depositors can increase the deposited assets for the existing id of this
+    /// receipt. It is STRONGLY RECOMMENDED the redepositor also provides data to
+    /// be forwarded to asset information to justify the additional deposit. New
+    /// offchain assets MUST NOT redeposit under existing IDs, they MUST be
+    /// deposited under a new id instead. The ID preservation provided by
+    /// `redeposit` is intended to ensure a consistent audit trail for the
+    /// lifecycle of any asset. We do not need a corresponding "rewithdraw"
+    /// function because withdrawals already target an ID.
+    ///
+    /// Note that the existence of `redeposit` and `withdraw` both allow the
+    /// potential of two different depositor/withdrawer accounts to apply the
+    /// same mint/burn concurrently to the mempool and have both included in a
+    /// block inappropriately. Features like this, as well as more fundamental
+    /// trust assumptions/limitations offchain, make it impossible to fully
+    /// decouple depositors and withdrawers from each other _per token_. The
+    /// model is that there are many decoupled tokens each with their own "team"
+    /// that can be expected to coordinate to prevent double-mint/burn.
+    ///
     /// @param assets_ As per IERC4626 `deposit`.
     /// @param receiver_ As per IERC4626 `deposit`.
     /// @param id_ The existing receipt to despoit additional assets under. Will
@@ -331,28 +427,33 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256 id_,
         bytes calldata receiptInformation_
     ) external returns (uint256) {
-        // This is stricter than the standard "or certifier" check.
-        require(
-            IReceipt(_receipt).balanceOf(msg.sender, id_) > 0,
-            "NOT_RECEIPT_HOLDER"
-        );
+        // Only allow redepositing for IDs that exist.
+        if (id_ > highwaterId) {
+            revert InvalidId(id_);
+        }
         _deposit(
             assets_,
             receiver_,
-            _shareRatio(msg.sender, receiver_),
+            _calculateDeposit(
+                assets_,
+                _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
+                0
+            ),
             id_,
             receiptInformation_
         );
         return assets_;
     }
 
+    /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
     function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
         return _snapshot();
     }
 
-    /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
-    /// disable report checking.
+    /// @param tier_ `ITier` contract to check when receiving shares. MAY be
+    /// `address(0)` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
+    /// @param context_ Global context to be forwarded with tier checks.
     function setERC20Tier(
         address tier_,
         uint8 minimumTier_,
@@ -364,9 +465,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
-    /// @param tier_ `ITier` contract to check reports from. MAY be `0` to
-    /// disable report checking.
+    /// @param tier_ `ITier` contract to check when receiving receipts. MAY be
+    /// `0` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
+    /// @param context_ Global context to be forwarded with tier checks.
     function setERC1155Tier(
         address tier_,
         uint8 minimumTier_,
@@ -378,20 +480,107 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_);
     }
 
+    /// Certifiers MAY EXTEND OR REDUCE the `certifiedUntil` time. If there are
+    /// many certifiers, any certifier can modify the certifiation at any time.
+    /// It is STRONGLY RECOMMENDED that certifiers DO NOT set the `forceUntil_`
+    /// flag to `true` unless they want to:
+    ///
+    /// - Potentially override another certifier's concurrent certification
+    /// - Reduce the certification time
+    ///
+    /// The certifier is STRONGLY RECOMMENDED to submit a summary report of the
+    /// process and findings used to justify the modified `certifiedUntil` time.
+    ///
+    /// The certifier MUST provide the block number containing the information
+    /// they used to perform the certification. It is entirely possible that
+    /// new mints/burns and receipt information becomes available after the
+    /// certification process begins, so the certifier MUST specify THEIR highest
+    /// seen block at the moment they made their decision. This block cannot be
+    /// in the future relative to the moment of certification.
+    ///
+    /// The certifier is STRONGLY RECOMMENDED to ONLY use publicly available
+    /// documents directly referenced by `ReceiptInformation` events to make
+    /// their decision. The certifier MUST specify if, when and why private data
+    /// was used to inform their certification decision. This is critical for
+    /// share holders who inform themselves on the quality of their tokens not
+    /// only by the overall audit outcome, but by the integrity of the sum of its
+    /// parts in the form of receipt and associated visible information.
+    ///
+    /// The certifier SHOULD NOT provide a certification time that predates the
+    /// timestamp of the reference block, although this is NOT enforced onchain.
+    /// This would imply that the system was certified until a time before the
+    /// data that informed the certification even existed. DO NOT certify until
+    /// a `0` time, any time in the past relative to the current time will have
+    /// the same effect on the system (freezing it immediately).
+    ///
+    /// Note that redundant certifications MAY be submitted. Regardless of the
+    /// `forceUntil_` flag the transaction WILL NOT REVERT and the `Certify`
+    /// event will be emitted for any valid `certifyUntil_` time. If certifier A
+    /// certifies until time X and certifier B certifies until time X - Y then
+    /// both certifications will emit an event and time X is the certifiation
+    /// date of the system. This encouranges multiple certifications to be sought
+    /// in parallel if it helps maintain trust in the overall system.
+    ///
+    /// @param certifyUntil_ The new `certifiedUntil` time.
+    /// @param referenceBlockNumber_ The highest block number that the certifier
+    /// has seen at the moment they decided to certify the system.
+    /// @param forceUntil_ Whether to force the new certification time even if it
+    /// is in the past relative to the existing certification time.
+    /// @param data_ Arbitrary data justifying the certification. MAY reference
+    /// data available offchain e.g. on IPFS.
     function certify(
-        uint32 until_,
-        bytes calldata data_,
-        bool forceUntil_
+        uint256 certifyUntil_,
+        uint256 referenceBlockNumber_,
+        bool forceUntil_,
+        bytes calldata data_
     ) external onlyRole(CERTIFIER) {
+        if (certifyUntil_ == 0) {
+            revert ZeroCertifyUntil(msg.sender);
+        }
+        if (referenceBlockNumber_ > block.number) {
+            revert FutureReferenceBlock(msg.sender, referenceBlockNumber_);
+        }
         // A certifier can set `forceUntil_` to true to force a _decrease_ in
         // the `certifiedUntil` time, which is unusual but MAY need to be done
         // in the case of rectifying a prior mistake.
-        if (forceUntil_ || until_ > certifiedUntil) {
-            certifiedUntil = until_;
+        if (forceUntil_ || certifyUntil_ > certifiedUntil) {
+            certifiedUntil = uint32(certifyUntil_);
         }
-        emit Certify(msg.sender, until_, data_);
+        emit Certify(
+            msg.sender,
+            certifyUntil_,
+            referenceBlockNumber_,
+            forceUntil_,
+            data_
+        );
     }
 
+    /// Reverts if some transfer is disallowed. Handles both share and receipt
+    /// transfers. Standard logic reverts any transfer that is EITHER to or from
+    /// an address that does not have the required tier OR the system is no
+    /// longer certified therefore ALL unpriviledged transfers MUST revert.
+    ///
+    /// Certain exemptions to transfer restrictions apply:
+    /// - If a tier contract is not set OR the minimum tier is 0 then tier
+    ///   restrictions are ignored.
+    /// - Any handler role MAY SEND AND RECEIVE TOKENS AT ALL TIMES BETWEEN
+    ///   THEMSELVES AND ANYONE ELSE. Tier and certification restrictions are
+    ///   ignored for both sender and receiver when either is a handler. Handlers
+    ///   exist to _repair_ certification issues, so MUST be able to transfer
+    ///   unhindered.
+    /// - `address(0)` is treated as a handler for the purposes of any minting
+    ///   and burning that may be required to repair certification blockers.
+    /// - Transfers TO a confiscator are treated as handler-like at all times,
+    ///   but transfers FROM confiscators are treated as unpriviledged. This is
+    ///   to allow potential legal requirements on confiscation during system
+    ///   freeze, without assigning unnecessary priviledges to confiscators.
+    ///
+    /// @param tier_ The tier contract to check reports against.
+    /// MAY be `address(0)`.
+    /// @param minimumTier_ The minimum tier to check `from_` and `to_` against.
+    /// @param tierContext_ Additional context to pass to `tier_` for the report.
+    /// @param from_ The token is being transferred from this account.
+    /// @param to_ The token is being transferred to this account.
     function enforceValidTransfer(
         ITierV2 tier_,
         uint256 minimumTier_,
@@ -423,31 +612,44 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
         // Everyone else can only transfer while the certification is valid.
         //solhint-disable-next-line not-rely-on-time
-        require(block.timestamp <= certifiedUntil, "CERTIFICATION_EXPIRED");
+        if (block.timestamp > certifiedUntil) {
+            revert CertificationExpired(
+                from_,
+                to_,
+                certifiedUntil,
+                block.timestamp
+            );
+        }
 
         // If there is a tier contract we enforce it.
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             // The sender must have a valid tier.
-            require(
-                block.timestamp >=
-                    tier_.reportTimeForTier(from_, minimumTier_, tierContext_),
-                "SENDER_TIER"
+            uint256 fromReportTime_ = tier_.reportTimeForTier(
+                from_,
+                minimumTier_,
+                tierContext_
             );
+            if (block.timestamp < fromReportTime_) {
+                revert UnauthorizedSenderTier(from_, fromReportTime_);
+            }
             // The recipient must have a valid tier.
-            require(
-                block.timestamp >=
-                    tier_.reportTimeForTier(to_, minimumTier_, tierContext_),
-                "RECIPIENT_TIER"
+            uint256 toReportTime_ = tier_.reportTimeForTier(
+                to_,
+                minimumTier_,
+                tierContext_
             );
+            if (block.timestamp < toReportTime_) {
+                revert UnauthorizedRecipientTier(to_, toReportTime_);
+            }
         }
     }
 
-    // @inheritdoc ERC20
+    /// Apply standard transfer restrictions to share transfers.
     function _beforeTokenTransfer(
         address from_,
         address to_,
-        uint256
-    ) internal view override {
+        uint256 amount_
+    ) internal virtual override {
         enforceValidTransfer(
             erc20Tier,
             erc20MinimumTier,
@@ -455,22 +657,28 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             from_,
             to_
         );
-    }
-
-    function authorizeReceiptTransfer(
-        address from_,
-        address to_
-    ) external view virtual override {
-        enforceValidTransfer(
-            erc1155Tier,
-            erc1155MinimumTier,
-            erc1155TierContext,
-            from_,
-            to_
-        );
+        super._beforeTokenTransfer(from_, to_, amount_);
     }
 
     /// Confiscators can confiscate ERC20 vault shares from `confiscatee_`.
+    /// Confiscation BYPASSES TRANSFER RESTRICTIONS due to system freeze and
+    /// IGNORES ALLOWANCES set by the confiscatee.
+    ///
+    /// The LIMITATION ON CONFISCATION is that the confiscatee MUST NOT have the
+    /// minimum tier for transfers. I.e. confiscation is a two step process.
+    /// First the tokens must be frozen according to due process by the token
+    /// issuer (which may be an individual, organisation or many entities), THEN
+    /// the confiscation can clear. This prevents rogue/compromised confiscators
+    /// from being able to arbitrarily take tokens from users to themselves. At
+    /// the least, assuming separate private keys managing the tiers and
+    /// confiscation, the two steps require at least two critical security
+    /// breaches per attack rather than one.
+    ///
+    /// Confiscation is a binary event. All shares or zero shares are
+    /// confiscated from the confiscatee.
+    ///
+    /// @param confiscatee_ The address that shares are being confiscated from.
+    /// @return The amount of shares confiscated.
     function confiscateShares(
         address confiscatee_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
@@ -493,6 +701,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return confiscatedShares_;
     }
 
+    /// Confiscators can confiscate ERC1155 vault receipts from `confiscatee_`.
+    /// The process, limitations and logic is identical to share confiscation
+    /// except that receipt confiscation is performed per-ID.
+    ///
+    /// @param confiscatee_ The address that receipts are being confiscated from.
+    /// @param id_ The ID of the receipt to confiscate.
+    /// @return The amount of receipt confiscated.
     function confiscateReceipt(
         address confiscatee_,
         uint256 id_
@@ -507,11 +722,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 erc1155TierContext
             )
         ) {
-            IReceipt receipt_ = IReceipt(_receipt);
-            confiscatedReceiptAmount_ = IReceipt(receipt_).balanceOf(
-                confiscatee_,
-                id_
-            );
+            IReceiptV1 receipt_ = _receipt;
+            confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscatedReceiptAmount_ > 0) {
                 receipt_.ownerTransferFrom(
                     confiscatee_,

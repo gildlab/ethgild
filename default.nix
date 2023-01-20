@@ -7,10 +7,10 @@ let
     })
     { };
 
- ci-lint = pkgs.writeShellScriptBin "ci-lint" ''
- solhint 'contracts/**/*.sol'
- prettier --check .
- '';
+  ci-lint = pkgs.writeShellScriptBin "ci-lint" ''
+    solhint 'contracts/**/*.sol'
+    prettier --check .
+  '';
 
   flush-all = pkgs.writeShellScriptBin "flush-all" ''
     rm -rf artifacts
@@ -31,25 +31,25 @@ let
     slither . --npx-disable --filter-paths="contracts/test" --exclude-dependencies --fail-high
   '';
 
- ipfs-add = pkgs.writeShellScriptBin "ipfs-add" ''
-  ipfs add -r --pin --cid-version 1 erc1155Metadata
- '';
+  ipfs-add = pkgs.writeShellScriptBin "ipfs-add" ''
+    ipfs add -r --pin --cid-version 1 erc1155Metadata
+  '';
 in
 pkgs.stdenv.mkDerivation {
- name = "shell";
- buildInputs = [
-  pkgs.nodejs-18_x
-  pkgs.slither-analyzer
-  security-check
-  flush-all
-  ci-lint
-  ipfs-add
- ];
+  name = "shell";
+  buildInputs = [
+    pkgs.nodejs-18_x
+    pkgs.slither-analyzer
+    security-check
+    flush-all
+    ci-lint
+    ipfs-add
+  ];
 
- shellHook = ''
-  touch .env && source .env
-  export PATH=$( npm bin ):$PATH
-  # keep it fresh
-  npm install
- '';
+  shellHook = ''
+    touch .env && source .env
+    export PATH=$( npm bin ):$PATH
+    # keep it fresh
+    npm install
+  '';
 }

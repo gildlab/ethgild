@@ -10,9 +10,9 @@ import {
   ERC20Upgradeable as ERC20,
   ERC20PriceOracleReceiptVault,
   Receipt,
-} from "../../typechain";
+} from "../../typechain-types";
 import { BigNumber } from "ethers";
-import { WithdrawEvent } from "../../typechain/IERC4626Upgradeable";
+import { WithdrawEvent } from "../../typechain-types/@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable";
 
 const assert = require("assert");
 
@@ -149,7 +149,7 @@ describe("Redeem", async function () {
             aliceAddress,
             aliceAddress
           ),
-      "0_ASSETS",
+      "ZeroAssetsAmount",
       "failed to prevent a zero asset redeem"
     );
   });
@@ -169,7 +169,7 @@ describe("Redeem", async function () {
             ADDRESS_ZERO,
             aliceAddress
           ),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent a zero address receiver redeem"
     );
   });

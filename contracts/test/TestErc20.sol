@@ -3,22 +3,19 @@ pragma solidity =0.8.17;
 
 import {ERC20Upgradeable as ERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
-// solhint-disable-next-line max-line-length
+/// @dev One _billion_ dollars 👷😈 is 18 + 9 decimals.
+uint256 constant TOTAL_SUPPLY = 1e27;
+/// @dev The name is arbitrary for testing.
+string constant NAME = "Token";
+/// @dev The symbol is arbitrary for testing.
+string constant SYMBOL = "TKN";
 
 /// @title Erc20Token
-/// A test token that can be used as a reserve asset.
-
+/// @notice A test token that can be used as a vault asset.
 contract TestErc20 is ERC20 {
-    /// Accounts to freeze during testing.
-
-    // Stables such as USDT and USDC commonly have 6 decimals.
-    uint256 public constant DECIMALS = 6;
-    // One _billion_ dollars 👷😈.
-    uint256 public constant TOTAL_SUPPLY = 10 ** (DECIMALS + 9);
-
     /// Define and mint the erc20 token.
     constructor() initializer {
-        __ERC20_init("USD Classic", "USDCC");
+        __ERC20_init(NAME, SYMBOL);
         _mint(msg.sender, TOTAL_SUPPLY);
     }
 }

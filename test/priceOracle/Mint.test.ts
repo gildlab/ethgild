@@ -42,10 +42,9 @@ describe("Mint", async function () {
     const shares = fixedPointMul(assets, shareRatio);
 
     await vault.connect(alice).setMinShareRatio(shareRatio.add(1));
-
     await assertError(
       async () => await vault.connect(alice).previewMint(shares),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min shareRatio"
     );
   });
@@ -141,7 +140,7 @@ describe("Mint", async function () {
         await vault
           .connect(alice)
           ["mint(uint256,address)"](shares, alice.address),
-      "0_SHARES",
+      "ZeroAssetsAmount",
       "failed to prevent a zero share mint"
     );
   });
@@ -164,7 +163,7 @@ describe("Mint", async function () {
         await vault
           .connect(alice)
           ["mint(uint256,address)"](shares, ADDRESS_ZERO),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent mint to zero address"
     );
   });
@@ -226,7 +225,7 @@ describe("Mint", async function () {
             shareRatio.add(1),
             []
           ),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min shareRatio"
     );
   });
@@ -254,7 +253,7 @@ describe("Mint", async function () {
             shareRatio,
             []
           ),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent mint to zero address"
     );
   });
@@ -276,7 +275,7 @@ describe("Mint", async function () {
             shareRatio,
             []
           ),
-      "0_SHARES",
+      "ZeroAssetsAmount",
       "failed to prevent a zero share mint"
     );
   });

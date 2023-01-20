@@ -10,9 +10,9 @@ import {
   ERC20Upgradeable as ERC20,
   ERC20PriceOracleReceiptVault,
   Receipt,
-} from "../../typechain";
+} from "../../typechain-types";
 import { BigNumber } from "ethers";
-import { WithdrawEvent } from "../../typechain/IERC4626Upgradeable";
+import { WithdrawEvent } from "../../typechain-types/@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable";
 
 const assert = require("assert");
 
@@ -76,6 +76,29 @@ describe("Overloaded Redeem", async function () {
       `alice did not redeem all 1155 receipt amounts`
     );
   });
+  it("Redeems half of tokens", async function () {
+    const receiptBalance = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](aliceAddress, shareRatio);
+
+    await vault
+      .connect(alice)
+      ["redeem(uint256,address,address,uint256)"](
+        receiptBalance.div(2),
+        aliceAddress,
+        aliceAddress,
+        shareRatio
+      );
+
+    const receiptBalanceAfter = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](aliceAddress, shareRatio);
+
+    assert(
+      receiptBalanceAfter.eq(receiptBalance.div(2)),
+      `alice did not redeem all 1155 receipt amounts`
+    );
+  });
   it("Should not redeem on zero assets", async function () {
     await assertError(
       async () =>
@@ -87,7 +110,7 @@ describe("Overloaded Redeem", async function () {
             aliceAddress,
             shareRatio
           ),
-      "0_ASSETS",
+      "ZeroAssetsAmount",
       "failed to prevent a zero assets redeem"
     );
   });
@@ -106,7 +129,7 @@ describe("Overloaded Redeem", async function () {
             aliceAddress,
             shareRatio
           ),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent a zero address receiver redeem"
     );
   });
@@ -125,7 +148,7 @@ describe("Overloaded Redeem", async function () {
             ADDRESS_ZERO,
             shareRatio
           ),
-      "0_OWNER",
+      "ZeroOwner",
       "failed to prevent a zero address owner redeem"
     );
   });

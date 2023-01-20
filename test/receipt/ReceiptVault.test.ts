@@ -8,14 +8,15 @@ import {
   expectedReferencePrice,
   getEvent,
 } from "../util";
-import { DepositEvent } from "../../typechain/IERC4626Upgradeable";
+import { DepositEvent } from "../../typechain-types/@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   DepositWithReceiptEvent,
   WithdrawWithReceiptEvent,
-} from "../../typechain/ReceiptVault";
+} from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
 
 import { getEventArgs } from "../util";
+import { ReceiptInformationEvent } from "../../typechain-types/contracts/vault/receipt/Receipt";
 const assert = require("assert");
 
 let owner: SignerWithAddress;
@@ -200,7 +201,7 @@ describe("Receipt vault", async function () {
 
     await assertError(
       async () => await vault.connect(alice).previewDeposit(assets),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min share ratio"
     );
   });
@@ -244,7 +245,7 @@ describe("Deposit", async () => {
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](assets, bob.address),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min price"
     );
   }),
@@ -501,7 +502,7 @@ describe("Deposit", async () => {
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](aliceReserveBalance, ADDRESS_ZERO),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent deposit to zero address"
     );
   });
@@ -573,7 +574,7 @@ describe("Overloaded `deposit`", async () => {
             shareRatio.add(1),
             []
           ),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min shareRatio"
     );
   }),
@@ -879,7 +880,7 @@ describe("Overloaded `deposit`", async () => {
             shareRatio,
             []
           ),
-      "0_RECEIVER",
+      "ZeroReceiver",
       "failed to prevent deposit to zero address"
     );
   });
@@ -989,48 +990,51 @@ describe("Overloaded `deposit`", async () => {
       `wrong receiptInformation expected ${receiptInformation} got ${expectedInformation}`
     );
   });
-  // it("Check ReceiptInformation event is emitted", async function () {
-  //   const signers = await ethers.getSigners();
-  //   const alice = signers[0];
-  //
-  //   const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-  //
-  //   const shareRatio = await priceOracle.price();
-  //
-  //   const aliceAmount = ethers.BigNumber.from(5000);
-  //   await asset.transfer(alice.address, aliceAmount);
-  //
-  //   await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
-  //
-  //   const expectedId = shareRatio;
-  //
-  //   const informationBytes = [125, 126];
-  //   //generate hex string
-  //   const expectedInformation =
-  //     "0x" + informationBytes.map((num) => num.toString(16)).join("");
-  //
-  //   const { caller, id, information } = (await getEventArgs(
-  //     await vault.connect(alice)["deposit(uint256,address,uint256,bytes)"](
-  //       aliceAmount,
-  //       alice.address,
-  //       shareRatio,
-  //       informationBytes
-  //     ),
-  //     "ReceiptInformation",
-  //     vault
-  //   )) as ReceiptInformationEvent["args"];
-  //
-  //   assert(
-  //     caller === alice.address,
-  //     `wrong assets expected ${alice.address} got ${caller}`
-  //   );
-  //   assert(id.eq(expectedId), `wrong shares expected ${id} got ${expectedId}`);
-  //
-  //   assert(
-  //     information === expectedInformation,
-  //     `wrong information expected ${information} got ${expectedInformation}`
-  //   );
-  // });
+  it("Check ReceiptInformation event is emitted", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const [vault, asset, priceOracle, receipt] =
+      await deployERC20PriceOracleVault();
+
+    const shareRatio = await priceOracle.price();
+
+    const aliceAmount = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, aliceAmount);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
+
+    const expectedId = shareRatio;
+
+    const informationBytes = [125, 126];
+    //generate hex string
+    const expectedInformation =
+      "0x" + informationBytes.map((num) => num.toString(16)).join("");
+
+    const { sender, id, information } = (await getEventArgs(
+      await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+          aliceAmount,
+          alice.address,
+          shareRatio,
+          informationBytes
+        ),
+      "ReceiptInformation",
+      receipt
+    )) as ReceiptInformationEvent["args"];
+
+    assert(
+      sender === alice.address,
+      `wrong assets expected ${alice.address} got ${sender}`
+    );
+    assert(id.eq(expectedId), `wrong shares expected ${id} got ${expectedId}`);
+
+    assert(
+      information === expectedInformation,
+      `wrong information expected ${information} got ${expectedInformation}`
+    );
+  });
   it("Check WithdrawWithReceipt event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -1137,7 +1141,7 @@ describe("Mint", async function () {
 
     await assertError(
       async () => await vault.connect(alice).previewMint(shares),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min shareRatio"
     );
   });

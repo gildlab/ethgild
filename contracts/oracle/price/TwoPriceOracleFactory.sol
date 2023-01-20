@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
+import {Factory} from "@rainprotocol/rain-protocol/contracts/factory/Factory.sol";
 import "./TwoPriceOracle.sol";
 
 /// @title TwoPriceOracleFactory

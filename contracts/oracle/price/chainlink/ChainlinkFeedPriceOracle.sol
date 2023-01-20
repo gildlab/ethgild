@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import "@beehiveinnovation/rain-protocol/contracts/chainlink/LibChainlink.sol";
+import "@rainprotocol/rain-protocol/contracts/chainlink/LibChainlink.sol";
 
-import "../IPriceOracle.sol";
+import "../IPriceOracleV1.sol";
 
 /// @param feed The address of the underlying Chainlink oracle.
 /// @param staleAfter The duration in seconds after which price data will be
@@ -14,16 +14,13 @@ struct ChainlinkFeedPriceOracleConfig {
 }
 
 /// @title ChainlinkFeedPriceOracle
-/// @notice Converts a single Chainlink price oracle to an `IPriceOracle`.
+/// @notice Converts a single Chainlink price oracle to an `IPriceOracleV1`.
 /// This involves:
 /// - Fetching latest round data from Chainlink
 /// - Rejecting negative price values
 /// - Fetching decimals from Chainlink
 /// - Rescaling Chainlink price data to target decimals if required.
-contract ChainlinkFeedPriceOracle is IPriceOracle {
-    using SafeCast for int256;
-    using FixedPointMath for uint256;
-
+contract ChainlinkFeedPriceOracle is IPriceOracleV1 {
     /// Emitted upon deployment and construction of oracle.
     /// @param sender `msg.sender` that deploys the oracle.
     /// @param config All config used to construct the contract.
@@ -42,7 +39,7 @@ contract ChainlinkFeedPriceOracle is IPriceOracle {
         emit Construction(msg.sender, config_);
     }
 
-    /// @inheritdoc IPriceOracle
+    /// @inheritdoc IPriceOracleV1
     function price() external view virtual returns (uint256) {
         return LibChainlink.price(feed, staleAfter);
     }

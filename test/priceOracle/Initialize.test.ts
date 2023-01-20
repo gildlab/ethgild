@@ -11,32 +11,32 @@ import {
 import {
   ERC20PriceOracleReceiptVault,
   ERC20PriceOracleReceiptVaultInitializedEvent,
-} from "../../typechain/ERC20PriceOracleReceiptVault";
+} from "../../typechain-types/contracts/vault/priceOracle/ERC20PriceOracleReceiptVault";
 import {
   ERC20PriceOracleReceiptVaultFactory,
   NewChildEvent,
-} from "../../typechain/ERC20PriceOracleReceiptVaultFactory";
+} from "../../typechain-types/contracts/vault/priceOracle/ERC20PriceOracleReceiptVaultFactory";
 
 import { getEventArgs } from "../util";
 import {
   ReceiptFactory,
-  TestChainlinkDataFeed,
+  MockChainlinkDataFeed,
   TestErc20,
   TwoPriceOracle,
-} from "../../typechain";
+} from "../../typechain-types";
 import { Contract } from "ethers";
 
 const assert = require("assert");
 
-describe("config", async function () {
+describe("PriceOracle construction", async function () {
   it("Checks construction event", async function () {
     const now = await latestBlockNow();
 
     const oracleFactory = await ethers.getContractFactory(
-      "TestChainlinkDataFeed"
+      "MockChainlinkDataFeed"
     );
     const basePriceOracle =
-      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as MockChainlinkDataFeed;
     await basePriceOracle.deployed();
     // ETHUSD as of 2022-06-30
 
@@ -49,7 +49,7 @@ describe("config", async function () {
     });
 
     const quotePriceOracle =
-      (await oracleFactory.deploy()) as TestChainlinkDataFeed;
+      (await oracleFactory.deploy()) as MockChainlinkDataFeed;
     await quotePriceOracle.deployed();
     // XAUUSD as of 2022-06-30
     await quotePriceOracle.setDecimals(xauDecimals);
@@ -93,16 +93,17 @@ describe("config", async function () {
       quote: chainlinkFeedPriceOracleQuote.address,
     })) as TwoPriceOracle;
 
+    const ERC20PriceOracleReceiptVaultImplementationFactory =
+      await ethers.getContractFactory("ERC20PriceOracleReceiptVault");
+    const ERC20PriceOracleReceiptVaultImplementation =
+      (await ERC20PriceOracleReceiptVaultImplementationFactory.deploy()) as ERC20PriceOracleReceiptVault;
+
     const receiptFactoryFactory = await ethers.getContractFactory(
       "ReceiptFactory"
     );
     const receiptFactoryContract =
       (await receiptFactoryFactory.deploy()) as ReceiptFactory;
     await receiptFactoryContract.deployed();
-
-    const receiptConfig = {
-      uri: "https://example.com",
-    };
 
     const erc20PriceOracleVaultConfig = {
       priceOracle: twoPriceOracle.address,
@@ -118,13 +119,13 @@ describe("config", async function () {
     );
 
     let erc20PriceOracleReceiptVaultFactory =
-      (await erc20PriceOracleVaultFactoryFactory.deploy(
-        receiptFactoryContract.address
-      )) as ERC20PriceOracleReceiptVaultFactory;
+      (await erc20PriceOracleVaultFactoryFactory.deploy({
+        implementation: ERC20PriceOracleReceiptVaultImplementation.address,
+        receiptFactory: receiptFactoryContract.address,
+      })) as ERC20PriceOracleReceiptVaultFactory;
     await erc20PriceOracleReceiptVaultFactory.deployed();
 
     let tx = await erc20PriceOracleReceiptVaultFactory.createChildTyped(
-      receiptConfig,
       erc20PriceOracleVaultConfig
     );
     let { child } = (await getEventArgs(
@@ -144,14 +145,14 @@ describe("config", async function () {
       (await artifacts.readArtifact("ERC20PriceOracleReceiptVault")).abi
     );
 
-    let { caller, config } = (await getEventArgs(
+    let { sender, config } = (await getEventArgs(
       tx,
       "ERC20PriceOracleReceiptVaultInitialized",
       childContract
     )) as ERC20PriceOracleReceiptVaultInitializedEvent["args"];
 
     assert(
-      caller === erc20PriceOracleReceiptVaultFactory.address,
+      sender === erc20PriceOracleReceiptVaultFactory.address,
       "wrong deploy sender"
     );
     assert(

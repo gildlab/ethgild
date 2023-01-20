@@ -31,7 +31,7 @@ describe("deposit", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address)"](ethers.BigNumber.from(0), alice.address),
-      "0_ASSETS",
+      "ZeroAssetsAmount",
       "failed to prevent a zero value deposit"
     );
   });
@@ -67,7 +67,7 @@ describe("deposit", async function () {
             shareRatio.add(1),
             []
           ),
-      "MIN_SHARE_RATIO",
+      "MinShareRatio",
       "failed to respect min price"
     );
     await vault

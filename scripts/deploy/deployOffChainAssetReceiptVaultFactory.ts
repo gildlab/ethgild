@@ -8,7 +8,7 @@ import {
 } from "../../typechain";
 
 async function main() {
-  await deployOffChainAssetVaultFactory("Mumbai");
+  await deployOffChainReceiptAssetVaultFactory("Mumbai");
 }
 
 main()
@@ -18,7 +18,7 @@ main()
     process.exit(1);
   });
 
-async function deployOffChainAssetVaultFactory(network: string) {
+async function deployOffChainAssetReceiptVaultFactory(network: string) {
   console.log(network);
 
   const receiptFactoryFactory = await ethers.getContractFactory(

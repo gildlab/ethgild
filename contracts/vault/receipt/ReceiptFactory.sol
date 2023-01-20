@@ -1,39 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {Factory} from "@beehiveinnovation/rain-protocol/contracts/factory/Factory.sol";
+import {Factory} from "@rainprotocol/rain-protocol/contracts/factory/Factory.sol";
 import {ClonesUpgradeable as Clones} from "@openzeppelin/contracts-upgradeable/proxy/ClonesUpgradeable.sol";
-import {Receipt, ReceiptConfig} from "./Receipt.sol";
+import {Receipt} from "./Receipt.sol";
 
+/// @title ReceiptFactory
+/// @notice Factory that builds `Receipt` children and is ostensibly used by the
+/// `ReceiptVaultFactory` so ownership assignment MUST be handled by the caller
+/// of `createChild`.
 contract ReceiptFactory is Factory {
+    /// Implementation address that will be cloned when creating child contracts.
     address public immutable implementation;
 
+    /// Builds the `Receipt` reference implementation that all children will be
+    /// a proxy to.
     constructor() {
         address implementation_ = address(new Receipt());
-        emit Implementation(msg.sender, implementation_);
         implementation = implementation_;
+        emit Implementation(msg.sender, implementation_);
     }
 
+    /// The owner is `msg.sender` because this is intended to be used by the
+    /// `ReceiptVaultFactory` which will subsequently and atomically assign
+    /// ownership to the `ReceiptVault` that it creates.
     /// @inheritdoc Factory
     function _createChild(
-        bytes memory data_
+        bytes memory
     ) internal virtual override returns (address) {
-        ReceiptConfig memory config_ = abi.decode(data_, (ReceiptConfig));
         address clone_ = Clones.clone(implementation);
-        Receipt(clone_).initialize(config_);
+        Receipt(clone_).initialize();
         Receipt(clone_).transferOwnership(msg.sender);
         return clone_;
-    }
-
-    /// Typed wrapper for `createChild` with Source.
-    /// Use original `Factory` `createChild` function signature if function
-    /// parameters are already encoded.
-    ///
-    /// @param config_ construction config for the `Receipt`.
-    /// @return New `Receipt` child contract address.
-    function createChildTyped(
-        ReceiptConfig memory config_
-    ) external returns (Receipt) {
-        return Receipt(createChild(abi.encode(config_)));
     }
 }

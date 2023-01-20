@@ -2,34 +2,19 @@ import { ethers } from "hardhat";
 import {
   OffchainAssetReceiptVaultFactory,
   ReceiptFactory,
-} from "../../typechain";
+} from "../../typechain-types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expectedUri, getEventArgs } from "../util";
+import { deployOffchainAssetReceiptVaultFactory } from "./deployOffchainAssetReceiptVault";
+
 const assert = require("assert");
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
-let alice: SignerWithAddress;
 
-describe("OffchainAssetVaultFactory Test", () => {
+describe("OffchainAssetReceiptVaultFactory Test", () => {
   before(async () => {
-    const signers = await ethers.getSigners();
-    alice = signers[0];
-
-    const receiptFactoryFactory = await ethers.getContractFactory(
-      "ReceiptFactory"
-    );
-    const receiptFactoryContract =
-      (await receiptFactoryFactory.deploy()) as ReceiptFactory;
-    await receiptFactoryContract.deployed();
-
-    const offchainAssetReceiptVaultFactoryFactory =
-      await ethers.getContractFactory("OffchainAssetReceiptVaultFactory");
-
     offchainAssetReceiptVaultFactory =
-      (await offchainAssetReceiptVaultFactoryFactory.deploy(
-        receiptFactoryContract.address
-      )) as OffchainAssetReceiptVaultFactory;
-    await offchainAssetReceiptVaultFactory.deployed();
+      await deployOffchainAssetReceiptVaultFactory();
   });
 
   it("Should deploy Factory correctly", async () => {
@@ -39,21 +24,19 @@ describe("OffchainAssetVaultFactory Test", () => {
   });
 
   it("Should createChild", async () => {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
     const constructionConfig = {
       admin: alice.address,
       vaultConfig: {
         asset: ethers.constants.AddressZero,
-        name: "OffchainAssetVault",
+        name: "OffchainAssetReceiptVault",
         symbol: "OAV",
       },
     };
 
-    const receiptConfig = {
-      uri: expectedUri,
-    };
-
     let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
-      receiptConfig,
       constructionConfig
     );
 
