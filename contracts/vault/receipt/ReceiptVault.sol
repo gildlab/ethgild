@@ -917,7 +917,11 @@ contract ReceiptVault is
     }
 
     /// @inheritdoc ERC20Snapshot
-    function _beforeTokenTransfer(address from_, address to_, uint256 amount_) internal virtual override {
+    function _beforeTokenTransfer(
+        address from_,
+        address to_,
+        uint256 amount_
+    ) internal virtual override {
         super._beforeTokenTransfer(from_, to_, amount_);
     }
 }
