@@ -192,35 +192,23 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         uint256[] context
     );
 
-    /// Rolename for depositors.
-    /// Depositor role is required to mint new shares and receipts.
-    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
-    /// Rolename for depositor admins.
-    bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
-
-    /// Rolename for withdrawers.
-    /// Withdrawer role is required to burn shares and receipts.
-    bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
-    /// Rolename for withdrawer admins.
-    bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
-
     /// Rolename for certifiers.
     /// Certifier role is required to extend the `certifiedUntil` time.
     bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
     /// Rolename for certifier admins.
     bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
 
-    /// Rolename for handlers.
-    /// Handler role is required to accept tokens during system freeze.
-    bytes32 public constant HANDLER = keccak256("HANDLER");
-    /// Rolename for handler admins.
-    bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+    /// Rolename for confiscator.
+    /// Confiscator role is required to confiscate shares and/or receipts.
+    bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
+    /// Rolename for confiscator admins.
+    bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
 
-    /// Rolename for ERC20 tierer.
-    /// ERC20 tierer role is required to modify the tier contract for shares.
-    bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
-    /// Rolename for ERC20 tierer admins.
-    bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+    /// Rolename for depositors.
+    /// Depositor role is required to mint new shares and receipts.
+    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
+    /// Rolename for depositor admins.
+    bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
     /// Rolename for ERC1155 tierer.
     /// ERC1155 tierer role is required to modify the tier contract for receipts.
@@ -236,11 +224,23 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
-    /// Rolename for confiscator.
-    /// Confiscator role is required to confiscate shares and/or receipts.
-    bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
-    /// Rolename for confiscator admins.
-    bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
+    /// Rolename for ERC20 tierer.
+    /// ERC20 tierer role is required to modify the tier contract for shares.
+    bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
+    /// Rolename for ERC20 tierer admins.
+    bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+
+    /// Rolename for handlers.
+    /// Handler role is required to accept tokens during system freeze.
+    bytes32 public constant HANDLER = keccak256("HANDLER");
+    /// Rolename for handler admins.
+    bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+
+    /// Rolename for withdrawers.
+    /// Withdrawer role is required to burn shares and receipts.
+    bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
+    /// Rolename for withdrawer admins.
+    bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
     /// The largest issued id. The next id issued will be larger than this.
     uint256 private highwaterId;
@@ -287,20 +287,17 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             revert NonZeroAsset();
         }
 
-        _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);
-        _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
-
-        _setRoleAdmin(WITHDRAWER, WITHDRAWER_ADMIN);
-        _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
-
+        // Define all admin roles. Note that admins can admin each other which
+        // is a double edged sword. ANY admin can forcibly take over the entire
+        // role by removing all other admins.
         _setRoleAdmin(CERTIFIER, CERTIFIER_ADMIN);
         _setRoleAdmin(CERTIFIER_ADMIN, CERTIFIER_ADMIN);
 
-        _setRoleAdmin(HANDLER, HANDLER_ADMIN);
-        _setRoleAdmin(HANDLER_ADMIN, HANDLER_ADMIN);
+        _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
+        _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
 
-        _setRoleAdmin(ERC20TIERER, ERC20TIERER_ADMIN);
-        _setRoleAdmin(ERC20TIERER_ADMIN, ERC20TIERER_ADMIN);
+        _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);
+        _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
 
         _setRoleAdmin(ERC1155TIERER, ERC1155TIERER_ADMIN);
         _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
@@ -308,17 +305,24 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _setRoleAdmin(ERC20SNAPSHOTTER, ERC20SNAPSHOTTER_ADMIN);
         _setRoleAdmin(ERC20SNAPSHOTTER_ADMIN, ERC20SNAPSHOTTER_ADMIN);
 
-        _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
-        _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
+        _setRoleAdmin(ERC20TIERER, ERC20TIERER_ADMIN);
+        _setRoleAdmin(ERC20TIERER_ADMIN, ERC20TIERER_ADMIN);
 
-        _grantRole(DEPOSITOR_ADMIN, config_.admin);
-        _grantRole(WITHDRAWER_ADMIN, config_.admin);
+        _setRoleAdmin(HANDLER, HANDLER_ADMIN);
+        _setRoleAdmin(HANDLER_ADMIN, HANDLER_ADMIN);
+
+        _setRoleAdmin(WITHDRAWER, WITHDRAWER_ADMIN);
+        _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
+
+        // Grant every admin role to the configured admin.
         _grantRole(CERTIFIER_ADMIN, config_.admin);
-        _grantRole(HANDLER_ADMIN, config_.admin);
-        _grantRole(ERC20TIERER_ADMIN, config_.admin);
+        _grantRole(CONFISCATOR_ADMIN, config_.admin);
+        _grantRole(DEPOSITOR_ADMIN, config_.admin);
         _grantRole(ERC1155TIERER_ADMIN, config_.admin);
         _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
-        _grantRole(CONFISCATOR_ADMIN, config_.admin);
+        _grantRole(ERC20TIERER_ADMIN, config_.admin);
+        _grantRole(HANDLER_ADMIN, config_.admin);
+        _grantRole(WITHDRAWER_ADMIN, config_.admin);
 
         emit OffchainAssetReceiptVaultInitialized(msg.sender, config_);
     }
