@@ -915,4 +915,9 @@ contract ReceiptVault is
         _withdraw(assets_, receiver_, owner_, shares_, id_);
         return assets_;
     }
+
+    /// @inheritdoc ERC20Snapshot
+    function _beforeTokenTransfer(address from_, address to_, uint256 amount_) internal virtual override {
+        super._beforeTokenTransfer(from_, to_, amount_);
+    }
 }

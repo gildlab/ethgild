@@ -651,6 +651,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// Apply standard transfer restrictions to share transfers.
+    /// @inheritdoc ReceiptVault
     function _beforeTokenTransfer(
         address from_,
         address to_,
