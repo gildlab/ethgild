@@ -10,14 +10,6 @@ import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
 
-/// Thrown when the account does NOT have the depositor role on mint.
-/// @param account the unauthorized depositor.
-error UnauthorizedDeposit(address account);
-
-/// Thrown when the account does NOT have the withdrawer role on burn.
-/// @param account the unauthorized withdrawer.
-error UnauthorizedWithdraw(address account);
-
 /// Thrown when a certification reference a block number in the future that
 /// cannot possibly have been seen yet.
 /// @param account The certifier that attempted the certify.
@@ -40,6 +32,12 @@ error UnauthorizedRecipientTier(address to, uint256 reportTime);
 
 /// Thrown when a transfer is attempted by an unpriviledged account during system
 /// freeze due to certification lapse.
+/// @param from The account the transfer is from.
+/// @param to The account the transfer is to.
+/// @param certifiedUntil The (lapsed) certification time justifying the system
+/// freeze.
+/// @param timestamp Block timestamp of the transaction that is outside
+/// certification.
 error CertificationExpired(
     address from,
     address to,
@@ -289,29 +287,29 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             revert NonZeroAsset();
         }
 
-        _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
         _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);
+        _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
 
-        _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
         _setRoleAdmin(WITHDRAWER, WITHDRAWER_ADMIN);
+        _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
 
-        _setRoleAdmin(CERTIFIER_ADMIN, CERTIFIER_ADMIN);
         _setRoleAdmin(CERTIFIER, CERTIFIER_ADMIN);
+        _setRoleAdmin(CERTIFIER_ADMIN, CERTIFIER_ADMIN);
 
-        _setRoleAdmin(HANDLER_ADMIN, HANDLER_ADMIN);
         _setRoleAdmin(HANDLER, HANDLER_ADMIN);
+        _setRoleAdmin(HANDLER_ADMIN, HANDLER_ADMIN);
 
-        _setRoleAdmin(ERC20TIERER_ADMIN, ERC20TIERER_ADMIN);
         _setRoleAdmin(ERC20TIERER, ERC20TIERER_ADMIN);
+        _setRoleAdmin(ERC20TIERER_ADMIN, ERC20TIERER_ADMIN);
 
-        _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
         _setRoleAdmin(ERC1155TIERER, ERC1155TIERER_ADMIN);
+        _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
 
-        _setRoleAdmin(ERC20SNAPSHOTTER_ADMIN, ERC20SNAPSHOTTER_ADMIN);
         _setRoleAdmin(ERC20SNAPSHOTTER, ERC20SNAPSHOTTER_ADMIN);
+        _setRoleAdmin(ERC20SNAPSHOTTER_ADMIN, ERC20SNAPSHOTTER_ADMIN);
 
-        _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
         _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
+        _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
 
         _grantRole(DEPOSITOR_ADMIN, config_.admin);
         _grantRole(WITHDRAWER_ADMIN, config_.admin);
@@ -341,6 +339,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
+    /// Highwater needs to witness the incoming id.
     /// @inheritdoc ReceiptVault
     function _beforeDeposit(
         uint256,
@@ -512,6 +511,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// data that informed the certification even existed. DO NOT certify until
     /// a `0` time, any time in the past relative to the current time will have
     /// the same effect on the system (freezing it immediately).
+    /// The reason this is NOT enforced onchain is that the certification time is
+    /// a timestamp and the reference block number is a block number, these two
+    /// time keeping systems are NOT directly interchangeable.
     ///
     /// Note that redundant certifications MAY be submitted. Regardless of the
     /// `forceUntil_` flag the transaction WILL NOT REVERT and the `Certify`
