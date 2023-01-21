@@ -752,19 +752,19 @@ contract ReceiptVault is
     /// @param receiver_ As per IERC4626 `withdraw`.
     /// @param owner_ As per IERC4626 `withdraw`.
     /// @param id_ As per `_withdraw`.
-    /// @param data_ As per `_withdraw`.
+    /// @param receiptInformation_ As per `_withdraw`.
     function withdraw(
         uint256 assets_,
         address receiver_,
         address owner_,
         uint256 id_,
-        bytes memory data_
+        bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 shares_ = _calculateWithdraw(
             assets_,
             _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
         );
-        _withdraw(assets_, receiver_, owner_, shares_, id_, data_);
+        _withdraw(assets_, receiver_, owner_, shares_, id_, receiptInformation_);
         return shares_;
     }
 
@@ -910,19 +910,19 @@ contract ReceiptVault is
     /// @param owner_ As per IERC4626 `redeem`.
     /// @param id_ The reference id to redeem against. The owner MUST hold
     /// a receipt with id_ and it will be used to calculate the share ratio.
-    /// @param data_ Associated data for the redemption.
+    /// @param receiptInformation_ Associated receipt data for the redemption.
     function redeem(
         uint256 shares_,
         address receiver_,
         address owner_,
         uint256 id_,
-        bytes memory data_
+        bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 assets_ = _calculateRedeem(
             shares_,
             _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
         );
-        _withdraw(assets_, receiver_, owner_, shares_, id_, data_);
+        _withdraw(assets_, receiver_, owner_, shares_, id_, receiptInformation_);
         return assets_;
     }
 
