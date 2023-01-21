@@ -134,13 +134,15 @@ contract ReceiptVault is
     /// @param assets As per `IERC4626.Withdraw`.
     /// @param shares As per `IERC4626.Withdraw`.
     /// @param id As per `IERC1155.TransferSingle`.
+    /// @param receiptInformation As per `ReceiptInformation`.
     event WithdrawWithReceipt(
         address sender,
         address receiver,
         address owner,
         uint256 assets,
         uint256 shares,
-        uint256 id
+        uint256 id,
+        bytes receiptInformation
     );
 
     /// Underlying ERC4626 asset.
@@ -741,7 +743,7 @@ contract ReceiptVault is
         address receiver_,
         address owner_
     ) external returns (uint256) {
-        return withdraw(assets_, receiver_, owner_, withdrawIds[owner_]);
+        return withdraw(assets_, receiver_, owner_, withdrawIds[owner_], "");
     }
 
     /// Overloaded version of IERC4626 `withdraw` that allows the id to be
@@ -750,17 +752,19 @@ contract ReceiptVault is
     /// @param receiver_ As per IERC4626 `withdraw`.
     /// @param owner_ As per IERC4626 `withdraw`.
     /// @param id_ As per `_withdraw`.
+    /// @param data_ As per `_withdraw`.
     function withdraw(
         uint256 assets_,
         address receiver_,
         address owner_,
-        uint256 id_
+        uint256 id_,
+        bytes memory data_
     ) public returns (uint256) {
         uint256 shares_ = _calculateWithdraw(
             assets_,
             _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
         );
-        _withdraw(assets_, receiver_, owner_, shares_, id_);
+        _withdraw(assets_, receiver_, owner_, shares_, id_, data_);
         return shares_;
     }
 
@@ -778,12 +782,14 @@ contract ReceiptVault is
     /// @param id_ The receipt id to withdraw against. The owner MUST hold the
     /// receipt for the ID in addition to the shares being burned for
     /// withdrawal.
+    /// @param receiptInformation_ New receipt information for the withdraw.
     function _withdraw(
         uint256 assets_,
         address receiver_,
         address owner_,
         uint256 shares_,
-        uint256 id_
+        uint256 id_,
+        bytes memory receiptInformation_
     ) internal nonReentrant {
         if (assets_ == 0) {
             revert ZeroAssetsAmount();
@@ -808,7 +814,8 @@ contract ReceiptVault is
             owner_,
             assets_,
             shares_,
-            id_
+            id_,
+            receiptInformation_
         );
 
         // IERC4626:
@@ -825,7 +832,7 @@ contract ReceiptVault is
         _burn(owner_, shares_);
 
         // ERC1155 burn.
-        _receipt.ownerBurn(owner_, id_, shares_);
+        _receipt.ownerBurn(owner_, id_, shares_, receiptInformation_);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
@@ -894,7 +901,7 @@ contract ReceiptVault is
         address receiver_,
         address owner_
     ) external returns (uint256) {
-        return redeem(shares_, receiver_, owner_, withdrawIds[owner_]);
+        return redeem(shares_, receiver_, owner_, withdrawIds[owner_], "");
     }
 
     /// Overloaded redeem that allows the ID to redeem with to be passed in.
@@ -903,17 +910,19 @@ contract ReceiptVault is
     /// @param owner_ As per IERC4626 `redeem`.
     /// @param id_ The reference id to redeem against. The owner MUST hold
     /// a receipt with id_ and it will be used to calculate the share ratio.
+    /// @param data_ Associated data for the redemption.
     function redeem(
         uint256 shares_,
         address receiver_,
         address owner_,
-        uint256 id_
+        uint256 id_,
+        bytes memory data_
     ) public returns (uint256) {
         uint256 assets_ = _calculateRedeem(
             shares_,
             _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
         );
-        _withdraw(assets_, receiver_, owner_, shares_, id_);
+        _withdraw(assets_, receiver_, owner_, shares_, id_, data_);
         return assets_;
     }
 

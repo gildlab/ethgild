@@ -117,6 +117,13 @@ struct OffchainAssetReceiptVaultConfig {
 contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     using Math for uint256;
 
+    /// Snapshot event similar to Open Zeppelin `Snapshot` event but with
+    /// additional associated data as provided by the snapshotter.
+    /// @param sender The `msg.sender` that triggered the snapshot.
+    /// @param id The ID of the snapshot that was triggered.
+    /// @param data Associated data for the snapshot that was triggered.
+    event SnapshotWithData(address sender, uint256 id, bytes data);
+
     /// Contract has initialized.
     /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
@@ -178,11 +185,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    /// @param data Associated data for the change in tier config.
     event SetERC20Tier(
         address sender,
         address tier,
         uint256 minimumTier,
-        uint256[] context
+        uint256[] context,
+        bytes data
     );
 
     /// A new ERC1155 tier contract has been set.
@@ -192,11 +201,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    /// @param data Associated data for the change in tier config.
     event SetERC1155Tier(
         address sender,
         address tier,
         uint256 minimumTier,
-        uint256[] context
+        uint256[] context,
+        bytes data
     );
 
     /// Rolename for certifiers.
@@ -460,38 +471,52 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
-    function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
-        return _snapshot();
+    /// @param data_ Associated data relevant to the snapshot.
+    /// @return The snapshot ID as per Open Zeppelin.
+    function snapshot(
+        bytes memory data_
+    ) external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
+        uint256 id_ = _snapshot();
+        emit SnapshotWithData(msg.sender, id_, data_);
+        return id_;
     }
 
+    /// `ERC20TIERER` Role restricted setter for all internal state that drives
+    /// the erc20 tier restriction logic on transfers.
     /// @param tier_ `ITier` contract to check when receiving shares. MAY be
     /// `address(0)` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     /// @param context_ Global context to be forwarded with tier checks.
+    /// @param data_ Associated data relevant to the change in tier contract.
     function setERC20Tier(
         address tier_,
         uint8 minimumTier_,
-        uint256[] calldata context_
+        uint256[] calldata context_,
+        bytes memory data_
     ) external onlyRole(ERC20TIERER) {
         erc20Tier = ITierV2(tier_);
         erc20MinimumTier = minimumTier_;
         erc20TierContext = context_;
-        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_);
+        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_, data_);
     }
 
+    /// `ERC1155TIERER` Role restricted setter for all internal state that drives
+    /// the erc1155 tier restriction logic on transfers.
     /// @param tier_ `ITier` contract to check when receiving receipts. MAY be
     /// `0` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     /// @param context_ Global context to be forwarded with tier checks.
+    /// @param data_ Associated data relevant to the change in tier contract.
     function setERC1155Tier(
         address tier_,
         uint8 minimumTier_,
-        uint256[] calldata context_
+        uint256[] calldata context_,
+        bytes memory data_
     ) external onlyRole(ERC1155TIERER) {
         erc1155Tier = ITierV2(tier_);
         erc1155MinimumTier = minimumTier_;
         erc1155TierContext = context_;
-        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_);
+        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_, data_);
     }
 
     /// Certifiers MAY EXTEND OR REDUCE the `certifiedUntil` time. If there are
@@ -705,10 +730,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// and loose with user assets is the ONLY way to discourage such behaviour.
     ///
     /// @param confiscatee_ The address that shares are being confiscated from.
+    /// @param data_ The associated justification of the confiscation, and/or
+    /// other relevant data.
     /// @return The amount of shares confiscated.
     function confiscateShares(
         address confiscatee_,
-        bytes memory justification_
+        bytes memory data_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
         uint256 confiscatedShares_ = 0;
         if (
@@ -726,7 +753,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                     msg.sender,
                     confiscatee_,
                     confiscatedShares_,
-                    justification_
+                    data_
                 );
                 _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
@@ -749,11 +776,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ///
     /// @param confiscatee_ The address that receipts are being confiscated from.
     /// @param id_ The ID of the receipt to confiscate.
+    /// @param data_ The associated justification of the confiscation, and/or
+    /// other relevant data.
     /// @return The amount of receipt confiscated.
     function confiscateReceipt(
         address confiscatee_,
         uint256 id_,
-        bytes memory justification_
+        bytes memory data_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
         uint256 confiscatedReceiptAmount_ = 0;
         if (
@@ -773,7 +802,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                     confiscatee_,
                     id_,
                     confiscatedReceiptAmount_,
-                    justification_
+                    data_
                 );
                 receipt_.ownerTransferFrom(
                     confiscatee_,

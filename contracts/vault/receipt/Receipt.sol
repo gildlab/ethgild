@@ -54,8 +54,10 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
     function ownerBurn(
         address account_,
         uint256 id_,
-        uint256 amount_
+        uint256 amount_,
+        bytes memory data_
     ) external virtual onlyOwner {
+        _receiptInformation(account_, id_, data_);
         _burn(account_, id_, amount_);
     }
 
