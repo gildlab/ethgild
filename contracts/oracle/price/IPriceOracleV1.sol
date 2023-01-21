@@ -9,11 +9,13 @@ pragma solidity ^0.8.0;
 ///
 /// Prices from an `IPriceOracleV1` MUST be:
 /// - The latest available data/value
-/// - Fresh enough or error if only too-stale data is available
+/// - Fresh enough or revert if only too-stale data is available
 /// - Represented as `uint256` values or error (e.g. disallow negative values)
 /// - 18 decimal fixed point values representing a ratio (price) between "base"
 /// and "quote" token.
 /// - A positive integer, `0` prices are disallowed.
+/// - Valid according to the upstream orcale or revert for any other reason the
+/// price is suspect or unusable.
 ///
 /// By normalising all ratios to 18 decimal fixed point at their source we
 /// simplify downstream math that derives prices by combining several
