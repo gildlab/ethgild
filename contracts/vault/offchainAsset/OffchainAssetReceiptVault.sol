@@ -10,6 +10,9 @@ import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
 
+/// Thrown when the admin is address zero.
+error ZeroAdmin();
+
 /// Thrown when a certification reference a block number in the future that
 /// cannot possibly have been seen yet.
 /// @param account The certifier that attempted the certify.
@@ -285,6 +288,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         // There is no asset, the asset is offchain.
         if (config_.receiptVaultConfig.vaultConfig.asset != address(0)) {
             revert NonZeroAsset();
+        }
+        // The config admin MUST be set.
+        if (config_.admin == address(0)) {
+            revert ZeroAdmin();
         }
 
         // Define all admin roles. Note that admins can admin each other which
