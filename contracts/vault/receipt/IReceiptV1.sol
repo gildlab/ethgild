@@ -34,7 +34,8 @@ interface IReceiptV1 is IERC1155 {
     /// `Ownable.owner` function signature as it is a very common and popular
     /// implementation. `IReceiptV1` has no opinion on how ownership is
     /// implemented and managed, it only cares that there is some owner.
-    function owner() external view returns (address owner);
+    /// @return account The owner account.
+    function owner() external view returns (address account);
 
     /// The owner MAY directly mint receipts for any account, ID and amount
     /// without restriction. The data MUST be treated as both ERC1155 data and

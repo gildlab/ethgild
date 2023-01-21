@@ -708,10 +708,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         ) {
             confiscatedShares_ = balanceOf(confiscatee_);
             if (confiscatedShares_ > 0) {
+                emit ConfiscateShares(
+                    msg.sender,
+                    confiscatee_,
+                    confiscatedShares_
+                );
                 _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
         }
-        emit ConfiscateShares(msg.sender, confiscatee_, confiscatedShares_);
         return confiscatedShares_;
     }
 
@@ -739,6 +743,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             IReceiptV1 receipt_ = _receipt;
             confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscatedReceiptAmount_ > 0) {
+                emit ConfiscateReceipt(
+                    msg.sender,
+                    confiscatee_,
+                    id_,
+                    confiscatedReceiptAmount_
+                );
                 receipt_.ownerTransferFrom(
                     confiscatee_,
                     msg.sender,
@@ -748,15 +758,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 );
             }
         }
-        // Slither flags this as reentrant but this function has `nonReentrant`
-        // on it from `ReentrancyGuard`.
-        //slither-disable-next-line reentrancy-vulnerabilities-3
-        emit ConfiscateReceipt(
-            msg.sender,
-            confiscatee_,
-            id_,
-            confiscatedReceiptAmount_
-        );
         return confiscatedReceiptAmount_;
     }
 }
