@@ -764,7 +764,14 @@ contract ReceiptVault is
             assets_,
             _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
         );
-        _withdraw(assets_, receiver_, owner_, shares_, id_, receiptInformation_);
+        _withdraw(
+            assets_,
+            receiver_,
+            owner_,
+            shares_,
+            id_,
+            receiptInformation_
+        );
         return shares_;
     }
 
@@ -922,7 +929,14 @@ contract ReceiptVault is
             shares_,
             _shareRatio(owner_, receiver_, id_, ShareAction.Burn)
         );
-        _withdraw(assets_, receiver_, owner_, shares_, id_, receiptInformation_);
+        _withdraw(
+            assets_,
+            receiver_,
+            owner_,
+            shares_,
+            id_,
+            receiptInformation_
+        );
         return assets_;
     }
 
