@@ -556,6 +556,7 @@ contract ReceiptVault is
     /// due to rounding in different contexts so caller MUST calculate
     /// according to the rounding specification.
     /// @param id_ ID of the 1155 receipt and MUST be provided on withdrawal.
+    /// @param receiptInformation_ As per `Receipt` receipt information.
     function _deposit(
         uint256 assets_,
         address receiver_,

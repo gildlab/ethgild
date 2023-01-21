@@ -46,8 +46,8 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
         uint256 amount_,
         bytes memory data_
     ) external virtual onlyOwner {
-        _mint(account_, id_, amount_, data_);
         _receiptInformation(account_, id_, data_);
+        _mint(account_, id_, amount_, data_);
     }
 
     /// @inheritdoc IReceiptV1
