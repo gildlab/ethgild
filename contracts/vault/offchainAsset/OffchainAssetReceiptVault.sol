@@ -148,10 +148,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param sender The confiscator who is confiscating the shares.
     /// @param confiscatee The user who had their shares confiscated.
     /// @param confiscated The amount of shares that were confiscated.
+    /// @param justification The contextual data justifying the confiscation.
     event ConfiscateShares(
         address sender,
         address confiscatee,
-        uint256 confiscated
+        uint256 confiscated,
+        bytes justification
     );
 
     /// A receipt has been confiscated from a user who is not currently meeting
@@ -160,11 +162,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param confiscatee The user who had their receipt confiscated.
     /// @param id The receipt ID that was confiscated.
     /// @param confiscated The amount of the receipt that was confiscated.
+    /// @param justification The contextual data justifying the confiscation.
     event ConfiscateReceipt(
         address sender,
         address confiscatee,
         uint256 id,
-        uint256 confiscated
+        uint256 confiscated,
+        bytes justification
     );
 
     /// A new ERC20 tier contract has been set.
@@ -691,10 +695,20 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Confiscation is a binary event. All shares or zero shares are
     /// confiscated from the confiscatee.
     ///
+    /// Typically people DO NOT LIKE having their assets confiscated. It SHOULD
+    /// be treated as a rare and extreme action, only taken when all other
+    /// avenues/workarounds are explored and exhausted. The confiscator SHOULD
+    /// provide their justification of each confiscation, and the general public,
+    /// especially token holders SHOULD review and be highly suspect of unjust
+    /// confiscation events. If you review and DO NOT agree with a confiscation
+    /// you SHOULD NOT continue to hold the token, exiting systems that play fast
+    /// and loose with user assets is the ONLY way to discourage such behaviour.
+    ///
     /// @param confiscatee_ The address that shares are being confiscated from.
     /// @return The amount of shares confiscated.
     function confiscateShares(
-        address confiscatee_
+        address confiscatee_,
+        bytes memory justification_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
         uint256 confiscatedShares_ = 0;
         if (
@@ -711,7 +725,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 emit ConfiscateShares(
                     msg.sender,
                     confiscatee_,
-                    confiscatedShares_
+                    confiscatedShares_,
+                    justification_
                 );
                 _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
@@ -723,12 +738,22 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// The process, limitations and logic is identical to share confiscation
     /// except that receipt confiscation is performed per-ID.
     ///
+    /// Typically people DO NOT LIKE having their assets confiscated. It SHOULD
+    /// be treated as a rare and extreme action, only taken when all other
+    /// avenues/workarounds are explored and exhausted. The confiscator SHOULD
+    /// provide their justification of each confiscation, and the general public,
+    /// especially token holders SHOULD review and be highly suspect of unjust
+    /// confiscation events. If you review and DO NOT agree with a confiscation
+    /// you SHOULD NOT continue to hold the token, exiting systems that play fast
+    /// and loose with user assets is the ONLY way to discourage such behaviour.
+    ///
     /// @param confiscatee_ The address that receipts are being confiscated from.
     /// @param id_ The ID of the receipt to confiscate.
     /// @return The amount of receipt confiscated.
     function confiscateReceipt(
         address confiscatee_,
-        uint256 id_
+        uint256 id_,
+        bytes memory justification_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
         uint256 confiscatedReceiptAmount_ = 0;
         if (
@@ -747,7 +772,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                     msg.sender,
                     confiscatee_,
                     id_,
-                    confiscatedReceiptAmount_
+                    confiscatedReceiptAmount_,
+                    justification_
                 );
                 receipt_.ownerTransferFrom(
                     confiscatee_,
