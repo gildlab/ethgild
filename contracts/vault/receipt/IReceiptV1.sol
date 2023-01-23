@@ -34,7 +34,8 @@ interface IReceiptV1 is IERC1155 {
     /// `Ownable.owner` function signature as it is a very common and popular
     /// implementation. `IReceiptV1` has no opinion on how ownership is
     /// implemented and managed, it only cares that there is some owner.
-    function owner() external view returns (address owner);
+    /// @return account The owner account.
+    function owner() external view returns (address account);
 
     /// The owner MAY directly mint receipts for any account, ID and amount
     /// without restriction. The data MUST be treated as both ERC1155 data and
@@ -57,7 +58,13 @@ interface IReceiptV1 is IERC1155 {
     /// @param account The account to burn a receipt for.
     /// @param id The receipt ID to burn.
     /// @param amount The amount to mint for the `id`.
-    function ownerBurn(address account, uint256 id, uint256 amount) external;
+    /// @param data MUST be emitted as receipt information.
+    function ownerBurn(
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) external;
 
     /// The owner MAY directly transfer receipts from and to any account for any
     /// id and amount without restriction. Overflow and underflow MUST revert as

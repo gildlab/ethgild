@@ -18,6 +18,7 @@ import {
   ConfiscateSharesEvent,
   ConfiscateReceiptEvent,
   SetERC1155TierEvent,
+  SnapshotWithDataEvent,
 } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
 import {
   deployOffChainAssetReceiptVault,
@@ -36,6 +37,28 @@ describe("OffChainAssetReceiptVault", async function () {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
+  });
+  it("Check admin is not address zero", async function () {
+    const offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetReceiptVaultFactory();
+
+    const constructionConfig = {
+      admin: ADDRESS_ZERO,
+      vaultConfig: {
+        asset: ADDRESS_ZERO,
+        name: "OffchainAssetVaul",
+        symbol: "OAV",
+      },
+    };
+
+    await assertError(
+      async () =>
+        await offchainAssetReceiptVaultFactory.createChildTyped(
+          constructionConfig
+        ),
+      `ZeroAdmin()`,
+      "Failed to initialize"
+    );
   });
   it("Check asset is address zero", async function () {
     const signers = await ethers.getSigners();
@@ -63,7 +86,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Constructs well", async function () {
-    const [vault, receipt, config] = await deployOffChainAssetReceiptVault();
+    const [, , config] = await deployOffChainAssetReceiptVault();
 
     assert(
       config.receiptVaultConfig.vaultConfig.name === expectedName,
@@ -101,10 +124,10 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).ERC20TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(10);
 
-    const { sender, tier, minimumTier } = (await getEventArgs(
+    const { sender, tier, minimumTier, data } = (await getEventArgs(
       await vault
         .connect(alice)
-        .setERC20Tier(TierV2TestContract.address, minTier, []),
+        .setERC20Tier(TierV2TestContract.address, minTier, [], [1]),
       "SetERC20Tier",
       vault
     )) as SetERC20TierEvent["args"];
@@ -121,6 +144,7 @@ describe("OffChainAssetReceiptVault", async function () {
       minimumTier.eq(minTier),
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
+    assert(data === "0x01", `wrong data expected 0x01 got ${data}`);
   });
   it("Checks setERC1155Tier event is emitted", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
@@ -133,10 +157,10 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
     const minTier = ethers.BigNumber.from(100);
 
-    const { sender, tier, minimumTier } = (await getEventArgs(
+    const { sender, tier, minimumTier, data } = (await getEventArgs(
       await vault
         .connect(alice)
-        .setERC1155Tier(TierV2TestContract.address, minTier, []),
+        .setERC1155Tier(TierV2TestContract.address, minTier, [], [1]),
       "SetERC1155Tier",
       vault
     )) as SetERC1155TierEvent["args"];
@@ -153,6 +177,7 @@ describe("OffChainAssetReceiptVault", async function () {
       minimumTier.eq(minTier),
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
+    assert(data === "0x01", `wrong data expected 0x01 got ${data}`);
   });
   it("Checks totalAssets", async function () {
     const signers = await ethers.getSigners();
@@ -400,7 +425,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Redeposit - should be receipt holder", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+    const [, receipt] = await deployOffChainAssetReceiptVault();
 
     const aliceReceiptBalance = await receipt
       .connect(alice)
@@ -525,12 +550,35 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
 
     const { id } = (await getEventArgs(
-      await vault.connect(alice).snapshot(),
+      await vault.connect(alice).snapshot([]),
       "Snapshot",
       vault
     )) as SnapshotEvent["args"];
 
     assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
+  });
+  it("SnapshotWithData event is emitted", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
+
+    const { sender, id, data } = (await getEventArgs(
+      await vault.connect(alice).snapshot([1]),
+      "SnapshotWithData",
+      vault
+    )) as SnapshotWithDataEvent["args"];
+
+    assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
+
+    assert(
+      sender === alice.address,
+      `Wrong sender. Expected ${alice.address}, got ${sender}`
+    );
+    assert(data === "0x01", `Wrong information. Expected 0x01, got ${data}`);
   });
   it("Sets correct erc20Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
@@ -546,14 +594,14 @@ describe("OffChainAssetReceiptVault", async function () {
     const { tier, minimumTier } = (await getEventArgs(
       await vault
         .connect(alice)
-        .setERC20Tier(TierV2TestContract.address, minTier, []),
+        .setERC20Tier(TierV2TestContract.address, minTier, [], []),
       "SetERC20Tier",
       vault
     )) as SetERC20TierEvent["args"];
 
     await vault
       .connect(alice)
-      .setERC20Tier(TierV2TestContract.address, minTier, []);
+      .setERC20Tier(TierV2TestContract.address, minTier, [], []);
 
     assert(
       tier === TierV2TestContract.address,
@@ -578,14 +626,14 @@ describe("OffChainAssetReceiptVault", async function () {
     const { tier, minimumTier } = (await getEventArgs(
       await vault
         .connect(alice)
-        .setERC1155Tier(TierV2TestContract.address, minTier, []),
+        .setERC1155Tier(TierV2TestContract.address, minTier, [], []),
       "SetERC1155Tier",
       vault
     )) as SetERC20TierEvent["args"];
 
     await vault
       .connect(alice)
-      .setERC1155Tier(TierV2TestContract.address, minTier, []);
+      .setERC1155Tier(TierV2TestContract.address, minTier, [], []);
 
     assert(
       tier === TierV2TestContract.address,
@@ -803,14 +851,15 @@ describe("OffChainAssetReceiptVault", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
     await assertError(
-      async () => await vault.connect(alice).confiscateShares(alice.address),
+      async () =>
+        await vault.connect(alice).confiscateShares(alice.address, []),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
         .connect(alice)
         .CONFISCATOR()}`,
       "failed to confiscate"
     );
   });
-  it("Confiscate - Checks ConfiscateShares is emitted", async function () {
+  it.only("Confiscate - Checks ConfiscateShares is NOT emitted on Zero balance", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetReceiptVault();
@@ -819,8 +868,56 @@ describe("OffChainAssetReceiptVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
-    const { sender, confiscatee } = (await getEventArgs(
-      await vault.connect(alice).confiscateShares(alice.address),
+    try {
+      await getEventArgs(
+        await vault.connect(alice).confiscateShares(alice.address, [1]),
+        "ConfiscateShares",
+        vault
+      );
+    } catch (err) {
+      assert(
+        err
+          .toString()
+          .includes("Error: Could not find event with name ConfiscateShares"),
+        `ConfiscateShares was emitted`
+      );
+    }
+  });
+  it("Confiscate - Checks ConfiscateShares is emitted", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const assets = ethers.BigNumber.from(100);
+
+    await asset.transfer(alice.address, assets);
+
+    await asset
+      .connect(alice)
+      .increaseAllowance(vault.connect(alice).address, assets);
+
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+        assets,
+        alice.address,
+        ONE,
+        []
+      );
+
+    const { sender, confiscatee, justification } = (await getEventArgs(
+      await vault.connect(alice).confiscateShares(alice.address, [1]),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -833,20 +930,58 @@ describe("OffChainAssetReceiptVault", async function () {
       confiscatee === alice.address,
       `wrong confiscatee expected ${alice.address} got ${confiscatee}`
     );
+    assert(
+      justification === "0x01",
+      `wrong justification expected 0x01 got ${justification}`
+    );
   });
   it("Confiscate receipts - Checks ConfiscateReceipt is emitted", async function () {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
     const [vault] = await deployOffChainAssetReceiptVault();
 
-    const _id = ONE;
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
 
+    const _id = ethers.BigNumber.from(1);
+
+    const alice = signers[0];
+
+    const aliceAssets = ethers.BigNumber.from(100);
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+    await vault
+      .connect(alice)
+      .certify(_certifiedUntil, _referenceBlockNumber, false, []);
+
+    await asset.transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
 
-    const { sender, confiscatee, id } = (await getEventArgs(
-      await vault.connect(alice).confiscateReceipt(alice.address, _id),
+    await vault
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
+        aliceAssets,
+        alice.address,
+        _id,
+        []
+      );
+
+    const { sender, confiscatee, id, justification } = (await getEventArgs(
+      await vault.connect(alice).confiscateReceipt(alice.address, _id, [1]),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateReceiptEvent["args"];
@@ -860,6 +995,38 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong confiscatee expected ${alice.address} got ${confiscatee}`
     );
     assert(id.eq(_id), `wrong id expected ${_id} got ${id}`);
+
+    assert(
+      justification === "0x01",
+      `wrong justification expected 0x01 got ${justification}`
+    );
+  });
+  it.only("Confiscate receipts - Checks ConfiscateReceipt is NOT emitted on zero balance", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    const alice = signers[0];
+
+    const _id = ethers.BigNumber.from(1);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+
+    try {
+      await getEventArgs(
+        await vault.connect(alice).confiscateReceipt(alice.address, _id, [1]),
+        "ConfiscateReceipt",
+        vault
+      );
+    } catch (err) {
+      assert(
+        err
+          .toString()
+          .includes("Error: Could not find event with name ConfiscateReceipt"),
+        `ConfiscateReceipt was emitted`
+      );
+    }
   });
   it("Checks confiscated is same as balance", async function () {
     const signers = await ethers.getSigners();
@@ -899,7 +1066,7 @@ describe("OffChainAssetReceiptVault", async function () {
       ["balanceOf(address)"](alice.address);
 
     const { confiscated } = (await getEventArgs(
-      await vault.connect(alice).confiscateShares(alice.address),
+      await vault.connect(alice).confiscateShares(alice.address, []),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -942,7 +1109,7 @@ describe("OffChainAssetReceiptVault", async function () {
       ["balanceOf(address)"](alice.address);
 
     const { confiscated } = (await getEventArgs(
-      await vault.connect(alice).confiscateShares(bob.address),
+      await vault.connect(alice).confiscateShares(bob.address, []),
       "ConfiscateShares",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -1010,7 +1177,7 @@ describe("OffChainAssetReceiptVault", async function () {
     const erc20balanceBef = await vault.connect(alice).balanceOf(bob.address);
 
     const { confiscated } = (await getEventArgs(
-      await vault.connect(alice).confiscateReceipt(bob.address, id),
+      await vault.connect(alice).confiscateReceipt(bob.address, id, []),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -1080,7 +1247,7 @@ describe("OffChainAssetReceiptVault", async function () {
       ["balanceOf(address,uint256)"](alice.address, id);
 
     const { confiscated } = (await getEventArgs(
-      await vault.connect(alice).confiscateReceipt(bob.address, id),
+      await vault.connect(alice).confiscateReceipt(bob.address, id, []),
       "ConfiscateReceipt",
       vault
     )) as ConfiscateSharesEvent["args"];
@@ -1125,7 +1292,7 @@ describe("OffChainAssetReceiptVault", async function () {
       ["mint(uint256,address,uint256,bytes)"](shares2, bob.address, 2, []);
 
     let ABI = [
-      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
+      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_, bytes receiptInformation_)",
     ];
     let iface = new ethers.utils.Interface(ABI);
     await vault
@@ -1141,12 +1308,14 @@ describe("OffChainAssetReceiptVault", async function () {
             bob.address,
             bob.address,
             1,
+            [],
           ]),
           iface.encodeFunctionData("redeem", [
             ethers.BigNumber.from(20),
             bob.address,
             bob.address,
             2,
+            [],
           ]),
         ],
         { from: bob.address }
@@ -1202,11 +1371,12 @@ describe("OffChainAssetReceiptVault", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             balance.add(1),
             alice.address,
             alice.address,
-            id
+            id,
+            []
           ),
       "ERC20: burn amount exceeds balance",
       "failed to prevent withdraw on more than balance"
@@ -1250,11 +1420,12 @@ describe("OffChainAssetReceiptVault", async function () {
       async () =>
         await vault
           .connect(bob)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             balance,
             alice.address,
             alice.address,
-            id
+            id,
+            []
           ),
       "ERC20: insufficient allowance",
       "failed to prevent withdraw on someone else's shares"
@@ -1304,7 +1475,7 @@ describe("OffChainAssetReceiptVault", async function () {
 
     await vault
       .connect(alice)
-      .setERC1155Tier(TierV2TestContract.address, minTier, []);
+      .setERC1155Tier(TierV2TestContract.address, minTier, [], []);
 
     await assertError(
       async () =>

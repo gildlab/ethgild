@@ -65,11 +65,12 @@ describe("Overloaded Withdraw", async function () {
 
     await vault
       .connect(alice)
-      ["withdraw(uint256,address,address,uint256)"](
+      ["withdraw(uint256,address,address,uint256,bytes)"](
         withdrawBalance,
         aliceAddress,
         aliceAddress,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const receiptBalanceAfter = await receipt
@@ -86,11 +87,12 @@ describe("Overloaded Withdraw", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["withdraw(uint256,address,address,uint256)"](
+          ["withdraw(uint256,address,address,uint256,bytes)"](
             ethers.BigNumber.from(0),
             aliceAddress,
             aliceAddress,
-            shareRatio
+            shareRatio,
+            []
           ),
       "ZeroAssetsAmount",
       "failed to prevent a zero asset withdraw"
@@ -108,11 +110,12 @@ describe("Overloaded Withdraw", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["withdraw(uint256,address,address,uint256)"](
+          ["withdraw(uint256,address,address,uint256,bytes)"](
             withdrawBalance,
             ADDRESS_ZERO,
             aliceAddress,
-            shareRatio
+            shareRatio,
+            []
           ),
       "ZeroReceiver",
       "failed to prevent a zero address receiver withdraw"
@@ -130,11 +133,12 @@ describe("Overloaded Withdraw", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["withdraw(uint256,address,address,uint256)"](
+          ["withdraw(uint256,address,address,uint256,bytes)"](
             withdrawBalance,
             aliceAddress,
             ADDRESS_ZERO,
-            shareRatio
+            shareRatio,
+            []
           ),
       "ZeroOwner",
       "failed to prevent a zero address owner withdraw"
@@ -151,11 +155,12 @@ describe("Overloaded Withdraw", async function () {
     await vault.connect(alice).setWithdrawId(shareRatio);
     const withdrawTx = await vault
       .connect(alice)
-      ["withdraw(uint256,address,address,uint256)"](
+      ["withdraw(uint256,address,address,uint256,bytes)"](
         withdrawBalance,
         aliceAddress,
         aliceAddress,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const withdrawEvent = (await getEvent(

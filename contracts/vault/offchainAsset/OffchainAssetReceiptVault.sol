@@ -10,6 +10,9 @@ import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
 
+/// Thrown when the admin is address zero.
+error ZeroAdmin();
+
 /// Thrown when a certification reference a block number in the future that
 /// cannot possibly have been seen yet.
 /// @param account The certifier that attempted the certify.
@@ -114,6 +117,13 @@ struct OffchainAssetReceiptVaultConfig {
 contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     using Math for uint256;
 
+    /// Snapshot event similar to Open Zeppelin `Snapshot` event but with
+    /// additional associated data as provided by the snapshotter.
+    /// @param sender The `msg.sender` that triggered the snapshot.
+    /// @param id The ID of the snapshot that was triggered.
+    /// @param data Associated data for the snapshot that was triggered.
+    event SnapshotWithData(address sender, uint256 id, bytes data);
+
     /// Contract has initialized.
     /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
@@ -145,10 +155,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param sender The confiscator who is confiscating the shares.
     /// @param confiscatee The user who had their shares confiscated.
     /// @param confiscated The amount of shares that were confiscated.
+    /// @param justification The contextual data justifying the confiscation.
     event ConfiscateShares(
         address sender,
         address confiscatee,
-        uint256 confiscated
+        uint256 confiscated,
+        bytes justification
     );
 
     /// A receipt has been confiscated from a user who is not currently meeting
@@ -157,11 +169,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param confiscatee The user who had their receipt confiscated.
     /// @param id The receipt ID that was confiscated.
     /// @param confiscated The amount of the receipt that was confiscated.
+    /// @param justification The contextual data justifying the confiscation.
     event ConfiscateReceipt(
         address sender,
         address confiscatee,
         uint256 id,
-        uint256 confiscated
+        uint256 confiscated,
+        bytes justification
     );
 
     /// A new ERC20 tier contract has been set.
@@ -171,11 +185,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    /// @param data Associated data for the change in tier config.
     event SetERC20Tier(
         address sender,
         address tier,
         uint256 minimumTier,
-        uint256[] context
+        uint256[] context,
+        bytes data
     );
 
     /// A new ERC1155 tier contract has been set.
@@ -185,11 +201,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
+    /// @param data Associated data for the change in tier config.
     event SetERC1155Tier(
         address sender,
         address tier,
         uint256 minimumTier,
-        uint256[] context
+        uint256[] context,
+        bytes data
     );
 
     /// Rolename for certifiers.
@@ -285,6 +303,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         // There is no asset, the asset is offchain.
         if (config_.receiptVaultConfig.vaultConfig.asset != address(0)) {
             revert NonZeroAsset();
+        }
+        // The config admin MUST be set.
+        if (config_.admin == address(0)) {
+            revert ZeroAdmin();
         }
 
         // Define all admin roles. Note that admins can admin each other which
@@ -449,38 +471,52 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
-    function snapshot() external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
-        return _snapshot();
+    /// @param data_ Associated data relevant to the snapshot.
+    /// @return The snapshot ID as per Open Zeppelin.
+    function snapshot(
+        bytes memory data_
+    ) external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
+        uint256 id_ = _snapshot();
+        emit SnapshotWithData(msg.sender, id_, data_);
+        return id_;
     }
 
+    /// `ERC20TIERER` Role restricted setter for all internal state that drives
+    /// the erc20 tier restriction logic on transfers.
     /// @param tier_ `ITier` contract to check when receiving shares. MAY be
     /// `address(0)` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     /// @param context_ Global context to be forwarded with tier checks.
+    /// @param data_ Associated data relevant to the change in tier contract.
     function setERC20Tier(
         address tier_,
         uint8 minimumTier_,
-        uint256[] calldata context_
+        uint256[] calldata context_,
+        bytes memory data_
     ) external onlyRole(ERC20TIERER) {
         erc20Tier = ITierV2(tier_);
         erc20MinimumTier = minimumTier_;
         erc20TierContext = context_;
-        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_);
+        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_, data_);
     }
 
+    /// `ERC1155TIERER` Role restricted setter for all internal state that drives
+    /// the erc1155 tier restriction logic on transfers.
     /// @param tier_ `ITier` contract to check when receiving receipts. MAY be
     /// `0` to disable report checking.
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     /// @param context_ Global context to be forwarded with tier checks.
+    /// @param data_ Associated data relevant to the change in tier contract.
     function setERC1155Tier(
         address tier_,
         uint8 minimumTier_,
-        uint256[] calldata context_
+        uint256[] calldata context_,
+        bytes memory data_
     ) external onlyRole(ERC1155TIERER) {
         erc1155Tier = ITierV2(tier_);
         erc1155MinimumTier = minimumTier_;
         erc1155TierContext = context_;
-        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_);
+        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_, data_);
     }
 
     /// Certifiers MAY EXTEND OR REDUCE the `certifiedUntil` time. If there are
@@ -684,10 +720,22 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Confiscation is a binary event. All shares or zero shares are
     /// confiscated from the confiscatee.
     ///
+    /// Typically people DO NOT LIKE having their assets confiscated. It SHOULD
+    /// be treated as a rare and extreme action, only taken when all other
+    /// avenues/workarounds are explored and exhausted. The confiscator SHOULD
+    /// provide their justification of each confiscation, and the general public,
+    /// especially token holders SHOULD review and be highly suspect of unjust
+    /// confiscation events. If you review and DO NOT agree with a confiscation
+    /// you SHOULD NOT continue to hold the token, exiting systems that play fast
+    /// and loose with user assets is the ONLY way to discourage such behaviour.
+    ///
     /// @param confiscatee_ The address that shares are being confiscated from.
+    /// @param data_ The associated justification of the confiscation, and/or
+    /// other relevant data.
     /// @return The amount of shares confiscated.
     function confiscateShares(
-        address confiscatee_
+        address confiscatee_,
+        bytes memory data_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
         uint256 confiscatedShares_ = 0;
         if (
@@ -701,10 +749,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         ) {
             confiscatedShares_ = balanceOf(confiscatee_);
             if (confiscatedShares_ > 0) {
+                emit ConfiscateShares(
+                    msg.sender,
+                    confiscatee_,
+                    confiscatedShares_,
+                    data_
+                );
                 _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
         }
-        emit ConfiscateShares(msg.sender, confiscatee_, confiscatedShares_);
         return confiscatedShares_;
     }
 
@@ -712,12 +765,24 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// The process, limitations and logic is identical to share confiscation
     /// except that receipt confiscation is performed per-ID.
     ///
+    /// Typically people DO NOT LIKE having their assets confiscated. It SHOULD
+    /// be treated as a rare and extreme action, only taken when all other
+    /// avenues/workarounds are explored and exhausted. The confiscator SHOULD
+    /// provide their justification of each confiscation, and the general public,
+    /// especially token holders SHOULD review and be highly suspect of unjust
+    /// confiscation events. If you review and DO NOT agree with a confiscation
+    /// you SHOULD NOT continue to hold the token, exiting systems that play fast
+    /// and loose with user assets is the ONLY way to discourage such behaviour.
+    ///
     /// @param confiscatee_ The address that receipts are being confiscated from.
     /// @param id_ The ID of the receipt to confiscate.
+    /// @param data_ The associated justification of the confiscation, and/or
+    /// other relevant data.
     /// @return The amount of receipt confiscated.
     function confiscateReceipt(
         address confiscatee_,
-        uint256 id_
+        uint256 id_,
+        bytes memory data_
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
         uint256 confiscatedReceiptAmount_ = 0;
         if (
@@ -732,6 +797,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             IReceiptV1 receipt_ = _receipt;
             confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscatedReceiptAmount_ > 0) {
+                emit ConfiscateReceipt(
+                    msg.sender,
+                    confiscatee_,
+                    id_,
+                    confiscatedReceiptAmount_,
+                    data_
+                );
                 receipt_.ownerTransferFrom(
                     confiscatee_,
                     msg.sender,
@@ -741,15 +813,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
                 );
             }
         }
-        // Slither flags this as reentrant but this function has `nonReentrant`
-        // on it from `ReentrancyGuard`.
-        //slither-disable-next-line reentrancy-vulnerabilities-3
-        emit ConfiscateReceipt(
-            msg.sender,
-            confiscatee_,
-            id_,
-            confiscatedReceiptAmount_
-        );
         return confiscatedReceiptAmount_;
     }
 }

@@ -61,11 +61,12 @@ describe("Overloaded Redeem", async function () {
 
     await vault
       .connect(alice)
-      ["redeem(uint256,address,address,uint256)"](
+      ["redeem(uint256,address,address,uint256,bytes)"](
         receiptBalance,
         aliceAddress,
         aliceAddress,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const receiptBalanceAfter = await receipt
@@ -83,11 +84,12 @@ describe("Overloaded Redeem", async function () {
 
     await vault
       .connect(alice)
-      ["redeem(uint256,address,address,uint256)"](
+      ["redeem(uint256,address,address,uint256,bytes)"](
         receiptBalance.div(2),
         aliceAddress,
         aliceAddress,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const receiptBalanceAfter = await receipt
@@ -104,11 +106,12 @@ describe("Overloaded Redeem", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             ethers.BigNumber.from(0),
             aliceAddress,
             aliceAddress,
-            shareRatio
+            shareRatio,
+            []
           ),
       "ZeroAssetsAmount",
       "failed to prevent a zero assets redeem"
@@ -123,11 +126,12 @@ describe("Overloaded Redeem", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             receiptBalance,
             ADDRESS_ZERO,
             aliceAddress,
-            shareRatio
+            shareRatio,
+            []
           ),
       "ZeroReceiver",
       "failed to prevent a zero address receiver redeem"
@@ -142,11 +146,12 @@ describe("Overloaded Redeem", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             receiptBalance,
             aliceAddress,
             ADDRESS_ZERO,
-            shareRatio
+            shareRatio,
+            []
           ),
       "ZeroOwner",
       "failed to prevent a zero address owner redeem"
@@ -162,11 +167,12 @@ describe("Overloaded Redeem", async function () {
 
     const redeemTx = await vault
       .connect(alice)
-      ["redeem(uint256,address,address,uint256)"](
+      ["redeem(uint256,address,address,uint256,bytes)"](
         receiptBalance,
         aliceAddress,
         aliceAddress,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const withdrawEvent = (await getEvent(

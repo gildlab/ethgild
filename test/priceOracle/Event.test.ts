@@ -83,11 +83,12 @@ describe("events", async function () {
     const ERC1155Amount = aliceBalance;
     const redeemTx = await vault
       .connect(alice)
-      ["redeem(uint256,address,address,uint256)"](
+      ["redeem(uint256,address,address,uint256,bytes)"](
         ERC1155Amount,
         alice.address,
         alice.address,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const withdrawEventArgs = await getEventArgs(redeemTx, "Withdraw", vault);

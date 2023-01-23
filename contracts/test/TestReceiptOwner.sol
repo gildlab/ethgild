@@ -66,13 +66,15 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
     /// @param account_ As per `IReceiptV1.ownerBurn`.
     /// @param id_ As per `IReceiptV1.ownerBurn`.
     /// @param amount_ As per `IReceiptV1.ownerBurn`.
+    /// @param receiptInformation_ As per `IReceiptV1.ownerBurn`.
     function ownerBurn(
         IReceiptV1 receipt_,
         address account_,
         uint256 id_,
-        uint256 amount_
+        uint256 amount_,
+        bytes memory receiptInformation_
     ) external {
-        receipt_.ownerBurn(account_, id_, amount_);
+        receipt_.ownerBurn(account_, id_, amount_, receiptInformation_);
     }
 
     /// Exposes `IReceiptV1.ownerTransferFrom` to anon.

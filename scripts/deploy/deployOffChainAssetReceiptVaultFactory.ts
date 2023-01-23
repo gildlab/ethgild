@@ -5,10 +5,10 @@ import { artifacts, ethers } from "hardhat";
 import {
   OffchainAssetReceiptVaultFactory,
   ReceiptFactory,
-} from "../../typechain";
+} from "../../typechain-types";
 
 async function main() {
-  await deployOffChainReceiptAssetVaultFactory("Mumbai");
+  await deployOffChainAssetReceiptVaultFactory("Mumbai");
 }
 
 main()
