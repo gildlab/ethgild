@@ -1,12 +1,11 @@
 // scripts/deploy.js
 // @ts-ignore
 import { ethers, artifacts } from "hardhat";
-import type { ChainlinkFeedPriceOracleFactory } from "../../typechain";
-import type { ChainlinkFeedPriceOracle } from "../../typechain";
-import type { TwoPriceOracle } from "../../typechain";
-import type { TwoPriceOracleFactory } from "../../typechain";
-import type { ERC20PriceOracleReceiptVaultFactory } from "../../typechain";
-import type { ERC20PriceOracleReceiptVault } from "../../typechain";
+import type { ChainlinkFeedPriceOracleFactory } from "../../typechain-types";
+import type { ChainlinkFeedPriceOracle } from "../../typechain-types";
+import type { TwoPriceOracleFactory } from "../../typechain-types";
+import type { ERC20PriceOracleReceiptVaultFactory } from "../../typechain-types";
+import type { ERC20PriceOracleReceiptVault } from "../../typechain-types";
 
 import type { Contract } from "ethers";
 import { getEventArgs } from "../../test/util";
