@@ -815,9 +815,33 @@ describe("OffChainAssetReceiptVault", async function () {
     const alice = signers[0];
     const [vault] = await deployOffChainAssetReceiptVault();
 
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
     await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+        .connect(alice)
+        .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const assets = ethers.BigNumber.from(100);
+
+    await asset.transfer(alice.address, assets);
+
+    await asset
+        .connect(alice)
+        .increaseAllowance(vault.connect(alice).address, assets);
+
+    await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+        assets,
+        alice.address,
+        ONE,
+        []
+    );
 
     const { sender, confiscatee } = (await getEventArgs(
       await vault.connect(alice).confiscateShares(alice.address,[]),
@@ -836,14 +860,48 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Confiscate receipts - Checks ConfiscateReceipt is emitted", async function () {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
     const [vault] = await deployOffChainAssetReceiptVault();
 
-    const _id = ONE;
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const _id = ethers.BigNumber.from(1);
+
+    const alice = signers[0];
+
+    const aliceAssets = ethers.BigNumber.from(100);
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+    await vault
+        .connect(alice)
+        .certify(_certifiedUntil, _referenceBlockNumber, false, []);
+
+    await asset.transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+
+
+        await vault
+            .connect(alice)
+            ["deposit(uint256,address,uint256,bytes)"](
+            aliceAssets,
+            alice.address,
+            _id,
+            [])
 
     const { sender, confiscatee, id } = (await getEventArgs(
       await vault.connect(alice).confiscateReceipt(alice.address, _id,[]),
