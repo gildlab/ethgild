@@ -859,6 +859,30 @@ describe("OffChainAssetReceiptVault", async function () {
       "failed to confiscate"
     );
   });
+  it.only("Confiscate - Checks ConfiscateShares is NOT emitted on Zero balance", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+
+    try {
+      await getEventArgs(
+        await vault.connect(alice).confiscateShares(alice.address, [1]),
+        "ConfiscateShares",
+        vault
+      );
+    } catch (err) {
+      assert(
+        err
+          .toString()
+          .includes("Error: Could not find event with name ConfiscateShares"),
+        `ConfiscateShares was emitted`
+      );
+    }
+  });
   it("Confiscate - Checks ConfiscateShares is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -976,6 +1000,33 @@ describe("OffChainAssetReceiptVault", async function () {
       justification === "0x01",
       `wrong justification expected 0x01 got ${justification}`
     );
+  });
+  it.only("Confiscate receipts - Checks ConfiscateReceipt is NOT emitted on zero balance", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    const alice = signers[0];
+
+    const _id = ethers.BigNumber.from(1);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
+
+    try {
+      await getEventArgs(
+        await vault.connect(alice).confiscateReceipt(alice.address, _id, [1]),
+        "ConfiscateReceipt",
+        vault
+      );
+    } catch (err) {
+      assert(
+        err
+          .toString()
+          .includes("Error: Could not find event with name ConfiscateReceipt"),
+        `ConfiscateReceipt was emitted`
+      );
+    }
   });
   it("Checks confiscated is same as balance", async function () {
     const signers = await ethers.getSigners();
