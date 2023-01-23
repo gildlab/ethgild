@@ -1184,7 +1184,7 @@ describe("OffChainAssetReceiptVault", async function () {
       ["mint(uint256,address,uint256,bytes)"](shares2, bob.address, 2, []);
 
     let ABI = [
-      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_)",
+      "function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_, bytes receiptInformation_)",
     ];
     let iface = new ethers.utils.Interface(ABI);
     await vault
@@ -1200,12 +1200,14 @@ describe("OffChainAssetReceiptVault", async function () {
             bob.address,
             bob.address,
             1,
+            [],
           ]),
           iface.encodeFunctionData("redeem", [
             ethers.BigNumber.from(20),
             bob.address,
             bob.address,
             2,
+            [],
           ]),
         ],
         { from: bob.address }
