@@ -859,7 +859,7 @@ describe("OffChainAssetReceiptVault", async function () {
       "failed to confiscate"
     );
   });
-  it.only("Confiscate - Checks ConfiscateShares is NOT emitted on Zero balance", async function () {
+  it("Confiscate - Checks ConfiscateShares is NOT emitted on Zero balance", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const [vault] = await deployOffChainAssetReceiptVault();
@@ -1001,7 +1001,7 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong justification expected 0x01 got ${justification}`
     );
   });
-  it.only("Confiscate receipts - Checks ConfiscateReceipt is NOT emitted on zero balance", async function () {
+  it("Confiscate receipts - Checks ConfiscateReceipt is NOT emitted on zero balance", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetReceiptVault();
 
