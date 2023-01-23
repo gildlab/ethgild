@@ -37,6 +37,28 @@ describe("OffChainAssetReceiptVault", async function () {
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
   });
+  it("Check admin is not address zero", async function () {
+    const offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetReceiptVaultFactory();
+
+    const constructionConfig = {
+      admin: ADDRESS_ZERO,
+      vaultConfig: {
+        asset: ADDRESS_ZERO,
+        name: "OffchainAssetVaul",
+        symbol: "OAV",
+      },
+    };
+
+    await assertError(
+      async () =>
+        await offchainAssetReceiptVaultFactory.createChildTyped(
+          constructionConfig
+        ),
+      `ZeroAdmin()`,
+      "Failed to initialize"
+    );
+  });
   it("Check asset is address zero", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];

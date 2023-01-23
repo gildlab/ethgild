@@ -191,7 +191,7 @@ describe("Receipt vault", async function () {
       )}, got ${balanceAfter}`
     );
   });
-  it.only("Checks ReceiptInformation event is emitted with correct data", async function () {
+  it("Checks ReceiptInformation event is emitted with correct data", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -246,7 +246,6 @@ describe("Receipt vault", async function () {
     );
     assert(id.eq(receiptId), `Wrong id. Expected ${receiptId}, got ${id}`);
   });
-
   it("OwnerBurn fails while not enough balance to burn", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
