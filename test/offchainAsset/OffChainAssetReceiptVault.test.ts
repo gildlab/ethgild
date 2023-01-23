@@ -1259,13 +1259,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await assertError(
       async () =>
         await vault
-          .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
-            balance.add(1),
+          .connect(alice)["redeem(uint256,address,address,uint256,bytes)"](
+              balance.add(1),
             alice.address,
             alice.address,
-            id
-          ),
+            id,[]),
       "ERC20: burn amount exceeds balance",
       "failed to prevent withdraw on more than balance"
     );
@@ -1308,11 +1306,12 @@ describe("OffChainAssetReceiptVault", async function () {
       async () =>
         await vault
           .connect(bob)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             balance,
             alice.address,
             alice.address,
-            id
+            id,
+            []
           ),
       "ERC20: insufficient allowance",
       "failed to prevent withdraw on someone else's shares"
