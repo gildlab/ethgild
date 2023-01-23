@@ -157,11 +157,12 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       .grantRole(await vault.connect(alice).WITHDRAWER(), bob.address);
     await vault
       .connect(bob)
-      ["redeem(uint256,address,address,uint256)"](
+      ["redeem(uint256,address,address,uint256,bytes)"](
         balance,
         bob.address,
         bob.address,
-        shareRatio
+        shareRatio,
+        []
       );
 
     const balanceAfter = await receipt
@@ -189,7 +190,7 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       async () =>
         await vault
           .connect(alice)
-          .setERC20Tier(TierV2TestContract.address, minTier, []),
+          .setERC20Tier(TierV2TestContract.address, minTier, [], []),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
         .connect(alice)
         .ERC20TIERER()}`,
@@ -211,7 +212,7 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       async () =>
         await vault
           .connect(alice)
-          .setERC1155Tier(TierV2TestContract.address, minTier, []),
+          .setERC1155Tier(TierV2TestContract.address, minTier, [], []),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
         .connect(alice)
         .ERC1155TIERER()}`,
@@ -224,7 +225,7 @@ describe("OffChainAssetReceiptVault Roles", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
     await assertError(
-      async () => await vault.connect(alice).snapshot(),
+      async () => await vault.connect(alice).snapshot([]),
       `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
         .connect(alice)
         .ERC20SNAPSHOTTER()}`,

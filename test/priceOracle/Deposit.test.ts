@@ -195,11 +195,12 @@ describe("deposit", async function () {
 
     await vault
       .connect(alice)
-      ["redeem(uint256,address,address,uint256)"](
+      ["redeem(uint256,address,address,uint256,bytes)"](
         erc1155Balance,
         alice.address,
         alice.address,
-        shareRatio
+        shareRatio,
+        []
       );
     const erc20AliceBalanceWithdraw = await vault
       .connect(alice)
@@ -215,11 +216,12 @@ describe("deposit", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["redeem(uint256,address,address,uint256)"](
+          ["redeem(uint256,address,address,uint256,bytes)"](
             erc1155Balance.sub(1),
             alice.address,
             alice.address,
-            shareRatio
+            shareRatio,
+            []
           ),
       "burn amount exceeds balance",
       "failed to prevent shareRatio manipulation"
@@ -291,11 +293,12 @@ describe("deposit", async function () {
     // alice cannot withdraw after sending to bob.
     await assertError(
       async () =>
-        await aliceVault["redeem(uint256,address,address,uint256)"](
+        await aliceVault["redeem(uint256,address,address,uint256,bytes)"](
           1000,
           alice.address,
           alice.address,
-          shareRatio
+          shareRatio,
+          []
         ),
       "burn amount exceeds balance",
       "failed to prevent alice withdrawing after sending erc1155"
@@ -304,11 +307,12 @@ describe("deposit", async function () {
     // bob cannot withdraw without erc20
     await assertError(
       async () =>
-        await bobVault["redeem(uint256,address,address,uint256)"](
+        await bobVault["redeem(uint256,address,address,uint256,bytes)"](
           1000,
           bob.address,
           bob.address,
-          shareRatio
+          shareRatio,
+          []
         ),
       "burn amount exceeds balance",
       "failed to prevent bob withdrawing without receiving erc20"
@@ -319,11 +323,12 @@ describe("deposit", async function () {
 
     await assertError(
       async () =>
-        await aliceVault["redeem(uint256,address,address,uint256)"](
+        await aliceVault["redeem(uint256,address,address,uint256,bytes)"](
           1000,
           alice.address,
           alice.address,
-          shareRatio
+          shareRatio,
+          []
         ),
       "burn amount exceeds balance",
       "failed to prevent alice withdrawing after sending erc1155 and erc20"
@@ -336,8 +341,8 @@ describe("deposit", async function () {
       ["balanceOf(address,uint256)"](bob.address, id1155);
 
     const bobRedeemTx = await bobVault[
-      "redeem(uint256,address,address,uint256)"
-    ](bobReceiptBalance, bob.address, bob.address, shareRatio);
+      "redeem(uint256,address,address,uint256,bytes)"
+    ](bobReceiptBalance, bob.address, bob.address, shareRatio, []);
     await bobRedeemTx.wait();
     const bobReceiptBalanceAfter = await receipt
       .connect(alice)

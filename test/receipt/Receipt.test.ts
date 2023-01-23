@@ -179,7 +179,7 @@ describe("Receipt vault", async function () {
 
     await receiptOwner
       .connect(alice)
-      .ownerBurn(receipt.address, alice.address, receiptId, toBurn);
+      .ownerBurn(receipt.address, alice.address, receiptId, toBurn, []);
 
     const balanceAfter = await receipt.balanceOf(alice.address, receiptId);
 
@@ -234,7 +234,7 @@ describe("Receipt vault", async function () {
       async () =>
         await receiptOwner
           .connect(alice)
-          .ownerBurn(receipt.address, alice.address, receiptId, toBurn),
+          .ownerBurn(receipt.address, alice.address, receiptId, toBurn, []),
       "ERC1155: burn amount exceeds balance",
       "failed to prevent ownerBurn"
     );

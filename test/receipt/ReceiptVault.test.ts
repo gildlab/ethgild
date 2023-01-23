@@ -1071,11 +1071,12 @@ describe("Overloaded `deposit`", async () => {
     const { sender, receiver, owner, assets, shares, id } = (await getEventArgs(
       await vault
         .connect(alice)
-        ["withdraw(uint256,address,address,uint256)"](
+        ["withdraw(uint256,address,address,uint256,bytes)"](
           erc1155Balance,
           alice.address,
           alice.address,
-          shareRatio
+          shareRatio,
+          []
         ),
       "WithdrawWithReceipt",
       vault
