@@ -88,11 +88,11 @@ describe("oracle", async function () {
     const priceA = await twoPriceOracle.price();
 
     await quotePriceOracle.setDecimals(xauDecimalsB);
-    await quotePriceOracle.setRoundData(1, {
+    await quotePriceOracle.setRoundData(2, {
       startedAt: now,
       updatedAt: now,
       answer: quotePriceB,
-      answeredInRound: 1,
+      answeredInRound: 2,
     });
 
     const priceB = await twoPriceOracle.price();
