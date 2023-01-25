@@ -19,6 +19,7 @@
     "typescript": "=4.9.4"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.1.5",
     "@rainprotocol/rain-protocol": "git://github.com/rainprotocol/rain-protocol.git#0811373919b0dc4da6a2bd5edb0ad4470796f9dc",
     "solc": "=0.8.17"
   }
