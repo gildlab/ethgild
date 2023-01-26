@@ -9,7 +9,7 @@ import {
 } from "../../typechain-types";
 
 async function main() {
-  await deployOffChainAssetReceiptVaultFactory("Mumbai");
+  await deployOffChainAssetReceiptVaultFactory();
 }
 
 main()
@@ -19,8 +19,7 @@ main()
     process.exit(1);
   });
 
-async function deployOffChainAssetReceiptVaultFactory(network: string) {
-  console.log(network);
+async function deployOffChainAssetReceiptVaultFactory() {
 
   const offchainAssetReceiptVaultImplementationFactory =
     await ethers.getContractFactory("OffchainAssetReceiptVault");
