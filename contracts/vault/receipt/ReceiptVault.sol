@@ -111,6 +111,13 @@ contract ReceiptVault is
     using FixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
+    /// Similar to receipt information but for the entire vault. Anyone can emit
+    /// any data about the vault, it is up to indexers to filter and clients to
+    /// interpret the data.
+    /// @param sender Sender of the receipt vault information.
+    /// @param vaultInformation The vault information.
+    event ReceiptVaultInformation(address sender, bytes vaultInformation);
+
     /// Similar to IERC4626 deposit but with receipt ID and information.
     /// @param sender As per `IERC4626.Deposit`.
     /// @param owner As per `IERC4626.Deposit`.
@@ -188,6 +195,16 @@ contract ReceiptVault is
             revert WrongOwner(address(this), receiptOwner_);
         }
         _receipt = receipt_;
+    }
+
+    /// Similar to `receiptInformation` on the underlying receipt but for this
+    /// vault. Anyone can call this and provide any information. Indexers and
+    /// clients MUST take care against corrupt and malicious data.
+    /// @param vaultInformation_ The information to emit for this vault.
+    function receiptVaultInformation(
+        bytes memory vaultInformation_
+    ) external virtual {
+        emit ReceiptVaultInformation(msg.sender, vaultInformation_);
     }
 
     /// @inheritdoc IReceiptOwnerV1
