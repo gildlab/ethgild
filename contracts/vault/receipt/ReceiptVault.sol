@@ -201,7 +201,9 @@ contract ReceiptVault is
     /// vault. Anyone can call this and provide any information. Indexers and
     /// clients MUST take care against corrupt and malicious data.
     /// @param vaultInformation_ The information to emit for this vault.
-    function receiptVaultInformation(bytes memory vaultInformation_) external virtual {
+    function receiptVaultInformation(
+        bytes memory vaultInformation_
+    ) external virtual {
         emit ReceiptVaultInformation(msg.sender, vaultInformation_);
     }
 
