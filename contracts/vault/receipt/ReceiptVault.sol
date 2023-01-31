@@ -8,7 +8,7 @@ import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/t
 import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./IReceiptV1.sol";
-import "@rainprotocol/rain-protocol/contracts/math/FixedPointMath.sol";
+import "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 import "./IReceiptOwnerV1.sol";
 
 /// Thrown when an ID can't be deposited or withdrawn.
@@ -108,7 +108,7 @@ contract ReceiptVault is
     ERC20Snapshot,
     IERC4626
 {
-    using FixedPointMath for uint256;
+    using LibFixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
     /// Similar to receipt information but for the entire vault. Anyone can emit
