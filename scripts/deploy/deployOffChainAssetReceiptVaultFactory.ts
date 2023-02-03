@@ -20,7 +20,6 @@ main()
   });
 
 async function deployOffChainAssetReceiptVaultFactory() {
-
   const offchainAssetReceiptVaultImplementationFactory =
     await ethers.getContractFactory("OffchainAssetReceiptVault");
   const offchainAssetReceiptVaultImplementation =
