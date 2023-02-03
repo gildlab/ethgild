@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@nomiclabs/hardhat-etherscan": "^3.1.5",
-    "@rainprotocol/rain-protocol": "git://github.com/rainprotocol/rain-protocol.git#0811373919b0dc4da6a2bd5edb0ad4470796f9dc",
+    "@rainprotocol/rain-protocol": "git://github.com/rainprotocol/rain-protocol.git#891b44d186e9c30d520b056314666b53c5d9ff64",
     "solc": "=0.8.17"
   }
 }

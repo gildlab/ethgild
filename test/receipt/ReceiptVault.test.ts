@@ -12,6 +12,7 @@ import { DepositEvent } from "../../typechain-types/@openzeppelin/contracts-upgr
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   DepositWithReceiptEvent,
+  ReceiptVaultInformationEvent,
   WithdrawWithReceiptEvent,
 } from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
 
@@ -223,6 +224,26 @@ describe("Receipt vault", async function () {
     const share = await vault.connect(alice).previewDeposit(assets);
 
     assert(share.eq(expectedshares), `Wrong shares ${expectedshares} ${share}`);
+  });
+  it("Checks ReceiptVaultInformation event is emitted", async function () {
+    const [vault] = await deployERC20PriceOracleVault();
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const { sender, vaultInformation } = (await getEventArgs(
+      await vault.connect(alice).receiptVaultInformation([1]),
+      "ReceiptVaultInformation",
+      vault
+    )) as ReceiptVaultInformationEvent["args"];
+
+    assert(
+      sender === alice.address,
+      `Incorrect sender. Expected ${alice.address} got ${sender}`
+    );
+
+    assert(
+      vaultInformation === "0x01",
+      `Incorrect sender. Expected 0x01 got ${vaultInformation}`
+    );
   });
 });
 describe("Deposit", async () => {
