@@ -11,6 +11,7 @@ const {
   POLYGON_URL,
   MUMBAI_URL,
   POLYGONSCAN_API_KEY,
+  GOERLI_URL,
 } = process.env;
 
 export const config = {
@@ -28,12 +29,17 @@ export const config = {
     matic: {
       url: POLYGON_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-      gasPrice: 53000000000,
+      gasPrice: 141900000000,
     },
     mumbai: {
       url: MUMBAI_URL || "https://rpc-mumbai.maticvigil.com",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 53000000000,
+    },
+    goerli: {
+      url: GOERLI_URL,
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 16000000000,
     },
   },
   solidity: {

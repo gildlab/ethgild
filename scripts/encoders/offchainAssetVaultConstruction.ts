@@ -2,7 +2,6 @@
 
 // @ts-ignore
 import { ethers, artifacts } from "hardhat";
-import type { OffchainAssetReceiptVaultFactory } from "../../typechain";
 
 async function main() {
   //receipt factory contract address 18/11/2022
