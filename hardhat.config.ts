@@ -1,6 +1,7 @@
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
+import "@nomiclabs/hardhat-etherscan";
 // import "hardhat-gas-reporter";
 
 require("dotenv").config();
@@ -12,6 +13,7 @@ const {
   MUMBAI_URL,
   POLYGONSCAN_API_KEY,
   GOERLI_URL,
+  ETHERSCAN_API_KEY,
 } = process.env;
 
 export const config = {
