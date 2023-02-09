@@ -2,6 +2,7 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
+import "@nomiclabs/hardhat-etherscan";
 
 require("dotenv").config();
 
@@ -9,8 +10,11 @@ const {
   RINKEBY_URL,
   PRIVATE_KEY,
   POLYGON_URL,
+  ETHEREUM_URL,
   MUMBAI_URL,
   POLYGONSCAN_API_KEY,
+  GOERLI_URL,
+  ETHERSCAN_API_KEY,
 } = process.env;
 
 export const config = {
@@ -28,12 +32,22 @@ export const config = {
     matic: {
       url: POLYGON_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-      gasPrice: 53000000000,
+      gasPrice: 141900000000,
     },
     mumbai: {
       url: MUMBAI_URL || "https://rpc-mumbai.maticvigil.com",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 53000000000,
+    },
+    goerli: {
+      url: GOERLI_URL || "",
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 16000000000,
+    },
+    ethereum: {
+      url: ETHEREUM_URL || "",
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 22000000000,
     },
   },
   solidity: {
@@ -52,7 +66,7 @@ export const config = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: POLYGONSCAN_API_KEY,
+    apiKey: ETHERSCAN_API_KEY,
   },
   gasReporter: {
     currency: "USD",
