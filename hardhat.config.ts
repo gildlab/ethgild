@@ -1,7 +1,7 @@
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "hardhat-contract-sizer";
-// import "hardhat-gas-reporter";
+import "hardhat-gas-reporter";
 
 require("dotenv").config();
 
