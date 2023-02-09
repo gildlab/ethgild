@@ -1,6 +1,7 @@
 {
+  "name": "ethgild",
   "description": "EthGild",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "license": "MIT",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "=2.2.1",
