@@ -39,7 +39,7 @@ export const config = {
       gasPrice: 53000000000,
     },
     goerli: {
-      url: GOERLI_URL,
+      url: GOERLI_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 16000000000,
     },
