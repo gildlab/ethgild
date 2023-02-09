@@ -10,6 +10,7 @@ const {
   RINKEBY_URL,
   PRIVATE_KEY,
   POLYGON_URL,
+  ETHEREUM_URL,
   MUMBAI_URL,
   POLYGONSCAN_API_KEY,
   GOERLI_URL,
@@ -43,6 +44,11 @@ export const config = {
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 16000000000,
     },
+    ethereum: {
+      url: ETHEREUM_URL || "",
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 22000000000,
+    },
   },
   solidity: {
     compilers: [
@@ -60,7 +66,7 @@ export const config = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: POLYGONSCAN_API_KEY,
+    apiKey: ETHERSCAN_API_KEY,
   },
   gasReporter: {
     currency: "USD",
