@@ -456,18 +456,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         if (id_ > highwaterId) {
             revert InvalidId(id_);
         }
-        _deposit(
+        uint256 shares_ = _calculateDeposit(
             assets_,
-            receiver_,
-            _calculateDeposit(
-                assets_,
-                _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
-                0
-            ),
-            id_,
-            receiptInformation_
+            _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
+            0
         );
-        return assets_;
+        _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
+        return shares_;
     }
 
     /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.

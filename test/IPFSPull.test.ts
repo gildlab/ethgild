@@ -7,7 +7,7 @@ describe("IPFS pull", async function () {
     const resp = await fetch(
       "https://ipfs.io/ipfs/bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley"
     );
-    const ipfsData = await resp.json();
+    const ipfsData = await resp.json().catch(console.error);
 
     assert(
       ipfsData.name === erc1155Metadata.name,
