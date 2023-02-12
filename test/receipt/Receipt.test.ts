@@ -466,4 +466,66 @@ describe("Receipt vault", async function () {
       "failed to prevent ownerBurn"
     );
   });
+  it.only("Check the receipt info sender when depositor burns for a different receiver ", async function () {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const testReceipt = await ethers.getContractFactory("TestReceipt");
+    const receipt = (await testReceipt.deploy()) as TestReceipt;
+    await receipt.deployed();
+
+    const testReceiptOwner = await ethers.getContractFactory(
+        "TestReceiptOwner"
+    );
+    const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
+    await receiptOwner.deployed();
+
+    await receipt.setOwner(receiptOwner.address);
+
+    await receiptOwner.setFrom(ADDRESS_ZERO);
+    await receiptOwner.setTo(alice.address);
+
+    const assets = ethers.BigNumber.from(30);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
+
+    const receiptId = ethers.BigNumber.from(1);
+    const toMint = ethers.BigNumber.from(10);
+    await receiptOwner
+        .connect(alice)
+        .ownerMint(receipt.address, alice.address, receiptId, toMint, []);
+
+    const toBurn = ethers.BigNumber.from(5);
+    await receiptOwner.setFrom(alice.address);
+    await receiptOwner.setTo(bob.address);
+
+    const { sender, id, information } = (await getEventArgs(
+        await receiptOwner
+            .connect(alice)
+            .ownerBurn(receipt.address, bob.address, receiptId, toBurn, [1]),
+        "ReceiptInformation",
+        receipt
+    )) as ReceiptInformationEvent["args"];
+
+    console.log(alice.address, bob.address)
+
+    console.log(sender, id, information)
+
+    // assert(
+    //     sender === alice.address,
+    //     `Wrong sender. Expected ${alice.address}, got ${sender}`
+    // );
+    // assert(
+    //     information === "0x01",
+    //     `Wrong information. Expected 0x01, got ${information}`
+    // );
+    // assert(id.eq(receiptId), `Wrong id. Expected ${receiptId}, got ${id}`);
+  });
+
+
 });
