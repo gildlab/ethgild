@@ -466,7 +466,7 @@ describe("Receipt vault", async function () {
       "failed to prevent ownerBurn"
     );
   });
-  it.only("Check the receipt info sender when depositor burns for a different receiver ", async function () {
+  it("Check the receipt info sender when depositor burns for a different receiver ", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -480,7 +480,7 @@ describe("Receipt vault", async function () {
     await receipt.deployed();
 
     const testReceiptOwner = await ethers.getContractFactory(
-        "TestReceiptOwner"
+      "TestReceiptOwner"
     );
     const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
     await receiptOwner.deployed();
@@ -497,24 +497,24 @@ describe("Receipt vault", async function () {
     const receiptId = ethers.BigNumber.from(1);
     const toMint = ethers.BigNumber.from(10);
     await receiptOwner
-        .connect(alice)
-        .ownerMint(receipt.address, alice.address, receiptId, toMint, []);
+      .connect(alice)
+      .ownerMint(receipt.address, alice.address, receiptId, toMint, []);
 
     const toBurn = ethers.BigNumber.from(5);
     await receiptOwner.setFrom(alice.address);
     await receiptOwner.setTo(bob.address);
 
     const { sender, id, information } = (await getEventArgs(
-        await receiptOwner
-            .connect(alice)
-            .ownerBurn(receipt.address, bob.address, receiptId, toBurn, [1]),
-        "ReceiptInformation",
-        receipt
+      await receiptOwner
+        .connect(alice)
+        .ownerBurn(receipt.address, bob.address, receiptId, toBurn, [1]),
+      "ReceiptInformation",
+      receipt
     )) as ReceiptInformationEvent["args"];
 
-    console.log(alice.address, bob.address)
+    console.log(alice.address, bob.address);
 
-    console.log(sender, id, information)
+    console.log(sender, id, information);
 
     // assert(
     //     sender === alice.address,
@@ -526,6 +526,4 @@ describe("Receipt vault", async function () {
     // );
     // assert(id.eq(receiptId), `Wrong id. Expected ${receiptId}, got ${id}`);
   });
-
-
 });

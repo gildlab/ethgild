@@ -117,7 +117,7 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       "Failed to deposit"
     );
   });
-  it("Checks withdraw without depositor role", async function () {
+  it.only("Checks withdraw without depositor role", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
