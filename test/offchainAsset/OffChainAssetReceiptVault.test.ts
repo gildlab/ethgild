@@ -1578,6 +1578,19 @@ describe("OffChainAssetReceiptVault", async function () {
       .connect(alice)
       .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).CERTIFIER(), bob.address);
+
+    await vault
+        .connect(bob)
+        .certify(_until, _referenceBlockNumber, false, [])
+
     const { sender } = (await getEventArgs(
       await vault
         .connect(alice)
