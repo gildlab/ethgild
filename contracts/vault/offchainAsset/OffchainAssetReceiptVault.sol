@@ -446,6 +446,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// mint new ERC20 shares and also increase the held receipt amount 1:1.
     /// @param receiptInformation_ Forwarded to receipt mint and
     /// `receiptInformation`.
+    /// @return shares_ As per IERC4626 `deposit`.
     function redeposit(
         uint256 assets_,
         address receiver_,
