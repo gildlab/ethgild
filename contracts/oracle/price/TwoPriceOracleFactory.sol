@@ -25,7 +25,7 @@ contract TwoPriceOracleFactory is Factory {
     /// parameters are already encoded.
     ///
     /// @param config_ Config for the oracle.
-    /// @return New `ChainlinkFeedPriceOracle` child contract address.
+    /// @return New `TwoPriceOracle` child contract address.
     function createChildTyped(
         TwoPriceOracleConfig memory config_
     ) external returns (TwoPriceOracle) {
