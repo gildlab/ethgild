@@ -1077,11 +1077,17 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong confiscated expected ${shares} got ${confiscated}`
     );
   });
+
   it("Checks confiscated is transferred", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
     const [vault] = await deployOffChainAssetReceiptVault();
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _certifiedUntil = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1104,6 +1110,13 @@ describe("OffChainAssetReceiptVault", async function () {
 
     await vault
       .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+    await vault
+      .connect(alice)
+      .certify(_certifiedUntil, _referenceBlockNumber, false, []);
+
+    await vault
+      .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](assets, bob.address, ONE, []);
     const aliceBalanceBef = await vault
       .connect(alice)
@@ -1123,6 +1136,7 @@ describe("OffChainAssetReceiptVault", async function () {
       `Shares has not been confiscated`
     );
   });
+
   it("Checks confiscated is same as receipt balance", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
@@ -1534,8 +1548,7 @@ describe("OffChainAssetReceiptVault", async function () {
     const alice = signers[0];
     const bob = signers[1];
 
-    const [vault, receipt] =
-        await deployOffChainAssetReceiptVault();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1549,27 +1562,25 @@ describe("OffChainAssetReceiptVault", async function () {
 
     const informationBytes = [125, 126];
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const { sender } = (await getEventArgs(
-        await vault
-            .connect(alice)
-            ["deposit(uint256,address,uint256,bytes)"](
-            aliceAmount,
-            bob.address,
-            expectedId,
-            informationBytes
+      await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+          aliceAmount,
+          bob.address,
+          expectedId,
+          informationBytes
         ),
-        "ReceiptInformation",
-        receipt
+      "ReceiptInformation",
+      receipt
     )) as ReceiptInformationEvent["args"];
 
     assert(
-        sender === alice.address,
-        `wrong receipt information sender ${alice.address} got ${sender}`
+      sender === alice.address,
+      `wrong receipt information sender ${alice.address} got ${sender}`
     );
-
   });
-
 });
