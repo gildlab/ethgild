@@ -25,6 +25,7 @@ import {
   deployOffchainAssetReceiptVaultFactory,
 } from "./deployOffchainAssetReceiptVault";
 import { DepositWithReceiptEvent } from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
+import { ReceiptInformationEvent } from "../../typechain-types/contracts/vault/receipt/Receipt";
 
 const assert = require("assert");
 
@@ -1528,4 +1529,47 @@ describe("OffChainAssetReceiptVault", async function () {
       "Failed to mint"
     );
   });
+  it("Check the receipt info sender when depositor mints for a different receiver", async () => {
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const [vault, receipt] =
+        await deployOffChainAssetReceiptVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const aliceAmount = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, aliceAmount);
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAmount);
+
+    const expectedId = 1;
+
+    const informationBytes = [125, 126];
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const { sender } = (await getEventArgs(
+        await vault
+            .connect(alice)
+            ["deposit(uint256,address,uint256,bytes)"](
+            aliceAmount,
+            bob.address,
+            expectedId,
+            informationBytes
+        ),
+        "ReceiptInformation",
+        receipt
+    )) as ReceiptInformationEvent["args"];
+
+    assert(
+        sender === alice.address,
+        `wrong receipt information sender ${alice.address} got ${sender}`
+    );
+
+  });
+
 });
