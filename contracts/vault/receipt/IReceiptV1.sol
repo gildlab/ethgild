@@ -40,12 +40,15 @@ interface IReceiptV1 is IERC1155 {
     /// The owner MAY directly mint receipts for any account, ID and amount
     /// without restriction. The data MUST be treated as both ERC1155 data and
     /// receipt information. Overflow MUST revert as usual for ERC1155.
-    /// MUST REVERT if the `msg.sender` is NOT the owner.
+    /// MUST REVERT if the `msg.sender` is NOT the owner. Receipt information
+    /// MUST be emitted under the sender not the receiver account.
+    /// @param sender The sender to emit receipt information under.
     /// @param account The account to mint a receipt for.
     /// @param id The receipt ID to mint.
     /// @param amount The amount to mint for the `id`.
     /// @param data The ERC1155 data. MUST be emitted as receipt information.
     function ownerMint(
+        address sender,
         address account,
         uint256 id,
         uint256 amount,

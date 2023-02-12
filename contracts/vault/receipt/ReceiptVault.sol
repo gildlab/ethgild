@@ -609,7 +609,13 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        _receipt.ownerMint(receiver_, id_, shares_, receiptInformation_);
+        _receipt.ownerMint(
+            msg.sender,
+            receiver_,
+            id_,
+            shares_,
+            receiptInformation_
+        );
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit

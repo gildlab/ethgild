@@ -41,12 +41,13 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
 
     /// @inheritdoc IReceiptV1
     function ownerMint(
+        address sender_,
         address account_,
         uint256 id_,
         uint256 amount_,
         bytes memory data_
     ) external virtual onlyOwner {
-        _receiptInformation(account_, id_, data_);
+        _receiptInformation(sender_, id_, data_);
         _mint(account_, id_, amount_, data_);
     }
 
