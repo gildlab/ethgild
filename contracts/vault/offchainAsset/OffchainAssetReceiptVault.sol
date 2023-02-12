@@ -446,6 +446,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// mint new ERC20 shares and also increase the held receipt amount 1:1.
     /// @param receiptInformation_ Forwarded to receipt mint and
     /// `receiptInformation`.
+    /// @return shares_ As per IERC4626 `deposit`.
     function redeposit(
         uint256 assets_,
         address receiver_,
@@ -456,18 +457,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         if (id_ > highwaterId) {
             revert InvalidId(id_);
         }
-        _deposit(
+
+        uint256 shares_ = _calculateDeposit(
             assets_,
-            receiver_,
-            _calculateDeposit(
-                assets_,
-                _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
-                0
-            ),
-            id_,
-            receiptInformation_
+            _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
+            0
         );
-        return assets_;
+
+        _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
+        return shares_;
     }
 
     /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
@@ -637,11 +635,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             return;
         }
 
-        // Minting and burning is always allowed as it is controlled via. RBAC
-        // separately to the tier contracts. Minting and burning is ALSO valid
-        // after the certification expires as it is likely the only way to
+        // Minting and burning is always allowed for the respective roles if they
+        // interact directly with the shares/receipt. Minting and burning is ALSO
+        // valid after the certification expires as it is likely the only way to
         // repair the system and bring it back to a certifiable state.
-        if (from_ == address(0) || to_ == address(0)) {
+        if (
+            (from_ == address(0) && hasRole(DEPOSITOR, to_)) ||
+            (to_ == address(0) && hasRole(WITHDRAWER, from_))
+        ) {
             return;
         }
 
@@ -665,23 +666,28 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
         // If there is a tier contract we enforce it.
         if (address(tier_) != address(0) && minimumTier_ > 0) {
-            // The sender must have a valid tier.
-            uint256 fromReportTime_ = tier_.reportTimeForTier(
-                from_,
-                minimumTier_,
-                tierContext_
-            );
-            if (block.timestamp < fromReportTime_) {
-                revert UnauthorizedSenderTier(from_, fromReportTime_);
+            if (from_ != address(0)) {
+                // The sender must have a valid tier.
+                uint256 fromReportTime_ = tier_.reportTimeForTier(
+                    from_,
+                    minimumTier_,
+                    tierContext_
+                );
+                if (block.timestamp < fromReportTime_) {
+                    revert UnauthorizedSenderTier(from_, fromReportTime_);
+                }
             }
-            // The recipient must have a valid tier.
-            uint256 toReportTime_ = tier_.reportTimeForTier(
-                to_,
-                minimumTier_,
-                tierContext_
-            );
-            if (block.timestamp < toReportTime_) {
-                revert UnauthorizedRecipientTier(to_, toReportTime_);
+
+            if (to_ != address(0)) {
+                // The recipient must have a valid tier.
+                uint256 toReportTime_ = tier_.reportTimeForTier(
+                    to_,
+                    minimumTier_,
+                    tierContext_
+                );
+                if (block.timestamp < toReportTime_) {
+                    revert UnauthorizedRecipientTier(to_, toReportTime_);
+                }
             }
         }
     }

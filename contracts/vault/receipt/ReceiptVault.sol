@@ -547,16 +547,10 @@ contract ReceiptVault is
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 id_ = _nextId();
-        uint256 shareRatio_ = _shareRatio(
-            msg.sender,
-            receiver_,
-            id_,
-            ShareAction.Mint
-        );
 
         uint256 shares_ = _calculateDeposit(
             assets_,
-            shareRatio_,
+            _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
             depositMinShareRatio_
         );
 
@@ -615,7 +609,13 @@ contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        _receipt.ownerMint(receiver_, id_, shares_, receiptInformation_);
+        _receipt.ownerMint(
+            msg.sender,
+            receiver_,
+            id_,
+            shares_,
+            receiptInformation_
+        );
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -856,7 +856,13 @@ contract ReceiptVault is
         _burn(owner_, shares_);
 
         // ERC1155 burn.
-        _receipt.ownerBurn(owner_, id_, shares_, receiptInformation_);
+        _receipt.ownerBurn(
+            msg.sender,
+            owner_,
+            id_,
+            shares_,
+            receiptInformation_
+        );
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
