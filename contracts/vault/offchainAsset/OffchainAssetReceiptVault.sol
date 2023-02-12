@@ -456,11 +456,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         if (id_ > highwaterId) {
             revert InvalidId(id_);
         }
+
         uint256 shares_ = _calculateDeposit(
             assets_,
             _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
             0
         );
+
         _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
         return shares_;
     }

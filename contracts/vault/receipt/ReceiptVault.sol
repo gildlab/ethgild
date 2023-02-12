@@ -547,16 +547,10 @@ contract ReceiptVault is
         bytes memory receiptInformation_
     ) public returns (uint256) {
         uint256 id_ = _nextId();
-        uint256 shareRatio_ = _shareRatio(
-            msg.sender,
-            receiver_,
-            id_,
-            ShareAction.Mint
-        );
 
         uint256 shares_ = _calculateDeposit(
             assets_,
-            shareRatio_,
+            _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
             depositMinShareRatio_
         );
 
