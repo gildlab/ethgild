@@ -57,12 +57,15 @@ interface IReceiptV1 is IERC1155 {
 
     /// The owner MAY directly burn receipts for any account, ID and amount
     /// without restriction. Underflow MUST revert as usual for ERC1155.
-    /// MUST REVERT if the `msg.sender` is NOT the owner.
+    /// MUST REVERT if the `msg.sender` is NOT the owner. Receipt information
+    /// MUST be emitted under the sender not the receipt owner account.
+    /// @param sender The sender to emit receipt information under.
     /// @param account The account to burn a receipt for.
     /// @param id The receipt ID to burn.
     /// @param amount The amount to mint for the `id`.
     /// @param data MUST be emitted as receipt information.
     function ownerBurn(
+        address sender,
         address account,
         uint256 id,
         uint256 amount,

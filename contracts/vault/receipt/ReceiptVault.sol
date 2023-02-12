@@ -856,7 +856,13 @@ contract ReceiptVault is
         _burn(owner_, shares_);
 
         // ERC1155 burn.
-        _receipt.ownerBurn(owner_, id_, shares_, receiptInformation_);
+        _receipt.ownerBurn(
+            msg.sender,
+            owner_,
+            id_,
+            shares_,
+            receiptInformation_
+        );
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets_, receiver_, owner_, shares_, id_);

@@ -74,7 +74,13 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
         uint256 amount_,
         bytes memory receiptInformation_
     ) external {
-        receipt_.ownerBurn(account_, id_, amount_, receiptInformation_);
+        receipt_.ownerBurn(
+            msg.sender,
+            account_,
+            id_,
+            amount_,
+            receiptInformation_
+        );
     }
 
     /// Exposes `IReceiptV1.ownerTransferFrom` to anon.
