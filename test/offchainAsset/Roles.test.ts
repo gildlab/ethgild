@@ -145,12 +145,10 @@ describe("OffChainAssetReceiptVault Roles", async function () {
     const _referenceBlockNumber = block.number;
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).CERTIFIER(), bob.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), bob.address);
 
-    await vault
-        .connect(bob)
-        .certify(_until, _referenceBlockNumber, false, [])
+    await vault.connect(bob).certify(_until, _referenceBlockNumber, false, []);
 
     await vault
       .connect(alice)
