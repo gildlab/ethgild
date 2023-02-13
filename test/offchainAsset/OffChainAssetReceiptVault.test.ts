@@ -432,6 +432,44 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong assets. expected ${expectedAssets} got ${bobBalanceAfter}`
     );
   });
+  it("Mints to someone else if recipient is DEPOSITOR", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const shares = fixedPointMul(assets, ONE).add(1);
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), bob.address);
+
+    await vault
+        .connect(alice)
+        ["mint(uint256,address,uint256,bytes)"](shares, bob.address, ONE, [1]);
+    const expectedAssets = fixedPointDiv(shares, ONE);
+    const bobBalanceAfter = await receipt
+        .connect(alice)
+        ["balanceOf(address,uint256)"](bob.address, 1);
+
+    assert(
+        bobBalanceAfter.eq(expectedAssets),
+        `wrong assets. expected ${expectedAssets} got ${bobBalanceAfter}`
+    );
+  });
+
   it("PreviewRedeem returns correct assets", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
     const shares = ethers.BigNumber.from(100);
