@@ -610,6 +610,48 @@ describe("OffChainAssetReceiptVault", async function () {
       )} got ${aliceReceiptBalanceAfterRedeposit}`
     );
   });
+  it("Prevents redeposit to someone else while not certified or recipient is not depositor", async function () {
+    const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const receiptId = ethers.BigNumber.from(1);
+    const aliceAssets = ethers.BigNumber.from(20);
+
+    await asset.connect(alice).transfer(alice.address, aliceAssets);
+
+    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const assetToDeposit = aliceAssets.div(2);
+    const assetToReDeposit = ethers.BigNumber.from(10);
+    await vault
+        .connect(alice)
+        ["deposit(uint256,address,uint256,bytes)"](
+        assetToDeposit,
+        alice.address,
+        receiptId,
+        []
+    );
+
+    await assertError(
+        async () =>
+            await vault
+                .connect(alice)
+                .redeposit(assetToReDeposit, bob.address, 1, [1]),
+        `CertificationExpired`,
+        "Failed to redeposit"
+    );
+  });
   it("Redeposits to someone else while certified", async function () {
     const signers = await ethers.getSigners();
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
