@@ -378,12 +378,58 @@ describe("OffChainAssetReceiptVault", async function () {
     const shares = fixedPointMul(assets, ONE).add(1);
 
     await assertError(
-        async () =>
-            await vault
-                .connect(alice)
-                ["mint(uint256,address,uint256,bytes)"](shares, bob.address, ONE, [1]),
-        `CertificationExpired`,
-        "Failed to mint"
+      async () =>
+        await vault
+          .connect(alice)
+          ["mint(uint256,address,uint256,bytes)"](shares, bob.address, ONE, [
+            1,
+          ]),
+      `CertificationExpired`,
+      "Failed to mint"
+    );
+  });
+  it("Mints to someone else if recipient is not DEPOSITOR but system certified for them", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const asset = (await testErc20.deploy()) as TestErc20;
+    await asset.deployed();
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const assets = ethers.BigNumber.from(5000);
+    await asset.transfer(alice.address, assets);
+    await asset.connect(alice).increaseAllowance(vault.address, assets);
+
+    const shares = fixedPointMul(assets, ONE).add(1);
+
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+    const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), bob.address);
+
+    await vault.connect(bob).certify(_until, _referenceBlockNumber, false, []);
+
+    await vault
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares, bob.address, ONE, [1]);
+    const expectedAssets = fixedPointDiv(shares, ONE);
+    const bobBalanceAfter = await receipt
+      .connect(alice)
+      ["balanceOf(address,uint256)"](bob.address, 1);
+
+    assert(
+      bobBalanceAfter.eq(expectedAssets),
+      `wrong assets. expected ${expectedAssets} got ${bobBalanceAfter}`
     );
   });
   it("PreviewRedeem returns correct assets", async function () {
