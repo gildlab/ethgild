@@ -1940,13 +1940,13 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
     await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
+      .connect(alice)
+      ["deposit(uint256,address,uint256,bytes)"](
         aliceAmount,
         alice.address,
         expectedId,
         informationBytes
-    )
+      );
 
     const { sender } = (await getEventArgs(
       await vault
