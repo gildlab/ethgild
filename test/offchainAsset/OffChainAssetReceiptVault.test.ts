@@ -1967,4 +1967,63 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong receipt information sender ${alice.address} got ${sender}`
     );
   });
+  it.only("Withdraw on someone else", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+    const bob = signers[1];
+    const id = 1;
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+
+    const testErc20 = await ethers.getContractFactory("TestErc20");
+    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
+    await testErc20Contract.deployed();
+
+    const assets = ethers.BigNumber.from(30);
+    await testErc20Contract.transfer(alice.address, assets);
+    await testErc20Contract
+        .connect(alice)
+        .increaseAllowance(vault.address, assets);
+
+    const shares = ethers.BigNumber.from(10);
+    await vault
+        .connect(alice)
+        ["mint(uint256,address,uint256,bytes)"](shares, alice.address, id, []);
+
+    const balance = await receipt.connect(alice).balanceOf(alice.address, id);
+
+    await vault
+        .connect(alice)
+        .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
+
+    await vault
+        .connect(alice)
+        ["withdraw(uint256,address,address,uint256,bytes)"](
+        balance,
+        bob.address,
+        alice.address,
+        id,
+        []
+    )
+
+
+    // await assertError(
+    //     async () =>
+    //         await vault
+    //             .connect(alice)
+    //             ["redeem(uint256,address,address,uint256,bytes)"](
+    //             balance.add(1),
+    //             alice.address,
+    //             alice.address,
+    //             id,
+    //             []
+    //         ),
+    //     "ERC20: burn amount exceeds balance",
+    //     "failed to prevent withdraw on more than balance"
+    // );
+  });
 });
