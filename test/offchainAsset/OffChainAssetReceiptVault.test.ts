@@ -1967,7 +1967,7 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong receipt information sender ${alice.address} got ${sender}`
     );
   });
-  it.only("Withdraw on someone else", async function () {
+  it("Withdraw on someone else", async function () {
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
@@ -1975,6 +1975,7 @@ describe("OffChainAssetReceiptVault", async function () {
     const bob = signers[1];
     const id = 1;
 
+    //grant depositor role to alice
     await vault
         .connect(alice)
         .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
@@ -2000,6 +2001,9 @@ describe("OffChainAssetReceiptVault", async function () {
         .connect(alice)
         .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
+    let bobBalanceVault = await vault.connect(alice).balanceOf(bob.address)
+    let aliceBalanceVault = await vault.connect(alice).balanceOf(alice.address)
+
     await vault
         .connect(alice)
         ["withdraw(uint256,address,address,uint256,bytes)"](
@@ -2010,20 +2014,17 @@ describe("OffChainAssetReceiptVault", async function () {
         []
     )
 
+    let bobBalanceVaultAft = await vault.connect(alice).balanceOf(bob.address)
+    let aliceBalanceVaultAft = await vault.connect(alice).balanceOf(alice.address)
 
-    // await assertError(
-    //     async () =>
-    //         await vault
-    //             .connect(alice)
-    //             ["redeem(uint256,address,address,uint256,bytes)"](
-    //             balance.add(1),
-    //             alice.address,
-    //             alice.address,
-    //             id,
-    //             []
-    //         ),
-    //     "ERC20: burn amount exceeds balance",
-    //     "failed to prevent withdraw on more than balance"
-    // );
+
+    assert(
+        bobBalanceVaultAft.eq(bobBalanceVault),
+        `Wrong shares for bob ${bobBalanceVaultAft} got ${bobBalanceVaultAft}`
+    );
+    assert(
+        aliceBalanceVaultAft.eq(aliceBalanceVault.sub(balance)),
+        `Wrong shares for alice ${aliceBalanceVault.sub(balance)} got ${aliceBalanceVaultAft}`
+    );
   });
 });
