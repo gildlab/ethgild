@@ -2095,7 +2095,7 @@ describe("OffChainAssetReceiptVault", async function () {
       `Wrong shares after withdraw ${0} got ${aliceSharesAft}`
     );
   });
-  it.only("Redeems on someone else", async function () {
+  it("Redeems on someone else", async function () {
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
@@ -2158,7 +2158,7 @@ describe("OffChainAssetReceiptVault", async function () {
       )} got ${aliceBalanceVaultAft}`
     );
   });
-  it.only("Check redeem for alice", async function () {
+  it("Check redeem for alice", async function () {
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
