@@ -1977,8 +1977,8 @@ describe("OffChainAssetReceiptVault", async function () {
 
     //grant depositor role to alice
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const testErc20Contract = (await testErc20.deploy()) as TestErc20;
@@ -1987,44 +1987,47 @@ describe("OffChainAssetReceiptVault", async function () {
     const assets = ethers.BigNumber.from(30);
     await testErc20Contract.transfer(alice.address, assets);
     await testErc20Contract
-        .connect(alice)
-        .increaseAllowance(vault.address, assets);
+      .connect(alice)
+      .increaseAllowance(vault.address, assets);
 
     const shares = ethers.BigNumber.from(10);
     await vault
-        .connect(alice)
-        ["mint(uint256,address,uint256,bytes)"](shares, alice.address, id, []);
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, id, []);
 
     const balance = await receipt.connect(alice).balanceOf(alice.address, id);
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
-    let bobBalanceVault = await vault.connect(alice).balanceOf(bob.address)
-    let aliceBalanceVault = await vault.connect(alice).balanceOf(alice.address)
+    let bobBalanceVault = await vault.connect(alice).balanceOf(bob.address);
+    let aliceBalanceVault = await vault.connect(alice).balanceOf(alice.address);
 
     await vault
-        .connect(alice)
-        ["withdraw(uint256,address,address,uint256,bytes)"](
+      .connect(alice)
+      ["withdraw(uint256,address,address,uint256,bytes)"](
         balance,
         bob.address,
         alice.address,
         id,
         []
-    )
+      );
 
-    let bobBalanceVaultAft = await vault.connect(alice).balanceOf(bob.address)
-    let aliceBalanceVaultAft = await vault.connect(alice).balanceOf(alice.address)
-
+    let bobBalanceVaultAft = await vault.connect(alice).balanceOf(bob.address);
+    let aliceBalanceVaultAft = await vault
+      .connect(alice)
+      .balanceOf(alice.address);
 
     assert(
-        bobBalanceVaultAft.eq(bobBalanceVault),
-        `Wrong shares for bob ${bobBalanceVaultAft} got ${bobBalanceVaultAft}`
+      bobBalanceVaultAft.eq(bobBalanceVault),
+      `Wrong shares for bob ${bobBalanceVaultAft} got ${bobBalanceVaultAft}`
     );
     assert(
-        aliceBalanceVaultAft.eq(aliceBalanceVault.sub(balance)),
-        `Wrong shares for alice ${aliceBalanceVault.sub(balance)} got ${aliceBalanceVaultAft}`
+      aliceBalanceVaultAft.eq(aliceBalanceVault.sub(balance)),
+      `Wrong shares for alice ${aliceBalanceVault.sub(
+        balance
+      )} got ${aliceBalanceVaultAft}`
     );
   });
   it("Check withdraw for alice", async function () {
@@ -2036,8 +2039,8 @@ describe("OffChainAssetReceiptVault", async function () {
 
     //grant depositor role to alice
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const testErc20Contract = (await testErc20.deploy()) as TestErc20;
@@ -2046,48 +2049,50 @@ describe("OffChainAssetReceiptVault", async function () {
     const assets = ethers.BigNumber.from(30);
     await testErc20Contract.transfer(alice.address, assets);
     await testErc20Contract
-        .connect(alice)
-        .increaseAllowance(vault.address, assets);
-    let bla = await vault.connect(alice).balanceOf(alice.address)
-    console.log(bla)
+      .connect(alice)
+      .increaseAllowance(vault.address, assets);
+
     const shares = ethers.BigNumber.from(10);
     await vault
-        .connect(alice)
-        ["mint(uint256,address,uint256,bytes)"](shares, alice.address, id, []);
+      .connect(alice)
+      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, id, []);
 
     const balance = await receipt.connect(alice).balanceOf(alice.address, id);
 
     await vault
-        .connect(alice)
-        .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
+      .connect(alice)
+      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
 
-    let aliceSharesBef = await receipt.connect(alice).balanceOf(alice.address, id)
+    let aliceSharesBef = await receipt
+      .connect(alice)
+      .balanceOf(alice.address, id);
 
     await vault
-        .connect(alice)
-        ["withdraw(uint256,address,address,uint256,bytes)"](
+      .connect(alice)
+      ["withdraw(uint256,address,address,uint256,bytes)"](
         balance,
         alice.address,
         alice.address,
         id,
         []
-    )
+      );
 
-    let aliceSharesAft = await receipt.connect(alice).balanceOf(alice.address, id)
-    let aliceAssetsAft = await vault.connect(alice).balanceOf(alice.address)
+    let aliceSharesAft = await receipt
+      .connect(alice)
+      .balanceOf(alice.address, id);
+    let aliceAssetsAft = await vault.connect(alice).balanceOf(alice.address);
 
     assert(
-        aliceSharesBef.eq(balance),
-        `Wrong shares ${balance} got ${aliceSharesBef}`
+      aliceSharesBef.eq(balance),
+      `Wrong shares ${balance} got ${aliceSharesBef}`
     );
     assert(
-        aliceAssetsAft.eq(0),
-        `Wrong assets after withdraw ${0} got ${aliceAssetsAft}`
+      aliceAssetsAft.eq(0),
+      `Wrong assets after withdraw ${0} got ${aliceAssetsAft}`
     );
     assert(
-        aliceSharesAft.eq(0),
-        `Wrong shares after withdraw ${0} got ${aliceSharesAft}`
+      aliceSharesAft.eq(0),
+      `Wrong shares after withdraw ${0} got ${aliceSharesAft}`
     );
   });
-
 });
