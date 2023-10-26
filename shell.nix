@@ -2,7 +2,7 @@
 with pkgs;
 pkgs.mkShell {
   buildInputs = [
-    pkgs.nodejs-20_x
+    pkgs.nodejs_20
     pkgs.slither-analyzer
     # security-check
     # flush-all
@@ -11,7 +11,7 @@ pkgs.mkShell {
   ];
   shellHook = ''
     touch .env && source .env
-    export PATH=$( npm bin ):$PATH
+    export PATH="$PWD/node_modules/.bin:$PATH"
     # keep it fresh
     # npm install
   '';

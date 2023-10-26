@@ -2,7 +2,7 @@
   description = "Flake for development workflows.";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/338a8633bc883122459c3f3daeb0a782d6e3bb56";
     rain.url = "github:rainprotocol/rain.cli";
     flake-utils.url = "github:numtide/flake-utils";
   };
