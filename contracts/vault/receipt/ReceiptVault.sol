@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.19;
 
-import {ERC20SnapshotUpgradeable as ERC20Snapshot} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
-import {IERC4626Upgradeable as IERC4626} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
-import {ReentrancyGuardUpgradeable as ReentrancyGuard} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable as SafeERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "./IReceiptV1.sol";
-import "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
-import "./IReceiptOwnerV1.sol";
+import {ERC20SnapshotUpgradeable as ERC20Snapshot} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
+import {IERC4626Upgradeable as IERC4626} from "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC4626Upgradeable.sol";
+import {ReentrancyGuardUpgradeable as ReentrancyGuard} from "openzeppelin-contracts-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
+import {IERC20Upgradeable as IERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable as SafeERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {MulticallUpgradeable as Multicall} from "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
+import {LibFixedPointDecimalArithmeticOpenZeppelin, Math} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+
+import {IReceiptV1} from "./IReceiptV1.sol";
+import {IReceiptOwnerV1} from "./IReceiptOwnerV1.sol";
 
 /// Thrown when an ID can't be deposited or withdrawn.
 /// @param id The invalid ID.
@@ -108,7 +109,6 @@ contract ReceiptVault is
     ERC20Snapshot,
     IERC4626
 {
-    using LibFixedPointMath for uint256;
     using SafeERC20 for IERC20;
 
     /// Similar to receipt information but for the entire vault. Anyone can emit
@@ -153,22 +153,22 @@ contract ReceiptVault is
     );
 
     /// Underlying ERC4626 asset.
-    IERC20 internal _asset;
+    IERC20 internal sAsset;
     /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
     /// mints and enforcing integrity of subsequent burns.
-    IReceiptV1 internal _receipt;
+    IReceiptV1 internal sReceipt;
 
     /// Senders MAY OPTIONALLY set minimum share ratios for ERC4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
     /// the non-standard equivalent functions that take a minimum share ratio
     /// parameter.
-    mapping(address => uint256) public minShareRatios;
+    mapping(address => uint256) public sMinShareRatios;
 
     /// Users MAY OPTIONALLY set the receipt ID they want to withdraw as a
     /// two step workflow and call the 4626 standard withdraw functions.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
     /// the non-standard equivalent functions that take a ID parameter.
-    mapping(address => uint256) public withdrawIds;
+    mapping(address => uint256) public sWithdrawIds;
 
     /// `ReceiptVault` is intended to be cloned and initialized by a
     /// `ReceiptVaultFactory` so is an implementation contract that can't itself
@@ -187,14 +187,14 @@ contract ReceiptVault is
         __ReentrancyGuard_init();
         __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
         __ERC20Snapshot_init();
-        _asset = IERC20(config_.vaultConfig.asset);
+        sAsset = IERC20(config_.vaultConfig.asset);
 
-        IReceiptV1 receipt_ = IReceiptV1(config_.receipt);
-        address receiptOwner_ = receipt_.owner();
+        IReceiptV1 receipt = IReceiptV1(config_.receipt);
+        address receiptOwner_ = receipt.owner();
         if (receiptOwner_ != address(this)) {
             revert WrongOwner(address(this), receiptOwner_);
         }
-        _receipt = receipt_;
+        sReceipt = receipt;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
@@ -305,29 +305,29 @@ contract ReceiptVault is
 
     /// @inheritdoc IERC4626
     function asset() public view virtual returns (address) {
-        return address(_asset);
+        return address(sAsset);
     }
 
     /// Any address can set their own minimum share ratio.
     /// This is optional as the non-standard ERC4626 equivalent functions accept
     /// a minimum share ratio parameter. This facilitates the ERC4626 interface
     /// by adding one additional initial transaction for the user.
-    /// @param senderMinShareRatio_ The new minimum share ratio for the
+    /// @param senderMinShareRatio The new minimum share ratio for the
     /// `msg.sender` to be used in subsequent deposit calls.
-    function setMinShareRatio(uint256 senderMinShareRatio_) external {
-        minShareRatios[msg.sender] = senderMinShareRatio_;
+    function setMinShareRatio(uint256 senderMinShareRatio) external {
+        sMinShareRatios[msg.sender] = senderMinShareRatio;
     }
 
     /// Any address can set their own ID for withdrawals.
     /// This is optional as the non-standard ERC4626 equivalent functions accept
     /// a withdrawal ID parameter. This facilitates the ERC4626 interface
     /// by adding one initial transaction for the user.
-    /// @param id_ The new withdrawal id_ for the `msg.sender` to be used
+    /// @param id The new withdrawal id for the `msg.sender` to be used
     /// in subsequent withdrawal calls. If the ID does NOT match the ID of a
     /// receipt held by sender then these subsequent withdrawals will fail.
     /// It is the responsibility of the caller to set a valid ID.
-    function setWithdrawId(uint256 id_) external {
-        withdrawIds[msg.sender] = id_;
+    function setWithdrawId(uint256 id) external {
+        sWithdrawIds[msg.sender] = id;
     }
 
     /// This is external NOT public. It is NOT allowed to revert BUT if we were
@@ -458,11 +458,11 @@ contract ReceiptVault is
 
     /// @inheritdoc IERC4626
     function previewDeposit(
-        uint256 assets_
+        uint256 assets
     ) external view virtual returns (uint256) {
         return
             _calculateDeposit(
-                assets_,
+                assets,
                 // Spec doesn't provide us with a receipient but wants a per-user
                 // preview so we assume that depositor = receipient.
                 _shareRatio(
@@ -483,17 +483,17 @@ contract ReceiptVault is
                 // preferences they set for themselves onchain.
                 // If the user did not set a min ratio then the min ratio will
                 // be 0 and never revert.
-                minShareRatios[msg.sender]
+                sMinShareRatios[msg.sender]
             );
     }
 
     /// @inheritdoc IERC4626
     function previewMint(
-        uint256 shares_
+        uint256 shares
     ) public view virtual returns (uint256) {
         return
             _calculateMint(
-                shares_,
+                shares,
                 // Spec doesn't provide us with a recipient but wants a per-user
                 // preview so we assume that depositor = recipient.
                 _shareRatio(
@@ -514,7 +514,7 @@ contract ReceiptVault is
                 // preferences they set for themselves onchain.
                 // If the user did not set a min ratio the min ratio will be 0 and
                 // never revert.
-                minShareRatios[msg.sender]
+                sMinShareRatios[msg.sender]
             );
     }
 
@@ -524,10 +524,10 @@ contract ReceiptVault is
     /// method.
     /// @inheritdoc IERC4626
     function deposit(
-        uint256 assets_,
-        address receiver_
+        uint256 assets,
+        address receiver
     ) external returns (uint256) {
-        return deposit(assets_, receiver_, minShareRatios[msg.sender], "");
+        return deposit(assets, receiver, sMinShareRatios[msg.sender], "");
     }
 
     /// Overloaded `deposit` to allow `depositMinShareRatio_` to be passed
@@ -563,58 +563,58 @@ contract ReceiptVault is
     /// correctly according to spec including rounding, in the calling context.
     /// Depositing reentrantly is never ok so we restrict that here in the
     /// internal function rather than on the external methods.
-    /// @param assets_ As per IERC4626 `deposit`.
-    /// @param receiver_ As per IERC4626 `deposit`.
-    /// @param shares_ Amount of shares to mint for receiver. MAY be different
+    /// @param assets As per IERC4626 `deposit`.
+    /// @param receiver As per IERC4626 `deposit`.
+    /// @param shares Amount of shares to mint for receiver. MAY be different
     /// due to rounding in different contexts so caller MUST calculate
     /// according to the rounding specification.
-    /// @param id_ ID of the 1155 receipt and MUST be provided on withdrawal.
-    /// @param receiptInformation_ As per `Receipt` receipt information.
+    /// @param id ID of the 1155 receipt and MUST be provided on withdrawal.
+    /// @param receiptInformation As per `Receipt` receipt information.
     function _deposit(
-        uint256 assets_,
-        address receiver_,
-        uint256 shares_,
-        uint256 id_,
-        bytes memory receiptInformation_
+        uint256 assets,
+        address receiver,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
     ) internal virtual nonReentrant {
-        if (assets_ == 0) {
+        if (assets == 0) {
             revert ZeroAssetsAmount();
         }
-        if (shares_ == 0) {
+        if (shares == 0) {
             revert ZeroSharesAmount();
         }
-        if (receiver_ == address(0)) {
+        if (receiver == address(0)) {
             revert ZeroReceiver();
         }
-        if (id_ == 0) {
+        if (id == 0) {
             revert InvalidId(0);
         }
 
-        emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
+        emit IERC4626.Deposit(msg.sender, receiver, assets, shares);
         emit DepositWithReceipt(
             msg.sender,
-            receiver_,
-            assets_,
-            shares_,
-            id_,
-            receiptInformation_
+            receiver,
+            assets,
+            shares,
+            id,
+            receiptInformation
         );
-        _beforeDeposit(assets_, receiver_, shares_, id_);
+        _beforeDeposit(assets, receiver, shares, id);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
         // on it from `ReentrancyGuard`.
         //slither-disable-next-line reentrancy-vulnerabilities-3 reentrancy-vulnerabilities-2
-        _mint(receiver_, shares_);
+        _mint(receiver, shares);
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        _receipt.ownerMint(
+        sReceipt.ownerMint(
             msg.sender,
-            receiver_,
-            id_,
-            shares_,
-            receiptInformation_
+            receiver,
+            id,
+            shares,
+            receiptInformation
         );
     }
 
@@ -643,10 +643,10 @@ contract ReceiptVault is
     /// Alternatively they can use the off-spec overloaded `mint` method.
     /// @inheritdoc IERC4626
     function mint(
-        uint256 shares_,
-        address receiver_
+        uint256 shares,
+        address receiver
     ) external returns (uint256) {
-        return mint(shares_, receiver_, minShareRatios[msg.sender], "");
+        return mint(shares, receiver, sMinShareRatios[msg.sender], "");
     }
 
     /// Overloaded version of IERC4626 `mint` that allows directly passing the
@@ -690,9 +690,9 @@ contract ReceiptVault is
     /// can be looped over to build a view over several withdraw IDs.
     /// @inheritdoc IERC4626
     function maxWithdraw(
-        address owner_
+        address owner
     ) external view virtual returns (uint256) {
-        return maxWithdraw(owner_, withdrawIds[owner_]);
+        return maxWithdraw(owner, sWithdrawIds[owner]);
     }
 
     /// Overloaded `maxWithdraw` that allows passing a receipt id directly. The
@@ -701,23 +701,23 @@ contract ReceiptVault is
     /// to the balance of a ID-bound ERC1155. If a user has multiple 1155
     /// receipts they will need to call `maxWithdraw` multiple times to
     /// calculate a global withdrawal limit across all receipts.
-    /// @param owner_ As per IERC4626 `maxWithdraw`.
-    /// @param id_ The reference id to check the max withdrawal against
+    /// @param owner As per IERC4626 `maxWithdraw`.
+    /// @param id The reference id to check the max withdrawal against
     /// for a specific receipt the owner presumably holds. Max withdrawal will
     /// be 0 if the user does not hold a receipt.
-    /// @return maxAssets_ As per IERC4626 `maxWithdraw`.
+    /// @return maxAssets As per IERC4626 `maxWithdraw`.
     function maxWithdraw(
-        address owner_,
-        uint256 id_
+        address owner,
+        uint256 id
     ) public view returns (uint256) {
         // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
         return
             _calculateRedeem(
-                _receipt.balanceOf(owner_, id_),
+                sReceipt.balanceOf(owner, id),
                 // Assume the owner is hypothetically withdrawing for themselves.
-                _shareRatio(owner_, owner_, id_, ShareAction.Burn)
+                _shareRatio(owner, owner, id, ShareAction.Burn)
             );
     }
 
@@ -727,25 +727,25 @@ contract ReceiptVault is
     /// easier to use the overloaded version that allows IDs to be passed in
     /// as arguments.
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 assets_) external view returns (uint256) {
-        return previewWithdraw(assets_, withdrawIds[msg.sender]);
+    function previewWithdraw(uint256 assets) external view returns (uint256) {
+        return previewWithdraw(assets, sWithdrawIds[msg.sender]);
     }
 
     /// Overloaded version of IERC4626 that allows caller to pass in the ID
     /// to preview. Multiple receipt holders will need to call this function
     /// for each recieipt ID to preview all their withdrawals.
-    /// @param assets_ As per IERC4626 `previewWithdraw`.
-    /// @param id_ The receipt to preview a withdrawal against.
-    /// @return shares_ As per IERC4626 `previewWithdraw`.
+    /// @param assets As per IERC4626 `previewWithdraw`.
+    /// @param id The receipt to preview a withdrawal against.
+    /// @return shares As per IERC4626 `previewWithdraw`.
     function previewWithdraw(
-        uint256 assets_,
-        uint256 id_
+        uint256 assets,
+        uint256 id
     ) public view virtual returns (uint256) {
         return
             _calculateWithdraw(
-                assets_,
+                assets,
                 // Assume that owner and receiver are the sender for a preview
-                _shareRatio(msg.sender, msg.sender, id_, ShareAction.Burn)
+                _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn)
             );
     }
 
@@ -756,11 +756,11 @@ contract ReceiptVault is
     /// receipt ID directly, which may be cheaper and more convenient.
     /// @inheritdoc IERC4626
     function withdraw(
-        uint256 assets_,
-        address receiver_,
-        address owner_
+        uint256 assets,
+        address receiver,
+        address owner
     ) external returns (uint256) {
-        return withdraw(assets_, receiver_, owner_, withdrawIds[owner_], "");
+        return withdraw(assets, receiver, owner, sWithdrawIds[owner], "");
     }
 
     /// Overloaded version of IERC4626 `withdraw` that allows the id to be
@@ -797,49 +797,49 @@ contract ReceiptVault is
     /// according to spec including rounding, in the calling context.
     /// Withdrawing reentrantly is never ok so we restrict that here in the
     /// internal function rather than on the external methods.
-    /// @param assets_ As per IERC4626 `withdraw`.
-    /// @param receiver_ As per IERC4626 `withdraw`.
-    /// @param owner_ As per IERC4626 `withdraw`.
-    /// @param shares_ Caller MUST calculate the correct shares to burn for
+    /// @param assets As per IERC4626 `withdraw`.
+    /// @param receiver As per IERC4626 `withdraw`.
+    /// @param owner As per IERC4626 `withdraw`.
+    /// @param shares Caller MUST calculate the correct shares to burn for
     /// withdrawal at `shareRatio_`. It is caller's responsibility to handle
     /// rounding correctly as per 4626 spec.
-    /// @param id_ The receipt id to withdraw against. The owner MUST hold the
+    /// @param id The receipt id to withdraw against. The owner MUST hold the
     /// receipt for the ID in addition to the shares being burned for
     /// withdrawal.
-    /// @param receiptInformation_ New receipt information for the withdraw.
+    /// @param receiptInformation New receipt information for the withdraw.
     function _withdraw(
-        uint256 assets_,
-        address receiver_,
-        address owner_,
-        uint256 shares_,
-        uint256 id_,
-        bytes memory receiptInformation_
+        uint256 assets,
+        address receiver,
+        address owner,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
     ) internal nonReentrant {
-        if (assets_ == 0) {
+        if (assets == 0) {
             revert ZeroAssetsAmount();
         }
-        if (shares_ == 0) {
+        if (shares == 0) {
             revert ZeroSharesAmount();
         }
-        if (receiver_ == address(0)) {
+        if (receiver == address(0)) {
             revert ZeroReceiver();
         }
-        if (owner_ == address(0)) {
+        if (owner == address(0)) {
             revert ZeroOwner();
         }
-        if (id_ == 0) {
-            revert InvalidId(id_);
+        if (id == 0) {
+            revert InvalidId(id);
         }
 
-        emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
+        emit IERC4626.Withdraw(msg.sender, receiver, owner, assets, shares);
         emit WithdrawWithReceipt(
             msg.sender,
-            receiver_,
-            owner_,
-            assets_,
-            shares_,
-            id_,
-            receiptInformation_
+            receiver,
+            owner,
+            assets,
+            shares,
+            id,
+            receiptInformation
         );
 
         // IERC4626:
@@ -848,24 +848,24 @@ contract ReceiptVault is
         // > approval over the shares of owner.
         // Note that we do NOT require the caller has allowance over the receipt
         // in order to burn the shares to withdraw assets.
-        if (owner_ != msg.sender) {
-            _spendAllowance(owner_, msg.sender, shares_);
+        if (owner != msg.sender) {
+            _spendAllowance(owner, msg.sender, shares);
         }
 
         // ERC20 burn.
-        _burn(owner_, shares_);
+        _burn(owner, shares);
 
         // ERC1155 burn.
-        _receipt.ownerBurn(
+        sReceipt.ownerBurn(
             msg.sender,
-            owner_,
-            id_,
-            shares_,
-            receiptInformation_
+            owner,
+            id,
+            shares,
+            receiptInformation
         );
 
         // Hook to allow additional withdrawal checks.
-        _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
+        _afterWithdraw(assets, receiver, owner, shares, id);
     }
 
     function _afterWithdraw(
@@ -885,30 +885,30 @@ contract ReceiptVault is
     /// transaction. The overloaded maxRedeem function allows the ID being
     /// checked against to be passed in directly.
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner_) external view returns (uint256) {
-        return maxRedeem(owner_, withdrawIds[owner_]);
+    function maxRedeem(address owner) external view returns (uint256) {
+        return maxRedeem(owner, sWithdrawIds[owner]);
     }
 
     /// Overloaded maxRedeem function that allows the redemption ID to be
     /// passed directly. The maximum number of shares that can be redeemed is
     /// simply the balance of the associated receipt NFT the user holds for the
     /// given ID.
-    /// @param owner_ As per IERC4626 `maxRedeem`.
-    /// @param id_ The reference id to check the owner's 1155 balance for.
-    /// @return maxShares_ As per IERC4626 `maxRedeem`.
+    /// @param owner As per IERC4626 `maxRedeem`.
+    /// @param id The reference id to check the owner's 1155 balance for.
+    /// @return maxShares As per IERC4626 `maxRedeem`.
     function maxRedeem(
-        address owner_,
-        uint256 id_
+        address owner,
+        uint256 id
     ) public view returns (uint256) {
-        return _receipt.balanceOf(owner_, id_);
+        return sReceipt.balanceOf(owner, id);
     }
 
     /// Preview redeem is only relevant to the currently set withdraw ID for
     /// the caller. The overloaded previewRedeem allows the ID to be passed
     /// directly which may avoid gas costs and additional transactions.
     /// @inheritdoc IERC4626
-    function previewRedeem(uint256 shares_) external view returns (uint256) {
-        return _calculateRedeem(shares_, withdrawIds[msg.sender]);
+    function previewRedeem(uint256 shares) external view returns (uint256) {
+        return _calculateRedeem(shares, sWithdrawIds[msg.sender]);
     }
 
     /// Overloaded previewRedeem that allows ID to redeem for to be passed
@@ -927,11 +927,11 @@ contract ReceiptVault is
     /// set separately in storage.
     /// @inheritdoc IERC4626
     function redeem(
-        uint256 shares_,
-        address receiver_,
-        address owner_
+        uint256 shares,
+        address receiver,
+        address owner
     ) external returns (uint256) {
-        return redeem(shares_, receiver_, owner_, withdrawIds[owner_], "");
+        return redeem(shares, receiver, owner, sWithdrawIds[owner], "");
     }
 
     /// Overloaded redeem that allows the ID to redeem with to be passed in.

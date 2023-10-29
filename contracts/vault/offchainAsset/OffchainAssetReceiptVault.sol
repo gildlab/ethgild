@@ -1,17 +1,28 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.19;
+
+import {LibUint256Array} from "rain.solmem/lib/LibUint256Array.sol";
+import {EvaluableConfig} from "rain.interpreter/src/lib/caller/LibEvaluable.sol";
+import {LibContext} from "rain.interpreter/src/lib/caller/LibContext.sol";
+import {IInterpreterV1, DEFAULT_STATE_NAMESPACE, SourceIndex} from "rain.interpreter/src/interface/IInterpreterV1.sol";
+import {IInterpreterStoreV1} from "rain.interpreter/src/interface/IInterpreterStoreV1.sol";
+import {EncodedDispatch, LibEncodedDispatch} from "rain.interpreter/src/lib/caller/LibEncodedDispatch.sol";
+import {SignedContextV1} from "rain.interpreter/src/interface/IInterpreterCallerV2.sol";
 
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
-import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
-import "../receipt/IReceiptV1.sol";
-import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import {AccessControlUpgradeable as AccessControl} from "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {IReceiptV1} from "../receipt/IReceiptV1.sol";
+import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
 
 /// Thrown when the admin is address zero.
 error ZeroAdmin();
+
+/// Thrown when a token is transferred to/from the zero address without an
+/// associated supply change.
+error ZeroAddressTransfer(address from, address to);
 
 /// Thrown when a certification reference a block number in the future that
 /// cannot possibly have been seen yet.
@@ -71,6 +82,11 @@ struct OffchainAssetVaultConfig {
 struct OffchainAssetReceiptVaultConfig {
     address admin;
     ReceiptVaultConfig receiptVaultConfig;
+}
+
+struct RulesConfig {
+    EvaluableConfig evaluableConfig;
+    bytes data;
 }
 
 /// @title OffchainAssetReceiptVault
@@ -186,7 +202,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     /// @param data Associated data for the change in tier config.
-    event SetERC20Tier(
+    event setShareTransferRules(
         address sender,
         address tier,
         uint256 minimumTier,
@@ -200,13 +216,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// confiscations.
     /// @param minimumTier Minimum tier that a user must hold to be eligible
     /// to send/receive/hold receipts and be immune to receipt confiscations.
-    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
-    /// @param data Associated data for the change in tier config.
-    event SetERC1155Tier(
+    /// @param data Associated data for the rules change.
+    event setReceiptTransferRules(
         address sender,
-        address tier,
-        uint256 minimumTier,
-        uint256[] context,
+        address expression,
         bytes data
     );
 
@@ -228,13 +241,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Rolename for depositor admins.
     bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
 
-    /// Rolename for ERC1155 tierer.
-    /// ERC1155 tierer role is required to modify the tier contract for receipts.
-    bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
-    /// Rolename for ERC1155 tierer admins.
-    bytes32 public constant ERC1155TIERER_ADMIN =
-        keccak256("ERC1155TIERER_ADMIN");
-
     /// Rolename for ERC20 snapshotter.
     /// ERC20 snapshotter role is required to snapshot shares.
     bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
@@ -242,11 +248,36 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
         keccak256("ERC20SNAPSHOTTER_ADMIN");
 
-    /// Rolename for ERC20 tierer.
-    /// ERC20 tierer role is required to modify the tier contract for shares.
-    bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
-    /// Rolename for ERC20 tierer admins.
-    bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+    /// Rolename for SHARE_TRANSFER_RULEMAKER.
+    /// SHARE_TRANSFER_RULEMAKER role is required to modify the rules for
+    /// receiving shares.
+    bytes32 public constant SHARE_TRANSFER_RULEMAKER = keccak256("SHARE_TRANSFER_RULEMAKER");
+    /// Rolename for SHARE_TRANSFER_RULEMAKER admins.
+    bytes32 public constant SHARE_TRANSFER_RULEMAKER_ADMIN = keccak256("SHARE_TRANSFER_RULEMAKER_ADMIN");
+
+    /// Rolename for SHARE_CONFISCATION_RULEMAKER.
+    /// SHARE_CONFISCATION_RULEMAKER role is required to modify the rules for
+    /// confiscating shares.
+    bytes32 public constant SHARE_CONFISCATION_RULEMAKER = keccak256("SHARE_CONFISCATION_RULEMAKER");
+    /// Rolename for SHARE_CONFISCATION_RULEMAKER admins.
+    bytes32 public constant SHARE_CONFISCATION_RULEMAKER_ADMIN =
+        keccak256("SHARE_CONFISCATION_RULEMAKER_ADMIN");
+
+    /// Rolename for RECEIPT_TRANSFER_RULEMAKER.
+    /// RECEIPT_TRANSFER_RULEMAKER role is required to modify the rules for
+    /// receiving receipts.
+    bytes32 public constant RECEIPT_TRANSFER_RULEMAKER = keccak256("RECEIPT_TRANSFER_RULEMAKER");
+    /// Rolename for RECEIPT_TRANSFER_RULEMAKER admins.
+    bytes32 public constant RECEIPT_TRANSFER_RULEMAKER_ADMIN =
+        keccak256("RECEIPT_TRANSFER_RULEMAKER_ADMIN");
+
+    /// Rolename for RECEIPT_CONFISCATION_RULEMAKER.
+    /// RECEIPT_CONFISCATION_RULEMAKER role is required to modify the rules for
+    /// confiscating receipts.
+    bytes32 public constant RECEIPT_CONFISCATION_RULEMAKER = keccak256("RECEIPT_CONFISCATION_RULEMAKER");
+    /// Rolename for RECEIPT_CONFISCATION_RULEMAKER admins.
+    bytes32 public constant RECEIPT_CONFISCATION_RULEMAKER_ADMIN =
+        keccak256("RECEIPT_CONFISCATION_RULEMAKER_ADMIN");
 
     /// Rolename for handlers.
     /// Handler role is required to accept tokens during system freeze.
@@ -261,33 +292,37 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
     /// The largest issued id. The next id issued will be larger than this.
-    uint256 private highwaterId;
+    uint256 private sHighwaterId;
+
+    EncodedDispatch private sShareTransferRulesDispatch;
+    EncodedDispatch private sReceiptConfiscationRulesDispatch;
+    EncodedDispatch private sShareConfiscationRulesDispatch;
+    EncodedDispatch private sReceiptTransferRulesDispatch;
 
     /// The system is certified until this timestamp. If this is in the past then
     /// general transfers of shares and receipts will fail until the system can
     /// be certified to a future time.
-    uint32 private certifiedUntil;
+    uint32 private sCertifiedUntil;
 
-    /// The minimum tier required for an address to receive shares.
-    uint8 private erc20MinimumTier;
-    /// The minimum tier required for an address to receive receipts.
-    uint8 private erc1155MinimumTier;
+    /// The address of the expression that defines the rules for receiving
+    /// shares.
+    IInterpreterV1 private sShareTransferRulesInterpreter;
+    IInterpreterStoreV1 private sShareTransferRulesStore;
 
-    /// The `ITierV2` contract that defines the current tier of each address for
-    /// the purpose of receiving shares.
-    ITierV2 private erc20Tier;
-    /// The `ITierV2` contract that defines the current tier of each address for
-    /// the purpose of receiving receipts.
-    ITierV2 private erc1155Tier;
+    /// The address of the expression that defines the rules for confiscating
+    /// shares.
+    IInterpreterV1 private sShareConfiscationRulesInterpreter;
+    IInterpreterStoreV1 private sShareConfiscationRulesStore;
 
-    /// Optional context to provide to the `ITierV2` contract when calculating
-    /// any addresses' tier for the purpose of receiving shares. Global to all
-    /// addresses.
-    uint256[] private erc20TierContext;
-    /// Optional context to provide to the `ITierV2` contract when calculating
-    /// any addresses' tier for the purpose of receiving receipts. Global to all
-    /// addresses.
-    uint256[] private erc1155TierContext;
+    /// The address of the expression that defines the rules for receiving
+    /// receipts.
+    IInterpreterV1 private sReceiptTransferRulesInterpreter;
+    IInterpreterStoreV1 private sReceiptTransferRulesStore;
+
+    /// The address of the expression that defines the rules for confiscating
+    /// receipts.
+    IInterpreterV1 private sReceiptConfiscationRulesInterpreter;
+    IInterpreterStoreV1 private sReceiptConfiscationRulesStore;
 
     /// Initializes the initial admin and the underlying `ReceiptVault`.
     /// The admin provided will be admin of all roles and can reassign and revoke
@@ -479,42 +514,76 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return id_;
     }
 
-    /// `ERC20TIERER` Role restricted setter for all internal state that drives
-    /// the erc20 tier restriction logic on transfers.
-    /// @param tier_ `ITier` contract to check when receiving shares. MAY be
-    /// `address(0)` to disable report checking.
-    /// @param minimumTier_ The minimum tier to be held according to `tier_`.
-    /// @param context_ Global context to be forwarded with tier checks.
-    /// @param data_ Associated data relevant to the change in tier contract.
-    function setERC20Tier(
-        address tier_,
-        uint8 minimumTier_,
-        uint256[] calldata context_,
-        bytes memory data_
-    ) external onlyRole(ERC20TIERER) {
-        erc20Tier = ITierV2(tier_);
-        erc20MinimumTier = minimumTier_;
-        erc20TierContext = context_;
-        emit SetERC20Tier(msg.sender, tier_, minimumTier_, context_, data_);
+    function setShareTransferRules(
+        RulesConfig memory rulesConfig
+    ) external onlyRole(SHARE_TRANSFER_RULEMAKER) {
+        (IInterpreterV1 interpreter, IInterpreterStoreV1 store, address shareTransferRules) = rulesConfig
+            .evaluableConfig
+            .deployer
+            .deployExpression(
+            config.evaluableConfig.bytecode,
+            config.evaluableConfig.constants,
+            LibUint256Array.arrayFrom(CALCULATE_ORDER_MIN_OUTPUTS, HANDLE_IO_MIN_OUTPUTS)
+        );
+        sShareTransferRules = shareTransferRules;
+        sShareTransferRulesInterpreter = interpreter;
+        sShareTransferRulesStore = store;
+
+        emit SetShareTransferRules(msg.sender, expression, shareTransferRules.data);
     }
 
-    /// `ERC1155TIERER` Role restricted setter for all internal state that drives
-    /// the erc1155 tier restriction logic on transfers.
-    /// @param tier_ `ITier` contract to check when receiving receipts. MAY be
-    /// `0` to disable report checking.
-    /// @param minimumTier_ The minimum tier to be held according to `tier_`.
-    /// @param context_ Global context to be forwarded with tier checks.
-    /// @param data_ Associated data relevant to the change in tier contract.
-    function setERC1155Tier(
-        address tier_,
-        uint8 minimumTier_,
-        uint256[] calldata context_,
-        bytes memory data_
-    ) external onlyRole(ERC1155TIERER) {
-        erc1155Tier = ITierV2(tier_);
-        erc1155MinimumTier = minimumTier_;
-        erc1155TierContext = context_;
-        emit SetERC1155Tier(msg.sender, tier_, minimumTier_, context_, data_);
+    function setShareConfiscationRules(
+        RulesConfig memory rulesConfig
+    ) external onlyRole(SHARE_CONFISCATION_RULEMAKER) {
+        (IInterpreterV1 interpreter, IInterpreterStoreV1 store, address shareConfiscationRules) = rulesConfig
+            .evaluableConfig
+            .deployer
+            .deployExpression(
+            config.evaluableConfig.bytecode,
+            config.evaluableConfig.constants,
+            LibUint256Array.arrayFrom(CALCULATE_ORDER_MIN_OUTPUTS, HANDLE_IO_MIN_OUTPUTS)
+        );
+        sShareConfiscationRules = shareConfiscationRules;
+        sShareConfiscationRulesInterpreter = interpreter;
+        sShareConfiscationRulesStore = store;
+
+        emit SetShareConfiscationRules(msg.sender, expression, shareConfiscationRules.data);
+    }
+
+    function setReceiptTransferRules(
+        RulesConfig rulesConfig
+    ) external onlyRole(RECEIPT_TRANSFER_RULEMAKER) {
+        (IInterpreterV1 interpreter, IInterpreterStoreV1 store, address receiptTransferRules) = rulesConfig
+            .evaluableConfig
+            .deployer
+            .deployExpression(
+            config.evaluableConfig.bytecode,
+            config.evaluableConfig.constants,
+            LibUint256Array.arrayFrom(CALCULATE_ORDER_MIN_OUTPUTS, HANDLE_IO_MIN_OUTPUTS)
+        );
+        sReceiptTransferRules = receiptTransferRules;
+        sReceiptTransferRulesInterpreter = interpreter;
+        sReceiptTransferRulesStore = store;
+
+        emit SetReceiptTransferRules(msg.sender, expression, receiptTransferRules.data);
+    }
+
+    function setReceiptConfiscationRules(
+        RulesConfig rulesConfig
+    ) external onlyRole(RECEIPT_CONFISCATION_RULEMAKER) {
+        (IInterpreterV1 interpreter, IInterpreterStoreV1 store, address receiptConfiscationRules) = rulesConfig
+            .evaluableConfig
+            .deployer
+            .deployExpression(
+            config.evaluableConfig.bytecode,
+            config.evaluableConfig.constants,
+            LibUint256Array.arrayFrom(CALCULATE_ORDER_MIN_OUTPUTS, HANDLE_IO_MIN_OUTPUTS)
+        );
+        sReceiptConfiscationRules = receiptConfiscationRules;
+        sReceiptConfiscationRulesInterpreter = interpreter;
+        sReceiptConfiscationRulesStore = store;
+
+        emit SetReceiptConfiscationRules(msg.sender, expression, receiptConfiscationRules.data);
     }
 
     /// Certifiers MAY EXTEND OR REDUCE the `certifiedUntil` time. If there are
@@ -597,14 +666,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// Reverts if some transfer is disallowed. Handles both share and receipt
     /// transfers. Standard logic reverts any transfer that is EITHER to or from
-    /// an address that does not have the required tier OR the system is no
-    /// longer certified therefore ALL unpriviledged transfers MUST revert.
+    /// an address that does not meet the requirements of the rules OR the system
+    /// is no longer certified therefore ALL unpriviledged transfers MUST revert.
     ///
     /// Certain exemptions to transfer restrictions apply:
-    /// - If a tier contract is not set OR the minimum tier is 0 then tier
-    ///   restrictions are ignored.
+    /// - If a rule expression is not set then it does not restrict transfer.
     /// - Any handler role MAY SEND AND RECEIVE TOKENS AT ALL TIMES BETWEEN
-    ///   THEMSELVES AND ANYONE ELSE. Tier and certification restrictions are
+    ///   THEMSELVES AND ANYONE ELSE. Rule and certification restrictions are
     ///   ignored for both sender and receiver when either is a handler. Handlers
     ///   exist to _repair_ certification issues, so MUST be able to transfer
     ///   unhindered.
@@ -615,23 +683,22 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     ///   to allow potential legal requirements on confiscation during system
     ///   freeze, without assigning unnecessary priviledges to confiscators.
     ///
-    /// @param tier_ The tier contract to check reports against.
-    /// MAY be `address(0)`.
-    /// @param minimumTier_ The minimum tier to check `from_` and `to_` against.
-    /// @param tierContext_ Additional context to pass to `tier_` for the report.
-    /// @param from_ The token is being transferred from this account.
-    /// @param to_ The token is being transferred to this account.
+    /// @param expression The address of the rainlang expression to run to
+    /// enforce transfer restrictions. MAY be `address(0)` to disable transfer
+    /// restrictions.
+    /// @param from The token is being transferred from this account.
+    /// @param to The token is being transferred to this account.
+    /// @param amount The amount of tokens being transferred.
     function enforceValidTransfer(
-        ITierV2 tier_,
-        uint256 minimumTier_,
-        uint256[] memory tierContext_,
-        address from_,
-        address to_
+        address expression,
+        address from,
+        address to,
+        uint256 amount
     ) internal view {
         // Handlers can ALWAYS send and receive funds.
-        // Handlers bypass BOTH the timestamp on certification AND tier based
+        // Handlers bypass BOTH the timestamp on certification AND rule based
         // restriction.
-        if (hasRole(HANDLER, from_) || hasRole(HANDLER, to_)) {
+        if (hasRole(HANDLER, from) || hasRole(HANDLER, to)) {
             return;
         }
 
@@ -640,53 +707,63 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         // valid after the certification expires as it is likely the only way to
         // repair the system and bring it back to a certifiable state.
         if (
-            (from_ == address(0) && hasRole(DEPOSITOR, to_)) ||
-            (to_ == address(0) && hasRole(WITHDRAWER, from_))
+            (from == address(0) && hasRole(DEPOSITOR, to)) ||
+            (to == address(0) && hasRole(WITHDRAWER, from))
         ) {
             return;
         }
 
         // Confiscation is always allowed as it likely represents some kind of
         // regulatory/legal requirement. It may also be required to satisfy
-        // certification requirements.
-        if (hasRole(CONFISCATOR, to_)) {
+        // certification requirements. Confiscators MAY also recover tokens from
+        // the zero address, contracts or other invalid addresses. It is a very
+        // powerful role.
+        if (hasRole(CONFISCATOR, to)) {
             return;
+        }
+
+        // If the 0 address is still involved somehow, it is not a handler, and
+        // it is not a mint/burn, and it is not a confiscation, then it is
+        // invalid. Either this is a bug or someone is trying to do something
+        // they shouldn't.
+        if (from == address(0) || to == address(0)) {
+            revert ZeroAddressTransfer(from, to);
         }
 
         // Everyone else can only transfer while the certification is valid.
         //solhint-disable-next-line not-rely-on-time
         if (block.timestamp > certifiedUntil) {
             revert CertificationExpired(
-                from_,
-                to_,
+                from,
+                to,
                 certifiedUntil,
                 block.timestamp
             );
         }
 
         // If there is a tier contract we enforce it.
-        if (address(tier_) != address(0) && minimumTier_ > 0) {
-            if (from_ != address(0)) {
+        if (address(expression) != address(0)) {
+            if (from != address(0)) {
                 // The sender must have a valid tier.
                 uint256 fromReportTime_ = tier_.reportTimeForTier(
-                    from_,
+                    from,
                     minimumTier_,
                     tierContext_
                 );
                 if (block.timestamp < fromReportTime_) {
-                    revert UnauthorizedSenderTier(from_, fromReportTime_);
+                    revert UnauthorizedSenderTier(from, fromReportTime_);
                 }
             }
 
-            if (to_ != address(0)) {
+            if (to != address(0)) {
                 // The recipient must have a valid tier.
                 uint256 toReportTime_ = tier_.reportTimeForTier(
-                    to_,
+                    to,
                     minimumTier_,
                     tierContext_
                 );
                 if (block.timestamp < toReportTime_) {
-                    revert UnauthorizedRecipientTier(to_, toReportTime_);
+                    revert UnauthorizedRecipientTier(to, toReportTime_);
                 }
             }
         }
@@ -695,21 +772,19 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Apply standard transfer restrictions to share transfers.
     /// @inheritdoc ReceiptVault
     function _beforeTokenTransfer(
-        address from_,
-        address to_,
-        uint256 amount_
+        address from,
+        address to,
+        uint256 amount
     ) internal virtual override {
         enforceValidTransfer(
-            erc20Tier,
-            erc20MinimumTier,
-            erc20TierContext,
-            from_,
-            to_
+            from,
+            to,
+            amount
         );
-        super._beforeTokenTransfer(from_, to_, amount_);
+        super._beforeTokenTransfer(from, to, amount);
     }
 
-    /// Confiscators can confiscate ERC20 vault shares from `confiscatee_`.
+    /// Confiscators can confiscate ERC20 vault shares from `confiscatee`.
     /// Confiscation BYPASSES TRANSFER RESTRICTIONS due to system freeze and
     /// IGNORES ALLOWANCES set by the confiscatee.
     ///
@@ -735,39 +810,47 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// you SHOULD NOT continue to hold the token, exiting systems that play fast
     /// and loose with user assets is the ONLY way to discourage such behaviour.
     ///
-    /// @param confiscatee_ The address that shares are being confiscated from.
-    /// @param data_ The associated justification of the confiscation, and/or
+    /// @param confiscatee The address that shares are being confiscated from.
+    /// @param data The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of shares confiscated.
     function confiscateShares(
-        address confiscatee_,
-        bytes memory data_
+        address confiscatee,
+        SignedContextV1 memory signedContext,
+        bytes memory data
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
-        uint256 confiscatedShares_ = 0;
-        if (
-            address(erc20Tier) == address(0) ||
-            block.timestamp <
-            erc20Tier.reportTimeForTier(
-                confiscatee_,
-                erc20MinimumTier,
-                erc20TierContext
-            )
-        ) {
-            confiscatedShares_ = balanceOf(confiscatee_);
-            if (confiscatedShares_ > 0) {
-                emit ConfiscateShares(
-                    msg.sender,
-                    confiscatee_,
-                    confiscatedShares_,
-                    data_
-                );
-                _transfer(confiscatee_, msg.sender, confiscatedShares_);
-            }
+        uint256 confiscatedSharesAmount = 0;
+        confiscatedSharesAmount = balanceOf(confiscatee);
+
+        EncodedDispatch shareConfiscationRulesDispatch = sShareConfiscationRulesDispatch;
+        (address expression, SourceIndex sourceIndex, uint16 maxOutputs) = LibEncodedDispatch.decode(shareConfiscationRulesDispatch);
+        (sourceIndex, maxOutputs);
+        if (expression != address(0)) {
+            (uint256[] memory stack, uint256[] memory writes) = sShareConfiscationRulesInterpreter
+                .eval(sShareConfiscationRulesStore, DEFAULT_STATE_NAMESPACE, shareConfiscationRulesDispatch, LibContext.build(
+                    LibUint256Array.arrayFrom(
+                        uint256(confiscatee),
+                        confiscatedSharesAmount
+                    ),
+                    signedContext
+                ));
+            (stack);
+            sShareConfiscationRulesStore.set(DEFAULT_STATE_NAMESPACE, writes);
         }
-        return confiscatedShares_;
+
+        if (confiscatedSharesAmount > 0) {
+            emit ConfiscateShares(
+                msg.sender,
+                confiscatee,
+                confiscatedSharesAmount,
+                data
+            );
+            _transfer(confiscatee, msg.sender, confiscatedSharesAmount);
+        }
+        return confiscatedSharesAmount;
     }
 
-    /// Confiscators can confiscate ERC1155 vault receipts from `confiscatee_`.
+    /// Confiscators can confiscate ERC1155 vault receipts from `confiscatee`.
     /// The process, limitations and logic is identical to share confiscation
     /// except that receipt confiscation is performed per-ID.
     ///
@@ -780,45 +863,56 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// you SHOULD NOT continue to hold the token, exiting systems that play fast
     /// and loose with user assets is the ONLY way to discourage such behaviour.
     ///
-    /// @param confiscatee_ The address that receipts are being confiscated from.
-    /// @param id_ The ID of the receipt to confiscate.
-    /// @param data_ The associated justification of the confiscation, and/or
+    /// @param confiscatee The address that receipts are being confiscated from.
+    /// @param id The ID of the receipt to confiscate.
+    /// @param data The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of receipt confiscated.
     function confiscateReceipt(
-        address confiscatee_,
-        uint256 id_,
-        bytes memory data_
+        address confiscatee,
+        uint256 id,
+        SignedContextV1 memory signedContext,
+        bytes memory data
     ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
-        uint256 confiscatedReceiptAmount_ = 0;
-        if (
-            address(erc1155Tier) == address(0) ||
-            block.timestamp <
-            erc1155Tier.reportTimeForTier(
-                confiscatee_,
-                erc1155MinimumTier,
-                erc1155TierContext
-            )
-        ) {
-            IReceiptV1 receipt_ = _receipt;
-            confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
-            if (confiscatedReceiptAmount_ > 0) {
-                emit ConfiscateReceipt(
-                    msg.sender,
-                    confiscatee_,
-                    id_,
-                    confiscatedReceiptAmount_,
-                    data_
-                );
-                receipt_.ownerTransferFrom(
-                    confiscatee_,
-                    msg.sender,
-                    id_,
-                    confiscatedReceiptAmount_,
-                    ""
-                );
-            }
+        uint256 confiscatedReceiptAmount = 0;
+
+        IReceiptV1 receipt = sReceipt;
+        confiscatedReceiptAmount = receipt.balanceOf(confiscatee, id);
+
+        EncodedDispatch receiptConfiscationRulesDispatch = sReceiptConfiscationRulesDispatch;
+        (address expression, SourceIndex sourceIndex, uint16 maxOutputs) = LibEncodedDispatch.decode(receiptConfiscationRulesDispatch);
+        (sourceIndex, maxOutputs);
+        if (expression != address(0)) {
+            (uint256[] memory stack, uint256[] memory writes) = sReceiptConfiscationRulesInterpreter
+                .eval(sReceiptConfiscationRulesStore, DEFAULT_STATE_NAMESPACE, receiptConfiscationRulesDispatch, LibContext.build(
+                    LibUint256Array.arrayFrom(
+                        uint256(confiscatee),
+                        id,
+                        confiscatedReceiptAmount
+                    ),
+                    signedContext
+                ));
+            (stack);
+            sReceiptConfiscationRulesStore.set(DEFAULT_STATE_NAMESPACE, writes);
         }
-        return confiscatedReceiptAmount_;
+
+        if (confiscatedReceiptAmount > 0) {
+            emit ConfiscateReceipt(
+                msg.sender,
+                confiscatee,
+                id,
+                confiscatedReceiptAmount,
+                data
+            );
+            receipt.ownerTransferFrom(
+                confiscatee,
+                msg.sender,
+                id,
+                confiscatedReceiptAmount,
+                ""
+            );
+        }
+
+        return confiscatedReceiptAmount;
     }
 }

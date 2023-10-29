@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.19;
 
-import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20Upgradeable as IERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction} from "../receipt/ReceiptVault.sol";
 import "../../oracle/price/IPriceOracleV1.sol";
 
