@@ -17,7 +17,8 @@ const {
   GOERLI_URL,
   SEPOLIA_URL,
   ETHERSCAN_API_KEY,
-  ARBITRUM_API_KEY
+  ARBITRUM_API_KEY,
+  ARBITRUM_URL
 } = process.env;
 
 export const config = {
@@ -56,6 +57,11 @@ export const config = {
       url: SEPOLIA_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 22000000000,
+    },
+    arbitrum: {
+      url: ARBITRUM_URL || "",
+      accounts: PRIVATE_KEY3 ? [`0x${PRIVATE_KEY3}`] : [],
+      gasPrice: 300000000,
     },
   },
   solidity: {
