@@ -672,7 +672,7 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const assetToDeposit = aliceAssets.div(2);
-    const assetToReDeposit = ethers.BigNumber.from(10);
+    const assetToReDeposit = ethers.BigNumber.from(0);
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](

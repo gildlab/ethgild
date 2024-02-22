@@ -1,6 +1,6 @@
 module.exports = [
   {
-    implementation: "0x52324308A8dC7240Bcce870A10733A1DA4633CFC",
-    receiptFactory: "0x5C5663c76147CFa47d5bb19570B8F1e1AB292492",
+    implementation: "0x1331b50cBDE17d2ff04ca87797178721430A698e",
+    receiptFactory: "0xdEE8d59c6C2925b83C678A7f8c26D9C228a52621",
   },
 ];

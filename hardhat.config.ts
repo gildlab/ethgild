@@ -9,12 +9,15 @@ require("dotenv").config();
 const {
   RINKEBY_URL,
   PRIVATE_KEY,
+  PRIVATE_KEY3,
   POLYGON_URL,
   ETHEREUM_URL,
   MUMBAI_URL,
   POLYGONSCAN_API_KEY,
   GOERLI_URL,
+  SEPOLIA_URL,
   ETHERSCAN_API_KEY,
+  ARBITRUM_API_KEY
 } = process.env;
 
 export const config = {
@@ -32,7 +35,7 @@ export const config = {
     matic: {
       url: POLYGON_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-      gasPrice: 141900000000,
+      gasPrice: 262000000000,
     },
     mumbai: {
       url: MUMBAI_URL || "https://rpc-mumbai.maticvigil.com",
@@ -41,11 +44,16 @@ export const config = {
     },
     goerli: {
       url: GOERLI_URL || "",
-      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-      gasPrice: 16000000000,
+      accounts: PRIVATE_KEY3 ? [`0x${PRIVATE_KEY3}`] : [],
+      gasPrice: 22000000000,
     },
     ethereum: {
       url: ETHEREUM_URL || "",
+      accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+      gasPrice: 22000000000,
+    },
+    sepolia: {
+      url: SEPOLIA_URL || "",
       accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
       gasPrice: 22000000000,
     },
@@ -66,7 +74,17 @@ export const config = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: ETHERSCAN_API_KEY,
+    apiKey: ARBITRUM_API_KEY,
+    customChains: [
+      {
+        network: "arbitrum sepolia",
+        chainId: 421614,
+        urls: {
+          apiURL: "https://api-sepolia.arbiscan.io/api",
+          browserURL: "https://sepolia.arbiscan.io/"
+        }
+      }
+    ]
   },
   gasReporter: {
     currency: "USD",
