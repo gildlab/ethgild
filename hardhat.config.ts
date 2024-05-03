@@ -7,13 +7,13 @@ import "@nomiclabs/hardhat-etherscan";
 require("dotenv").config();
 
 const {
-    RINKEBY_URL,
     PRIVATE_KEY,
     POLYGON_URL,
     ETHEREUM_URL,
     POLYGONSCAN_API_KEY,
     ETHERSCAN_API_KEY,
     SEPOLIA_URL,
+    POLYGON_AMOY_URL,
 } = process.env;
 
 export const config = {
@@ -40,8 +40,15 @@ export const config = {
             accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
             gasPrice: 22000000000,
         },
+        amoy: {
+            chainId: 80002,
+            url: POLYGON_AMOY_URL || "",
+            accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+            gasPrice: 22000000000,
+        },
+
         // arbitrumSepolia: {
-        //     url: ARBITRUM+SEPOLIA_URL || "",
+        //     url: ARBITRUM_SEPOLIA_URL || "",
         //     accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
         //     gasPrice: 22000000000,
         // },
