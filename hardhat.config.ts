@@ -38,7 +38,7 @@ export const config = {
             chainId: 11155111,
             url: SEPOLIA_URL || "",
             accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-            gasPrice: 22000000000,
+            gasPrice: 2200000,
         },
         amoy: {
             chainId: 80002,
