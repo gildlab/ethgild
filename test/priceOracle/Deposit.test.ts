@@ -10,11 +10,11 @@ import {
 const assert = require("assert");
 
 describe("deposit", async function () {
+  const [vault, asset, priceOracle, receipt] = await deployERC20PriceOracleVault();
+
   it("should not zero deposit", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[1];
-
-    const [vault, asset] = await deployERC20PriceOracleVault();
 
     const totalTokenSupply = await asset.totalSupply();
     const aliceDepositAmount = totalTokenSupply.div(2);
@@ -38,8 +38,6 @@ describe("deposit", async function () {
 
   it("should deposit a sensible reference price", async function () {
     const signers = await ethers.getSigners();
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
     const alice = signers[1];
 
@@ -91,9 +89,6 @@ describe("deposit", async function () {
 
   it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
-
-    const [vault, asset, priceOracle, receipt] =
-      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -238,9 +233,6 @@ describe("deposit", async function () {
 
   it("should trade erc1155", async function () {
     const signers = await ethers.getSigners();
-
-    const [vault, asset, priceOracle, receipt] =
-      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];

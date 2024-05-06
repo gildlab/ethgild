@@ -25,12 +25,11 @@ let vault: ERC20PriceOracleReceiptVault,
 
 describe("Redeem", async function () {
   let alice;
+  const [ERC20PriceOracleVault, Erc20Asset, priceOracle, receiptVault] =
+    await deployERC20PriceOracleVault();
   beforeEach(async () => {
     const signers = await ethers.getSigners();
     alice = signers[0];
-
-    const [ERC20PriceOracleVault, Erc20Asset, priceOracle, receiptVault] =
-      await deployERC20PriceOracleVault();
 
     vault = await ERC20PriceOracleVault;
     asset = await Erc20Asset;
