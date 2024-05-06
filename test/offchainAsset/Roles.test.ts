@@ -8,10 +8,12 @@ import assert from "assert";
 
 let TierV2TestContract: ReadWriteTier;
 
-describe("OffChainAssetReceiptVault Roles", async function () {
-  it("Checks Admin roles granted", async function () {
+describe("OffChainAssetReceiptVault Roles", async function() {
+  const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
+  it("Checks Admin roles granted", async function() {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
+    const alice = signers[ 0 ];
     const [vault] = await deployOffChainAssetReceiptVault();
 
     const DEPOSITOR_ADMIN = await vault.connect(alice).DEPOSITOR_ADMIN();
@@ -54,47 +56,46 @@ describe("OffChainAssetReceiptVault Roles", async function () {
 
     assert(
       DEPOSITOR_ADMIN_Granted === true,
-      `No ${DEPOSITOR_ADMIN_Granted} role granted`
+      `No ${ DEPOSITOR_ADMIN_Granted } role granted`
     );
     assert(
       WITHDRAWER_ADMIN_Granted === true,
-      `No ${WITHDRAWER_ADMIN_Granted} role granted`
+      `No ${ WITHDRAWER_ADMIN_Granted } role granted`
     );
     assert(
       CERTIFIER_ADMIN_Granted === true,
-      `No ${CERTIFIER_ADMIN_Granted} role granted`
+      `No ${ CERTIFIER_ADMIN_Granted } role granted`
     );
     assert(
       HANDLER_ADMIN_Granted === true,
-      `No ${HANDLER_ADMIN_Granted} role granted`
+      `No ${ HANDLER_ADMIN_Granted } role granted`
     );
     assert(
       ERC20TIERER_ADMIN_Granted === true,
-      `No ${ERC20TIERER_ADMIN_Granted} role granted`
+      `No ${ ERC20TIERER_ADMIN_Granted } role granted`
     );
     assert(
       ERC1155TIERER_ADMIN_Granted === true,
-      `No ${ERC1155TIERER_ADMIN_Granted} role granted`
+      `No ${ ERC1155TIERER_ADMIN_Granted } role granted`
     );
     assert(
       ERC20SNAPSHOTTER_ADMIN_Granted === true,
-      `No ${ERC20SNAPSHOTTER_ADMIN_Granted} role granted`
+      `No ${ ERC20SNAPSHOTTER_ADMIN_Granted } role granted`
     );
     assert(
       CONFISCATOR_ADMIN_Granted === true,
-      `No ${CONFISCATOR_ADMIN_Granted} role granted`
+      `No ${ CONFISCATOR_ADMIN_Granted } role granted`
     );
   });
-  it("Gets 0 shares for deposit without depositor role", async function () {
+  it("Gets 0 shares for deposit without depositor role", async function() {
     const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
+    const asset = ( await testErc20.deploy() ) as TestErc20;
     await asset.deployed();
 
-    const alice = signers[0];
-    const bob = signers[1];
+    const alice = signers[ 0 ];
+    const bob = signers[ 1 ];
 
     const shareRatio = ONE;
     const aliceAssets = ethers.BigNumber.from(1000);
@@ -107,26 +108,24 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       async () =>
         await vault
           .connect(alice)
-          ["deposit(uint256,address,uint256,bytes)"](
-            aliceAssets,
-            bob.address,
-            shareRatio,
-            []
-          ),
+          [ "deposit(uint256,address,uint256,bytes)" ](
+          aliceAssets,
+          bob.address,
+          shareRatio,
+          []
+        ),
       `MinShareRatio`,
       "Failed to deposit"
     );
   });
-  it("Checks withdraw without depositor role", async function () {
+  it("Checks withdraw without depositor role", async function() {
     const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
     const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
+    const asset = ( await testErc20.deploy() ) as TestErc20;
     await asset.deployed();
 
-    const alice = signers[0];
-    const bob = signers[1];
+    const alice = signers[ 0 ];
+    const bob = signers[ 1 ];
 
     const shareRatio = ethers.BigNumber.from(1);
     const aliceAssets = ethers.BigNumber.from(10);
@@ -152,12 +151,12 @@ describe("OffChainAssetReceiptVault Roles", async function () {
 
     await vault
       .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        aliceAssets,
-        bob.address,
-        shareRatio,
-        []
-      );
+      [ "deposit(uint256,address,uint256,bytes)" ](
+      aliceAssets,
+      bob.address,
+      shareRatio,
+      []
+    );
 
     const balance = await receipt
       .connect(alice)
@@ -168,13 +167,13 @@ describe("OffChainAssetReceiptVault Roles", async function () {
       .grantRole(await vault.connect(alice).WITHDRAWER(), bob.address);
     await vault
       .connect(bob)
-      ["redeem(uint256,address,address,uint256,bytes)"](
-        balance,
-        bob.address,
-        bob.address,
-        shareRatio,
-        []
-      );
+      [ "redeem(uint256,address,address,uint256,bytes)" ](
+      balance,
+      bob.address,
+      bob.address,
+      shareRatio,
+      []
+    );
 
     const balanceAfter = await receipt
       .connect(alice)
@@ -182,18 +181,16 @@ describe("OffChainAssetReceiptVault Roles", async function () {
 
     assert(
       balanceAfter.isZero(),
-      `wrong assets. expected ${ethers.BigNumber.from(0)} got ${balanceAfter}`
+      `wrong assets. expected ${ ethers.BigNumber.from(0) } got ${ balanceAfter }`
     );
   });
-  it("Checks SetERC20Tier role", async function () {
+  it("Checks SetERC20Tier role", async function() {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
+    TierV2TestContract = ( await TierV2Test.deploy() ) as ReadWriteTier;
     await TierV2TestContract.deployed();
 
-    const [vault] = await deployOffChainAssetReceiptVault();
-
     const signers = await ethers.getSigners();
-    const alice = signers[0];
+    const alice = signers[ 0 ];
 
     const minTier = ethers.BigNumber.from(10);
 
@@ -202,20 +199,18 @@ describe("OffChainAssetReceiptVault Roles", async function () {
         await vault
           .connect(alice)
           .setERC20Tier(TierV2TestContract.address, minTier, [], []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+      `AccessControl: account ${ alice.address.toLowerCase() } is missing role ${ await vault
         .connect(alice)
-        .ERC20TIERER()}`,
+        .ERC20TIERER() }`,
       "Failed to set erc20tier"
     );
   });
-  it("Checks setERC1155Tier role", async function () {
+  it("Checks setERC1155Tier role", async function() {
     const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
+    TierV2TestContract = ( await TierV2Test.deploy() ) as ReadWriteTier;
     await TierV2TestContract.deployed();
-    const [vault] = await deployOffChainAssetReceiptVault();
-
     const signers = await ethers.getSigners();
-    const alice = signers[0];
+    const alice = signers[ 0 ];
 
     const minTier = ethers.BigNumber.from(10);
 
@@ -224,29 +219,27 @@ describe("OffChainAssetReceiptVault Roles", async function () {
         await vault
           .connect(alice)
           .setERC1155Tier(TierV2TestContract.address, minTier, [], []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+      `AccessControl: account ${ alice.address.toLowerCase() } is missing role ${ await vault
         .connect(alice)
-        .ERC1155TIERER()}`,
+        .ERC1155TIERER() }`,
       "Failed to set erc1155tier"
     );
   });
-  it("Checks role for snapshotter", async function () {
+  it("Checks role for snapshotter", async function() {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
+    const alice = signers[ 0 ];
 
     await assertError(
       async () => await vault.connect(alice).snapshot([]),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+      `AccessControl: account ${ alice.address.toLowerCase() } is missing role ${ await vault
         .connect(alice)
-        .ERC20SNAPSHOTTER()}`,
+        .ERC20SNAPSHOTTER() }`,
       "failed to snapshot"
     );
   });
-  it("Checks role for certifier", async function () {
+  it("Checks role for certifier", async function() {
     const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
+    const alice = signers[ 0 ];
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
@@ -258,9 +251,9 @@ describe("OffChainAssetReceiptVault Roles", async function () {
         await vault
           .connect(alice)
           .certify(_until, _referenceBlockNumber, false, []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
+      `AccessControl: account ${ alice.address.toLowerCase() } is missing role ${ await vault
         .connect(alice)
-        .CERTIFIER()}`,
+        .CERTIFIER() }`,
       "failed to certify"
     );
   });
