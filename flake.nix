@@ -87,7 +87,10 @@
             packages.security-check
           ];
           shellHook = rainix.devShells.${system}.default.shellHook;
-          buildInputs = rainix.devShells.${system}.default.buildInputs;
+          buildInputs = rainix.devShells.${system}.default.buildInputs ++ [
+            pkgs.nodejs-18_x
+            pkgs.slither-analyzer
+          ];
           nativeBuildInputs = rainix.devShells.${system}.default.nativeBuildInputs;
         };
       }
