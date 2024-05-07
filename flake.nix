@@ -86,7 +86,13 @@
             packages.ipfs-add
             packages.security-check
           ];
-          shellHook = rainix.devShells.${system}.default.shellHook;
+          shellHook = ''
+              touch .env && source .env
+              export PATH=$(npm bin):$PATH
+              # keep it fresh
+              npm install
+              ${rainix.devShells.${system}.default.shellHook}
+            '';
           buildInputs = rainix.devShells.${system}.default.buildInputs;
           nativeBuildInputs = rainix.devShells.${system}.default.nativeBuildInputs;
         };
