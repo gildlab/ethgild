@@ -20,16 +20,16 @@
           }).buildRustPackage {
             src = ./.;
             doCheck = false;
-            name = "rain-metadata";
+            name = "ethgild";
             cargoLock.lockFile = ./Cargo.lock;
             # allows for git deps to be resolved without the need to specify their outputHash
             cargoLock.allowBuiltinFetchGit = true;
             buildPhase = ''
-              cargo build --release --bin rain-metadata --all-features
+              cargo build --release --bin ethgild --all-features
             '';
             installPhase = ''
               mkdir -p $out/bin
-              cp target/release/rain-metadata $out/bin/
+              cp target/release/ethgild $out/bin/
             '';
             buildInputs = with pkgs; [
               openssl
@@ -84,6 +84,7 @@
             packages.ci-lint
             packages.flush-all
             packages.ipfs-add
+            packages.security-check
           ];
           shellHook = rainix.devShells.${system}.default.shellHook;
           buildInputs = rainix.devShells.${system}.default.buildInputs;
