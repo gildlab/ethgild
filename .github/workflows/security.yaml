@@ -15,4 +15,4 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: Security check
-        run: nix-shell --run security-check
+        run: nix develop -c security-check
