@@ -16,6 +16,7 @@
           ci-lint = rainix.mkTask.${system} {
             name = "ci-lint";
             body = ''
+              npm install
               solhint 'contracts/**/*.sol'
               prettier --check .
             '';
@@ -55,6 +56,7 @@
           buildInputs = rainix.devShells.${system}.default.buildInputs ++ [
             pkgs.nodejs-18_x
             pkgs.slither-analyzer
+            pkgs.hardhat
             ci-lint
             flush-all
             ipfs-add
