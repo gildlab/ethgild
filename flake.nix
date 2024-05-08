@@ -56,7 +56,6 @@
           buildInputs = rainix.devShells.${system}.default.buildInputs ++ [
             pkgs.nodejs-18_x
             pkgs.slither-analyzer
-            pkgs.hardhat
             ci-lint
             flush-all
             ipfs-add
