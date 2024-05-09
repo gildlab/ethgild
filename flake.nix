@@ -16,6 +16,7 @@
         ci-lint = rainix.mkTask.${system} {
           name = "ci-lint";
           body = ''
+            set -euxo pipefail
             solhint 'contracts/**/*.sol'
             prettier --check .
           '';
@@ -23,6 +24,7 @@
         flush-all = rainix.mkTask.${system} {
           name = "flush-all";
           body = ''
+            set -euxo pipefail
             rm -rf artifacts
             rm -rf cache
             rm -rf node_modules
@@ -34,6 +36,7 @@
         security-check = rainix.mkTask.${system} {
           name = "security-check";
           body = ''
+            set -euxo pipefail
             flush-all
             npm install
 
@@ -59,7 +62,6 @@
             flush-all
             ipfs-add
             security-check];
-          nativeBuildInputs = rainix.devShells.${system}.default.nativeBuildInputs;
         };
        }
     );
