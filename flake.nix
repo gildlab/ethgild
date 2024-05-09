@@ -17,6 +17,7 @@
           name = "ci-lint";
           body = ''
             set -euxo pipefail
+            npm install
             solhint 'contracts/**/*.sol'
             prettier --check .
           '';
