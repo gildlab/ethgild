@@ -15,4 +15,4 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
       - name: Hardhat test
-        run: nix develop -c "hardhat test"
+        run: nix develop -c hardhat test
