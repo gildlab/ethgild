@@ -1,4 +1,4 @@
-name: Rainix CI
+name: Security tests
 on: [push]
 
 jobs:
