@@ -1,4 +1,4 @@
-name: Security tests
+name: Rainix CI
 on: [push]
 
 jobs:
@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        task: [rainix-sol-static]
+        task: [rainix-sol-test, rainix-sol-static]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     env:
