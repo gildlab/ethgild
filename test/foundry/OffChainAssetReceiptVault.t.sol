@@ -10,10 +10,10 @@ import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 contract OffChainAssetReceiptVaultTest is Test {
     OffchainAssetReceiptVaultFactory factory;
     OffchainAssetVaultConfig offchainAssetVaultConfig;
-    ReceiptVaultConfig receiptVaultConfig;
     VaultConfig vaultConfig;
     OffchainAssetReceiptVault implementation;
     ReceiptVault receiptVault;
+    OffchainAssetReceiptVault vault;
 
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
 
@@ -27,24 +27,20 @@ contract OffChainAssetReceiptVaultTest is Test {
             "ASSET"
         );
 
-        receiptVaultConfig = ReceiptVaultConfig(
-            address(receiptVault),
-            vaultConfig
-        );
-
         offchainAssetVaultConfig = OffchainAssetVaultConfig(
-            address(0xc0D477556c25C9d67E1f57245C7453DA776B51cf),
+            msg.sender,
             vaultConfig
         );
 
         factory = new OffchainAssetReceiptVaultFactory(ReceiptVaultFactoryConfig(address(implementation), address(receiptVault)));
+        vault = factory.createChildTyped(offchainAssetVaultConfig);
+
     }
 
     function test_Certify() public {
 
 
-        OffchainAssetReceiptVault child = factory.createChildTyped(offchainAssetVaultConfig);
-        child.grantRole(child.CERTIFIER(), msg.sender);
+//        vault.grantRole(vault.CERTIFIER(), msg.sender);
 
 //        vaultContract.balanceOf(msg.sender);//.grantRole(vaultContract.CERTIFIER(), msg.sender);
 //        vm.expectEmit(true, true, true, true);
