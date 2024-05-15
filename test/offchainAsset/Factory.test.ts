@@ -1,17 +1,21 @@
 import { ethers } from "hardhat";
 import {
-  OffchainAssetReceiptVaultFactory
+  OffchainAssetReceiptVaultFactory,
+  ReceiptFactory,
 } from "../../typechain-types";
-import { getEventArgs } from "../util";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { expectedUri, getEventArgs } from "../util";
 import { deployOffchainAssetReceiptVaultFactory } from "./deployOffchainAssetReceiptVault";
 
 const assert = require("assert");
 
 let offchainAssetReceiptVaultFactory: OffchainAssetReceiptVaultFactory;
 
-describe("OffchainAssetReceiptVaultFactory Test", async () => {
-  offchainAssetReceiptVaultFactory =
-    await deployOffchainAssetReceiptVaultFactory();
+describe("OffchainAssetReceiptVaultFactory Test", () => {
+  before(async () => {
+    offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetReceiptVaultFactory();
+  });
 
   it("Should deploy Factory correctly", async () => {
     assert(
@@ -21,15 +25,15 @@ describe("OffchainAssetReceiptVaultFactory Test", async () => {
 
   it("Should createChild", async () => {
     const signers = await ethers.getSigners();
-    const alice = signers[ 0 ];
+    const alice = signers[0];
 
     const constructionConfig = {
       admin: alice.address,
       vaultConfig: {
         asset: ethers.constants.AddressZero,
         name: "OffchainAssetReceiptVault",
-        symbol: "OAV"
-      }
+        symbol: "OAV",
+      },
     };
 
     let tx = await offchainAssetReceiptVaultFactory.createChildTyped(
