@@ -34,15 +34,15 @@ let expectedName = "OffchainAssetVaul";
 let expectedSymbol = "OAV";
 
 describe("OffChainAssetReceiptVault", async function () {
-  const [vault, receipt, config] = await deployOffChainAssetReceiptVault();
-  const offchainAssetReceiptVaultFactory =
-    await deployOffchainAssetReceiptVaultFactory();
-
-  const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-  TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
-  await TierV2TestContract.deployed();
-
+  beforeEach(async () => {
+    const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
+    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
+    await TierV2TestContract.deployed();
+  });
   it("Check admin is not address zero", async function () {
+    const offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetReceiptVaultFactory();
+
     const constructionConfig = {
       admin: ADDRESS_ZERO,
       vaultConfig: {
@@ -65,6 +65,9 @@ describe("OffChainAssetReceiptVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
+    const offchainAssetReceiptVaultFactory =
+      await deployOffchainAssetReceiptVaultFactory();
+
     const constructionConfig = {
       admin: alice.address,
       vaultConfig: {
@@ -84,6 +87,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Constructs well", async function () {
+    const [, , config] = await deployOffChainAssetReceiptVault();
+
     assert(
       config.receiptVaultConfig.vaultConfig.name === expectedName,
       `wrong name expected ${expectedName} got ${config.receiptVaultConfig.vaultConfig.name}`
@@ -99,6 +104,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Check vault is the owner of its receipt", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -109,6 +115,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Checks SetERC20Tier event is emitted", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -140,6 +148,8 @@ describe("OffChainAssetReceiptVault", async function () {
     assert(data === "0x01", `wrong data expected 0x01 got ${data}`);
   });
   it("Checks setERC1155Tier event is emitted", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -172,6 +182,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Checks totalAssets", async function () {
     const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -220,6 +231,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("PreviewDeposit returns correct shares", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const assets = ethers.BigNumber.from(100);
 
     const signers = await ethers.getSigners();
@@ -248,6 +260,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("PreviewMint returns correct assets", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const shares = ethers.BigNumber.from(10);
 
     const signers = await ethers.getSigners();
@@ -266,6 +279,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("PreviewWithdraw returns 0 shares if no withdrawer role", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const assets = ethers.BigNumber.from(100);
 
     const signers = await ethers.getSigners();
@@ -285,6 +299,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("PreviewWithdraw returns correct shares", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const assets = ethers.BigNumber.from(10);
 
     const signers = await ethers.getSigners();
@@ -310,6 +325,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Mints with data", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -342,6 +358,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Cannot Mint to someone else if recipient is not DEPOSITOR or system not certified for them", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -372,6 +389,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Mints to someone else if recipient is not DEPOSITOR but system certified for them", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -415,6 +433,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Mints to someone else if recipient is DEPOSITOR", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -451,6 +470,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Cannot Deposit to someone else if recipient is not DEPOSITOR or system not certified for them", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -479,6 +499,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Deposits to someone else if recipient is not DEPOSITOR but system certified for them", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -519,6 +540,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Deposits to someone else if recipient is DEPOSITOR", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -552,6 +574,7 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("PreviewRedeem returns correct assets", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
     const shares = ethers.BigNumber.from(100);
 
     const signers = await ethers.getSigners();
@@ -585,6 +608,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("PreviewRedeem returns 0 shares if no withdrawer role", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -627,6 +652,8 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Redeposits", async function () {
     const signers = await ethers.getSigners();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
     await asset.deployed();
@@ -645,7 +672,7 @@ describe("OffChainAssetReceiptVault", async function () {
       .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
 
     const assetToDeposit = aliceAssets.div(2);
-    const assetToReDeposit = ethers.BigNumber.from(10);
+    const assetToReDeposit = ethers.BigNumber.from(0);
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
@@ -678,6 +705,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Prevents redeposit to someone else while not certified or recipient is not depositor", async function () {
     const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -719,6 +747,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Redeposits to someone else while certified", async function () {
     const signers = await ethers.getSigners();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -781,6 +810,8 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Prevents Redeposit on receipt with id 0", async function () {
     const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
     await asset.deployed();
@@ -806,6 +837,8 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Prevents Redeposit on non-existing receipt", async function () {
     const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
     await asset.deployed();
@@ -832,6 +865,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Snapshot event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     await vault
       .connect(alice)
@@ -848,6 +882,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("SnapshotWithData event is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     await vault
       .connect(alice)
@@ -868,6 +903,8 @@ describe("OffChainAssetReceiptVault", async function () {
     assert(data === "0x01", `Wrong information. Expected 0x01, got ${data}`);
   });
   it("Sets correct erc20Tier and mintier", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -898,6 +935,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Sets correct erc11Tier and mintier", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -928,6 +967,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Checks Certify event is emitted", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -963,6 +1004,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Certifies with data", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -1000,6 +1043,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Certify in the past relative to the existing certification time with forceUntil true", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
@@ -1038,6 +1083,8 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Checks certifiedUntil is not zero", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
     const _certifiedUntil = ethers.BigNumber.from(0);
@@ -1059,6 +1106,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Checks referenceBlockNumber is less than block number", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
@@ -1081,6 +1129,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Certifies", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
@@ -1107,6 +1156,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     await assertError(
       async () =>
@@ -1120,6 +1170,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Confiscate - Checks role CONFISCATOR", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     await assertError(
       async () =>
@@ -1133,6 +1184,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Confiscate - Checks ConfiscateShares is NOT emitted on Zero balance", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     await vault
       .connect(alice)
@@ -1156,6 +1208,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Confiscate - Checks ConfiscateShares is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1206,6 +1259,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Confiscate receipts - Checks ConfiscateReceipt is emitted", async function () {
     const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1271,6 +1325,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Confiscate receipts - Checks ConfiscateReceipt is NOT emitted on zero balance", async function () {
     const signers = await ethers.getSigners();
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const alice = signers[0];
 
@@ -1298,6 +1353,7 @@ describe("OffChainAssetReceiptVault", async function () {
   it("Checks confiscated is same as balance", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1346,6 +1402,7 @@ describe("OffChainAssetReceiptVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
+    const [vault] = await deployOffChainAssetReceiptVault();
 
     const blockNum = await ethers.provider.getBlockNumber();
     const block = await ethers.provider.getBlock(blockNum);
@@ -1401,6 +1458,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Checks confiscated is same as receipt balance", async function () {
     const signers = await ethers.getSigners();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1472,6 +1530,7 @@ describe("OffChainAssetReceiptVault", async function () {
   });
   it("Checks confiscated amount is transferred", async function () {
     const signers = await ethers.getSigners();
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const alice = signers[0];
     const bob = signers[1];
@@ -1542,6 +1601,7 @@ describe("OffChainAssetReceiptVault", async function () {
     const alice = signers[0];
     const bob = signers[1];
 
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const testErc20Contract = (await testErc20.deploy()) as TestErc20;
     await testErc20Contract.deployed();
@@ -1609,6 +1669,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Should not withdraw on more than balance", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const id = ethers.BigNumber.from(1);
@@ -1655,6 +1717,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("User not being able to withdraw someone else's share", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -1702,6 +1766,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Prevent authorizeReceiptTransfer if system not certified", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -1716,6 +1782,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Prevent authorizeReceiptTransfer if unauthorizedSenderTier", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -1756,6 +1824,8 @@ describe("OffChainAssetReceiptVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
+
+    const [vault] = await deployOffChainAssetReceiptVault();
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).DEPOSITOR(), bob.address);
@@ -1776,6 +1846,7 @@ describe("OffChainAssetReceiptVault", async function () {
     const alice = signers[0];
     const bob = signers[1];
 
+    const [vault] = await deployOffChainAssetReceiptVault();
     await vault
       .connect(alice)
       .grantRole(await vault.connect(alice).DEPOSITOR(), bob.address);
@@ -1795,6 +1866,8 @@ describe("OffChainAssetReceiptVault", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
+
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
@@ -1845,6 +1918,8 @@ describe("OffChainAssetReceiptVault", async function () {
     const alice = signers[0];
     const bob = signers[1];
 
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const testErc20 = await ethers.getContractFactory("TestErc20");
     const asset = (await testErc20.deploy()) as TestErc20;
     await asset.deployed();
@@ -1893,6 +1968,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Withdraw on someone else", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -1954,6 +2031,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Check withdraw for alice", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const id = 1;
@@ -2017,6 +2096,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Redeems on someone else", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
@@ -2078,6 +2159,8 @@ describe("OffChainAssetReceiptVault", async function () {
     );
   });
   it("Check redeem for alice", async function () {
+    const [vault, receipt] = await deployOffChainAssetReceiptVault();
+
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const id = 1;
