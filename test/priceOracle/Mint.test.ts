@@ -11,11 +11,11 @@ import {
 const assert = require("assert");
 
 describe("Mint", async function () {
-  const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
   it("Sets maxShares correctly", async function () {
     const signers = await ethers.getSigners();
     const owner = signers[0];
+
+    const [vault] = await deployERC20PriceOracleVault();
 
     const expectedMaxShares = ethers.BigNumber.from(2)
       .pow(256)
@@ -29,6 +29,7 @@ describe("Mint", async function () {
     );
   });
   it("Checks min share ratio is less than share ratio", async function () {
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const shareRatio = await priceOracle.price();
 
     const signers = await ethers.getSigners();
@@ -48,6 +49,7 @@ describe("Mint", async function () {
     );
   });
   it("PreviewMint - Calculates assets correctly with round up", async function () {
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const shareRatio = await priceOracle.price();
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -68,6 +70,8 @@ describe("Mint", async function () {
   });
   it("Mint - Calculates assets correctly while minShareRation is set", async function () {
     const signers = await ethers.getSigners();
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
     const alice = signers[0];
 
@@ -98,6 +102,8 @@ describe("Mint", async function () {
   it("Mint - Calculates assets correctly", async function () {
     const signers = await ethers.getSigners();
 
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
     const alice = signers[0];
 
     const assets = ethers.BigNumber.from(5000);
@@ -126,6 +132,7 @@ describe("Mint", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
+    const [vault] = await deployERC20PriceOracleVault();
     const shares = ethers.BigNumber.from(0);
 
     await assertError(
@@ -164,6 +171,8 @@ describe("Mint", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
     const assets = ethers.BigNumber.from(5000);
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
@@ -194,6 +203,7 @@ describe("Mint", async function () {
     );
   });
   it("Mint Overloaded - Checks min share ratio is less than share ratio", async function () {
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
     const shareRatio = await priceOracle.price();
 
     const signers = await ethers.getSigners();
@@ -223,6 +233,8 @@ describe("Mint", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
+
     const assets = ethers.BigNumber.from(5000);
     await asset.transfer(alice.address, assets);
     await asset.connect(alice).increaseAllowance(vault.address, assets);
@@ -248,6 +260,8 @@ describe("Mint", async function () {
   it("Mint Overloaded - Should not mint to 0 shares", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+
+    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
 
     const shareRatio = await priceOracle.price();
 

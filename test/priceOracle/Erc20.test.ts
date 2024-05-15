@@ -8,12 +8,11 @@ import {
 const assert = require("assert");
 
 describe("erc20 usage", async function () {
-  const [vault, asset, priceOracle, receipt] =
-    await deployERC20PriceOracleVault();
-
   it("should construct well", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
+
+    const [vault] = await deployERC20PriceOracleVault();
 
     const erc20Name = await vault.connect(alice).name();
     const erc20Symbol = await vault.connect(alice).symbol();
@@ -30,6 +29,9 @@ describe("erc20 usage", async function () {
 
   it("should only send itself", async function () {
     const signers = await ethers.getSigners();
+
+    const [vault, asset, priceOracle, receipt] =
+      await deployERC20PriceOracleVault();
 
     const alice = signers[0];
     const bob = signers[1];
