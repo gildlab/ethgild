@@ -23,17 +23,6 @@ contract OffChainAssetReceiptVaultTest is Test {
         implementation = new OffchainAssetReceiptVault();
         receiptFactory = new ReceiptFactory();
 
-        vaultConfig = VaultConfig(
-            address(0),
-            "Asset Name",
-            "ASSET"
-        );
-
-        offchainAssetVaultConfig = OffchainAssetVaultConfig(
-            address (msg.sender),
-            vaultConfig
-        );
-
         // Set up factory config
         ReceiptVaultFactoryConfig memory factoryConfig = ReceiptVaultFactoryConfig({
             implementation: address(implementation),
@@ -41,16 +30,32 @@ contract OffChainAssetReceiptVaultTest is Test {
         });
 
         factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
-
-
     }
 
     function test_Certify() public {
+        // Get the first signer address
+        address alice = vm.addr(1);
+        // Get the current block number
+        uint256 blockNum = block.number;
 
-//        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
 
-//        vault.grantRole(vault.CERTIFIER(), msg.sender);
+        //VaultConfig to create child contract
+        vaultConfig = VaultConfig(
+            address(0),
+            "Asset Name",
+            "ASSET"
+        );
+
+        offchainAssetVaultConfig = OffchainAssetVaultConfig({
+            admin: alice,
+            vaultConfig: vaultConfig
+        });
+
+        vault = factory.createChildTyped(offchainAssetVaultConfig);
+
+        vault.grantRole(vault.CERTIFIER(), alice);
 
 //        vaultContract.balanceOf(msg.sender);//.grantRole(vaultContract.CERTIFIER(), msg.sender);
 //        vm.expectEmit(true, true, true, true);
@@ -58,7 +63,9 @@ contract OffChainAssetReceiptVaultTest is Test {
 //        expected emitted event
 //        emit Certify(msg.sender, 100, 10, false, abi.encodePacked("Certification data"));
 //
-//        vaultContract.certify(100, 10, false, abi.encodePacked("Certification data"));
+        vault.certify(1719777599, blockNum, false, abi.encodePacked("Certification data"));
+
+        vm.stopPrank();
 
     }
 }
