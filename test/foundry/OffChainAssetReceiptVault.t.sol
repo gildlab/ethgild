@@ -1,8 +1,10 @@
 pragma solidity 0.8.17;
 
 import "../../contracts/vault/receipt/ReceiptVault.sol";
+import "../../contracts/vault/receipt/ReceiptFactory.sol";
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 
 import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
@@ -12,14 +14,14 @@ contract OffChainAssetReceiptVaultTest is Test {
     OffchainAssetVaultConfig offchainAssetVaultConfig;
     VaultConfig vaultConfig;
     OffchainAssetReceiptVault implementation;
-    ReceiptVault receiptVault;
     OffchainAssetReceiptVault vault;
+    ReceiptFactory receiptFactory;
 
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
 
     function setUp() public {
         implementation = new OffchainAssetReceiptVault();
-        receiptVault = new ReceiptVault();
+        receiptFactory = new ReceiptFactory();
 
         vaultConfig = VaultConfig(
             address(0),
@@ -28,17 +30,25 @@ contract OffChainAssetReceiptVaultTest is Test {
         );
 
         offchainAssetVaultConfig = OffchainAssetVaultConfig(
-            msg.sender,
+            address (msg.sender),
             vaultConfig
         );
 
-        factory = new OffchainAssetReceiptVaultFactory(ReceiptVaultFactoryConfig(address(implementation), address(receiptVault)));
+        // Set up factory config
+        ReceiptVaultFactoryConfig memory factoryConfig = ReceiptVaultFactoryConfig({
+            implementation: address(implementation),
+            receiptFactory: address(receiptFactory)
+        });
+
+        factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
         vault = factory.createChildTyped(offchainAssetVaultConfig);
+
 
     }
 
     function test_Certify() public {
 
+//        vault = factory.createChildTyped(offchainAssetVaultConfig);
 
 //        vault.grantRole(vault.CERTIFIER(), msg.sender);
 
