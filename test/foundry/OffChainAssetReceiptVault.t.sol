@@ -16,6 +16,7 @@ contract OffChainAssetReceiptVaultTest is Test {
     OffchainAssetReceiptVault implementation;
     OffchainAssetReceiptVault vault;
     ReceiptFactory receiptFactory;
+    address alice;
 
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
 
@@ -29,19 +30,12 @@ contract OffChainAssetReceiptVaultTest is Test {
             receiptFactory: address(receiptFactory)
         });
 
+        // Create OffchainAssetReceiptVaultFactory contract
         factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
-    }
-
-    function test_Certify() public {
         // Get the first signer address
-        address alice = vm.addr(1);
-        // Get the current block number
-        uint256 blockNum = block.number;
+        alice = vm.addr(1);
 
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        //VaultConfig to create child contract
+        // VaultConfig to create child contract
         vaultConfig = VaultConfig(
             address(0),
             "Asset Name",
@@ -54,18 +48,64 @@ contract OffChainAssetReceiptVaultTest is Test {
         });
 
         vault = factory.createChildTyped(offchainAssetVaultConfig);
+    }
 
+    function test_Certify() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), alice);
 
-//        vaultContract.balanceOf(msg.sender);//.grantRole(vaultContract.CERTIFIER(), msg.sender);
-//        vm.expectEmit(true, true, true, true);
+        // Get the current block number
+        uint256 blockNum = block.number;
 
-//        expected emitted event
-//        emit Certify(msg.sender, 100, 10, false, abi.encodePacked("Certification data"));
-//
-        vault.certify(1719777599, blockNum, false, abi.encodePacked("Certification data"));
+        // Set up expected parameters
+        uint256 certifyUntil = 1719777599;
+        bool forceUntil = false;
+        bytes memory data = abi.encodePacked("Certification data");
+
+        // Expect the Certify event
+        vm.expectEmit(true, true, true, true);
+        emit Certify(alice, certifyUntil, blockNum, forceUntil, data);
+
+        // Call the certify function
+        vault.certify(certifyUntil, blockNum, forceUntil, data);
 
         vm.stopPrank();
+    }
 
+    function test_Certify_RevertOnZeroCertifyUntil() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        // Grant CERTIFIER role to Alice
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Get the current block number
+        uint256 blockNum = block.number;
+
+        // Expect revert on zero certifyUntil
+        vm.expectRevert(abi.encodeWithSignature("ZeroCertifyUntil(address)", alice));
+        vault.certify(0, blockNum, false, abi.encodePacked("Certification data"));
+
+        vm.stopPrank();
+    }
+
+    function test_Certify_RevertOnFutureReferenceBlock() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        // Grant CERTIFIER role to Alice
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Set a future block number
+        uint256 futureBlockNum = block.number + 10;
+
+        // Expect revert on future reference block
+        vm.expectRevert(abi.encodeWithSignature("FutureReferenceBlock(address,uint256)", alice, futureBlockNum));
+        vault.certify(1719777599, futureBlockNum, false, abi.encodePacked("Certification data"));
+
+        vm.stopPrank();
     }
 }
