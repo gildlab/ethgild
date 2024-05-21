@@ -14,6 +14,8 @@ const {
     ETHERSCAN_API_KEY,
     SEPOLIA_URL,
     POLYGON_AMOY_URL,
+    ARBITRUM_SEPOLIA_URL,
+    ETHEREUM_SEPOLIA_URL
 } = process.env;
 
 export const config = {
@@ -46,12 +48,16 @@ export const config = {
             accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
             gasPrice: 22000000000,
         },
-
-        // arbitrumSepolia: {
-        //     url: ARBITRUM_SEPOLIA_URL || "",
-        //     accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
-        //     gasPrice: 22000000000,
-        // },
+        "arbitrum-sepolia": {
+            url: ARBITRUM_SEPOLIA_URL || "",
+            accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+            gasPrice: 22000000000,
+        },
+        "ethereum-sepolia": {
+            url: ETHEREUM_SEPOLIA_URL || "",
+            accounts: PRIVATE_KEY ? [`0x${PRIVATE_KEY}`] : [],
+            gasPrice: 22000000000,
+        },
     },
     solidity: {
         compilers: [
