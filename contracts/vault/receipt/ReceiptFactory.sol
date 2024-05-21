@@ -25,9 +25,7 @@ contract ReceiptFactory is Factory {
     /// `ReceiptVaultFactory` which will subsequently and atomically assign
     /// ownership to the `ReceiptVault` that it creates.
     /// @inheritdoc Factory
-    function _createChild(
-        bytes memory
-    ) internal virtual override returns (address) {
+    function _createChild(bytes memory) internal virtual override returns (address) {
         address clone_ = Clones.clone(implementation);
         Receipt(clone_).initialize();
         Receipt(clone_).transferOwnership(msg.sender);

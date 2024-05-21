@@ -2,7 +2,8 @@
 pragma solidity =0.8.17;
 
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
-import {AccessControlUpgradeable as AccessControl} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {AccessControlUpgradeable as AccessControl} from
+    "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 import "../receipt/IReceiptV1.sol";
 import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
@@ -41,12 +42,7 @@ error UnauthorizedRecipientTier(address to, uint256 reportTime);
 /// freeze.
 /// @param timestamp Block timestamp of the transaction that is outside
 /// certification.
-error CertificationExpired(
-    address from,
-    address to,
-    uint256 certifiedUntil,
-    uint256 timestamp
-);
+error CertificationExpired(address from, address to, uint256 certifiedUntil, uint256 timestamp);
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and transfer ownership
@@ -127,10 +123,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Contract has initialized.
     /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
-    event OffchainAssetReceiptVaultInitialized(
-        address sender,
-        OffchainAssetReceiptVaultConfig config
-    );
+    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
 
     /// A new certification time has been set.
     /// @param sender The certifier setting the new time.
@@ -142,13 +135,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param forceUntil Whether the certifier forced the certification time.
     /// @param data The certifier MAY provide additional supporting data such
     /// as an auditor's report/comments etc.
-    event Certify(
-        address sender,
-        uint256 certifyUntil,
-        uint256 referenceBlockNumber,
-        bool forceUntil,
-        bytes data
-    );
+    event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
 
     /// Shares have been confiscated from a user who is not currently meeting
     /// the ERC20 tier contract minimum requirements.
@@ -156,12 +143,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param confiscatee The user who had their shares confiscated.
     /// @param confiscated The amount of shares that were confiscated.
     /// @param justification The contextual data justifying the confiscation.
-    event ConfiscateShares(
-        address sender,
-        address confiscatee,
-        uint256 confiscated,
-        bytes justification
-    );
+    event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
 
     /// A receipt has been confiscated from a user who is not currently meeting
     /// the ERC1155 tier contract minimum requirements.
@@ -170,13 +152,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param id The receipt ID that was confiscated.
     /// @param confiscated The amount of the receipt that was confiscated.
     /// @param justification The contextual data justifying the confiscation.
-    event ConfiscateReceipt(
-        address sender,
-        address confiscatee,
-        uint256 id,
-        uint256 confiscated,
-        bytes justification
-    );
+    event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
 
     /// A new ERC20 tier contract has been set.
     /// @param sender `msg.sender` who set the new tier contract.
@@ -186,13 +162,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// to send/receive/hold shares and be immune to share confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     /// @param data Associated data for the change in tier config.
-    event SetERC20Tier(
-        address sender,
-        address tier,
-        uint256 minimumTier,
-        uint256[] context,
-        bytes data
-    );
+    event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
 
     /// A new ERC1155 tier contract has been set.
     /// @param sender `msg.sender` who set the new tier contract.
@@ -202,13 +172,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// to send/receive/hold receipts and be immune to receipt confiscations.
     /// @param context OPTIONAL additional context to pass to ITierV2 calls.
     /// @param data Associated data for the change in tier config.
-    event SetERC1155Tier(
-        address sender,
-        address tier,
-        uint256 minimumTier,
-        uint256[] context,
-        bytes data
-    );
+    event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
 
     /// Rolename for certifiers.
     /// Certifier role is required to extend the `certifiedUntil` time.
@@ -232,15 +196,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// ERC1155 tierer role is required to modify the tier contract for receipts.
     bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
     /// Rolename for ERC1155 tierer admins.
-    bytes32 public constant ERC1155TIERER_ADMIN =
-        keccak256("ERC1155TIERER_ADMIN");
+    bytes32 public constant ERC1155TIERER_ADMIN = keccak256("ERC1155TIERER_ADMIN");
 
     /// Rolename for ERC20 snapshotter.
     /// ERC20 snapshotter role is required to snapshot shares.
     bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
     /// Rolename for ERC20 snapshotter admins.
-    bytes32 public constant ERC20SNAPSHOTTER_ADMIN =
-        keccak256("ERC20SNAPSHOTTER_ADMIN");
+    bytes32 public constant ERC20SNAPSHOTTER_ADMIN = keccak256("ERC20SNAPSHOTTER_ADMIN");
 
     /// Rolename for ERC20 tierer.
     /// ERC20 tierer role is required to modify the tier contract for shares.
@@ -294,9 +256,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// this as appropriate according to standard Open Zeppelin access control
     /// logic.
     /// @param config_ All config required to initialize.
-    function initialize(
-        OffchainAssetReceiptVaultConfig memory config_
-    ) external initializer {
+    function initialize(OffchainAssetReceiptVaultConfig memory config_) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
         __AccessControl_init();
 
@@ -351,28 +311,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
-    function authorizeReceiptTransfer(
-        address from_,
-        address to_
-    ) external view virtual override {
-        enforceValidTransfer(
-            erc1155Tier,
-            erc1155MinimumTier,
-            erc1155TierContext,
-            from_,
-            to_
-        );
+    function authorizeReceiptTransfer(address from_, address to_) external view virtual override {
+        enforceValidTransfer(erc1155Tier, erc1155MinimumTier, erc1155TierContext, from_, to_);
     }
 
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// Highwater needs to witness the incoming id.
     /// @inheritdoc ReceiptVault
-    function _beforeDeposit(
-        uint256,
-        address,
-        uint256,
-        uint256 id_
-    ) internal virtual override {
+    function _beforeDeposit(uint256, address, uint256, uint256 id_) internal virtual override {
         highwaterId = highwaterId.max(id_);
     }
 
@@ -395,22 +341,17 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     }
 
     /// @inheritdoc ReceiptVault
-    function _shareRatio(
-        address owner_,
-        address,
-        uint256 id_,
-        ShareAction shareAction_
-    ) internal view virtual override returns (uint256) {
+    function _shareRatio(address owner_, address, uint256 id_, ShareAction shareAction_)
+        internal
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         if (shareAction_ == ShareAction.Mint) {
-            return
-                hasRole(DEPOSITOR, owner_)
-                    ? _shareRatioUserAgnostic(id_, shareAction_)
-                    : 0;
+            return hasRole(DEPOSITOR, owner_) ? _shareRatioUserAgnostic(id_, shareAction_) : 0;
         } else {
-            return
-                hasRole(WITHDRAWER, owner_)
-                    ? _shareRatioUserAgnostic(id_, shareAction_)
-                    : 0;
+            return hasRole(WITHDRAWER, owner_) ? _shareRatioUserAgnostic(id_, shareAction_) : 0;
         }
     }
 
@@ -447,22 +388,16 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param receiptInformation_ Forwarded to receipt mint and
     /// `receiptInformation`.
     /// @return shares_ As per IERC4626 `deposit`.
-    function redeposit(
-        uint256 assets_,
-        address receiver_,
-        uint256 id_,
-        bytes calldata receiptInformation_
-    ) external returns (uint256) {
+    function redeposit(uint256 assets_, address receiver_, uint256 id_, bytes calldata receiptInformation_)
+        external
+        returns (uint256)
+    {
         // Only allow redepositing for IDs that exist.
         if (id_ > highwaterId) {
             revert InvalidId(id_);
         }
 
-        uint256 shares_ = _calculateDeposit(
-            assets_,
-            _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint),
-            0
-        );
+        uint256 shares_ = _calculateDeposit(assets_, _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint), 0);
 
         _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
         return shares_;
@@ -471,9 +406,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
     /// @param data_ Associated data relevant to the snapshot.
     /// @return The snapshot ID as per Open Zeppelin.
-    function snapshot(
-        bytes memory data_
-    ) external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
+    function snapshot(bytes memory data_) external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
         uint256 id_ = _snapshot();
         emit SnapshotWithData(msg.sender, id_, data_);
         return id_;
@@ -486,12 +419,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     /// @param context_ Global context to be forwarded with tier checks.
     /// @param data_ Associated data relevant to the change in tier contract.
-    function setERC20Tier(
-        address tier_,
-        uint8 minimumTier_,
-        uint256[] calldata context_,
-        bytes memory data_
-    ) external onlyRole(ERC20TIERER) {
+    function setERC20Tier(address tier_, uint8 minimumTier_, uint256[] calldata context_, bytes memory data_)
+        external
+        onlyRole(ERC20TIERER)
+    {
         erc20Tier = ITierV2(tier_);
         erc20MinimumTier = minimumTier_;
         erc20TierContext = context_;
@@ -505,12 +436,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param minimumTier_ The minimum tier to be held according to `tier_`.
     /// @param context_ Global context to be forwarded with tier checks.
     /// @param data_ Associated data relevant to the change in tier contract.
-    function setERC1155Tier(
-        address tier_,
-        uint8 minimumTier_,
-        uint256[] calldata context_,
-        bytes memory data_
-    ) external onlyRole(ERC1155TIERER) {
+    function setERC1155Tier(address tier_, uint8 minimumTier_, uint256[] calldata context_, bytes memory data_)
+        external
+        onlyRole(ERC1155TIERER)
+    {
         erc1155Tier = ITierV2(tier_);
         erc1155MinimumTier = minimumTier_;
         erc1155TierContext = context_;
@@ -568,12 +497,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// is in the past relative to the existing certification time.
     /// @param data_ Arbitrary data justifying the certification. MAY reference
     /// data available offchain e.g. on IPFS.
-    function certify(
-        uint256 certifyUntil_,
-        uint256 referenceBlockNumber_,
-        bool forceUntil_,
-        bytes calldata data_
-    ) external onlyRole(CERTIFIER) {
+    function certify(uint256 certifyUntil_, uint256 referenceBlockNumber_, bool forceUntil_, bytes calldata data_)
+        external
+        onlyRole(CERTIFIER)
+    {
         if (certifyUntil_ == 0) {
             revert ZeroCertifyUntil(msg.sender);
         }
@@ -586,13 +513,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         if (forceUntil_ || certifyUntil_ > certifiedUntil) {
             certifiedUntil = uint32(certifyUntil_);
         }
-        emit Certify(
-            msg.sender,
-            certifyUntil_,
-            referenceBlockNumber_,
-            forceUntil_,
-            data_
-        );
+        emit Certify(msg.sender, certifyUntil_, referenceBlockNumber_, forceUntil_, data_);
     }
 
     /// Reverts if some transfer is disallowed. Handles both share and receipt
@@ -639,10 +560,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         // interact directly with the shares/receipt. Minting and burning is ALSO
         // valid after the certification expires as it is likely the only way to
         // repair the system and bring it back to a certifiable state.
-        if (
-            (from_ == address(0) && hasRole(DEPOSITOR, to_)) ||
-            (to_ == address(0) && hasRole(WITHDRAWER, from_))
-        ) {
+        if ((from_ == address(0) && hasRole(DEPOSITOR, to_)) || (to_ == address(0) && hasRole(WITHDRAWER, from_))) {
             return;
         }
 
@@ -656,23 +574,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         // Everyone else can only transfer while the certification is valid.
         //solhint-disable-next-line not-rely-on-time
         if (block.timestamp > certifiedUntil) {
-            revert CertificationExpired(
-                from_,
-                to_,
-                certifiedUntil,
-                block.timestamp
-            );
+            revert CertificationExpired(from_, to_, certifiedUntil, block.timestamp);
         }
 
         // If there is a tier contract we enforce it.
         if (address(tier_) != address(0) && minimumTier_ > 0) {
             if (from_ != address(0)) {
                 // The sender must have a valid tier.
-                uint256 fromReportTime_ = tier_.reportTimeForTier(
-                    from_,
-                    minimumTier_,
-                    tierContext_
-                );
+                uint256 fromReportTime_ = tier_.reportTimeForTier(from_, minimumTier_, tierContext_);
                 if (block.timestamp < fromReportTime_) {
                     revert UnauthorizedSenderTier(from_, fromReportTime_);
                 }
@@ -680,11 +589,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
             if (to_ != address(0)) {
                 // The recipient must have a valid tier.
-                uint256 toReportTime_ = tier_.reportTimeForTier(
-                    to_,
-                    minimumTier_,
-                    tierContext_
-                );
+                uint256 toReportTime_ = tier_.reportTimeForTier(to_, minimumTier_, tierContext_);
                 if (block.timestamp < toReportTime_) {
                     revert UnauthorizedRecipientTier(to_, toReportTime_);
                 }
@@ -694,18 +599,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// Apply standard transfer restrictions to share transfers.
     /// @inheritdoc ReceiptVault
-    function _beforeTokenTransfer(
-        address from_,
-        address to_,
-        uint256 amount_
-    ) internal virtual override {
-        enforceValidTransfer(
-            erc20Tier,
-            erc20MinimumTier,
-            erc20TierContext,
-            from_,
-            to_
-        );
+    function _beforeTokenTransfer(address from_, address to_, uint256 amount_) internal virtual override {
+        enforceValidTransfer(erc20Tier, erc20MinimumTier, erc20TierContext, from_, to_);
         super._beforeTokenTransfer(from_, to_, amount_);
     }
 
@@ -739,28 +634,20 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param data_ The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of shares confiscated.
-    function confiscateShares(
-        address confiscatee_,
-        bytes memory data_
-    ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
+    function confiscateShares(address confiscatee_, bytes memory data_)
+        external
+        nonReentrant
+        onlyRole(CONFISCATOR)
+        returns (uint256)
+    {
         uint256 confiscatedShares_ = 0;
         if (
-            address(erc20Tier) == address(0) ||
-            block.timestamp <
-            erc20Tier.reportTimeForTier(
-                confiscatee_,
-                erc20MinimumTier,
-                erc20TierContext
-            )
+            address(erc20Tier) == address(0)
+                || block.timestamp < erc20Tier.reportTimeForTier(confiscatee_, erc20MinimumTier, erc20TierContext)
         ) {
             confiscatedShares_ = balanceOf(confiscatee_);
             if (confiscatedShares_ > 0) {
-                emit ConfiscateShares(
-                    msg.sender,
-                    confiscatee_,
-                    confiscatedShares_,
-                    data_
-                );
+                emit ConfiscateShares(msg.sender, confiscatee_, confiscatedShares_, data_);
                 _transfer(confiscatee_, msg.sender, confiscatedShares_);
             }
         }
@@ -785,38 +672,22 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param data_ The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of receipt confiscated.
-    function confiscateReceipt(
-        address confiscatee_,
-        uint256 id_,
-        bytes memory data_
-    ) external nonReentrant onlyRole(CONFISCATOR) returns (uint256) {
+    function confiscateReceipt(address confiscatee_, uint256 id_, bytes memory data_)
+        external
+        nonReentrant
+        onlyRole(CONFISCATOR)
+        returns (uint256)
+    {
         uint256 confiscatedReceiptAmount_ = 0;
         if (
-            address(erc1155Tier) == address(0) ||
-            block.timestamp <
-            erc1155Tier.reportTimeForTier(
-                confiscatee_,
-                erc1155MinimumTier,
-                erc1155TierContext
-            )
+            address(erc1155Tier) == address(0)
+                || block.timestamp < erc1155Tier.reportTimeForTier(confiscatee_, erc1155MinimumTier, erc1155TierContext)
         ) {
             IReceiptV1 receipt_ = _receipt;
             confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
             if (confiscatedReceiptAmount_ > 0) {
-                emit ConfiscateReceipt(
-                    msg.sender,
-                    confiscatee_,
-                    id_,
-                    confiscatedReceiptAmount_,
-                    data_
-                );
-                receipt_.ownerTransferFrom(
-                    confiscatee_,
-                    msg.sender,
-                    id_,
-                    confiscatedReceiptAmount_,
-                    ""
-                );
+                emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscatedReceiptAmount_, data_);
+                receipt_.ownerTransferFrom(confiscatee_, msg.sender, id_, confiscatedReceiptAmount_, "");
             }
         }
         return confiscatedReceiptAmount_;

@@ -33,10 +33,7 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
 
     /// Only transfers between `from` and `to` are authorized.
     /// @inheritdoc IReceiptOwnerV1
-    function authorizeReceiptTransfer(
-        address from_,
-        address to_
-    ) external view {
+    function authorizeReceiptTransfer(address from_, address to_) external view {
         if (from_ != from) {
             revert UnauthorizedTransfer(from_, to_);
         }
@@ -51,13 +48,9 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
     /// @param id_ As per `IReceiptV1.ownerMint`.
     /// @param amount_ As per `IReceiptV1.ownerMint`.
     /// @param data_ As per `IReceiptV1.ownerMint`.
-    function ownerMint(
-        IReceiptV1 receipt_,
-        address account_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory data_
-    ) external {
+    function ownerMint(IReceiptV1 receipt_, address account_, uint256 id_, uint256 amount_, bytes memory data_)
+        external
+    {
         receipt_.ownerMint(msg.sender, account_, id_, amount_, data_);
     }
 
@@ -74,13 +67,7 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
         uint256 amount_,
         bytes memory receiptInformation_
     ) external {
-        receipt_.ownerBurn(
-            msg.sender,
-            account_,
-            id_,
-            amount_,
-            receiptInformation_
-        );
+        receipt_.ownerBurn(msg.sender, account_, id_, amount_, receiptInformation_);
     }
 
     /// Exposes `IReceiptV1.ownerTransferFrom` to anon.

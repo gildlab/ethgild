@@ -8,16 +8,11 @@ import "./TwoPriceOracle.sol";
 /// @notice Factory for creating and deploying `TwoPriceOracle`.
 contract TwoPriceOracleFactory is Factory {
     /// @inheritdoc Factory
-    function _createChild(
-        bytes memory data_
-    ) internal virtual override returns (address) {
+    function _createChild(bytes memory data_) internal virtual override returns (address) {
         // This is built directly with `new` instead of cloning as we're
         // optimizing for use of cheap immutables at runtime rather than cheap
         // deployments.
-        return
-            address(
-                new TwoPriceOracle(abi.decode(data_, (TwoPriceOracleConfig)))
-            );
+        return address(new TwoPriceOracle(abi.decode(data_, (TwoPriceOracleConfig))));
     }
 
     /// Typed wrapper for `createChild` with Source.
@@ -26,9 +21,7 @@ contract TwoPriceOracleFactory is Factory {
     ///
     /// @param config_ Config for the oracle.
     /// @return New `TwoPriceOracle` child contract address.
-    function createChildTyped(
-        TwoPriceOracleConfig memory config_
-    ) external returns (TwoPriceOracle) {
+    function createChildTyped(TwoPriceOracleConfig memory config_) external returns (TwoPriceOracle) {
         return TwoPriceOracle(createChild(abi.encode(config_)));
     }
 }

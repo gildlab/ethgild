@@ -118,18 +118,13 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// Emitted when deployed and constructed.
     /// @param sender `msg.sender` that deployed the contract.
     /// @param config All construction config.
-    event ERC20PriceOracleReceiptVaultInitialized(
-        address sender,
-        ERC20PriceOracleReceiptVaultConfig config
-    );
+    event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
 
     /// The price oracle used for all minting calculations.
     IPriceOracleV1 public priceOracle;
 
     /// Initialization of the underlying receipt vault and price oracle.
-    function initialize(
-        ERC20PriceOracleReceiptVaultConfig memory config_
-    ) external initializer {
+    function initialize(ERC20PriceOracleReceiptVaultConfig memory config_) external initializer {
         __ReceiptVault_init(config_.receiptVaultConfig);
         priceOracle = IPriceOracleV1(config_.priceOracle);
         emit ERC20PriceOracleReceiptVaultInitialized(msg.sender, config_);
@@ -142,12 +137,11 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     function _nextId() internal view virtual override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
-        try priceOracle.price() returns (
-            // slither puts false positives on `try/catch/returns`.
-            // https://github.com/crytic/slither/issues/511
-            //slither-disable-next-line
-            uint256 price_
-        ) {
+        try priceOracle.price()
+        // slither puts false positives on `try/catch/returns`.
+        // https://github.com/crytic/slither/issues/511
+        //slither-disable-next-line
+        returns (uint256 price_) {
             return price_;
         } catch {
             // Depositing assets while the price oracle is erroring will give 0
@@ -159,10 +153,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The ID-less share ratio is the current oracle price, which will be the
     /// ID in the case of a real deposit.
     /// @inheritdoc ReceiptVault
-    function _shareRatioUserAgnostic(
-        uint256 id_,
-        ShareAction
-    ) internal view virtual override returns (uint256) {
+    function _shareRatioUserAgnostic(uint256 id_, ShareAction) internal view virtual override returns (uint256) {
         return id_;
     }
 }

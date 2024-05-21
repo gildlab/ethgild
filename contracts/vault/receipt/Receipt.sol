@@ -29,48 +29,36 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
     }
 
     /// @inheritdoc IReceiptV1
-    function owner()
-        public
-        view
-        virtual
-        override(IReceiptV1, Ownable)
-        returns (address)
-    {
+    function owner() public view virtual override(IReceiptV1, Ownable) returns (address) {
         return Ownable.owner();
     }
 
     /// @inheritdoc IReceiptV1
-    function ownerMint(
-        address sender_,
-        address account_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory data_
-    ) external virtual onlyOwner {
+    function ownerMint(address sender_, address account_, uint256 id_, uint256 amount_, bytes memory data_)
+        external
+        virtual
+        onlyOwner
+    {
         _receiptInformation(sender_, id_, data_);
         _mint(account_, id_, amount_, data_);
     }
 
     /// @inheritdoc IReceiptV1
-    function ownerBurn(
-        address sender_,
-        address account_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory data_
-    ) external virtual onlyOwner {
+    function ownerBurn(address sender_, address account_, uint256 id_, uint256 amount_, bytes memory data_)
+        external
+        virtual
+        onlyOwner
+    {
         _receiptInformation(sender_, id_, data_);
         _burn(account_, id_, amount_);
     }
 
     /// @inheritdoc IReceiptV1
-    function ownerTransferFrom(
-        address from_,
-        address to_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory data_
-    ) external virtual onlyOwner {
+    function ownerTransferFrom(address from_, address to_, uint256 id_, uint256 amount_, bytes memory data_)
+        external
+        virtual
+        onlyOwner
+    {
         _safeTransferFrom(from_, to_, id_, amount_, data_);
     }
 
@@ -85,14 +73,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
         uint256[] memory amounts_,
         bytes memory data_
     ) internal virtual override {
-        super._beforeTokenTransfer(
-            operator_,
-            from_,
-            to_,
-            ids_,
-            amounts_,
-            data_
-        );
+        super._beforeTokenTransfer(operator_, from_, to_, ids_, amounts_, data_);
         IReceiptOwnerV1(owner()).authorizeReceiptTransfer(from_, to_);
     }
 
@@ -101,11 +82,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
     /// @param account_ The account that is emitting receipt information.
     /// @param id_ The id of the receipt this information is for.
     /// @param data_ The data being emitted as information for the receipt.
-    function _receiptInformation(
-        address account_,
-        uint256 id_,
-        bytes memory data_
-    ) internal virtual {
+    function _receiptInformation(address account_, uint256 id_, bytes memory data_) internal virtual {
         // No data is noop.
         if (data_.length > 0) {
             emit ReceiptInformation(account_, id_, data_);
@@ -113,10 +90,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
     }
 
     /// @inheritdoc IReceiptV1
-    function receiptInformation(
-        uint256 id_,
-        bytes memory data_
-    ) external virtual {
+    function receiptInformation(uint256 id_, bytes memory data_) external virtual {
         _receiptInformation(msg.sender, id_, data_);
     }
 }
