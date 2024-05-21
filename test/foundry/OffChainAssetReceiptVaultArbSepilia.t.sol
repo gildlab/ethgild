@@ -24,7 +24,7 @@ contract OffChainAssetReceiptVaultTest is Test {
 
     function setUp() public {
         // Fetch the RPC URL from the environment
-        ARBITRUM_SEPOLIA_RPC_URL = vm.envString("ARBITRUM_SEPOLIA_RPC_URL");
+        ARBITRUM_SEPOLIA_RPC_URL = "https://arbitrum-sepolia.blockpi.network/v1/rpc/public";
 
         // Attempt to create a fork
         arbitrumSepoliaFork = vm.createFork(ARBITRUM_SEPOLIA_RPC_URL);
