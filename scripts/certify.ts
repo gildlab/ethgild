@@ -9,8 +9,8 @@ dotenv.config();
 async function main() {
   const { PRIVATE_KEY, CONTRACT_FACTORY_ADDRESS } = process.env;
 
-  if ( !PRIVATE_KEY ) {
-    throw new Error("Please set PRIVATE_KEY and ARBITRUM_RPC_URL in your .env file");
+  if ( !PRIVATE_KEY || CONTRACT_FACTORY_ADDRESS) {
+    throw new Error("Please set PRIVATE_KEY and CONTRACT_FACTORY_ADDRESS in your .env file");
   }
 
   // const provider = new ethers.providers.JsonRpcProvider(ETHEREUM_SEPOLIA_URL);
