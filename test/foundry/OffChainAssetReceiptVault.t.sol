@@ -4,7 +4,6 @@ import "../../contracts/vault/receipt/ReceiptVault.sol";
 import "../../contracts/vault/receipt/ReceiptFactory.sol";
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 
 import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
@@ -50,7 +49,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault = factory.createChildTyped(offchainAssetVaultConfig);
     }
 
-    function test_Certify() public {
+    function testCertify() public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
@@ -75,7 +74,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         vm.stopPrank();
     }
 
-    function test_Certify_RevertOnZeroCertifyUntil() public {
+    function testCertifyRevertOnZeroCertifyUntil() public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
@@ -92,7 +91,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         vm.stopPrank();
     }
 
-    function test_Certify_RevertOnFutureReferenceBlock() public {
+    function testCertifyRevertOnFutureReferenceBlock() public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
