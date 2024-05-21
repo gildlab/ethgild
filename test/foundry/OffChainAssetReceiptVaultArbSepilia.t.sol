@@ -84,38 +84,4 @@ contract OffChainAssetReceiptVaultTest is Test {
 
         vm.stopPrank();
     }
-
-//    function testCertifyRevertOnZeroCertifyUntil() public {
-//        // Prank as Alice for the transaction
-//        vm.startPrank(alice);
-//
-//        // Grant CERTIFIER role to Alice
-//        vault.grantRole(vault.CERTIFIER(), alice);
-//
-//        // Get the current block number
-//        uint256 blockNum = block.number;
-//
-//        // Expect revert on zero certifyUntil
-//        vm.expectRevert(abi.encodeWithSignature("ZeroCertifyUntil(address)", alice));
-//        vault.certify(0, blockNum, false, abi.encodePacked("Certification data"));
-//
-//        vm.stopPrank();
-//    }
-
-//    function testCertifyRevertOnFutureReferenceBlock() public {
-//        // Prank as Alice for the transaction
-//        vm.startPrank(alice);
-//
-//        // Grant CERTIFIER role to Alice
-//        vault.grantRole(vault.CERTIFIER(), alice);
-//
-//        // Set a future block number
-//        uint256 futureBlockNum = block.number + 10;
-//
-//        // Expect revert on future reference block
-//        vm.expectRevert(abi.encodeWithSignature("FutureReferenceBlock(address,uint256)", alice, futureBlockNum));
-//        vault.certify(1719777599, futureBlockNum, false, abi.encodePacked("Certification data"));
-//
-//        vm.stopPrank();
-//    }
 }
