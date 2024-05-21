@@ -7,20 +7,18 @@ import type { OffchainAssetReceiptVault } from "../typechain-types";
 dotenv.config();
 
 async function main() {
-  const { PRIVATE_KEY, ARBITRUM_SEPOLIA_RPC_URL } = process.env;
+  const { PRIVATE_KEY, CONTRACT_FACTORY_ADDRESS } = process.env;
 
-  if ( !PRIVATE_KEY || !ARBITRUM_SEPOLIA_RPC_URL ) {
+  if ( !PRIVATE_KEY ) {
     throw new Error("Please set PRIVATE_KEY and ARBITRUM_RPC_URL in your .env file");
   }
 
-  const provider = new ethers.providers.JsonRpcProvider(ARBITRUM_SEPOLIA_RPC_URL);
-  const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+  // const provider = new ethers.providers.JsonRpcProvider(ETHEREUM_SEPOLIA_URL);
+  const wallet = new ethers.Wallet(PRIVATE_KEY, ethers.provider);
 
   const contractFactoryAbi = ( await artifacts.readArtifact("OffchainAssetReceiptVaultFactory") ).abi;
-  //factory contract address on arbitrum sepolia
-  const contractFactoryAddress = "0xf1A14e96977E8dE295Ba9612691D127B157d1371";
 
-  const contractFactory = new ethers.Contract(contractFactoryAddress, contractFactoryAbi, wallet);
+  const contractFactory = new ethers.Contract(CONTRACT_FACTORY_ADDRESS, contractFactoryAbi, wallet);
 
   const constructionConfig = {
     admin: wallet.address,
@@ -51,17 +49,18 @@ async function main() {
     const block = await ethers.provider.getBlock(blockNum);
     const _certifiedUntil = block.timestamp + 100;
 
-    //Grant role
-    await contract.connect(wallet).grantRole(await contract.connect(wallet).CERTIFIER(), wallet.address);
+    // Grant role and wait for the transaction to be mined
+    const grantRoleTx = await contract.connect(wallet).grantRole(await contract.connect(wallet).CERTIFIER(), wallet.address);
+    await grantRoleTx.wait();
 
-    //Call certify function
-    const tx = await contract.connect(wallet).certify(_certifiedUntil, blockNum, false, []);
-    console.log("Transaction sent:", tx.hash);
+    // Call certify function
+    const certifyTx = await contract.connect(wallet).certify(_certifiedUntil, blockNum, false, []);
+    console.log("Transaction sent:", certifyTx.hash);
 
     // Wait for the transaction to be mined
-    const receipt = await tx.wait();
+    const receipt = await certifyTx.wait();
     console.log("Transaction mined:", receipt);
-  } catch ( error ) {
+  } catch (error) {
     console.error("Error occurred:", error);
   }
 }
