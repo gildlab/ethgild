@@ -9,7 +9,7 @@ dotenv.config();
 async function main() {
   const { PRIVATE_KEY, CONTRACT_FACTORY_ADDRESS } = process.env;
 
-  if ( !PRIVATE_KEY || CONTRACT_FACTORY_ADDRESS) {
+  if ( !PRIVATE_KEY || !CONTRACT_FACTORY_ADDRESS) {
     throw new Error("Please set PRIVATE_KEY and CONTRACT_FACTORY_ADDRESS in your .env file");
   }
 
