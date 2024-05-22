@@ -83,4 +83,19 @@ contract OffChainAssetReceiptVaultTest is Test {
 
     }
 
+    function testDepositWithoutDepositorRole() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        // Get the second signer address
+        address bob = vm.addr(2);
+        uint256 aliceAssets = 10;
+        bytes memory receiptInformation = "";
+
+        //shareRatio 1
+        uint256 shareRatio = 1e18;
+        vm.expectRevert(abi.encodeWithSignature("MinShareRatio(uint256,uint256)", shareRatio, 0));
+        vault.deposit(aliceAssets, bob, shareRatio, receiptInformation);
+        vm.stopPrank();
+    }
 }
