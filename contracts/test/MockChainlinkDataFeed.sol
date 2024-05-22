@@ -47,10 +47,7 @@ contract MockChainlinkDataFeed is AggregatorV3Interface {
     /// Updates `_latestRoundId` if the round id is larger.
     /// @param roundId_ The round id to set roundData_ for.
     /// @param roundData_ The data for this round.
-    function setRoundData(
-        uint80 roundId_,
-        RoundData memory roundData_
-    ) external {
+    function setRoundData(uint80 roundId_, RoundData memory roundData_) external {
         _roundData[roundId_] = roundData_;
         // Treat this as the high water mark if appropriate.
         if (roundId_ > _latestRoundId) {
@@ -75,26 +72,13 @@ contract MockChainlinkDataFeed is AggregatorV3Interface {
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function getRoundData(
-        uint80 roundId_
-    ) public view override returns (uint80, int256, uint256, uint256, uint80) {
+    function getRoundData(uint80 roundId_) public view override returns (uint80, int256, uint256, uint256, uint80) {
         RoundData memory roundData_ = _roundData[roundId_];
-        return (
-            roundId_,
-            roundData_.answer,
-            roundData_.startedAt,
-            roundData_.updatedAt,
-            roundData_.answeredInRound
-        );
+        return (roundId_, roundData_.answer, roundData_.startedAt, roundData_.updatedAt, roundData_.answeredInRound);
     }
 
     /// @inheritdoc AggregatorV3Interface
-    function latestRoundData()
-        external
-        view
-        override
-        returns (uint80, int256, uint256, uint256, uint80)
-    {
+    function latestRoundData() external view override returns (uint80, int256, uint256, uint256, uint80) {
         return getRoundData(_latestRoundId);
     }
 
