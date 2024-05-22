@@ -31,14 +31,13 @@ contract OffChainAssetReceiptVaultTest is Test {
 
         // Create OffchainAssetReceiptVaultFactory contract
         factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
-
     }
 
-    function testOffchainAssetReceiptVaultFactoryConstuction() public view{
+    function testOffchainAssetReceiptVaultFactoryConstuction() public view {
         assert(address(factory) != address(0));
     }
 
-    function testCreateChild() public{
+    function testCreateChild() public {
         // Get the first signer address
         alice = vm.addr(1);
 
@@ -46,16 +45,9 @@ contract OffChainAssetReceiptVaultTest is Test {
         string memory assetSymbol = "ASSET";
 
         // VaultConfig to create child contract
-        vaultConfig = VaultConfig(
-            address(0),
-            assetName,
-            assetSymbol
-        );
+        vaultConfig = VaultConfig(address(0), assetName, assetSymbol);
 
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({
-            admin: alice,
-            vaultConfig: vaultConfig
-        });
+        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         vault = factory.createChildTyped(offchainAssetVaultConfig);
         assert(address(vault) != address(0));
