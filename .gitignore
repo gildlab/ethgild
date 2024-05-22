@@ -6,3 +6,4 @@ typechain
 venv
 bin
 typechain-types
+out

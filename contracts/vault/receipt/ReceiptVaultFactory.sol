@@ -64,10 +64,11 @@ abstract contract ReceiptVaultFactory is Factory {
     /// @param config_ Vault config to be merged into the final
     /// `ReceiptVaultConfig`.
     /// @return The config merged with the newly created receipt.
-    function _createReceipt(
-        address receiptVault_,
-        VaultConfig memory config_
-    ) internal virtual returns (ReceiptVaultConfig memory) {
+    function _createReceipt(address receiptVault_, VaultConfig memory config_)
+        internal
+        virtual
+        returns (ReceiptVaultConfig memory)
+    {
         Receipt receipt_ = Receipt(receiptFactory.createChild(""));
         receipt_.transferOwnership(receiptVault_);
         return ReceiptVaultConfig(address(receipt_), config_);
