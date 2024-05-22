@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.17;
 
-import {IERC1155Upgradeable as IERC1155} from "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+import {IERC1155Upgradeable as IERC1155} from
+    "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
 
 /// @title IReceiptV1
 /// @notice IReceiptV1 is an extension to IERC1155 that requires implementers to
@@ -47,13 +48,7 @@ interface IReceiptV1 is IERC1155 {
     /// @param id The receipt ID to mint.
     /// @param amount The amount to mint for the `id`.
     /// @param data The ERC1155 data. MUST be emitted as receipt information.
-    function ownerMint(
-        address sender,
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) external;
+    function ownerMint(address sender, address account, uint256 id, uint256 amount, bytes memory data) external;
 
     /// The owner MAY directly burn receipts for any account, ID and amount
     /// without restriction. Underflow MUST revert as usual for ERC1155.
@@ -64,13 +59,7 @@ interface IReceiptV1 is IERC1155 {
     /// @param id The receipt ID to burn.
     /// @param amount The amount to mint for the `id`.
     /// @param data MUST be emitted as receipt information.
-    function ownerBurn(
-        address sender,
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) external;
+    function ownerBurn(address sender, address account, uint256 id, uint256 amount, bytes memory data) external;
 
     /// The owner MAY directly transfer receipts from and to any account for any
     /// id and amount without restriction. Overflow and underflow MUST revert as
@@ -82,13 +71,7 @@ interface IReceiptV1 is IERC1155 {
     /// @param amount The amount to transfer between accounts.
     /// @param data The data associated with the transfer as per ERC1155.
     /// MUST NOT be emitted as receipt information.
-    function ownerTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) external;
+    function ownerTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data) external;
 
     /// Emit a `ReceiptInformation` event for some receipt ID with `data` as the
     /// receipt information. ANY `msg.sender` MAY call this, it is up to offchain
