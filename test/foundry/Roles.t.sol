@@ -2,7 +2,9 @@ pragma solidity 0.8.17;
 
 import "../../contracts/vault/receipt/ReceiptVault.sol";
 import "../../contracts/vault/receipt/ReceiptFactory.sol";
+import "../../contracts/test/ReadWriteTier.sol";
 import "../../contracts/test/TestErc20.sol";
+import "../../lib/openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -19,9 +21,12 @@ contract OffChainAssetReceiptVaultTest is Test {
     ReceiptVaultFactoryConfig factoryConfig;
     OffchainAssetReceiptVault vault;
     TestErc20 testErc20Contract;
+    ReadWriteTier TierV2TestContract;
     address alice;
     //shareRatio 1
     uint256 shareRatio = 1e18;
+    bytes16 private constant _SYMBOLS = "0123456789abcdef";
+    uint8 private constant _ADDRESS_LENGTH = 20;
 
     function setUp() public {
         implementation = new OffchainAssetReceiptVault();
@@ -128,5 +133,24 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault.redeem(1, bob, bob, shareRatio, receiptInformation);
 
         vm.stopPrank();
+    }
+
+    function testSetERC20TierWithoutRole() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        bytes memory data = "";
+        uint8 minTier = 10;
+        uint256[] memory context = new uint256[](0);
+
+        //New testErc20 contract
+        TierV2TestContract = new ReadWriteTier();
+
+        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.ERC20TIERER())));
+        vm.expectRevert(bytes(errorMessage));
+
+        //set Tier
+        vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
+
     }
 }
