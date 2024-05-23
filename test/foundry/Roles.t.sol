@@ -12,7 +12,7 @@ import "forge-std/console.sol";
 import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 
-contract OffChainAssetReceiptVaultTest is Test {
+contract RolesTest is Test {
     OffchainAssetReceiptVaultFactory factory;
     OffchainAssetVaultConfig offchainAssetVaultConfig;
     VaultConfig vaultConfig;
