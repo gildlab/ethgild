@@ -52,9 +52,24 @@ contract OffChainAssetReceiptVaultTest is Test {
         string memory assetSymbol = "ASSET";
 
         vaultConfig = VaultConfig(asset, assetName, assetSymbol);
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig});
+        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         vm.expectRevert(abi.encodeWithSignature("NonZeroAsset()"));
         vault = factory.createChildTyped(offchainAssetVaultConfig);
+    }
+
+    function testConstruction() public {
+        address asset = address(0);
+        string memory assetName = "Asset Name";
+        string memory assetSymbol = "ASSET";
+
+        vaultConfig = VaultConfig(asset, assetName, assetSymbol);
+        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+
+        vault = factory.createChildTyped(offchainAssetVaultConfig);
+
+        assert(address(vault.asset()) == asset);
+        assert(keccak256(abi.encodePacked(vault.name())) == keccak256(abi.encodePacked(assetName)));
+        assert(keccak256(abi.encodePacked(vault.symbol())) == keccak256(abi.encodePacked(assetSymbol)));
     }
 }
