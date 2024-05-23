@@ -153,4 +153,23 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
 
     }
+
+    function testSetERC1155TierWithoutRole() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        bytes memory data = "";
+        uint8 minTier = 10;
+        uint256[] memory context = new uint256[](0);
+
+        //New testErc20 contract
+        TierV2TestContract = new ReadWriteTier();
+
+        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.ERC1155TIERER())));
+        vm.expectRevert(bytes(errorMessage));
+
+        //set Tier
+        vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
+
+    }
 }
