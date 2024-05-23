@@ -185,4 +185,24 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault.snapshot(data);
 
     }
+    function testCertifyWithoutRole() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        // Get the current block number
+        uint256 blockNum = block.number;
+
+        // Set up expected parameters
+        uint256 certifyUntil = block.timestamp+1000;
+        bool forceUntil = false;
+        bytes memory data = abi.encodePacked("Certification data");
+
+        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.CERTIFIER())));
+        vm.expectRevert(bytes(errorMessage));
+        // Call the certify function
+        vault.certify(certifyUntil, blockNum, forceUntil, data);
+
+        vm.stopPrank();
+
+    }
 }
