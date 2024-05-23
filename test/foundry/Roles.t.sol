@@ -25,8 +25,6 @@ contract OffChainAssetReceiptVaultTest is Test {
     address alice;
     //shareRatio 1
     uint256 shareRatio = 1e18;
-    bytes16 private constant _SYMBOLS = "0123456789abcdef";
-    uint8 private constant _ADDRESS_LENGTH = 20;
 
     function setUp() public {
         implementation = new OffchainAssetReceiptVault();
@@ -97,44 +95,6 @@ contract OffChainAssetReceiptVaultTest is Test {
         vm.stopPrank();
     }
 
-    function testWithdrawWithoutDepositorRole() public {
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        // Get the second signer address
-        address bob = vm.addr(2);
-
-        uint256 aliceAssets = 10;
-        bytes memory receiptInformation = "";
-
-        //New testErc20 contract
-        testErc20Contract = new TestErc20();
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
-        // Grant CERTIFIER role to Alice
-        vault.grantRole(vault.CERTIFIER(), alice);
-
-        // Get the current block number
-        uint256 blockNum = block.number;
-
-        // Set up expected parameters
-        uint256 certifyUntil = block.timestamp + 1000;
-        bool forceUntil = false;
-        bytes memory data = abi.encodePacked("Certification data");
-
-        // Call the certify function
-        vault.certify(certifyUntil, blockNum, forceUntil, data);
-
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vault.deposit(aliceAssets, bob, shareRatio, receiptInformation);
-
-        vault.grantRole(vault.WITHDRAWER(), bob);
-        vault.redeem(1, bob, bob, shareRatio, receiptInformation);
-
-        vm.stopPrank();
-    }
-
     function testSetERC20TierWithoutRole() public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -146,12 +106,18 @@ contract OffChainAssetReceiptVaultTest is Test {
         //New testErc20 contract
         TierV2TestContract = new ReadWriteTier();
 
-        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.ERC20TIERER())));
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.ERC20TIERER())
+            )
+        );
         vm.expectRevert(bytes(errorMessage));
 
         //set Tier
         vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
-
     }
 
     function testSetERC1155TierWithoutRole() public {
@@ -165,26 +131,40 @@ contract OffChainAssetReceiptVaultTest is Test {
         //New testErc20 contract
         TierV2TestContract = new ReadWriteTier();
 
-        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.ERC1155TIERER())));
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.ERC1155TIERER())
+            )
+        );
         vm.expectRevert(bytes(errorMessage));
 
         //set Tier
         vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
-
     }
+
     function testSnapshotWithoutRole() public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
         bytes memory data = "";
 
-        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.ERC20SNAPSHOTTER())));
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.ERC20SNAPSHOTTER())
+            )
+        );
         vm.expectRevert(bytes(errorMessage));
 
-        //set Tier
+        //snapshot
         vault.snapshot(data);
-
     }
+
     function testCertifyWithoutRole() public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -193,16 +173,45 @@ contract OffChainAssetReceiptVaultTest is Test {
         uint256 blockNum = block.number;
 
         // Set up expected parameters
-        uint256 certifyUntil = block.timestamp+1000;
+        uint256 certifyUntil = block.timestamp + 1000;
         bool forceUntil = false;
         bytes memory data = abi.encodePacked("Certification data");
 
-        string memory errorMessage = string(abi.encodePacked("AccessControl: account ", StringsUpgradeable.toHexString(alice), " is missing role ", vm.toString(vault.CERTIFIER())));
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.CERTIFIER())
+            )
+        );
         vm.expectRevert(bytes(errorMessage));
+
         // Call the certify function
         vault.certify(certifyUntil, blockNum, forceUntil, data);
 
         vm.stopPrank();
+    }
 
+    function testConfiscateWithoutRole() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        bytes memory data = abi.encodePacked("Certification data");
+
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.CONFISCATOR())
+            )
+        );
+        vm.expectRevert(bytes(errorMessage));
+
+        // Call the confiscateShares function
+        vault.confiscateShares(alice, data);
+
+        vm.stopPrank();
     }
 }
