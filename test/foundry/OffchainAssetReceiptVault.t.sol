@@ -2,6 +2,7 @@ pragma solidity 0.8.17;
 
 import "../../contracts/vault/receipt/ReceiptVault.sol";
 import "../../contracts/vault/receipt/ReceiptFactory.sol";
+import "../../contracts/vault/receipt/IReceiptV1.sol";
 
 import "forge-std/Test.sol";
 
@@ -71,5 +72,51 @@ contract OffChainAssetReceiptVaultTest is Test {
         assert(address(vault.asset()) == asset);
         assert(keccak256(abi.encodePacked(vault.name())) == keccak256(abi.encodePacked(assetName)));
         assert(keccak256(abi.encodePacked(vault.symbol())) == keccak256(abi.encodePacked(assetSymbol)));
+    }
+
+    function testVaultIsReceiptOwner() public {
+        address asset = address(0);
+        string memory assetName = "Asset Name";
+        string memory assetSymbol = "ASSET";
+
+        vaultConfig = VaultConfig(asset, assetName, assetSymbol);
+        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+
+        // Start recording logs
+        vm.recordLogs();
+        vault = factory.createChildTyped(offchainAssetVaultConfig);
+
+        // Get the logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        address receiptAddress = address(0);
+        address msgSender = address(0);
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (
+                logs[i].topics[0]
+                    == keccak256(
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                    )
+            ) {
+                // Decode the event data
+                (address sender, OffchainAssetReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                receiptAddress = config.receiptVaultConfig.receipt;
+                msgSender = sender;
+                break;
+            }
+        }
+        // Create an instance of the Receipt contract
+        IReceiptV1 receipt = IReceiptV1(receiptAddress);
+
+        // Check that the receipt address is not zero
+        assert(receiptAddress != address(0));
+        //Check sender
+        assert(msgSender == address(factory));
+
+        // Interact with the receipt contract
+        address owner = receipt.owner();
+        assert(owner == address(vault));
     }
 }
