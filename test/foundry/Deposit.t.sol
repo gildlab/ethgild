@@ -82,4 +82,23 @@ contract DepositTest is Test {
 
         vm.stopPrank();
     }
+
+    function testPreviewDepositReturnedShares() public {
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        uint256 aliceAssets = 100;
+
+        //New testErc20 contract
+        testErc20Contract = new TestErc20();
+        testErc20Contract.transfer(alice, aliceAssets);
+        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        uint256 shares = vault.previewDeposit(aliceAssets);
+
+        assertEqUint(shares, aliceAssets);
+
+        vm.stopPrank();
+    }
 }
