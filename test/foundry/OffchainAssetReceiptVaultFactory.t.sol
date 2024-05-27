@@ -31,7 +31,7 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
 
         // Simulate transaction from alice
         vm.prank(alice);
-        offchainAssetVaultConfig = OffchainAssetVaultConfig(alice, vaultConfig);
+        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
