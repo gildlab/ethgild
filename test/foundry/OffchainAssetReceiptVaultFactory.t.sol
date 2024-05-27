@@ -62,7 +62,7 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         assert(msgSender == address(factory));
         assertEq(admin, alice);
         assert(address(vault) != address(0));
-        assert(keccak256(abi.encodePacked(vault.name())) == keccak256(abi.encodePacked(assetName)));
-        assert(keccak256(abi.encodePacked(vault.symbol())) == keccak256(abi.encodePacked(assetSymbol)));
+        assert(keccak256(bytes(vault.name())) == keccak256(bytes(assetName)));
+        assert(keccak256(bytes(vault.symbol())) == keccak256(bytes(assetSymbol)));
     }
 }
