@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.17;
 
-import "../vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import "../vault/receipt/ReceiptFactory.sol";
-import "../vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
+import {OffchainAssetReceiptVault} from "../vault/offchainAsset/OffchainAssetReceiptVault.sol";
+import {ReceiptFactory} from "../vault/receipt/ReceiptFactory.sol";
+import {ReceiptVaultFactoryConfig} from "../vault/receipt/ReceiptVaultFactory.sol";
+import {OffchainAssetReceiptVaultFactory} from "../vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 
 abstract contract CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetReceiptVault public implementation;
