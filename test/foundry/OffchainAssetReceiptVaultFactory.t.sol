@@ -13,7 +13,6 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
     OffchainAssetVaultConfig offchainAssetVaultConfig;
     VaultConfig vaultConfig;
     OffchainAssetReceiptVault vault;
-    address alice;
 
     function setUp() public {
         createOffchainAssetReceiptVaultFactory();
@@ -23,19 +22,45 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         assert(address(factory) != address(0));
     }
 
-    function testCreateChild() public {
-        // Get the first signer address
-        alice = vm.addr(1);
-
-        string memory assetName = "Asset Name";
-        string memory assetSymbol = "ASSET";
+    function testCreateChild(address alice, string memory assetName, string memory assetSymbol) public {
+        // Exclude the zero address
+        vm.assume(alice != address(0));
 
         // VaultConfig to create child contract
         vaultConfig = VaultConfig(address(0), assetName, assetSymbol);
 
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+        // Simulate transaction from alice
+        vm.prank(alice);
+        offchainAssetVaultConfig = OffchainAssetVaultConfig(alice, vaultConfig);
 
+        // Start recording logs
+        vm.recordLogs();
         vault = factory.createChildTyped(offchainAssetVaultConfig);
+
+        // Get the logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        address msgSender = address(0);
+        address admin = address(0);
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (
+                logs[i].topics[0]
+                    == keccak256(
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                    )
+            ) {
+                // Decode the event data
+                (address sender, OffchainAssetReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                msgSender = sender;
+                admin = config.admin;
+                break;
+            }
+        }
+
+        assert(msgSender == address(factory));
+        assertEq(admin, alice);
         assert(address(vault) != address(0));
         assert(keccak256(abi.encodePacked(vault.name())) == keccak256(abi.encodePacked(assetName)));
         assert(keccak256(abi.encodePacked(vault.symbol())) == keccak256(abi.encodePacked(assetSymbol)));
