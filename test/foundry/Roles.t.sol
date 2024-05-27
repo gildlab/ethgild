@@ -159,8 +159,6 @@ contract RolesTest is Test {
     function testCertifyWithoutRole(uint256 certifyUntil, bytes memory data) public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        // Get the current block number
-        uint256 blockNum = block.number;
         bool forceUntil = false;
 
         string memory errorMessage = string(
@@ -174,15 +172,14 @@ contract RolesTest is Test {
         vm.expectRevert(bytes(errorMessage));
 
         // Call the certify function
-        vault.certify(certifyUntil, blockNum, forceUntil, data);
+        vault.certify(certifyUntil, block.number, forceUntil, data);
 
         vm.stopPrank();
     }
 
-    function testConfiscateWithoutRole() public {
+    function testConfiscateWithoutRole(bytes memory data) public {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        bytes memory data = abi.encodePacked("Certification data");
         string memory errorMessage = string(
             abi.encodePacked(
                 "AccessControl: account ",
