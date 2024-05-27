@@ -1,13 +1,8 @@
 pragma solidity =0.8.17;
-
-import "../../contracts/vault/receipt/ReceiptVault.sol";
-import "../../contracts/vault/receipt/ReceiptFactory.sol";
-import "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-
+import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
+import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import "forge-std/Test.sol";
-
-import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVault, OffchainAssetVaultConfig, OffchainAssetReceiptVaultConfig } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 
 contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetVaultConfig offchainAssetVaultConfig;
