@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CAL
 pragma solidity =0.8.17;
 
 import "../vault/offchainAsset/OffchainAssetReceiptVault.sol";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: CAL
 pragma solidity =0.8.17;
 
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
