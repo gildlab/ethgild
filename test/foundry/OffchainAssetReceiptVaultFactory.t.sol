@@ -18,11 +18,11 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         createOffchainAssetReceiptVaultFactory();
     }
 
-    function testOffchainAssetReceiptVaultFactoryConstuction() public view {
+    function testOffchainAssetReceiptVaultFactoryConstuction() external view {
         assert(address(factory) != address(0));
     }
 
-    function testCreateChild(address alice, string memory assetName, string memory assetSymbol) public {
+    function testCreateChild(address alice, string memory assetName, string memory assetSymbol) external {
         // Exclude the zero address
         vm.assume(alice != address(0));
 
