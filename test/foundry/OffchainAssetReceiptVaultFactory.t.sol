@@ -38,7 +38,7 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         address alice = vm.addr(fuzzedKeyAlice);
 
         // VaultConfig to create child contract
-        vaultConfig = VaultConfig(address(0), assetName, assetSymbol);
+        vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
         // Simulate transaction from alice
         vm.prank(alice);
