@@ -3,7 +3,7 @@ pragma solidity =0.8.17;
 
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import "forge-std/Test.sol";
+import {Test, Vm} from "forge-std/Test.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,
@@ -11,12 +11,12 @@ import {
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 
 contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    ///Test that OffchainAssetReceiptVaultFactory is created
+    /// Test that OffchainAssetReceiptVaultFactory is created
     function testOffchainAssetReceiptVaultFactoryConstuction() external {
-        //check address
+        // Check address
         assert(address(factory) != address(0));
 
-        //check codeSize
+        // Check codeSize
         address factoryAddress = address(factory);
         uint256 size;
         assembly {
@@ -25,8 +25,8 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         assertTrue(size > 0);
     }
 
-    ///Test OffchainAssetReceiptVaultFactory child is created with correct properties
-    ///and that OffchainAssetReceiptVaultInitialized event is emitted
+    /// Test OffchainAssetReceiptVaultFactory child is created with correct properties
+    /// and that OffchainAssetReceiptVaultInitialized event is emitted
     function testCreateChild(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
