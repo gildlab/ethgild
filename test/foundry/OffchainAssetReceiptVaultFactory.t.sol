@@ -50,6 +50,7 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         // Find the OffchainAssetReceiptVaultInitialized event log
         address msgSender = address(0);
         address admin = address(0);
+        bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
             if (
                 logs[i].topics[0]
@@ -62,9 +63,13 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
                     abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
                 msgSender = sender;
                 admin = config.admin;
+                eventFound = true; // Set the flag to true since event log was found
                 break;
             }
         }
+
+        // Assert that the event log was found
+        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
 
         assertEq(msgSender, address(factory));
         assertEq(admin, alice);
