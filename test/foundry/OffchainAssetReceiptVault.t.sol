@@ -1,13 +1,19 @@
 pragma solidity 0.8.17;
 
-import "../../contracts/vault/receipt/ReceiptVault.sol";
-import "../../contracts/vault/receipt/ReceiptFactory.sol";
-import "../../contracts/vault/receipt/IReceiptV1.sol";
-
-import "forge-std/Test.sol";
-
-import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
+import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
+import {Test, Vm} from "forge-std/Test.sol";
+import {
+    OffchainAssetReceiptVault,
+    OffchainAssetVaultConfig,
+    OffchainAssetReceiptVaultConfig,
+    ZeroAdmin,
+    NonZeroAsset
+} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
+import {ReceiptFactory} from "../../contracts/vault/receipt/ReceiptFactory.sol";
+import {ReceiptVaultFactoryConfig} from "../../contracts/vault/receipt/ReceiptVaultFactory.sol";
+import {OffchainAssetReceiptVaultFactory} from
+    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
+import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 
 contract OffChainAssetReceiptVaultTest is Test {
     OffchainAssetReceiptVaultFactory factory;
