@@ -16,8 +16,17 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
     OffchainAssetReceiptVault vault;
 
     ///Test that OffchainAssetReceiptVaultFactory is created
-    function testOffchainAssetReceiptVaultFactoryConstuction() external view {
+    function testOffchainAssetReceiptVaultFactoryConstuction() external {
+        //check address
         assert(address(factory) != address(0));
+
+        //check codeSize
+        address factoryAddress = address(factory);
+        uint256 size;
+        assembly {
+            size := extcodesize(factoryAddress)
+        }
+        assertTrue(size > 0);
     }
 
     ///Test OffchainAssetReceiptVaultFactory child is created with correct properties
