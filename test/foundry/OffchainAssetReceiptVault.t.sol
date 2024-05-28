@@ -51,7 +51,7 @@ contract OffChainAssetReceiptVaultTest is Test {
     }
 
     function testNonZeroAsset(address asset, string memory assetName, string memory assetSymbol) public {
-        vm.assume(asset!= address (0));
+        vm.assume(asset != address(0));
         vaultConfig = VaultConfig(asset, assetName, assetSymbol);
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
