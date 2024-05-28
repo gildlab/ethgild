@@ -7,22 +7,17 @@ import {ReceiptVaultFactoryConfig} from "../vault/receipt/ReceiptVaultFactory.so
 import {OffchainAssetReceiptVaultFactory} from "../vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 
 abstract contract CreateOffchainAssetReceiptVaultFactory {
-    OffchainAssetReceiptVault public implementation;
-    ReceiptFactory public receiptFactory;
-    OffchainAssetReceiptVaultFactory public factory;
-    ReceiptVaultFactoryConfig public factoryConfig;
+    OffchainAssetReceiptVault internal immutable implementation;
+    ReceiptFactory internal immutable receiptFactory;
+    OffchainAssetReceiptVaultFactory internal immutable factory;
 
     constructor() {
         implementation = new OffchainAssetReceiptVault();
         receiptFactory = new ReceiptFactory();
 
-        // Set up factory config
-        factoryConfig = ReceiptVaultFactoryConfig({
-            implementation: address(implementation),
-            receiptFactory: address(receiptFactory)
-        });
-
         // Create OffchainAssetReceiptVaultFactory contract
-        factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
+        factory = new OffchainAssetReceiptVaultFactory(
+            ReceiptVaultFactoryConfig({implementation: address(implementation), receiptFactory: address(receiptFactory)})
+        );
     }
 }
