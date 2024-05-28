@@ -36,33 +36,25 @@ contract OffChainAssetReceiptVaultTest is Test {
         alice = vm.addr(1);
     }
 
-    function testZeroAdmin() public {
-        string memory assetName = "Asset Name";
-        string memory assetSymbol = "ASSET";
-
+    function testZeroAdmin(string memory assetName, string memory assetSymbol) public {
         vaultConfig = VaultConfig(address(0), assetName, assetSymbol);
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig});
 
-        vm.expectRevert(abi.encodeWithSignature("ZeroAdmin()"));
+        vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
         vault = factory.createChildTyped(offchainAssetVaultConfig);
     }
 
-    function testNonZeroAsset() public {
+    function testNonZeroAsset(string memory assetName, string memory assetSymbol) public {
         address asset = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        string memory assetName = "Asset Name";
-        string memory assetSymbol = "ASSET";
-
         vaultConfig = VaultConfig(asset, assetName, assetSymbol);
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
-        vm.expectRevert(abi.encodeWithSignature("NonZeroAsset()"));
+        vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         vault = factory.createChildTyped(offchainAssetVaultConfig);
     }
 
-    function testConstruction() public {
+    function testConstruction(string memory assetName, string memory assetSymbol) public {
         address asset = address(0);
-        string memory assetName = "Asset Name";
-        string memory assetSymbol = "ASSET";
 
         vaultConfig = VaultConfig(asset, assetName, assetSymbol);
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
@@ -70,14 +62,12 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault = factory.createChildTyped(offchainAssetVaultConfig);
 
         assert(address(vault.asset()) == asset);
-        assert(keccak256(abi.encodePacked(vault.name())) == keccak256(abi.encodePacked(assetName)));
-        assert(keccak256(abi.encodePacked(vault.symbol())) == keccak256(abi.encodePacked(assetSymbol)));
+        assert(keccak256(bytes(vault.name())) == keccak256(bytes(assetName)));
+        assert(keccak256(bytes(vault.symbol())) == keccak256(bytes(assetSymbol)));
     }
 
-    function testVaultIsReceiptOwner() public {
+    function testVaultIsReceiptOwner(string memory assetName, string memory assetSymbol) public {
         address asset = address(0);
-        string memory assetName = "Asset Name";
-        string memory assetSymbol = "ASSET";
 
         vaultConfig = VaultConfig(asset, assetName, assetSymbol);
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
