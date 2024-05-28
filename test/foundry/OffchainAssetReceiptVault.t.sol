@@ -50,8 +50,8 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault = factory.createChildTyped(offchainAssetVaultConfig);
     }
 
-    function testNonZeroAsset(string memory assetName, string memory assetSymbol) public {
-        address asset = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    function testNonZeroAsset(address asset, string memory assetName, string memory assetSymbol) public {
+        vm.assume(asset!= address (0));
         vaultConfig = VaultConfig(asset, assetName, assetSymbol);
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
