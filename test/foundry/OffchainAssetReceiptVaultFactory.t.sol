@@ -15,10 +15,6 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
     VaultConfig vaultConfig;
     OffchainAssetReceiptVault vault;
 
-    function setUp() public {
-        createOffchainAssetReceiptVaultFactory();
-    }
-
     ///Test that OffchainAssetReceiptVaultFactory is created
     function testOffchainAssetReceiptVaultFactoryConstuction() external view {
         assert(address(factory) != address(0));

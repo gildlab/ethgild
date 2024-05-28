@@ -12,7 +12,7 @@ abstract contract CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetReceiptVaultFactory public factory;
     ReceiptVaultFactoryConfig public factoryConfig;
 
-    function createOffchainAssetReceiptVaultFactory() internal {
+    constructor() {
         implementation = new OffchainAssetReceiptVault();
         receiptFactory = new ReceiptFactory();
 
