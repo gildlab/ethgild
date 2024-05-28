@@ -10,8 +10,6 @@ import {
     OffchainAssetReceiptVaultConfig
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 
-uint256 constant MAX_VALID_PRIVATE_KEY = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
-
 contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetVaultConfig offchainAssetVaultConfig;
     VaultConfig vaultConfig;
@@ -34,7 +32,8 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
     ///Test OffchainAssetReceiptVaultFactory child is created with correct properties
     ///and that OffchainAssetReceiptVaultInitialized event is emitted
     function testCreateChild(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
-        vm.assume(fuzzedKeyAlice > 0 && fuzzedKeyAlice < MAX_VALID_PRIVATE_KEY);
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
         // VaultConfig to create child contract
