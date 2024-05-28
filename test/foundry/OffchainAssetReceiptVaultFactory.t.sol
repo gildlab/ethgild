@@ -11,10 +11,6 @@ import {
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 
 contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    OffchainAssetVaultConfig offchainAssetVaultConfig;
-    VaultConfig vaultConfig;
-    OffchainAssetReceiptVault vault;
-
     ///Test that OffchainAssetReceiptVaultFactory is created
     function testOffchainAssetReceiptVaultFactoryConstuction() external {
         //check address
@@ -37,15 +33,16 @@ contract OffChainAssetReceiptVaultFactoryTest is Test, CreateOffchainAssetReceip
         address alice = vm.addr(fuzzedKeyAlice);
 
         // VaultConfig to create child contract
-        vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
+        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
         // Simulate transaction from alice
         vm.prank(alice);
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+        OffchainAssetVaultConfig memory offchainAssetVaultConfig =
+            OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault = factory.createChildTyped(offchainAssetVaultConfig);
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
