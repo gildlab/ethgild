@@ -9,7 +9,7 @@ import {OffchainAssetReceiptVaultFactory} from "../vault/offchainAsset/OffchainA
 abstract contract CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetReceiptVault internal immutable implementation;
     ReceiptFactory internal immutable receiptFactory;
-    OffchainAssetReceiptVaultFactory public immutable factory;
+    OffchainAssetReceiptVaultFactory internal immutable factory;
 
     constructor() {
         implementation = new OffchainAssetReceiptVault();
