@@ -1590,7 +1590,7 @@ describe("OffChainAssetReceiptVault", async function () {
     assert(
       balance1.eq(ethers.BigNumber.from(0)) &&
         balance2.eq(ethers.BigNumber.from(0)),
-        `Shares has not been redeemed`
+      `Shares has not been redeemed`
     );
   });
   it("Should not withdraw on more than balance", async function () {
