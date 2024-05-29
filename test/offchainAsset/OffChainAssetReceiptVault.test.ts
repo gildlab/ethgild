@@ -141,11 +141,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      bob.address,
-      shareRatio,
-      []
-    );
+        aliceAssets,
+        bob.address,
+        shareRatio,
+        []
+      );
 
     const totalSupply = await vault.connect(alice).totalSupply();
     const totalAssets = await vault.connect(alice).totalAssets();
@@ -307,8 +307,8 @@ describe("OffChainAssetReceiptVault", async function () {
         await vault
           .connect(alice)
           ["mint(uint256,address,uint256,bytes)"](shares, bob.address, ONE, [
-          1,
-        ]),
+            1,
+          ]),
       `CertificationExpired`,
       "Failed to mint"
     );
@@ -417,8 +417,8 @@ describe("OffChainAssetReceiptVault", async function () {
         await vault
           .connect(alice)
           ["deposit(uint256,address,uint256,bytes)"](assets, bob.address, ONE, [
-          1,
-        ]),
+            1,
+          ]),
       `CertificationExpired`,
       "Failed to mint"
     );
@@ -559,11 +559,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assetToDeposit,
-      alice.address,
-      receiptId,
-      []
-    );
+        assetToDeposit,
+        alice.address,
+        receiptId,
+        []
+      );
 
     const expectedAssets = ethers.BigNumber.from(0);
     const assets = await vault
@@ -601,11 +601,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assetToDeposit,
-      alice.address,
-      receiptId,
-      []
-    );
+        assetToDeposit,
+        alice.address,
+        receiptId,
+        []
+      );
 
     const aliceReceiptBalance = await receipt
       .connect(alice)
@@ -655,11 +655,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assetToDeposit,
-      alice.address,
-      receiptId,
-      []
-    );
+        assetToDeposit,
+        alice.address,
+        receiptId,
+        []
+      );
 
     await assertError(
       async () =>
@@ -697,11 +697,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assetToDeposit,
-      alice.address,
-      receiptId,
-      []
-    );
+        assetToDeposit,
+        alice.address,
+        receiptId,
+        []
+      );
 
     const bobReceiptBalance = await receipt
       .connect(alice)
@@ -1157,11 +1157,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assets,
-      alice.address,
-      ONE,
-      []
-    );
+        assets,
+        alice.address,
+        ONE,
+        []
+      );
 
     const { sender, confiscatee, justification } = (await getEventArgs(
       await vault.connect(alice).confiscateShares(alice.address, [1]),
@@ -1221,11 +1221,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      aliceAssets,
-      alice.address,
-      _id,
-      []
-    );
+        aliceAssets,
+        alice.address,
+        _id,
+        []
+      );
 
     const { sender, confiscatee, id, justification } = (await getEventArgs(
       await vault.connect(alice).confiscateReceipt(alice.address, _id, [1]),
@@ -1302,11 +1302,11 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      assets,
-      alice.address,
-      ONE,
-      []
-    );
+        assets,
+        alice.address,
+        ONE,
+        []
+      );
 
     const shares = await vault
       .connect(alice)
@@ -1420,11 +1420,11 @@ describe("OffChainAssetReceiptVault", async function () {
       await vault
         .connect(alice)
         ["deposit(uint256,address,uint256,bytes)"](
-        aliceAssets,
-        bob.address,
-        ONE,
-        []
-      ),
+          aliceAssets,
+          bob.address,
+          ONE,
+          []
+        ),
       "DepositWithReceipt",
       vault
     )) as DepositWithReceiptEvent["args"];
@@ -1492,11 +1492,11 @@ describe("OffChainAssetReceiptVault", async function () {
       await vault
         .connect(alice)
         ["deposit(uint256,address,uint256,bytes)"](
-        aliceAssets,
-        bob.address,
-        ONE,
-        []
-      ),
+          aliceAssets,
+          bob.address,
+          ONE,
+          []
+        ),
       "DepositWithReceipt",
       vault
     )) as DepositWithReceiptEvent["args"];
@@ -1589,8 +1589,8 @@ describe("OffChainAssetReceiptVault", async function () {
 
     assert(
       balance1.eq(ethers.BigNumber.from(0)) &&
-      balance2.eq(ethers.BigNumber.from(0)),
-      `Shares has not been redeemed`
+        balance2.eq(ethers.BigNumber.from(0)),
+        `Shares has not been redeemed`
     );
   });
   it("Should not withdraw on more than balance", async function () {
@@ -1631,12 +1631,12 @@ describe("OffChainAssetReceiptVault", async function () {
         await vault
           .connect(alice)
           ["redeem(uint256,address,address,uint256,bytes)"](
-          balance.add(1),
-          alice.address,
-          alice.address,
-          id,
-          []
-        ),
+            balance.add(1),
+            alice.address,
+            alice.address,
+            id,
+            []
+          ),
       "ERC20: burn amount exceeds balance",
       "failed to prevent withdraw on more than balance"
     );
@@ -1680,12 +1680,12 @@ describe("OffChainAssetReceiptVault", async function () {
         await vault
           .connect(bob)
           ["redeem(uint256,address,address,uint256,bytes)"](
-          balance,
-          alice.address,
-          alice.address,
-          id,
-          []
-        ),
+            balance,
+            alice.address,
+            alice.address,
+            id,
+            []
+          ),
       "ERC20: insufficient allowance",
       "failed to prevent withdraw on someone else's shares"
     );
@@ -1824,11 +1824,11 @@ describe("OffChainAssetReceiptVault", async function () {
       await vault
         .connect(alice)
         ["deposit(uint256,address,uint256,bytes)"](
-        aliceAmount,
-        bob.address,
-        expectedId,
-        informationBytes
-      ),
+          aliceAmount,
+          bob.address,
+          expectedId,
+          informationBytes
+        ),
       "ReceiptInformation",
       receipt
     )) as ReceiptInformationEvent["args"];
@@ -1867,22 +1867,22 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["deposit(uint256,address,uint256,bytes)"](
-      aliceAmount,
-      alice.address,
-      expectedId,
-      informationBytes
-    );
+        aliceAmount,
+        alice.address,
+        expectedId,
+        informationBytes
+      );
 
     const { sender } = (await getEventArgs(
       await vault
         .connect(alice)
         ["redeem(uint256,address,address,uint256,bytes)"](
-        aliceAmount,
-        bob.address,
-        alice.address,
-        expectedId,
-        informationBytes
-      ),
+          aliceAmount,
+          bob.address,
+          alice.address,
+          expectedId,
+          informationBytes
+        ),
       "ReceiptInformation",
       receipt
     )) as ReceiptInformationEvent["args"];
@@ -1932,12 +1932,12 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["withdraw(uint256,address,address,uint256,bytes)"](
-      balance,
-      bob.address,
-      alice.address,
-      id,
-      []
-    );
+        balance,
+        bob.address,
+        alice.address,
+        id,
+        []
+      );
 
     let bobBalanceVaultAft = await vault.connect(alice).balanceOf(bob.address);
     let aliceBalanceVaultAft = await vault
@@ -1995,12 +1995,12 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["withdraw(uint256,address,address,uint256,bytes)"](
-      balance,
-      alice.address,
-      alice.address,
-      id,
-      []
-    );
+        balance,
+        alice.address,
+        alice.address,
+        id,
+        []
+      );
 
     let aliceSharesAft = await receipt
       .connect(alice)
@@ -2060,12 +2060,12 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["redeem(uint256,address,address,uint256,bytes)"](
-      balance,
-      bob.address,
-      alice.address,
-      id,
-      []
-    );
+        balance,
+        bob.address,
+        alice.address,
+        id,
+        []
+      );
 
     let bobBalanceVaultAft = await vault.connect(alice).balanceOf(bob.address);
     let aliceBalanceVaultAft = await vault
@@ -2123,12 +2123,12 @@ describe("OffChainAssetReceiptVault", async function () {
     await vault
       .connect(alice)
       ["redeem(uint256,address,address,uint256,bytes)"](
-      balance,
-      alice.address,
-      alice.address,
-      id,
-      []
-    );
+        balance,
+        alice.address,
+        alice.address,
+        id,
+        []
+      );
 
     let aliceSharesAft = await receipt
       .connect(alice)
