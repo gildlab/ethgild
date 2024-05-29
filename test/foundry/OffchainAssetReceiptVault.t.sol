@@ -43,7 +43,7 @@ contract OffChainAssetReceiptVaultTest is Test {
     }
 
     function testZeroAdmin(string memory assetName, string memory assetSymbol) public {
-        vaultConfig = VaultConfig(address(0), assetName, assetSymbol);
+        vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
@@ -52,7 +52,7 @@ contract OffChainAssetReceiptVaultTest is Test {
 
     function testNonZeroAsset(address asset, string memory assetName, string memory assetSymbol) public {
         vm.assume(asset != address(0));
-        vaultConfig = VaultConfig(asset, assetName, assetSymbol);
+        vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
@@ -62,7 +62,7 @@ contract OffChainAssetReceiptVaultTest is Test {
     function testConstruction(string memory assetName, string memory assetSymbol) public {
         address asset = address(0);
 
-        vaultConfig = VaultConfig(asset, assetName, assetSymbol);
+        vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         vault = factory.createChildTyped(offchainAssetVaultConfig);
@@ -73,9 +73,7 @@ contract OffChainAssetReceiptVaultTest is Test {
     }
 
     function testVaultIsReceiptOwner(string memory assetName, string memory assetSymbol) public {
-        address asset = address(0);
-
-        vaultConfig = VaultConfig(asset, assetName, assetSymbol);
+        vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
