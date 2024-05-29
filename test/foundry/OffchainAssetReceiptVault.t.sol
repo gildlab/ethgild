@@ -19,8 +19,7 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
-        OffchainAssetReceiptVault vault =
-            factory.createChildTyped(OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig}));
+        factory.createChildTyped(OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig}));
     }
 
     /// Test that asset is address zero
@@ -35,8 +34,7 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
-        OffchainAssetReceiptVault vault =
-            factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
+        factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
     }
 
     /// Test that offchainAssetReceiptVault constructs well
@@ -49,12 +47,47 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
 
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
-        OffchainAssetReceiptVault vault =
-            factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
+        // Simulate transaction from alice
+        vm.prank(alice);
+        OffchainAssetVaultConfig memory offchainAssetVaultConfig =
+            OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
-        assert(address(vault.asset()) == asset);
-        assert(keccak256(bytes(vault.name())) == keccak256(bytes(assetName)));
-        assert(keccak256(bytes(vault.symbol())) == keccak256(bytes(assetSymbol)));
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = factory.createChildTyped(offchainAssetVaultConfig);
+
+        // Get the logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        address msgSender = address(0);
+        address admin = address(0);
+        bool eventFound = false; // Flag to indicate whether the event log was found
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (
+                logs[i].topics[0]
+                    == keccak256(
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                    )
+            ) {
+                // Decode the event data
+                (address sender, OffchainAssetReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                msgSender = sender;
+                admin = config.admin;
+                eventFound = true; // Set the flag to true since event log was found
+                break;
+            }
+        }
+
+        // Assert that the event log was found
+        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
+
+        assertEq(msgSender, address(factory));
+        assertEq(admin, alice);
+        assert(address(vault) != address(0));
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
     }
 
     /// Test that vault is the owner of its receipt
@@ -100,10 +133,10 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
         // Check that the receipt address is not zero
         assert(receiptAddress != address(0));
         // Check sender
-        assert(msgSender == address(factory));
+        assertEq(msgSender, address(factory));
 
         // Interact with the receipt contract
         address owner = receipt.owner();
-        assert(owner == address(vault));
+        assertEq(owner, address(vault));
     }
 }
