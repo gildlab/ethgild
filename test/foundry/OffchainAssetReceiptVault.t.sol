@@ -42,6 +42,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         alice = vm.addr(1);
     }
 
+    /// Test that admin is not address zero
     function testZeroAdmin(string memory assetName, string memory assetSymbol) public {
         vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig});
@@ -50,6 +51,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault = factory.createChildTyped(offchainAssetVaultConfig);
     }
 
+    /// Test that asset is address zero
     function testNonZeroAsset(address asset, string memory assetName, string memory assetSymbol) public {
         vm.assume(asset != address(0));
         vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
@@ -59,6 +61,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         vault = factory.createChildTyped(offchainAssetVaultConfig);
     }
 
+    /// Test that offchainAssetReceiptVault constructs well
     function testConstruction(string memory assetName, string memory assetSymbol) public {
         address asset = address(0);
 
@@ -72,6 +75,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         assert(keccak256(bytes(vault.symbol())) == keccak256(bytes(assetSymbol)));
     }
 
+    /// Test that vault is the owner of its receipt
     function testVaultIsReceiptOwner(string memory assetName, string memory assetSymbol) public {
         vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
@@ -106,7 +110,7 @@ contract OffChainAssetReceiptVaultTest is Test {
 
         // Check that the receipt address is not zero
         assert(receiptAddress != address(0));
-        //Check sender
+        // Check sender
         assert(msgSender == address(factory));
 
         // Interact with the receipt contract
