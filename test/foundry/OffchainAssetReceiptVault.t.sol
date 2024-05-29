@@ -1,6 +1,8 @@
-pragma solidity 0.8.17;
+// SPDX-License-Identifier: CAL
+pragma solidity =0.8.17;
 
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
+import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 import {
     OffchainAssetReceiptVault,
@@ -9,41 +11,15 @@ import {
     ZeroAdmin,
     NonZeroAsset
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {ReceiptFactory} from "../../contracts/vault/receipt/ReceiptFactory.sol";
-import {ReceiptVaultFactoryConfig} from "../../contracts/vault/receipt/ReceiptVaultFactory.sol";
-import {OffchainAssetReceiptVaultFactory} from
-    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 
-contract OffChainAssetReceiptVaultTest is Test {
-    OffchainAssetReceiptVaultFactory factory;
+contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetVaultConfig offchainAssetVaultConfig;
     VaultConfig vaultConfig;
-    OffchainAssetReceiptVault implementation;
-    ReceiptFactory receiptFactory;
-    ReceiptVaultFactoryConfig factoryConfig;
     OffchainAssetReceiptVault vault;
-    address alice;
-
-    function setUp() public {
-        implementation = new OffchainAssetReceiptVault();
-        receiptFactory = new ReceiptFactory();
-
-        // Set up factory config
-        factoryConfig = ReceiptVaultFactoryConfig({
-            implementation: address(implementation),
-            receiptFactory: address(receiptFactory)
-        });
-
-        // Create OffchainAssetReceiptVaultFactory contract
-        factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
-
-        // Get the first signer address
-        alice = vm.addr(1);
-    }
 
     /// Test that admin is not address zero
-    function testZeroAdmin(string memory assetName, string memory assetSymbol) public {
+    function testZeroAdmin(string memory assetName, string memory assetSymbol) external {
         vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig});
 
@@ -52,7 +28,13 @@ contract OffChainAssetReceiptVaultTest is Test {
     }
 
     /// Test that asset is address zero
-    function testNonZeroAsset(address asset, string memory assetName, string memory assetSymbol) public {
+    function testNonZeroAsset(uint256 fuzzedKeyAlice, address asset, string memory assetName, string memory assetSymbol)
+        external
+    {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
         vm.assume(asset != address(0));
         vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
@@ -62,7 +44,11 @@ contract OffChainAssetReceiptVaultTest is Test {
     }
 
     /// Test that offchainAssetReceiptVault constructs well
-    function testConstruction(string memory assetName, string memory assetSymbol) public {
+    function testConstruction(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
         address asset = address(0);
 
         vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
@@ -76,7 +62,13 @@ contract OffChainAssetReceiptVaultTest is Test {
     }
 
     /// Test that vault is the owner of its receipt
-    function testVaultIsReceiptOwner(string memory assetName, string memory assetSymbol) public {
+    function testVaultIsReceiptOwner(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
+        external
+    {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
         vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
