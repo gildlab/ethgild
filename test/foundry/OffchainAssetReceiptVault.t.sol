@@ -14,17 +14,13 @@ import {
 import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 
 contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    OffchainAssetVaultConfig offchainAssetVaultConfig;
-    VaultConfig vaultConfig;
-    OffchainAssetReceiptVault vault;
-
     /// Test that admin is not address zero
     function testZeroAdmin(string memory assetName, string memory assetSymbol) external {
-        vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig});
+        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault =
+            factory.createChildTyped(OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig}));
     }
 
     /// Test that asset is address zero
@@ -36,11 +32,11 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
         address alice = vm.addr(fuzzedKeyAlice);
 
         vm.assume(asset != address(0));
-        vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault =
+            factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
     }
 
     /// Test that offchainAssetReceiptVault constructs well
@@ -51,10 +47,10 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
 
         address asset = address(0);
 
-        vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault =
+            factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
 
         assert(address(vault.asset()) == asset);
         assert(keccak256(bytes(vault.name())) == keccak256(bytes(assetName)));
@@ -69,12 +65,13 @@ contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultF
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
+        OffchainAssetVaultConfig memory offchainAssetVaultConfig =
+            OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault = factory.createChildTyped(offchainAssetVaultConfig);
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
