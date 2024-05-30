@@ -122,26 +122,41 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         //set Tier
         vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
     }
-    //
-    //    function testSetERC1155TierWithoutRole(bytes memory data, uint8 minTier, uint256[] memory context) external {
-    //        // Prank as Alice for the transaction
-    //        vm.startPrank(alice);
-    //        //New testErc20 contract
-    //        TierV2TestContract = new ReadWriteTier();
-    //
-    //        string memory errorMessage = string(
-    //            abi.encodePacked(
-    //                "AccessControl: account ",
-    //                StringsUpgradeable.toHexString(alice),
-    //                " is missing role ",
-    //                vm.toString(vault.ERC1155TIERER())
-    //            )
-    //        );
-    //        vm.expectRevert(bytes(errorMessage));
-    //
-    //        //set Tier
-    //        vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
-    //    }
+
+    function testSetERC1155TierWithoutRole(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory data,
+        uint8 minTier,
+        uint256[] memory context
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        alice = vm.addr(fuzzedKeyAlice);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        Utils utils = new Utils();
+        vault = utils.createVault(alice, assetName, assetSymbol);
+
+        //New testErc20 contract
+        ReadWriteTier TierV2TestContract = new ReadWriteTier();
+
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.ERC1155TIERER())
+            )
+        );
+        vm.expectRevert(bytes(errorMessage));
+
+        //set Tier
+        vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
+    }
     //
     //    function testSnapshotWithoutRole(bytes memory data) external {
     //        // Prank as Alice for the transaction
