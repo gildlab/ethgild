@@ -18,11 +18,12 @@ import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
 import {Utils} from "./Utils.sol";
 
 contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    //shareRatio 1
+    // ShareRatio 1
     uint256 shareRatio = 1e18;
     address alice;
     OffchainAssetReceiptVault vault;
 
+    /// Test to checks Admin roles granted
     function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -59,6 +60,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         assertTrue(CONFISCATOR_ADMIN_Granted);
     }
 
+    /// Test to checks deposit without depositor role
     function testDepositWithoutDepositorRole(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -87,6 +89,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test to checks SetERC20Tier without role
     function testSetERC20TierWithoutRole(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -105,7 +108,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         Utils utils = new Utils();
         vault = utils.createVault(alice, assetName, assetSymbol);
 
-        //New testErc20 contract
+        // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
         string memory errorMessage = string(
@@ -119,10 +122,11 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vm.expectRevert(bytes(errorMessage));
 
-        //set Tier
+        // Set Tier
         vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
     }
 
+    /// Test to checks setERC1155Tier without role
     function testSetERC1155TierWithoutRole(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -141,7 +145,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         Utils utils = new Utils();
         vault = utils.createVault(alice, assetName, assetSymbol);
 
-        //New testErc20 contract
+        // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
         string memory errorMessage = string(
@@ -154,10 +158,11 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         );
         vm.expectRevert(bytes(errorMessage));
 
-        //set Tier
+        // Set Tier
         vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
     }
 
+    /// Test to checks snapshott without role
     function testSnapshotWithoutRole(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -181,10 +186,11 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
             )
         );
         vm.expectRevert(bytes(errorMessage));
-        //snapshot
+        // Snapshot
         vault.snapshot(data);
     }
 
+    /// Test to checks Certify without role
     function testCertifyWithoutRole(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -218,6 +224,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test to checks Confiscate without role
     function testConfiscateWithoutRole(
         uint256 fuzzedKeyAlice,
         string memory assetName,
