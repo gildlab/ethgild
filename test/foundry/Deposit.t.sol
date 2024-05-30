@@ -1,49 +1,33 @@
-pragma solidity 0.8.17;
+// SPDX-License-Identifier: CAL
+pragma solidity =0.8.17;
 
-import "../../contracts/vault/receipt/ReceiptVault.sol";
-import "../../contracts/vault/receipt/ReceiptFactory.sol";
-import "../../contracts/test/TestErc20.sol";
+import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
+import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
+import {Test, Vm} from "forge-std/Test.sol";
+import {
+    OffchainAssetReceiptVault,
+    OffchainAssetVaultConfig,
+    OffchainAssetReceiptVaultConfig,
+    ZeroAdmin,
+    NonZeroAsset
+} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
+import {TestErc20} from "../../contracts/test/TestErc20.sol";
+import {TestErc20} from "../../contracts/test/TestErc20.sol";
 
-import "forge-std/Test.sol";
-
-import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-
-contract DepositTest is Test {
-    OffchainAssetReceiptVaultFactory factory;
-    OffchainAssetVaultConfig offchainAssetVaultConfig;
-    VaultConfig vaultConfig;
-    OffchainAssetReceiptVault implementation;
-    ReceiptFactory receiptFactory;
-    ReceiptVaultFactoryConfig factoryConfig;
+contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetReceiptVault vault;
     address alice;
     uint256 shareRatio;
-    TestErc20 testErc20Contract;
 
     function setUp() public {
-        implementation = new OffchainAssetReceiptVault();
-        receiptFactory = new ReceiptFactory();
-
-        // Set up factory config
-        factoryConfig = ReceiptVaultFactoryConfig({
-            implementation: address(implementation),
-            receiptFactory: address(receiptFactory)
-        });
-
-        // Create OffchainAssetReceiptVaultFactory contract
-        factory = new OffchainAssetReceiptVaultFactory(factoryConfig);
-
-        // Get the first signer address
         alice = vm.addr(1);
-
         address asset = address(0);
         string memory assetName = "Asset Name";
         string memory assetSymbol = "ASSET";
 
-        vaultConfig = VaultConfig(asset, assetName, assetSymbol);
-        offchainAssetVaultConfig = OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
+        vault = factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
     }
 
     function testTotalAssets() public {
@@ -57,7 +41,7 @@ contract DepositTest is Test {
         bytes memory receiptInformation = "";
 
         //New testErc20 contract
-        testErc20Contract = new TestErc20();
+        TestErc20 testErc20Contract = new TestErc20();
         testErc20Contract.transfer(alice, aliceAssets);
         testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
@@ -90,7 +74,7 @@ contract DepositTest is Test {
         uint256 aliceAssets = 100;
 
         //New testErc20 contract
-        testErc20Contract = new TestErc20();
+        TestErc20 testErc20Contract = new TestErc20();
         testErc20Contract.transfer(alice, aliceAssets);
         testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
