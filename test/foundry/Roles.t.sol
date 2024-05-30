@@ -23,7 +23,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     address alice;
     OffchainAssetReceiptVault vault;
 
-    function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) public {
+    function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         alice = vm.addr(fuzzedKeyAlice);
@@ -58,24 +58,35 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         assertTrue(ERC20SNAPSHOTTER_ADMIN_Granted);
         assertTrue(CONFISCATOR_ADMIN_Granted);
     }
-    //    function testDepositWithoutDepositorRole(
-    //        address fuzzAlice,
-    //        address fuzzBob,
-    //        uint256 aliceAssets,
-    //        bytes memory receiptInformation
-    //    ) public {
-    //        // Constrain the inputs to ensure they are not the zero address
-    //        vm.assume(fuzzAlice != address(0));
-    //        vm.assume(fuzzBob != address(0));
-    //
-    //        // Prank as Alice for the transaction
-    //        vm.startPrank(fuzzAlice);
-    //
-    //        vm.expectRevert(abi.encodeWithSignature("MinShareRatio(uint256,uint256)", shareRatio, 0));
-    //        vault.deposit(aliceAssets, fuzzBob, shareRatio, receiptInformation);
-    //        vm.stopPrank();
-    //    }
-    //
+
+    function testDepositWithoutDepositorRole(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 fuzzedKeyBob,
+        uint256 aliceAssets,
+        bytes memory receiptInformation
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        alice = vm.addr(fuzzedKeyAlice);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        // Constrain the inputs to ensure they are not same
+        vm.assume(alice != bob);
+
+        Utils utils = new Utils();
+        vault = utils.createVault(alice, assetName, assetSymbol);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        vm.expectRevert(abi.encodeWithSignature("MinShareRatio(uint256,uint256)", shareRatio, 0));
+        vault.deposit(aliceAssets, bob, shareRatio, receiptInformation);
+        vm.stopPrank();
+    }
+
     //    function testSetERC20TierWithoutRole(bytes memory data, uint8 minTier, uint256[] memory context) public {
     //        // Prank as Alice for the transaction
     //        vm.startPrank(alice);
