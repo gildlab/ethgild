@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.17;
 
-import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
+import {VaultConfig, MinShareRatio} from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -84,7 +84,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        vm.expectRevert(abi.encodeWithSignature("MinShareRatio(uint256,uint256)", shareRatio, 0));
+        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, shareRatio, 0));
         vault.deposit(aliceAssets, bob, shareRatio, receiptInformation);
         vm.stopPrank();
     }
