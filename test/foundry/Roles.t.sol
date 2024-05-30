@@ -217,22 +217,34 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vm.stopPrank();
     }
-    //
-    //    function testConfiscateWithoutRole(bytes memory data) external {
-    //        // Prank as Alice for the transaction
-    //        vm.startPrank(alice);
-    //        string memory errorMessage = string(
-    //            abi.encodePacked(
-    //                "AccessControl: account ",
-    //                StringsUpgradeable.toHexString(alice),
-    //                " is missing role ",
-    //                vm.toString(vault.CONFISCATOR())
-    //            )
-    //        );
-    //        vm.expectRevert(bytes(errorMessage));
-    //
-    //        // Call the confiscateShares function
-    //        vault.confiscateShares(alice, data);
-    //
-    //        vm.stopPrank();
+
+    function testConfiscateWithoutRole(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory data
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        alice = vm.addr(fuzzedKeyAlice);
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        Utils utils = new Utils();
+        vault = utils.createVault(alice, assetName, assetSymbol);
+
+        string memory errorMessage = string(
+            abi.encodePacked(
+                "AccessControl: account ",
+                StringsUpgradeable.toHexString(alice),
+                " is missing role ",
+                vm.toString(vault.CONFISCATOR())
+            )
+        );
+        vm.expectRevert(bytes(errorMessage));
+
+        // Call the confiscateShares function
+        vault.confiscateShares(alice, data);
+
+        vm.stopPrank();
+    }
 }
