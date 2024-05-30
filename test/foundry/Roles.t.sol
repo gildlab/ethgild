@@ -15,6 +15,7 @@ import {OffchainAssetReceiptVaultFactory} from
 
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
+import {Utils} from "./Utils.sol";
 
 contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     //shareRatio 1
@@ -26,13 +27,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         alice = vm.addr(fuzzedKeyAlice);
-        // VaultConfig to create child contract
-        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
-        OffchainAssetVaultConfig memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
-        // Use the factory to create the child contract
-        vault = factory.createChildTyped(offchainAssetVaultConfig);
+        Utils utils = new Utils();
+        vault = utils.createVault(alice, assetName, assetSymbol);
 
         bytes32 DEPOSITOR_ADMIN = vault.DEPOSITOR_ADMIN();
         bytes32 WITHDRAWER_ADMIN = vault.WITHDRAWER_ADMIN();
