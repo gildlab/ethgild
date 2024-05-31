@@ -15,6 +15,8 @@ import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 
+uint256 constant TOTAL_SUPPLY = 1e27;
+
 contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     OffchainAssetReceiptVault vault;
     address alice;
@@ -30,15 +32,17 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault = factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
     }
 
-    function testTotalAssets() public {
+    function testTotalAssets(uint256 aliceAssets, bytes memory receiptInformation, uint256 certifyUntil,  bytes memory data) public {
+        // Assume that aliceAssets is less than TOTAL_SUPPLY
+        aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
+        // Assume that certifyUntil is not zero and is in future
+        certifyUntil = bound(certifyUntil, 1, block.number + 1);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
         // Get the second signer address
         address bob = vm.addr(2);
-
-        uint256 aliceAssets = 1000;
-        bytes memory receiptInformation = "";
 
         //New testErc20 contract
         TestErc20 testErc20Contract = new TestErc20();
@@ -52,9 +56,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 blockNum = block.number;
 
         // Set up expected parameters
-        uint256 certifyUntil = block.timestamp + 1000;
         bool forceUntil = false;
-        bytes memory data = abi.encodePacked("Certification data");
 
         // Call the certify function
         vault.certify(certifyUntil, blockNum, forceUntil, data);
