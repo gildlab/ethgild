@@ -32,7 +32,12 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault = factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
     }
 
-    function testTotalAssets(uint256 aliceAssets, bytes memory receiptInformation, uint256 certifyUntil,  bytes memory data) public {
+    function testTotalAssets(
+        uint256 aliceAssets,
+        bytes memory receiptInformation,
+        uint256 certifyUntil,
+        bytes memory data
+    ) public {
         // Assume that aliceAssets is less than TOTAL_SUPPLY
         aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
         // Assume that certifyUntil is not zero and is in future
@@ -69,11 +74,12 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testPreviewDepositReturnedShares() public {
+    function testPreviewDepositReturnedShares(uint256 aliceAssets) public {
+        // Assume that aliceAssets is less than TOTAL_SUPPLY
+        aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-
-        uint256 aliceAssets = 100;
 
         //New testErc20 contract
         TestErc20 testErc20Contract = new TestErc20();
