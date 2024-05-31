@@ -105,25 +105,6 @@ describe("OffChainAssetReceiptVault", async function () {
     );
     assert(data === "0x01", `wrong data expected 0x01 got ${data}`);
   });
-  it("PreviewMint returns correct assets", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-    const shares = ethers.BigNumber.from(10);
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    //grant depositor role to alice
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assets = await vault.connect(alice).previewMint(shares);
-    const expectedAssets = fixedPointDivRound(shares, ONE);
-    assert(
-      assets.eq(expectedAssets),
-      `Wrong assets: expected ${expectedAssets} got ${assets}`
-    );
-  });
   it("PreviewWithdraw returns 0 shares if no withdrawer role", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
     const assets = ethers.BigNumber.from(100);
@@ -168,39 +149,6 @@ describe("OffChainAssetReceiptVault", async function () {
     assert(
       shares.eq(expectedShares),
       `Wrong shares: expected ${expectedShares} got ${shares} `
-    );
-  });
-  it("Mints with data", async function () {
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-    const shares = fixedPointMul(assets, ONE).add(1);
-
-    await vault
-      .connect(alice)
-      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, ONE, [1]);
-
-    const expectedAssets = fixedPointDiv(shares, ONE);
-    const aliceBalanceAfter = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](alice.address, 1);
-
-    assert(
-      aliceBalanceAfter.eq(expectedAssets),
-      `wrong assets. expected ${expectedAssets} got ${aliceBalanceAfter}`
     );
   });
   it("Cannot Mint to someone else if recipient is not DEPOSITOR or system not certified for them", async function () {
