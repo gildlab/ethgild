@@ -17,8 +17,6 @@ import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
 import {Utils} from "./Utils.sol";
 
 contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    OffchainAssetReceiptVault vault;
-
     /// Test to checks Admin roles granted
     function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -26,7 +24,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address alice = vm.addr(fuzzedKeyAlice);
 
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         bytes32 depositorAdmin = vault.DEPOSITOR_ADMIN();
         bytes32 withdrawerAdmin = vault.WITHDRAWER_ADMIN();
@@ -68,7 +66,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.assume(alice != bob);
 
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -95,7 +93,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.startPrank(alice);
 
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
@@ -132,7 +130,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.startPrank(alice);
 
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
@@ -164,7 +162,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         string memory errorMessage = string(
             abi.encodePacked(
@@ -193,7 +191,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         bool forceUntil = false;
 
@@ -226,7 +224,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         Utils utils = new Utils();
-        vault = utils.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = utils.createVault(alice, assetName, assetSymbol);
 
         string memory errorMessage = string(
             abi.encodePacked(
