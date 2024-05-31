@@ -19,6 +19,15 @@ import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/mat
 
 uint256 constant TOTAL_SUPPLY = 1e27;
 
+struct DepositWithReceiptEvent {
+    address sender;
+    address owner;
+    uint256 assets;
+    uint256 shares;
+    uint256 id;
+    bytes receiptInformation;
+}
+
 contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     using LibFixedPointMath for uint256;
 
@@ -34,6 +43,79 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
         vault = factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
+    }
+
+    function testDeposit(
+        uint256 aliceAssets,
+        bytes memory fuzzedReceiptInformation,
+        uint256 certifyUntil,
+        bytes memory data
+    ) external {
+        // Assume that aliceAssets is less than TOTAL_SUPPLY
+        aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
+        // Assume that certifyUntil is not zero and is in future
+        certifyUntil = bound(certifyUntil, 1, block.number + 1);
+        uint256 expectedShares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        //New testErc20 contract
+        TestErc20 testErc20Contract = new TestErc20();
+        testErc20Contract.transfer(alice, aliceAssets);
+        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+
+        // Grant CERTIFIER role to Alice
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Call the certify function
+        vault.certify(certifyUntil, block.number, false, data);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+
+        // Log event
+        // Start recording logs
+        vm.recordLogs();
+
+        vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
+
+        // Get the logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        DepositWithReceiptEvent memory eventData;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == keccak256("DepositWithReceipt(address,address,uint256,uint256,uint256,bytes)")) {
+                // Decode the event data
+                (
+                    address sender,
+                    address owner,
+                    uint256 assets,
+                    uint256 shares,
+                    uint256 id,
+                    bytes memory receiptInformation
+                ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
+                eventData = DepositWithReceiptEvent({
+                    sender: sender,
+                    owner: owner,
+                    assets: assets,
+                    shares: shares,
+                    id: id,
+                    receiptInformation: receiptInformation
+                });
+                break;
+            }
+        }
+
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
+        assertEq(eventData.sender, alice);
+        assertEq(eventData.owner, alice);
+        assertEq(eventData.assets, aliceAssets);
+        assertEq(eventData.shares, expectedShares);
+        assertEq(eventData.id, 1);
+        assertEq(eventData.receiptInformation, fuzzedReceiptInformation);
+
+        vm.stopPrank();
     }
 
     function testTotalAssets(
