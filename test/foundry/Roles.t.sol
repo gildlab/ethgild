@@ -4,7 +4,6 @@ pragma solidity =0.8.17;
 import {VaultConfig, MinShareRatio} from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,
@@ -18,8 +17,6 @@ import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
 import {Utils} from "./Utils.sol";
 
 contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    // ShareRatio 1
-    uint256 shareRatio = 1e18;
     address alice;
     OffchainAssetReceiptVault vault;
 
@@ -32,32 +29,32 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         Utils utils = new Utils();
         vault = utils.createVault(alice, assetName, assetSymbol);
 
-        bytes32 DEPOSITOR_ADMIN = vault.DEPOSITOR_ADMIN();
-        bytes32 WITHDRAWER_ADMIN = vault.WITHDRAWER_ADMIN();
-        bytes32 CERTIFIER_ADMIN = vault.CERTIFIER_ADMIN();
-        bytes32 HANDLER_ADMIN = vault.HANDLER_ADMIN();
-        bytes32 ERC20TIERER_ADMIN = vault.ERC20TIERER_ADMIN();
-        bytes32 ERC1155TIERER_ADMIN = vault.ERC1155TIERER_ADMIN();
-        bytes32 ERC20SNAPSHOTTER_ADMIN = vault.ERC20SNAPSHOTTER_ADMIN();
-        bytes32 CONFISCATOR_ADMIN = vault.CONFISCATOR_ADMIN();
+        bytes32 depositorAdmin = vault.DEPOSITOR_ADMIN();
+        bytes32 withdrawerAdmin = vault.WITHDRAWER_ADMIN();
+        bytes32 certifierAdmin = vault.CERTIFIER_ADMIN();
+        bytes32 handlerAdmin = vault.HANDLER_ADMIN();
+        bytes32 erc20TiererAdmin = vault.ERC20TIERER_ADMIN();
+        bytes32 erc1155TiererAdmin = vault.ERC1155TIERER_ADMIN();
+        bytes32 erc20SnapshotterAdmin = vault.ERC20SNAPSHOTTER_ADMIN();
+        bytes32 confiscatorAdmin = vault.CONFISCATOR_ADMIN();
 
-        bool DEPOSITOR_ADMIN_Granted = vault.hasRole(DEPOSITOR_ADMIN, alice);
-        bool WITHDRAWER_ADMIN_Granted = vault.hasRole(WITHDRAWER_ADMIN, alice);
-        bool CERTIFIER_ADMIN_Granted = vault.hasRole(CERTIFIER_ADMIN, alice);
-        bool HANDLER_ADMIN_Granted = vault.hasRole(HANDLER_ADMIN, alice);
-        bool ERC20TIERER_ADMIN_Granted = vault.hasRole(ERC20TIERER_ADMIN, alice);
-        bool ERC1155TIERER_ADMIN_Granted = vault.hasRole(ERC1155TIERER_ADMIN, alice);
-        bool ERC20SNAPSHOTTER_ADMIN_Granted = vault.hasRole(ERC20SNAPSHOTTER_ADMIN, alice);
-        bool CONFISCATOR_ADMIN_Granted = vault.hasRole(CONFISCATOR_ADMIN, alice);
+        bool depositorAdminGranted = vault.hasRole(depositorAdmin, alice);
+        bool withdrawerAdminGranted = vault.hasRole(withdrawerAdmin, alice);
+        bool certifierAdminGranted = vault.hasRole(certifierAdmin, alice);
+        bool handlerAdminGranted = vault.hasRole(handlerAdmin, alice);
+        bool erc20TiererAdminGranted = vault.hasRole(erc20TiererAdmin, alice);
+        bool erc1155TiererAdminGranted = vault.hasRole(erc1155TiererAdmin, alice);
+        bool erc20SnapshotterAdminGranted = vault.hasRole(erc20SnapshotterAdmin, alice);
+        bool confiscatorAdminGranted = vault.hasRole(confiscatorAdmin, alice);
 
-        assertTrue(DEPOSITOR_ADMIN_Granted);
-        assertTrue(WITHDRAWER_ADMIN_Granted);
-        assertTrue(CERTIFIER_ADMIN_Granted);
-        assertTrue(HANDLER_ADMIN_Granted);
-        assertTrue(ERC20TIERER_ADMIN_Granted);
-        assertTrue(ERC1155TIERER_ADMIN_Granted);
-        assertTrue(ERC20SNAPSHOTTER_ADMIN_Granted);
-        assertTrue(CONFISCATOR_ADMIN_Granted);
+        assertTrue(depositorAdminGranted);
+        assertTrue(withdrawerAdminGranted);
+        assertTrue(certifierAdminGranted);
+        assertTrue(handlerAdminGranted);
+        assertTrue(erc20TiererAdminGranted);
+        assertTrue(erc1155TiererAdminGranted);
+        assertTrue(erc20SnapshotterAdminGranted);
+        assertTrue(confiscatorAdminGranted);
     }
 
     /// Test to checks deposit without depositor role
@@ -69,6 +66,8 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 aliceAssets,
         bytes memory receiptInformation
     ) external {
+        // ShareRatio 1
+        uint256 shareRatio = 1e18;
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
