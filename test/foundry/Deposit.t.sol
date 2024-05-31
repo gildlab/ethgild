@@ -14,13 +14,16 @@ import {
 import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
+import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 
 uint256 constant TOTAL_SUPPLY = 1e27;
 
 contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
+    using LibFixedPointMath for uint256;
+
     OffchainAssetReceiptVault vault;
     address alice;
-    uint256 shareRatio;
+    uint256 shareRatio = 1e18;
 
     function setUp() public {
         alice = vm.addr(1);
@@ -81,15 +84,26 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
         vault.grantRole(vault.DEPOSITOR(), alice);
         uint256 shares = vault.previewDeposit(aliceAssets);
 
         assertEqUint(shares, aliceAssets);
+
+        vm.stopPrank();
+    }
+
+    function testPreviewMintReturnedAssets(uint256 shares) public {
+        shares = bound(shares, 1, TOTAL_SUPPLY - 1);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        uint256 expectedAssets = shares.fixedPointDiv(shareRatio, Math.Rounding.Up);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        uint256 assets = vault.previewMint(shares);
+
+        assertEqUint(assets, expectedAssets);
 
         vm.stopPrank();
     }
