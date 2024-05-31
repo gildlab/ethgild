@@ -8,7 +8,7 @@ import {
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 
-contract Utils is CreateOffchainAssetReceiptVaultFactory {
+contract OffchainAssetVaultCreator is CreateOffchainAssetReceiptVaultFactory {
     /// Helper to create child offchainAssetReceiptVault.
     function createVault(address alice, string memory name, string memory symbol)
         public
