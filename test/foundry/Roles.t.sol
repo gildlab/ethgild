@@ -17,14 +17,13 @@ import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
 import {Utils} from "./Utils.sol";
 
 contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    address alice;
     OffchainAssetReceiptVault vault;
 
     /// Test to checks Admin roles granted
     function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
 
         Utils utils = new Utils();
         vault = utils.createVault(alice, assetName, assetSymbol);
@@ -38,23 +37,14 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bytes32 erc20SnapshotterAdmin = vault.ERC20SNAPSHOTTER_ADMIN();
         bytes32 confiscatorAdmin = vault.CONFISCATOR_ADMIN();
 
-        bool depositorAdminGranted = vault.hasRole(depositorAdmin, alice);
-        bool withdrawerAdminGranted = vault.hasRole(withdrawerAdmin, alice);
-        bool certifierAdminGranted = vault.hasRole(certifierAdmin, alice);
-        bool handlerAdminGranted = vault.hasRole(handlerAdmin, alice);
-        bool erc20TiererAdminGranted = vault.hasRole(erc20TiererAdmin, alice);
-        bool erc1155TiererAdminGranted = vault.hasRole(erc1155TiererAdmin, alice);
-        bool erc20SnapshotterAdminGranted = vault.hasRole(erc20SnapshotterAdmin, alice);
-        bool confiscatorAdminGranted = vault.hasRole(confiscatorAdmin, alice);
-
-        assertTrue(depositorAdminGranted);
-        assertTrue(withdrawerAdminGranted);
-        assertTrue(certifierAdminGranted);
-        assertTrue(handlerAdminGranted);
-        assertTrue(erc20TiererAdminGranted);
-        assertTrue(erc1155TiererAdminGranted);
-        assertTrue(erc20SnapshotterAdminGranted);
-        assertTrue(confiscatorAdminGranted);
+        assertTrue(vault.hasRole(depositorAdmin, alice));
+        assertTrue(vault.hasRole(withdrawerAdmin, alice));
+        assertTrue(vault.hasRole(certifierAdmin, alice));
+        assertTrue(vault.hasRole(handlerAdmin, alice));
+        assertTrue(vault.hasRole(erc20TiererAdmin, alice));
+        assertTrue(vault.hasRole(erc1155TiererAdmin, alice));
+        assertTrue(vault.hasRole(erc20SnapshotterAdmin, alice));
+        assertTrue(vault.hasRole(confiscatorAdmin, alice));
     }
 
     /// Test to checks deposit without depositor role
@@ -71,7 +61,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
         address bob = vm.addr(fuzzedKeyBob);
 
         // Constrain the inputs to ensure they are not same
@@ -99,7 +89,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -136,7 +126,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -170,7 +160,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         Utils utils = new Utils();
@@ -199,7 +189,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         Utils utils = new Utils();
@@ -232,7 +222,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         Utils utils = new Utils();
