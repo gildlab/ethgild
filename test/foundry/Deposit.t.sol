@@ -109,7 +109,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    /// Test totalAssets amount is correct after mint
+    /// Test totalAssets amount is correct after deposit
     function testTotalAssets(
         uint256 fuzzedKeyAlice,
         uint256 aliceAssets,
@@ -299,6 +299,92 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test deposit to someone else with DEPOSITOR role
+    function testDepositToSomeoneElseWithDepositorRole(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 fuzzedKeyBob,
+        uint256 aliceAssets,
+        bytes memory fuzzedReceiptInformation
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        uint256 shareRatio = 1e18;
+        // Total supply of test erc20
+        uint256 totalSupply = 1e27;
+
+        vm.assume(alice != bob);
+
+        // Assume that aliceAssets is less than totalSupply
+        aliceAssets = bound(aliceAssets, 1, totalSupply - 1);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        //New testErc20 contract
+        TestErc20 testErc20Contract = new TestErc20();
+        testErc20Contract.transfer(alice, aliceAssets);
+        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+
+        // Log event
+        // Start recording logs
+        vm.recordLogs();
+
+        vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
+
+        uint256 expectedShares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
+
+        // Get the logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        DepositWithReceiptEvent memory eventData;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == keccak256("DepositWithReceipt(address,address,uint256,uint256,uint256,bytes)")) {
+                // Decode the event data
+                (
+                    address sender,
+                    address owner,
+                    uint256 assets,
+                    uint256 shares,
+                    uint256 id,
+                    bytes memory receiptInformation
+                ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
+                eventData = DepositWithReceiptEvent({
+                    sender: sender,
+                    owner: owner,
+                    assets: assets,
+                    shares: shares,
+                    id: id,
+                    receiptInformation: receiptInformation
+                });
+                break;
+            }
+        }
+
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
+        assertEq(eventData.sender, alice);
+        assertEq(eventData.owner, alice);
+        assertEq(eventData.assets, aliceAssets);
+        assertEq(eventData.shares, expectedShares);
+        assertEq(eventData.id, 1);
+        assertEq(eventData.receiptInformation, fuzzedReceiptInformation);
+
+        vm.stopPrank();
+    }
+
     function testPreviewDepositReturnedShares(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -355,7 +441,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testMintWithData(
+    /// Test mint function
+    function testMint(
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
