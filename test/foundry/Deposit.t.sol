@@ -2,7 +2,11 @@
 pragma solidity =0.8.17;
 
 import {
-    VaultConfig, MinShareRatio, ZeroAssetsAmount, ZeroReceiver
+    VaultConfig,
+    MinShareRatio,
+    ZeroAssetsAmount,
+    ZeroReceiver,
+    InvalidId
 } from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
@@ -510,7 +514,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     }
 
     /// Test redeposit to someone else reverts with certification expired
-    function testReDepositToSomeoneElse(
+    function testReDepositToSomeoneElseReverts(
         uint256 fuzzedKeyAlice,
         uint256 aliceAssets,
         uint256 fuzzedKeyBob,
@@ -547,6 +551,41 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), bob, 0, 1));
         vault.redeposit(aliceAssets, bob, 1, fuzzedReceiptInformation);
+
+        vm.stopPrank();
+    }
+
+    /// Test redeposit reverts on nonexistent receipt id
+    function testReDepositToSomeoneElseReverts(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        bytes memory fuzzedReceiptInformation,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Assume that aliceAssets is less than totalSupply
+        aliceAssets = bound(aliceAssets, 1, 1e27 - 1);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        //New testErc20 contract
+        TestErc20 testErc20Contract = new TestErc20();
+        testErc20Contract.transfer(alice, aliceAssets);
+        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.deposit(aliceAssets, alice, 1e18, fuzzedReceiptInformation);
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, 0));
+        vault.redeposit(aliceAssets, alice, 0, fuzzedReceiptInformation);
 
         vm.stopPrank();
     }
