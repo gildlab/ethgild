@@ -509,6 +509,48 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test redeposit to someone else reverts with certification expired
+    function testReDepositToSomeoneElse(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        uint256 fuzzedKeyBob,
+        bytes memory fuzzedReceiptInformation,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        vm.assume(alice != bob);
+
+        // Assume that aliceAssets is less than totalSupply
+        aliceAssets = bound(aliceAssets, 1, 1e27 - 1);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        //New testErc20 contract
+        TestErc20 testErc20Contract = new TestErc20();
+        testErc20Contract.transfer(alice, aliceAssets);
+        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.deposit(aliceAssets, alice, 1e18, fuzzedReceiptInformation);
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), bob, 0, 1));
+        vault.redeposit(aliceAssets, bob, 1, fuzzedReceiptInformation);
+
+        vm.stopPrank();
+    }
+
     /// Test mint function
     function testMint(
         uint256 fuzzedKeyAlice,
