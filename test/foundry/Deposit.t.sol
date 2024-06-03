@@ -556,7 +556,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     }
 
     /// Test redeposit reverts on nonexistent receipt id
-    function testReDepositToSomeoneElseReverts(
+    function testReDepositToNonExistentReceipt(
         uint256 fuzzedKeyAlice,
         uint256 aliceAssets,
         bytes memory fuzzedReceiptInformation,
