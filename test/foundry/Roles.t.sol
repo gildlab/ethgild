@@ -23,8 +23,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         bytes32 depositorAdmin = vault.DEPOSITOR_ADMIN();
         bytes32 withdrawerAdmin = vault.WITHDRAWER_ADMIN();
@@ -65,8 +64,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Constrain the inputs to ensure they are not same
         vm.assume(alice != bob);
 
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -92,8 +90,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
@@ -129,8 +126,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
@@ -161,8 +157,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         string memory errorMessage = string(
             abi.encodePacked(
@@ -190,8 +185,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         bool forceUntil = false;
 
@@ -223,8 +217,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetVaultCreator offchainAssetVaultCreator = new OffchainAssetVaultCreator();
-        OffchainAssetReceiptVault vault = offchainAssetVaultCreator.createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         string memory errorMessage = string(
             abi.encodePacked(

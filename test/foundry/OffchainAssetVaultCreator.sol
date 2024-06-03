@@ -6,14 +6,18 @@ import {
     OffchainAssetVaultConfig
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultFactory} from
+    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 
-contract OffchainAssetVaultCreator is CreateOffchainAssetReceiptVaultFactory {
+library OffchainAssetVaultCreator {
     /// Helper to create child offchainAssetReceiptVault.
-    function createVault(address alice, string memory name, string memory symbol)
-        public
-        returns (OffchainAssetReceiptVault)
-    {
+    function createVault(
+        OffchainAssetReceiptVaultFactory factory,
+        address alice,
+        string memory name,
+        string memory symbol
+    ) external returns (OffchainAssetReceiptVault) {
         // VaultConfig to create child contract
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: name, symbol: symbol});
         OffchainAssetVaultConfig memory offchainAssetVaultConfig =
