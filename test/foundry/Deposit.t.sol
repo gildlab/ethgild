@@ -19,8 +19,7 @@ import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
-
-uint256 constant TOTAL_SUPPLY = 1e27;
+import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
 
 struct DepositWithReceiptEvent {
     address sender;
@@ -34,23 +33,24 @@ struct DepositWithReceiptEvent {
 contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     using LibFixedPointMath for uint256;
 
-    OffchainAssetReceiptVault vault;
-    address alice;
-    uint256 shareRatio = 1e18;
+    /// Test deposit function
+    function testDeposit(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        bytes memory fuzzedReceiptInformation,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
 
-    function setUp() public {
-        alice = vm.addr(1);
-        address asset = address(0);
-        string memory assetName = "Asset Name";
-        string memory assetSymbol = "ASSET";
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        uint256 shareRatio = 1e18;
+        uint256 totalSupply = 1e27;
 
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
-        vault = factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
-    }
-
-    function testDeposit(uint256 aliceAssets, bytes memory fuzzedReceiptInformation) external {
         // Assume that aliceAssets is less than TOTAL_SUPPLY
-        aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
+        aliceAssets = bound(aliceAssets, 1, totalSupply - 1);
         uint256 expectedShares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
 
         // Prank as Alice for the transaction
@@ -108,8 +108,12 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test totalAssets amount is correct after mint
     function testTotalAssets(
+        uint256 fuzzedKeyAlice,
         uint256 aliceAssets,
+        string memory assetName,
+        string memory assetSymbol,
         bytes memory receiptInformation,
         uint256 certifyUntil,
         bytes memory data
@@ -118,6 +122,13 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
         // Assume that certifyUntil is not zero and is in future
         certifyUntil = bound(certifyUntil, 1, block.number + 1);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        uint256 shareRatio = 1e18;
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -147,12 +158,26 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testMinShareRatio(uint256 aliceAssets, bytes memory receiptInformation) external {
+    function testMinShareRatio(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 aliceAssets,
+        bytes memory receiptInformation
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        uint256 shareRatio = 1e18;
+
         // Assume that aliceAssets is less than TOTAL_SUPPLY
         aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         //New testErc20 contract
         TestErc20 testErc20Contract = new TestErc20();
@@ -166,17 +191,23 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testZeroAssetsAmount(bytes memory receiptInformation) external {
+    function testZeroAssetsAmount(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory receiptInformation
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
         // Assume that aliceAssets is less than TOTAL_SUPPLY
         uint256 aliceAssets = 0;
+        uint256 shareRatio = 1e18;
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
@@ -185,12 +216,25 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testZeroReceiver(uint256 aliceAssets, bytes memory receiptInformation) external {
+    function testZeroReceiver(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 aliceAssets,
+        bytes memory receiptInformation
+    ) external {
+        uint256 shareRatio = 1e18;
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
         // Assume that aliceAssets is less than TOTAL_SUPPLY
         aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         //New testErc20 contract
         TestErc20 testErc20Contract = new TestErc20();
@@ -206,13 +250,22 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
     /// Test deposit to someone else reverts if system not certified
     function testDepositToSomeoneElseExpiredCertification(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
         uint256 fuzzedKeyBob,
         uint256 aliceAssets,
         bytes memory receiptInformation
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
+
+        uint256 shareRatio = 1e18;
 
         vm.assume(alice != bob);
 
@@ -221,6 +274,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         //New testErc20 contract
         TestErc20 testErc20Contract = new TestErc20();
@@ -235,12 +290,22 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testPreviewDepositReturnedShares(uint256 aliceAssets) external {
+    function testPreviewDepositReturnedShares(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 aliceAssets
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
         // Assume that aliceAssets is less than TOTAL_SUPPLY
         aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         uint256 shares = vault.previewDeposit(aliceAssets);
@@ -250,11 +315,22 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    function testPreviewMintReturnedAssets(uint256 shares) external {
+    function testPreviewMintReturnedAssets(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 shares
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
         shares = bound(shares, 1, TOTAL_SUPPLY - 1);
+        uint256 shareRatio = 1e18;
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         uint256 expectedAssets = shares.fixedPointDiv(shareRatio, Math.Rounding.Up);
 
@@ -267,11 +343,20 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     }
 
     function testMintWithData(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
         uint256 aliceAssets,
         bytes memory receiptInformation,
         uint256 certifyUntil,
         bytes memory data
     ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        uint256 shareRatio = 1e18;
+
         // Assume that aliceAssets is less than TOTAL_SUPPLY
         aliceAssets = bound(aliceAssets, 1, TOTAL_SUPPLY - 1);
         // Assume that certifyUntil is not zero and is in future
@@ -280,18 +365,15 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
+        // Start recording logs
+        vm.recordLogs();
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         //New testErc20 contract
         TestErc20 testErc20Contract = new TestErc20();
         testErc20Contract.transfer(alice, aliceAssets);
         testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
-        // Start recording logs
-        vm.recordLogs();
-
-        // todo refactor with function
-        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: "Asset Name", symbol: "ASSET"});
-        vault = factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
-        //
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
