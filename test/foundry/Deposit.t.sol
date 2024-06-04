@@ -59,8 +59,17 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
 
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+        vm.mockCall(
+            address(testErc20Contract),
+            abi.encodeWithSelector(testErc20Contract.transfer.selector, alice, aliceAssets),
+            abi.encode(false)
+        );
+
+        vm.mockCall(
+            address(testErc20Contract),
+            abi.encodeWithSelector(testErc20Contract.increaseAllowance.selector, address(vault), aliceAssets),
+            abi.encode(false)
+        );
 
         vault.grantRole(vault.DEPOSITOR(), alice);
 
