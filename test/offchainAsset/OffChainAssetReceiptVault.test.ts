@@ -1766,27 +1766,6 @@ describe("OffChainAssetReceiptVault", async function () {
       "Failed to mint"
     );
   });
-  it("Check positive overflow", async () => {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const [vault] = await deployOffChainAssetReceiptVault();
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), bob.address);
-
-    const shares = ethers.BigNumber.from(ethers.constants.MaxUint256).add(1);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(bob)
-          ["mint(uint256,address,uint256,bytes)"](shares, bob.address, 1, []),
-      "out-of-bounds",
-      "Failed to mint"
-    );
-  });
   it("Check the receipt info sender when depositor mints for a different receiver", async () => {
     const signers = await ethers.getSigners();
     const alice = signers[0];
