@@ -37,6 +37,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
+
+        _minTier = uint8(bound(_minTier, uint256(1), uint256(8)));
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         // Start recording logs
@@ -91,6 +94,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
+
+        _minTier = uint8(bound(_minTier, uint256(1), uint256(8)));
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         // Start recording logs
