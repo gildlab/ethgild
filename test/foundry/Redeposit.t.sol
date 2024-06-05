@@ -128,6 +128,83 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test redeposit to someone else with Depositor role
+    function testReDepositToSomeoneElse(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        uint256 fuzzedKeyBob,
+        bytes memory fuzzedReceiptInformation,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        vm.assume(alice != bob);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        {
+            //New testErc20 contract
+            TestErc20 testErc20Contract = new TestErc20();
+
+            // Assume that aliceAssets is less than totalSupply
+            aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
+
+            testErc20Contract.transfer(alice, aliceAssets);
+            testErc20Contract.increaseAllowance(address(vault), aliceAssets);
+
+            vault.grantRole(vault.DEPOSITOR(), alice);
+            vault.grantRole(vault.DEPOSITOR(), bob);
+        }
+        // Get the logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        address receiptAddress = address(0);
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (
+                logs[i].topics[0]
+                    == keccak256(
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                    )
+            ) {
+                // Decode the event data
+                (, OffchainAssetReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                receiptAddress = config.receiptVaultConfig.receipt;
+                break;
+            }
+        }
+        // Create an instance of the Receipt contract
+        IReceiptV1 receipt = IReceiptV1(receiptAddress);
+
+        // Divide alice assets to 3 to have enough assets for redeposit
+        uint256 assetsToDeposit = aliceAssets.fixedPointDiv(3, Math.Rounding.Down);
+
+        vault.deposit(assetsToDeposit, bob, 1e18, fuzzedReceiptInformation);
+
+        uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
+        assertEqUint(receipt.balanceOf(bob, 1), expectedShares);
+
+        // Redeposit same amount
+        vault.redeposit(assetsToDeposit, bob, 1, fuzzedReceiptInformation);
+
+        //shares should be doubled
+        assertEqUint(receipt.balanceOf(bob, 1), expectedShares * 2);
+
+        vm.stopPrank();
+    }
+
     /// Test redeposit reverts on nonexistent receipt id
     function testReDepositToNonExistentReceipt(
         uint256 fuzzedKeyAlice,
