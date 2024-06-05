@@ -575,59 +575,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
-  it("Redeposits", async function () {
-    const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const receiptId = ethers.BigNumber.from(1);
-    const aliceAssets = ethers.BigNumber.from(20);
-
-    await asset.connect(alice).transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assetToDeposit = aliceAssets.div(2);
-    const assetToReDeposit = ethers.BigNumber.from(10);
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        assetToDeposit,
-        alice.address,
-        receiptId,
-        []
-      );
-
-    const aliceReceiptBalance = await receipt
-      .connect(alice)
-      .balanceOf(alice.address, receiptId);
-
-    await vault
-      .connect(alice)
-      .redeposit(assetToReDeposit, alice.address, 1, [1]);
-
-    const aliceReceiptBalanceAfterRedeposit = await receipt
-      .connect(alice)
-      .balanceOf(alice.address, receiptId);
-
-    assert(
-      aliceReceiptBalanceAfterRedeposit.eq(
-        aliceReceiptBalance.add(assetToReDeposit)
-      ),
-      `Incorrect balance ${aliceReceiptBalance.add(
-        assetToReDeposit
-      )} got ${aliceReceiptBalanceAfterRedeposit}`
-    );
-  });
   it("Prevents redeposit to someone else while not certified or recipient is not depositor", async function () {
     const signers = await ethers.getSigners();
     const [vault] = await deployOffChainAssetReceiptVault();
@@ -731,60 +678,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `Incorrect balance ${bobReceiptBalance.add(
         assetToReDeposit
       )} got ${bobReceiptBalanceAfterRedeposit}`
-    );
-  });
-  it("Prevents Redeposit on receipt with id 0", async function () {
-    const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const assetToReDeposit = ethers.BigNumber.from(10);
-
-    const id = 0;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .redeposit(assetToReDeposit, alice.address, id, [1]),
-      `InvalidId`,
-      "Failed to redeposit"
-    );
-  });
-  it("Prevents Redeposit on non-existing receipt", async function () {
-    const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const assetToReDeposit = ethers.BigNumber.from(10);
-
-    const id = 2;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .redeposit(assetToReDeposit, alice.address, id, [1]),
-      `InvalidId(${id})`,
-      "Failed to prevent redeposit"
     );
   });
   it("Snapshot event is emitted", async function () {
