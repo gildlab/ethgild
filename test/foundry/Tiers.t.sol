@@ -23,20 +23,23 @@ struct SetTierEvent {
 }
 
 contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
+    event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
+    event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
+
     /// Test setERC20Tier function
     function testSetERC20Tier(
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory _data,
-        uint8 _minTier,
-        uint256[] memory _context
+        bytes memory fuzzedData,
+        uint8 fuzzedMinTier,
+        uint256[] memory fuzzedContext
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        _minTier = uint8(bound(_minTier, uint256(1), uint256(8)));
+        fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -49,7 +52,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
-        vault.setERC20Tier(address(TierV2TestContract), _minTier, _context, _data);
+        vault.setERC20Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -58,7 +61,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         SetTierEvent memory eventData;
         bool eventFound = false;
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == keccak256("SetERC20Tier(address,address,uint256,uint256[],bytes)")) {
+            if (logs[i].topics[0] == SetERC20Tier.selector) {
                 // Decode the event data
                 (address sender, address tier, uint256 minimumTier, uint256[] memory context, bytes memory data) =
                     abi.decode(logs[i].data, (address, address, uint256, uint256[], bytes));
@@ -74,9 +77,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         assertEq(eventData.tier, address(TierV2TestContract));
         assertEq(eventData.sender, alice);
-        assertEq(eventData.minimumTier, _minTier);
-        assertEq(eventData.context, _context);
-        assertEq(eventData.data, _data);
+        assertEq(eventData.minimumTier, fuzzedMinTier);
+        assertEq(eventData.context, fuzzedContext);
+        assertEq(eventData.data, fuzzedData);
         vm.stopPrank();
     }
 
@@ -85,15 +88,15 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory _data,
-        uint8 _minTier,
-        uint256[] memory _context
+        bytes memory fuzzedData,
+        uint8 fuzzedMinTier,
+        uint256[] memory fuzzedContext
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        _minTier = uint8(bound(_minTier, uint256(1), uint256(8)));
+        fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -106,7 +109,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
-        vault.setERC1155Tier(address(TierV2TestContract), _minTier, _context, _data);
+        vault.setERC1155Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -115,7 +118,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         SetTierEvent memory eventData;
         bool eventFound = false;
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == keccak256("SetERC1155Tier(address,address,uint256,uint256[],bytes)")) {
+            if (logs[i].topics[0] == SetERC1155Tier.selector) {
                 // Decode the event data
                 (address sender, address tier, uint256 minimumTier, uint256[] memory context, bytes memory data) =
                     abi.decode(logs[i].data, (address, address, uint256, uint256[], bytes));
@@ -131,9 +134,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         assertEq(eventData.tier, address(TierV2TestContract));
         assertEq(eventData.sender, alice);
-        assertEq(eventData.minimumTier, _minTier);
-        assertEq(eventData.context, _context);
-        assertEq(eventData.data, _data);
+        assertEq(eventData.minimumTier, fuzzedMinTier);
+        assertEq(eventData.context, fuzzedContext);
+        assertEq(eventData.data, fuzzedData);
         vm.stopPrank();
     }
 
@@ -143,9 +146,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory _data,
-        uint8 _minTier,
-        uint256[] memory _context,
+        bytes memory fuzzedData,
+        uint8 fuzzedMinTier,
+        uint256[] memory fuzzedContext,
         uint256 certifyUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -159,7 +162,7 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntil = bound(certifyUntil, 1, block.number + 10 ** 6);
         vm.assume(alice != bob);
 
-        _minTier = uint8(bound(_minTier, uint256(1), uint256(8)));
+        fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -169,15 +172,15 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, _data);
+        vault.certify(certifyUntil, block.number, false, fuzzedData);
 
         vault.grantRole(vault.ERC1155TIERER(), alice);
 
         // New testErc20 contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
-        uint256 fromReportTime_ = TierV2TestContract.reportTimeForTier(alice, _minTier, _context);
+        uint256 fromReportTime_ = TierV2TestContract.reportTimeForTier(alice, fuzzedMinTier, fuzzedContext);
 
-        vault.setERC1155Tier(address(TierV2TestContract), _minTier, _context, _data);
+        vault.setERC1155Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Expect the revert with the exact revert reason
         // Revert reason must match the UnauthorizedSenderTier with correct encoding
