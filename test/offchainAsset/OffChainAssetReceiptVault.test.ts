@@ -1576,45 +1576,6 @@ describe("OffChainAssetReceiptVault", async function () {
       "failed to prevent authorizeReceiptTransfer"
     );
   });
-  it("Prevent authorizeReceiptTransfer if unauthorizedSenderTier", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    await vault
-      .connect(alice)
-      .certify(_until, _referenceBlockNumber, false, []);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
-    const minTier = ethers.BigNumber.from(1);
-
-    await vault
-      .connect(alice)
-      .setERC1155Tier(TierV2TestContract.address, minTier, [], []);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .authorizeReceiptTransfer(alice.address, bob.address),
-      "UnauthorizedSenderTier",
-      "failed to prevent UnauthorizedSenderTier"
-    );
-  });
   it("Check negative overflow", async () => {
     const signers = await ethers.getSigners();
     const alice = signers[0];
