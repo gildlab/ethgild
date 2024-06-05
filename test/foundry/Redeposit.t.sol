@@ -26,6 +26,11 @@ struct DepositWithReceiptEvent {
 contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     using LibFixedPointMath for uint256;
 
+    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
+    event DepositWithReceipt(
+        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
+    );
+
     function testReDeposit(
         uint256 fuzzedKeyAlice,
         uint256 aliceAssets,
@@ -50,9 +55,6 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
 
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Get the logs
@@ -61,12 +63,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Find the OffchainAssetReceiptVaultInitialized event log
         address receiptAddress = address(0);
         for (uint256 i = 0; i < logs.length; i++) {
-            if (
-                logs[i].topics[0]
-                    == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
-                    )
-            ) {
+            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
                 // Decode the event data
                 (, OffchainAssetReceiptVaultConfig memory config) =
                     abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
@@ -125,9 +122,6 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
 
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.deposit(aliceAssets, alice, 1e18, fuzzedReceiptInformation);
 
@@ -169,9 +163,6 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
             // Assume that aliceAssets is less than totalSupply
             aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
 
-            testErc20Contract.transfer(alice, aliceAssets);
-            testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
             vault.grantRole(vault.DEPOSITOR(), alice);
             vault.grantRole(vault.DEPOSITOR(), bob);
         }
@@ -181,12 +172,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Find the OffchainAssetReceiptVaultInitialized event log
         address receiptAddress = address(0);
         for (uint256 i = 0; i < logs.length; i++) {
-            if (
-                logs[i].topics[0]
-                    == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
-                    )
-            ) {
+            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
                 // Decode the event data
                 (, OffchainAssetReceiptVaultConfig memory config) =
                     abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
@@ -249,9 +235,6 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
             // Assume that aliceAssets is less than totalSupply
             aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
 
-            testErc20Contract.transfer(alice, aliceAssets);
-            testErc20Contract.increaseAllowance(address(vault), aliceAssets);
-
             vault.grantRole(vault.DEPOSITOR(), alice);
             vault.grantRole(vault.DEPOSITOR(), bob);
             vault.grantRole(vault.CERTIFIER(), alice);
@@ -278,7 +261,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Find the DepositWithReceipt event log
         DepositWithReceiptEvent memory eventData;
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == keccak256("DepositWithReceipt(address,address,uint256,uint256,uint256,bytes)")) {
+            if (logs[i].topics[0] == DepositWithReceipt.selector) {
                 // Decode the event data
                 (
                     address sender,
@@ -334,9 +317,6 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
-
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.deposit(aliceAssets, alice, 1e18, fuzzedReceiptInformation);
