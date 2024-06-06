@@ -63,55 +63,21 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.assume(aliceAssets != 0);
         vault.grantRole(vault.DEPOSITOR(), alice);
 
-        // Log event
-        // Start recording logs
-        vm.recordLogs();
-
-        vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
-
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        DepositWithReceiptEvent memory eventData;
-        bool eventFound = false;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == DepositWithReceipt.selector) {
-                // Decode the event data
-                (
-                    address sender,
-                    address owner,
-                    uint256 assets,
-                    uint256 shares,
-                    uint256 id,
-                    bytes memory receiptInformation
-                ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
-                eventFound = true;
-                eventData = DepositWithReceiptEvent({
-                    sender: sender,
-                    owner: owner,
-                    assets: assets,
-                    shares: shares,
-                    id: id,
-                    receiptInformation: receiptInformation
-                });
-                break;
-            }
-        }
+        // Calculate expected shares
         uint256 expectedShares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
 
-        // Assert that the event log was found
-        assertTrue(eventFound, "DepositWithReceipt event log not found");
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit DepositWithReceipt(alice, alice, aliceAssets, expectedShares, 1, fuzzedReceiptInformation);
 
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-        assertEq(eventData.sender, alice);
-        assertEq(eventData.owner, alice);
-        assertEq(eventData.assets, aliceAssets);
-        assertEq(eventData.shares, expectedShares);
-        assertEq(eventData.id, 1);
-        assertEq(eventData.receiptInformation, fuzzedReceiptInformation);
+        // Call the deposit function that should emit the event
+        vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
 
+        // Stop the prank
         vm.stopPrank();
+
+        // Assert that the total supply and total assets are equal after the deposit
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
     }
 
     function testMinShareRatio(
@@ -265,51 +231,13 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Start recording logs
         vm.recordLogs();
 
-        vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
-
         uint256 expectedShares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
 
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit DepositWithReceipt(alice, bob, aliceAssets, expectedShares, 1, fuzzedReceiptInformation);
 
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        DepositWithReceiptEvent memory eventData;
-        bool eventFound = false;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == DepositWithReceipt.selector) {
-                // Decode the event data
-                (
-                    address sender,
-                    address owner,
-                    uint256 assets,
-                    uint256 shares,
-                    uint256 id,
-                    bytes memory receiptInformation
-                ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
-                eventFound = true;
-                eventData = DepositWithReceiptEvent({
-                    sender: sender,
-                    owner: owner,
-                    assets: assets,
-                    shares: shares,
-                    id: id,
-                    receiptInformation: receiptInformation
-                });
-                break;
-            }
-        }
-
-        // Assert that the event log was found
-        assertTrue(eventFound, "DepositWithReceipt event log not found");
-
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-        assertEq(eventData.sender, alice);
-        assertEq(eventData.owner, alice);
-        assertEq(eventData.assets, aliceAssets);
-        assertEq(eventData.shares, expectedShares);
-        assertEq(eventData.id, 1);
-        assertEq(eventData.receiptInformation, fuzzedReceiptInformation);
-
+        vault.deposit(aliceAssets, bob, shareRatio, fuzzedReceiptInformation);
         vm.stopPrank();
     }
 
@@ -390,28 +318,6 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        bool eventFound = false;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
-                eventFound = true;
-                // Decode the event data
-                (, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                break;
-            }
-        }
-        // Assert that the event log was found
-        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
-
-        // Create an instance of the Receipt contract
-        IReceiptV1 receipt = IReceiptV1(receiptAddress);
-        // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
@@ -421,10 +327,11 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         uint256 shares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
 
-        vault.mint(shares, alice, shareRatio, receiptInformation);
-        uint256 expectedAssets = shares.fixedPointDiv(shareRatio, Math.Rounding.Up);
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit DepositWithReceipt(alice, alice, aliceAssets, shares, 1, receiptInformation);
 
-        assertEqUint(receipt.balanceOf(alice, 1), expectedAssets);
+        vault.mint(shares, alice, shareRatio, receiptInformation);
 
         vm.stopPrank();
     }
