@@ -170,7 +170,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        bytes memory data
+        uint256 fuzzedBlockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -182,7 +182,8 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         shareRatio = bound(shareRatio, 1, 1e18);
 
-        certifyUntil = bound(certifyUntil, block.timestamp + 1, block.timestamp + 10 ** 6);
+        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
 
         vm.assume(alice != bob);
 
@@ -207,7 +208,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 assetsToDeposit = aliceAssets.fixedPointDiv(3, Math.Rounding.Down);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, data);
+        vault.certify(certifyUntil, block.number, false, fuzzedReceiptInformation);
 
         vault.deposit(assetsToDeposit, bob, shareRatio, fuzzedReceiptInformation);
 
