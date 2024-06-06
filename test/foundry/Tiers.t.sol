@@ -22,7 +22,7 @@ struct SetTierEvent {
     bytes data;
 }
 
-contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
+contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
 
@@ -149,7 +149,8 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bytes memory fuzzedData,
         uint8 fuzzedMinTier,
         uint256[] memory fuzzedContext,
-        uint256 certifyUntil
+        uint256 certifyUntil,
+        uint256 fuzzedBlockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -159,7 +160,9 @@ contract RolesTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        certifyUntil = bound(certifyUntil, 1, block.number + 10 ** 6);
+        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+
         vm.assume(alice != bob);
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
