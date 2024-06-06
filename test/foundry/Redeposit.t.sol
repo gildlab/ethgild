@@ -10,7 +10,6 @@ import {
     CertificationExpired
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
-import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
 
@@ -41,11 +40,10 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.recordLogs();
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
+        //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
+        uint256 upperBound = type(uint256).max / 1e18;
         // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
+        aliceAssets = bound(aliceAssets, 1, upperBound);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
 
@@ -91,11 +89,10 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.recordLogs();
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
+        //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
+        uint256 upperBound = type(uint256).max / 1e18;
         // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
+        aliceAssets = bound(aliceAssets, 1, upperBound);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
@@ -134,11 +131,10 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         {
-            //New testErc20 contract
-            TestErc20 testErc20Contract = new TestErc20();
-
+            //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
+            uint256 upperBound = type(uint256).max / 1e18;
             // Assume that aliceAssets is less than totalSupply
-            aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
+            aliceAssets = bound(aliceAssets, 1, upperBound);
 
             vault.grantRole(vault.DEPOSITOR(), alice);
             vault.grantRole(vault.DEPOSITOR(), bob);
@@ -193,11 +189,10 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         {
-            //New testErc20 contract
-            TestErc20 testErc20Contract = new TestErc20();
-
+            //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
+            uint256 upperBound = type(uint256).max / 1e18;
             // Assume that aliceAssets is less than totalSupply
-            aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
+            aliceAssets = bound(aliceAssets, 1, upperBound);
 
             vault.grantRole(vault.DEPOSITOR(), alice);
             vault.grantRole(vault.DEPOSITOR(), bob);
@@ -244,11 +239,10 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.recordLogs();
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
+        //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
+        uint256 upperBound = type(uint256).max / 1e18;
         // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply());
+        aliceAssets = bound(aliceAssets, 1, upperBound);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.deposit(aliceAssets, alice, shareRatio, fuzzedReceiptInformation);
