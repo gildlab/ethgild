@@ -36,6 +36,11 @@ struct DepositWithReceiptEvent {
 contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     using LibFixedPointMath for uint256;
 
+    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
+    event DepositWithReceipt(
+        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
+    );
+
     /// Test deposit function
     function testDeposit(
         uint256 fuzzedKeyAlice,
@@ -69,8 +74,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Find the OffchainAssetReceiptVaultInitialized event log
         DepositWithReceiptEvent memory eventData;
+        bool eventFound = false;
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == keccak256("DepositWithReceipt(address,address,uint256,uint256,uint256,bytes)")) {
+            if (logs[i].topics[0] == DepositWithReceipt.selector) {
                 // Decode the event data
                 (
                     address sender,
@@ -80,6 +86,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
                     uint256 id,
                     bytes memory receiptInformation
                 ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
+                eventFound = true;
                 eventData = DepositWithReceiptEvent({
                     sender: sender,
                     owner: owner,
@@ -92,6 +99,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
             }
         }
         uint256 expectedShares = aliceAssets.fixedPointMul(shareRatio, Math.Rounding.Up);
+
+        // Assert that the event log was found
+        assertTrue(eventFound, "DepositWithReceipt event log not found");
 
         assertEqUint(vault.totalSupply(), vault.totalAssets());
         assertEq(eventData.sender, alice);
@@ -264,8 +274,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Find the OffchainAssetReceiptVaultInitialized event log
         DepositWithReceiptEvent memory eventData;
+        bool eventFound = false;
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == keccak256("DepositWithReceipt(address,address,uint256,uint256,uint256,bytes)")) {
+            if (logs[i].topics[0] == DepositWithReceipt.selector) {
                 // Decode the event data
                 (
                     address sender,
@@ -275,6 +286,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
                     uint256 id,
                     bytes memory receiptInformation
                 ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
+                eventFound = true;
                 eventData = DepositWithReceiptEvent({
                     sender: sender,
                     owner: owner,
@@ -286,6 +298,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
                 break;
             }
         }
+
+        // Assert that the event log was found
+        assertTrue(eventFound, "DepositWithReceipt event log not found");
 
         assertEqUint(vault.totalSupply(), vault.totalAssets());
         assertEq(eventData.sender, alice);
@@ -380,13 +395,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Find the OffchainAssetReceiptVaultInitialized event log
         address receiptAddress = address(0);
+        bool eventFound = false;
         for (uint256 i = 0; i < logs.length; i++) {
-            if (
-                logs[i].topics[0]
-                    == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
-                    )
-            ) {
+            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
+                eventFound = true;
                 // Decode the event data
                 (, OffchainAssetReceiptVaultConfig memory config) =
                     abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
@@ -394,6 +406,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
                 break;
             }
         }
+        // Assert that the event log was found
+        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
+
         // Create an instance of the Receipt contract
         IReceiptV1 receipt = IReceiptV1(receiptAddress);
         // Grant CERTIFIER role to Alice
