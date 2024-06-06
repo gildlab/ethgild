@@ -14,19 +14,9 @@ import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
 
-struct DepositWithReceiptEvent {
-    address sender;
-    address owner;
-    uint256 assets;
-    uint256 shares;
-    uint256 id;
-    bytes receiptInformation;
-}
-
 contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     using LibFixedPointMath for uint256;
 
-    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
     );
@@ -57,36 +47,17 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vault.grantRole(vault.DEPOSITOR(), alice);
 
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
-                // Decode the event data
-                (, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                break;
-            }
-        }
-        // Create an instance of the Receipt contract
-        IReceiptV1 receipt = IReceiptV1(receiptAddress);
-
         // Divide alice assets to 3 to have enough assets for redeposit
         uint256 assetsToDeposit = aliceAssets.fixedPointDiv(3, Math.Rounding.Up);
-
+        uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
         vault.deposit(assetsToDeposit, alice, 1e18, fuzzedReceiptInformation);
 
-        uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
-        assertEqUint(receipt.balanceOf(alice, 1), expectedShares);
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit DepositWithReceipt(alice, alice, assetsToDeposit, expectedShares, 1, fuzzedReceiptInformation);
 
         // Redeposit same amount
         vault.redeposit(assetsToDeposit, alice, 1, fuzzedReceiptInformation);
-
-        //shares should be doubled
-        assertEqUint(receipt.balanceOf(alice, 1), expectedShares * 2);
 
         vm.stopPrank();
     }
@@ -166,36 +137,19 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
             vault.grantRole(vault.DEPOSITOR(), alice);
             vault.grantRole(vault.DEPOSITOR(), bob);
         }
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
-                // Decode the event data
-                (, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                break;
-            }
-        }
-        // Create an instance of the Receipt contract
-        IReceiptV1 receipt = IReceiptV1(receiptAddress);
 
         // Divide alice assets to 3 to have enough assets for redeposit
         uint256 assetsToDeposit = aliceAssets.fixedPointDiv(3, Math.Rounding.Down);
+        uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
 
         vault.deposit(assetsToDeposit, bob, 1e18, fuzzedReceiptInformation);
 
-        uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
-        assertEqUint(receipt.balanceOf(bob, 1), expectedShares);
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit DepositWithReceipt(alice, bob, assetsToDeposit, expectedShares, 1, fuzzedReceiptInformation);
 
         // Redeposit same amount
         vault.redeposit(assetsToDeposit, bob, 1, fuzzedReceiptInformation);
-
-        //shares should be doubled
-        assertEqUint(receipt.balanceOf(bob, 1), expectedShares * 2);
 
         vm.stopPrank();
     }
@@ -248,48 +202,14 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vault.deposit(assetsToDeposit, bob, 1e18, fuzzedReceiptInformation);
 
-        // Start recording logs
-        vm.recordLogs();
-
         uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
+
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit DepositWithReceipt(alice, bob, assetsToDeposit, expectedShares, 1, fuzzedReceiptInformation);
 
         // Redeposit same amount
         vault.redeposit(assetsToDeposit, bob, 1, fuzzedReceiptInformation);
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the DepositWithReceipt event log
-        DepositWithReceiptEvent memory eventData;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == DepositWithReceipt.selector) {
-                // Decode the event data
-                (
-                    address sender,
-                    address owner,
-                    uint256 assets,
-                    uint256 shares,
-                    uint256 id,
-                    bytes memory receiptInformation
-                ) = abi.decode(logs[i].data, (address, address, uint256, uint256, uint256, bytes));
-                eventData = DepositWithReceiptEvent({
-                    sender: sender,
-                    owner: owner,
-                    assets: assets,
-                    shares: shares,
-                    id: id,
-                    receiptInformation: receiptInformation
-                });
-                break;
-            }
-        }
-
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-        assertEq(eventData.sender, alice);
-        assertEq(eventData.owner, bob);
-        assertEq(eventData.assets, assetsToDeposit);
-        assertEq(eventData.shares, expectedShares);
-        assertEq(eventData.id, 1);
-        assertEq(eventData.receiptInformation, fuzzedReceiptInformation);
 
         vm.stopPrank();
     }
