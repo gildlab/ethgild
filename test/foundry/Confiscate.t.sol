@@ -152,6 +152,46 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test to checks ConfiscateReceipt is NOT emitted on zero balance
+    function testConfiscateReceiptOnZeroBalance(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory justification
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        vm.assume(alice != bob);
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        vault.grantRole(vault.CONFISCATOR(), alice);
+
+        // Stop recording logs
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        vault.confiscateReceipt(bob, 1, justification);
+
+        // Check the logs to ensure event is not present
+        bool eventFound = false;
+
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == ConfiscateReceipt.selector) {
+                eventFound = true;
+                break;
+            }
+        }
+
+        assertFalse(eventFound, "ConfiscateReceipt event should not be emitted");
+        vm.stopPrank();
+    }
+
     /// Test to checks ConfiscateReceipt
     function testConfiscateReceipt(
         uint256 fuzzedKeyAlice,
