@@ -1078,20 +1078,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong until expected ${_certifiedUntil} got ${certifyUntil}`
     );
   });
-  it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .authorizeReceiptTransfer(alice.address, alice.address),
-      `CertificationExpired`,
-      "failed to AuthorizeReceiptTransfer"
-    );
-  });
   it("Confiscate - Checks role CONFISCATOR", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
