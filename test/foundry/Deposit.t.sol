@@ -294,18 +294,13 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol,
         uint256 aliceAssets,
-        bytes memory receiptInformation,
-        uint256 certifyUntil,
-        bytes memory data
+        bytes memory receiptInformation
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
         uint256 shareRatio = 1e18;
-
-        // Assume that certifyUntil is not zero and is in future
-        certifyUntil = bound(certifyUntil, 1, block.number + 1);
 
         // Assume that aliceAssets is not 0
         vm.assume(aliceAssets != 0);
@@ -319,9 +314,6 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.CERTIFIER(), alice);
-
-        // Call the certify function
-        vault.certify(certifyUntil, block.number, false, data);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
 
