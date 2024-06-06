@@ -10,23 +10,14 @@ import {
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultFactory} from
     "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
-
-struct SetTierEvent {
-    address sender;
-    address tier;
-    uint256 minimumTier;
-    uint256[] context;
-    bytes data;
-}
 
 contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
 
-    /// Test setERC20Tier function
+    /// Test setERC20Tier event
     function testSetERC20Tier(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -43,47 +34,27 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        // Start recording logs
-        vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        vault.grantRole(vault.ERC20TIERER(), alice);
-
-        // New testErc20 contract
+        // New TierV2TestContract contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
+        // Create the vault
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Grant the necessary role
+        vault.grantRole(vault.ERC20TIERER(), alice);
+
+        // Emit the expected event
+        vm.expectEmit(true, true, true, true);
+        emit SetERC20Tier(alice, address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+
+        // Call the function that should emit the event
         vault.setERC20Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
 
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        SetTierEvent memory eventData;
-        bool eventFound = false;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == SetERC20Tier.selector) {
-                // Decode the event data
-                (address sender, address tier, uint256 minimumTier, uint256[] memory context, bytes memory data) =
-                    abi.decode(logs[i].data, (address, address, uint256, uint256[], bytes));
-                eventFound = true;
-                eventData =
-                    SetTierEvent({sender: sender, tier: tier, minimumTier: minimumTier, context: context, data: data});
-                break;
-            }
-        }
-
-        // Assert that the event log was found
-        assertTrue(eventFound, "SetERC20Tier event log not found");
-
-        assertEq(eventData.tier, address(TierV2TestContract));
-        assertEq(eventData.sender, alice);
-        assertEq(eventData.minimumTier, fuzzedMinTier);
-        assertEq(eventData.context, fuzzedContext);
-        assertEq(eventData.data, fuzzedData);
+        // Stop the prank
         vm.stopPrank();
     }
 
-    /// Test setERC1155Tier function
+    /// Test setERC1155Tier event
     function testSetERC1155Tier(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -100,43 +71,23 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        // Start recording logs
-        vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        vault.grantRole(vault.ERC1155TIERER(), alice);
-
-        // New testErc20 contract
+        // New TierV2TestContract contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
+        // Create the vault
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Grant the necessary role
+        vault.grantRole(vault.ERC1155TIERER(), alice);
+
+        // Emit the expected event
+        vm.expectEmit(true, true, true, true);
+        emit SetERC1155Tier(alice, address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+
+        // Call the function that should emit the event
         vault.setERC1155Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
 
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        SetTierEvent memory eventData;
-        bool eventFound = false;
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == SetERC1155Tier.selector) {
-                // Decode the event data
-                (address sender, address tier, uint256 minimumTier, uint256[] memory context, bytes memory data) =
-                    abi.decode(logs[i].data, (address, address, uint256, uint256[], bytes));
-                eventFound = true;
-                eventData =
-                    SetTierEvent({sender: sender, tier: tier, minimumTier: minimumTier, context: context, data: data});
-                break;
-            }
-        }
-
-        // Assert that the event log was found
-        assertTrue(eventFound, "SetERC1155Tier event log not found");
-
-        assertEq(eventData.tier, address(TierV2TestContract));
-        assertEq(eventData.sender, alice);
-        assertEq(eventData.minimumTier, fuzzedMinTier);
-        assertEq(eventData.context, fuzzedContext);
-        assertEq(eventData.data, fuzzedData);
+        // Stop the prank
         vm.stopPrank();
     }
 
@@ -179,7 +130,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vault.grantRole(vault.ERC1155TIERER(), alice);
 
-        // New testErc20 contract
+        // New TierV2TestContract contract
         ReadWriteTier TierV2TestContract = new ReadWriteTier();
         uint256 fromReportTime_ = TierV2TestContract.reportTimeForTier(alice, fuzzedMinTier, fuzzedContext);
 
