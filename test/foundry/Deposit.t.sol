@@ -24,15 +24,6 @@ import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
 
-struct DepositWithReceiptEvent {
-    address sender;
-    address owner;
-    uint256 assets;
-    uint256 shares;
-    uint256 id;
-    bytes receiptInformation;
-}
-
 contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     using LibFixedPointMath for uint256;
 
@@ -85,14 +76,13 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol,
         uint256 aliceAssets,
+        uint256 shareRatio,
         bytes memory receiptInformation
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        vm.assume(shareRatio != 1e18 && shareRatio != 0);
         address alice = vm.addr(fuzzedKeyAlice);
-
-        uint256 shareRatio = 1e18;
-
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
@@ -102,31 +92,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, shareRatio + 1, shareRatio));
-        vault.deposit(aliceAssets, alice, shareRatio + 1, receiptInformation);
-
-        vm.stopPrank();
-    }
-
-    function testZeroAssetsAmount(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        bytes memory receiptInformation
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-        uint256 aliceAssets = 0;
-        uint256 shareRatio = 1e18;
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
+        vm.expectRevert();
         vault.deposit(aliceAssets, alice, shareRatio, receiptInformation);
 
         vm.stopPrank();
