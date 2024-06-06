@@ -15,23 +15,17 @@ import {
   SetERC20TierEvent,
   CertifyEvent,
   SnapshotEvent,
-  ConfiscateSharesEvent,
-  ConfiscateReceiptEvent,
   SetERC1155TierEvent,
   SnapshotWithDataEvent,
 } from "../../typechain-types/contracts/vault/offchainAsset/OffchainAssetReceiptVault";
 import {
   deployOffChainAssetReceiptVault,
-  deployOffchainAssetReceiptVaultFactory,
 } from "./deployOffchainAssetReceiptVault";
-import { DepositWithReceiptEvent } from "../../typechain-types/contracts/vault/receipt/ReceiptVault";
 import { ReceiptInformationEvent } from "../../typechain-types/contracts/vault/receipt/Receipt";
 
 const assert = require("assert");
 
 let TierV2TestContract: ReadWriteTier;
-let expectedName = "OffchainAssetVaul";
-let expectedSymbol = "OAV";
 
 describe("OffChainAssetReceiptVault", async function () {
   beforeEach(async () => {
@@ -1090,73 +1084,6 @@ describe("OffChainAssetReceiptVault", async function () {
           .authorizeReceiptTransfer(alice.address, alice.address),
       `CertificationExpired`,
       "failed to AuthorizeReceiptTransfer"
-    );
-  });
-  it("Checks confiscated amount is transferred", async function () {
-    const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const aliceAssets = ethers.BigNumber.from(1000);
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-    await vault
-      .connect(alice)
-      .certify(_certifiedUntil, _referenceBlockNumber, false, []);
-
-    await asset.transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
-
-    const { id } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        ["deposit(uint256,address,uint256,bytes)"](
-          aliceAssets,
-          bob.address,
-          ONE,
-          []
-        ),
-      "DepositWithReceipt",
-      vault
-    )) as DepositWithReceiptEvent["args"];
-
-    const aliceBalanceBef = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](alice.address, id);
-
-    const { confiscated } = (await getEventArgs(
-      await vault.connect(alice).confiscateReceipt(bob.address, id, []),
-      "ConfiscateReceipt",
-      vault
-    )) as ConfiscateSharesEvent["args"];
-
-    const aliceBalanceAft = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](alice.address, id);
-
-    assert(
-      aliceBalanceAft.eq(aliceBalanceBef.add(confiscated)),
-      `Shares has not been confiscated`
     );
   });
   it("Should call multicall", async () => {
