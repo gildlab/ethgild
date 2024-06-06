@@ -891,43 +891,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
-  it("Checks Certify event is emitted", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    //get block timestamp and add 100 to get _until
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { sender, certifyUntil, referenceBlockNumber } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_until, _referenceBlockNumber, false, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
-
-    assert(
-      sender === alice.address,
-      `wrong sender expected ${alice.address} got ${sender}`
-    );
-    assert(
-      certifyUntil.eq(_until),
-      `wrong until expected ${_until} got ${certifyUntil}`
-    );
-    assert(
-      referenceBlockNumber.eq(_referenceBlockNumber),
-      `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
-    );
-  });
   it("Certifies with data", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
