@@ -54,24 +54,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
-        vm.expectCall(address(testErc20Contract), abi.encodeCall(testErc20Contract.transfer, (alice, aliceAssets)));
-
-        vm.mockCall(
-            address(testErc20Contract),
-            abi.encodeWithSelector(testErc20Contract.transfer.selector, alice, aliceAssets),
-            abi.encode(true)
-        );
-
-        vm.mockCall(
-            address(testErc20Contract),
-            abi.encodeWithSelector(testErc20Contract.increaseAllowance.selector, address(vault), aliceAssets),
-            abi.encode(true)
-        );
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Log event
@@ -136,16 +120,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
-
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, shareRatio + 1, shareRatio));
@@ -191,18 +169,12 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
-
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vm.expectRevert(abi.encodeWithSelector(ZeroReceiver.selector));
@@ -235,16 +207,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
-
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), bob, 0, 1));
@@ -274,20 +240,13 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 shareRatio = 1e18;
 
         vm.assume(alice != bob);
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
-
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.DEPOSITOR(), bob);
@@ -405,6 +364,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that certifyUntil is not zero and is in future
         certifyUntil = bound(certifyUntil, 1, block.number + 1);
 
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
@@ -412,15 +374,6 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.recordLogs();
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        //New testErc20 contract
-        TestErc20 testErc20Contract = new TestErc20();
-
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, testErc20Contract.totalSupply() - 1);
-
-        testErc20Contract.transfer(alice, aliceAssets);
-        testErc20Contract.increaseAllowance(address(vault), aliceAssets);
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
