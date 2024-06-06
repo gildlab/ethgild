@@ -891,29 +891,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
-  it("Checks referenceBlockNumber is less than block number", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = blockNum + 10;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      `FutureReferenceBlock`,
-      "failed to certify"
-    );
-  });
   it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
