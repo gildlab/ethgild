@@ -3,7 +3,11 @@ pragma solidity =0.8.17;
 
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
-import {OffchainAssetReceiptVault} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
+import {
+    OffchainAssetReceiptVault,
+    ZeroCertifyUntil,
+    FutureReferenceBlock
+} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultFactory} from
     "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
@@ -39,6 +43,68 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Call the certify function
         vault.certify(certifyUntil, block.number, false, data);
+
+        vm.stopPrank();
+    }
+
+    function testCertifyRevertOnZeroCertifyUntil(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory data
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        uint256 certifyUntil = 0;
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Grant CERTIFIER role to Alice
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Expect the Certify event
+        vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector, alice));
+
+        // Call the certify function
+        vault.certify(certifyUntil, block.number, false, data);
+
+        vm.stopPrank();
+    }
+
+    function testCertifyRevertOnFutureReferenceBlock(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 certifyUntil,
+        uint256 fuzzedBlockNumber,
+        bytes memory data,
+        uint256 fuzzedFutureBlockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        fuzzedFutureBlockNumber = bound(block.number + 1, 1, 1e6);
+
+        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Grant CERTIFIER role to Alice
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Expect the Certify event
+        vm.expectRevert(abi.encodeWithSelector(FutureReferenceBlock.selector, alice, fuzzedFutureBlockNumber));
+
+        // Call the certify function
+        vault.certify(certifyUntil, fuzzedFutureBlockNumber, false, data);
 
         vm.stopPrank();
     }
