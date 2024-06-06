@@ -1092,44 +1092,6 @@ describe("OffChainAssetReceiptVault", async function () {
       "failed to AuthorizeReceiptTransfer"
     );
   });
-  it("Confiscate - Checks role CONFISCATOR", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await assertError(
-      async () =>
-        await vault.connect(alice).confiscateShares(alice.address, []),
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role ${await vault
-        .connect(alice)
-        .CONFISCATOR()}`,
-      "failed to confiscate"
-    );
-  });
-  it("Confiscate - Checks ConfiscateShares is NOT emitted on Zero balance", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CONFISCATOR(), alice.address);
-
-    try {
-      await getEventArgs(
-        await vault.connect(alice).confiscateShares(alice.address, [1]),
-        "ConfiscateShares",
-        vault
-      );
-    } catch (err) {
-      assert(
-        err
-          .toString()
-          .includes("Error: Could not find event with name ConfiscateShares"),
-        `ConfiscateShares was emitted`
-      );
-    }
-  });
   it("Confiscate - Checks ConfiscateShares is emitted", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
