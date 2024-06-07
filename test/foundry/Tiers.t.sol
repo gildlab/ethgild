@@ -4,6 +4,7 @@ pragma solidity =0.8.17;
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 import {
     OffchainAssetReceiptVault,
     UnauthorizedSenderTier
@@ -101,7 +102,8 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
-        uint256 fuzzedBlockNumber
+        uint256 fuzzedBlockNumber,
+        address tierAddress
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -116,6 +118,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
 
         vm.assume(alice != bob);
+        vm.assume(tierAddress != address(0));
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
@@ -130,19 +133,22 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.certify(certifyUntil, referenceBlockNumber, false, fuzzedData);
 
         vault.grantRole(vault.ERC1155TIERER(), alice);
+        vault.setERC1155Tier(tierAddress, fuzzedMinTier, fuzzedContext, fuzzedData);
 
-        // New TierV2TestContract contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
-        uint256 fromReportTime_ = TierV2TestContract.reportTimeForTier(alice, fuzzedMinTier, fuzzedContext);
+        {
+            ITierV2 tierContract = ITierV2(tierAddress);
+            vm.mockCall(
+                address(tierContract),
+                abi.encodeWithSelector(ITierV2.reportTimeForTier.selector, alice, fuzzedMinTier, fuzzedContext),
+                abi.encode(999)
+            );
 
-        vault.setERC1155Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+            //Expect the revert with the exact revert reason
+            //Revert reason must match the UnauthorizedSenderTier with correct encoding
+            vm.expectRevert(abi.encodeWithSelector(UnauthorizedSenderTier.selector, alice, 999));
 
-        // Expect the revert with the exact revert reason
-        // Revert reason must match the UnauthorizedSenderTier with correct encoding
-        vm.expectRevert(abi.encodeWithSelector(UnauthorizedSenderTier.selector, alice, fromReportTime_));
-
-        vault.authorizeReceiptTransfer(alice, bob);
-
+            vault.authorizeReceiptTransfer(alice, bob);
+        }
         vm.stopPrank();
     }
 }
