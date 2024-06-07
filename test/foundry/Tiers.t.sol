@@ -112,7 +112,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
@@ -171,7 +171,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
