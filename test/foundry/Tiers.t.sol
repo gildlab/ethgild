@@ -101,6 +101,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint8 fuzzedMinTier,
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
+        uint256 referenceBlockNumber,
         uint256 fuzzedBlockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -111,6 +112,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
+        referenceBlockNumber = bound(fuzzedBlockNumber, 1, block.number);
         fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
         certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
 
@@ -126,7 +128,7 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, fuzzedData);
+        vault.certify(certifyUntil, referenceBlockNumber, false, fuzzedData);
 
         vault.grantRole(vault.ERC1155TIERER(), alice);
 
