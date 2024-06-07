@@ -46,12 +46,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.assume(aliceAssets != 0);
         vault.grantRole(vault.DEPOSITOR(), alice);
 
-        // Calculate expected shares
-        uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
-
         // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit DepositWithReceipt(alice, alice, aliceAssets, expectedShares, 1, fuzzedReceiptInformation);
+        emit DepositWithReceipt(alice, alice, aliceAssets, aliceAssets, 1, fuzzedReceiptInformation);
 
         // Call the deposit function that should emit the event
         vault.deposit(aliceAssets, alice, minShareRatio, fuzzedReceiptInformation);
@@ -63,6 +60,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         assertEqUint(vault.totalSupply(), vault.totalAssets());
     }
 
+    /// Test to check deposit reverts with MinShareRatio
     function testMinShareRatio(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -91,6 +89,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test to check deposit reverts with ZeroReceiver
     function testZeroReceiver(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -189,20 +188,15 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.DEPOSITOR(), bob);
 
-        // Log event
-        // Start recording logs
-        vm.recordLogs();
-
-        uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
-
         // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit DepositWithReceipt(alice, bob, aliceAssets, expectedShares, 1, fuzzedReceiptInformation);
+        emit DepositWithReceipt(alice, bob, aliceAssets, aliceAssets, 1, fuzzedReceiptInformation);
 
         vault.deposit(aliceAssets, bob, minShareRatio, fuzzedReceiptInformation);
         vm.stopPrank();
     }
 
+    /// Test PreviewDeposit returns correct shares
     function testPreviewDepositReturnedShares(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -225,6 +219,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    //Test PreviewDeposit returns correct assets
     function testPreviewMintReturnedAssets(
         uint256 fuzzedKeyAlice,
         string memory assetName,
@@ -234,18 +229,15 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
-        uint256 minShareRatio = 1e18;
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        uint256 expectedAssets = shares.fixedPointDiv(minShareRatio, Math.Rounding.Up);
-
         vault.grantRole(vault.DEPOSITOR(), alice);
         uint256 assets = vault.previewMint(shares);
 
-        assertEqUint(assets, expectedAssets);
+        assertEqUint(assets, shares);
 
         vm.stopPrank();
     }
@@ -279,13 +271,11 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vault.grantRole(vault.DEPOSITOR(), alice);
 
-        uint256 shares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
-
         // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit DepositWithReceipt(alice, alice, aliceAssets, shares, 1, receiptInformation);
+        emit DepositWithReceipt(alice, alice, aliceAssets, aliceAssets, 1, receiptInformation);
 
-        vault.mint(shares, alice, minShareRatio, receiptInformation);
+        vault.mint(aliceAssets, alice, minShareRatio, receiptInformation);
 
         vm.stopPrank();
     }
