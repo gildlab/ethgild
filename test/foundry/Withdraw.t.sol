@@ -10,7 +10,6 @@ import {
 } from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 import {OffchainAssetReceiptVault} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
@@ -90,7 +89,8 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Calculate expected shares
         uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
-        // Set up the event expectation for DepositWithReceipt
+
+        // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
         emit WithdrawWithReceipt(alice, alice, alice, aliceAssets, expectedShares, 1, data);
 
@@ -368,10 +368,9 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Calculate expected shares
         uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
-        // Set up the event expectation for DepositWithReceipt
+        // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
         emit WithdrawWithReceipt(alice, bob, alice, aliceAssets, expectedShares, 1, data);
-
         // Call withdraw function
         vault.withdraw(aliceAssets, bob, alice, 1, data);
 
