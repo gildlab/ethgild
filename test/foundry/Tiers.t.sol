@@ -12,6 +12,7 @@ import {OffchainAssetReceiptVaultFactory} from
     "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
+import {ITierV2} from "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
 
 contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
@@ -24,7 +25,8 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory fuzzedData,
         uint8 fuzzedMinTier,
-        uint256[] memory fuzzedContext
+        uint256[] memory fuzzedContext,
+        address tier
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -34,8 +36,6 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        // New TierV2TestContract contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
         // Create the vault
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
@@ -45,10 +45,10 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Emit the expected event
         vm.expectEmit(true, true, true, true);
-        emit SetERC20Tier(alice, address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+        emit SetERC20Tier(alice, address(tier), fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Call the function that should emit the event
-        vault.setERC20Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+        vault.setERC20Tier(address(tier), fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Stop the prank
         vm.stopPrank();
@@ -61,7 +61,8 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory fuzzedData,
         uint8 fuzzedMinTier,
-        uint256[] memory fuzzedContext
+        uint256[] memory fuzzedContext,
+        address tier
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -71,8 +72,6 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        // New TierV2TestContract contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
 
         // Create the vault
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
@@ -82,10 +81,10 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Emit the expected event
         vm.expectEmit(true, true, true, true);
-        emit SetERC1155Tier(alice, address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+        emit SetERC1155Tier(alice, tier, fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Call the function that should emit the event
-        vault.setERC1155Tier(address(TierV2TestContract), fuzzedMinTier, fuzzedContext, fuzzedData);
+        vault.setERC1155Tier(tier, fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Stop the prank
         vm.stopPrank();
