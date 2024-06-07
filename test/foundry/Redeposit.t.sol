@@ -6,10 +6,8 @@ import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/Creat
 import {Test, Vm} from "forge-std/Test.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfig,
     CertificationExpired
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
 
@@ -166,7 +164,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        uint256 fuzzedBlockNumber
+        uint256 referenceBlockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -177,9 +175,8 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         shareRatio = bound(shareRatio, 1, 1e18);
-
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
 
@@ -203,7 +200,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 assetsToDeposit = aliceAssets.fixedPointDiv(3, Math.Rounding.Down);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, fuzzedReceiptInformation);
+        vault.certify(certifyUntil, referenceBlockNumber, false, fuzzedReceiptInformation);
 
         vault.deposit(assetsToDeposit, bob, shareRatio, fuzzedReceiptInformation);
 
