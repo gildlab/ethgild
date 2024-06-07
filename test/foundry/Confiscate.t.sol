@@ -65,7 +65,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 fuzzedBlockNumber
+        uint256 referenceBlockNumber
     ) external {
         shareRatio = bound(shareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -75,8 +75,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -87,7 +87,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, false, justification);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
@@ -113,7 +113,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 fuzzedBlockNumber
+        uint256 referenceBlockNumber
     ) external {
         shareRatio = bound(shareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -123,8 +123,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -135,7 +135,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, false, justification);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
@@ -201,7 +201,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 fuzzedBlockNumber
+        uint256 referenceBlockNumber
     ) external {
         shareRatio = bound(shareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -211,8 +211,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -223,7 +223,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, false, justification);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
@@ -249,7 +249,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 fuzzedBlockNumber
+        uint256 referenceBlockNumber
     ) external {
         shareRatio = bound(shareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -259,8 +259,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -271,7 +271,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, false, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, false, justification);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
