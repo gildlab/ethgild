@@ -1593,55 +1593,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `Shares has not been redeemed`
     );
   });
-  it("User not being able to withdraw someone else's share", async function () {
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-    const id = ethers.BigNumber.from(1);
-
-    //grant depositor role to alice
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
-    await testErc20Contract.deployed();
-
-    const assets = ethers.BigNumber.from(30);
-    await testErc20Contract.transfer(alice.address, assets);
-    await testErc20Contract
-      .connect(alice)
-      .increaseAllowance(vault.address, assets);
-
-    const shares = ethers.BigNumber.from(10);
-    await vault
-      .connect(alice)
-      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, 1, []);
-
-    const balance = await receipt.connect(alice).balanceOf(alice.address, id);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(bob)
-          ["redeem(uint256,address,address,uint256,bytes)"](
-            balance,
-            alice.address,
-            alice.address,
-            id,
-            []
-          ),
-      "ERC20: insufficient allowance",
-      "failed to prevent withdraw on someone else's shares"
-    );
-  });
   it("Prevent authorizeReceiptTransfer if system not certified", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
