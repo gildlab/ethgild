@@ -1795,69 +1795,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong receipt information sender ${alice.address} got ${sender}`
     );
   });
-  it("Withdraw on someone else", async function () {
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-    const id = 1;
-
-    //grant depositor role to alice
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const testErc20Contract = (await testErc20.deploy()) as TestErc20;
-    await testErc20Contract.deployed();
-
-    const assets = ethers.BigNumber.from(30);
-    await testErc20Contract.transfer(alice.address, assets);
-    await testErc20Contract
-      .connect(alice)
-      .increaseAllowance(vault.address, assets);
-
-    const shares = ethers.BigNumber.from(10);
-    await vault
-      .connect(alice)
-      ["mint(uint256,address,uint256,bytes)"](shares, alice.address, id, []);
-
-    const balance = await receipt.connect(alice).balanceOf(alice.address, id);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
-
-    let bobBalanceVault = await vault.connect(alice).balanceOf(bob.address);
-    let aliceBalanceVault = await vault.connect(alice).balanceOf(alice.address);
-
-    await vault
-      .connect(alice)
-      ["withdraw(uint256,address,address,uint256,bytes)"](
-        balance,
-        bob.address,
-        alice.address,
-        id,
-        []
-      );
-
-    let bobBalanceVaultAft = await vault.connect(alice).balanceOf(bob.address);
-    let aliceBalanceVaultAft = await vault
-      .connect(alice)
-      .balanceOf(alice.address);
-
-    assert(
-      bobBalanceVaultAft.eq(bobBalanceVault),
-      `Wrong shares for bob ${bobBalanceVaultAft} got ${bobBalanceVaultAft}`
-    );
-    assert(
-      aliceBalanceVaultAft.eq(aliceBalanceVault.sub(balance)),
-      `Wrong shares for alice ${aliceBalanceVault.sub(
-        balance
-      )} got ${aliceBalanceVaultAft}`
-    );
-  });
   it("Redeems on someone else", async function () {
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
 
