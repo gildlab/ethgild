@@ -4,7 +4,6 @@ pragma solidity =0.8.17;
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 import {
     OffchainAssetReceiptVault,
     UnauthorizedSenderTier
@@ -102,7 +101,6 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
-        uint256 fuzzedBlockNumber,
         address tierAddress
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -113,9 +111,8 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        referenceBlockNumber = bound(fuzzedBlockNumber, 1, block.number);
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
@@ -163,7 +160,6 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
-        uint256 fuzzedBlockNumber,
         address tierAddress
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -174,9 +170,8 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        referenceBlockNumber = bound(fuzzedBlockNumber, 1, block.number);
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
 
         vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
