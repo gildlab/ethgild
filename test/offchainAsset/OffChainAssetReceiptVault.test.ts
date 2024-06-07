@@ -203,52 +203,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets}`
     );
   });
-  it("PreviewWithdraw returns 0 shares if no withdrawer role", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-    const assets = ethers.BigNumber.from(100);
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const id = ethers.BigNumber.from(1);
-
-    const expectedShares = ethers.BigNumber.from(0);
-
-    const shares = await vault
-      .connect(alice)
-      ["previewWithdraw(uint256,uint256)"](assets, id);
-
-    assert(
-      shares.eq(expectedShares),
-      `Wrong shares: expected ${expectedShares} got ${shares} `
-    );
-  });
-  it("PreviewWithdraw returns correct shares", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-    const assets = ethers.BigNumber.from(10);
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    //assets are always deposited 1:1 with shares
-    const id = ONE;
-
-    //grant withdrawer role to alice
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
-
-    const expectedShares = fixedPointMul(assets, id);
-
-    const shares = await vault
-      .connect(alice)
-      ["previewWithdraw(uint256,uint256)"](assets, id);
-
-    assert(
-      shares.eq(expectedShares),
-      `Wrong shares: expected ${expectedShares} got ${shares} `
-    );
-  });
   it("Mints with data", async function () {
     const [vault, receipt] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();

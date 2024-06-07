@@ -28,6 +28,62 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bytes receiptInformation
     );
 
+    /// Test PreviewWithdraw returns 0 shares if no withdrawer role
+    function testPreviewWithdrawReturnsZero(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Call withdraw function
+        uint256 shares = vault.previewWithdraw(aliceAssets, 1);
+
+        assertEq(shares, 0);
+        // Stop the prank
+        vm.stopPrank();
+    }
+
+    /// Test PreviewWithdraw returns correct shares
+    function testPreviewWithdraw(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        vault.grantRole(vault.WITHDRAWER(), alice);
+
+        uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
+
+        // Call withdraw function
+        uint256 shares = vault.previewWithdraw(aliceAssets, 1);
+
+        assertEq(shares, expectedShares);
+        // Stop the prank
+        vm.stopPrank();
+    }
+
     /// Test withdraw function reverts without WITHDRAWER role
     function testWithdrawRevertsWithoutRole(
         uint256 fuzzedKeyAlice,
