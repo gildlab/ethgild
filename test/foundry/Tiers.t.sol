@@ -151,4 +151,63 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
         }
         vm.stopPrank();
     }
+
+    /// Test authorizeReceiptTransfer reverts on random tier address
+    function testAuthorizeReceiptTransferOnRandomTier(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory fuzzedData,
+        uint8 fuzzedMinTier,
+        uint256[] memory fuzzedContext,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        uint256 fuzzedBlockNumber,
+        address tierAddress
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        referenceBlockNumber = bound(fuzzedBlockNumber, 1, block.number);
+        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+
+        vm.assume(alice != bob);
+        vm.assume(tierAddress != address(0));
+
+        fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Call the certify function
+        vault.certify(certifyUntil, referenceBlockNumber, false, fuzzedData);
+
+        vault.grantRole(vault.ERC1155TIERER(), alice);
+        vault.setERC1155Tier(tierAddress, fuzzedMinTier, fuzzedContext, fuzzedData);
+
+        {
+            // Test case: simulate a revert on call to randomAddress
+            // Modify the mock call behavior to revert
+            vm.mockCall(
+                tierAddress,
+                abi.encodeWithSelector(ITierV2.reportTimeForTier.selector, alice, fuzzedMinTier, fuzzedContext),
+                abi.encode(false) // Set the response to false to simulate a revert
+            );
+
+            vm.expectRevert();
+            vault.authorizeReceiptTransfer(alice, bob);
+        }
+        vm.stopPrank();
+    }
 }
