@@ -2,17 +2,12 @@
 pragma solidity =0.8.17;
 
 import {
-    VaultConfig,
-    MinShareRatio,
-    ZeroAssetsAmount,
-    ZeroReceiver,
-    InvalidId
+    MinShareRatio, ZeroAssetsAmount, ZeroReceiver, InvalidId
 } from "../../contracts/vault/receipt/ReceiptVault.sol";
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetVaultConfig,
     OffchainAssetReceiptVaultConfig,
     ZeroAdmin,
     NonZeroAsset,
