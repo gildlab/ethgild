@@ -34,7 +34,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         address alice = vm.addr(fuzzedKeyAlice);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
@@ -71,7 +71,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        vm.assume(minShareRatio > 1e18);
+        minShareRatio = bound(minShareRatio, 1e18 + 1, type(uint256).max);
 
         address alice = vm.addr(fuzzedKeyAlice);
         // Prank as Alice for the transaction
@@ -98,7 +98,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 minShareRatio,
         bytes memory receiptInformation
     ) external {
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
 
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -136,7 +136,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
 
         vm.assume(alice != bob);
 
@@ -174,7 +174,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
 
         vm.assume(alice != bob);
         // Assume that aliceAssets is not 0
@@ -254,7 +254,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
 
         // Assume that aliceAssets is not 0
         vm.assume(aliceAssets != 0);
