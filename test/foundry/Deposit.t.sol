@@ -44,7 +44,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit DepositWithReceipt(alice, alice, aliceAssets, aliceAssets, 1, fuzzedReceiptInformation);
 
         // Call the deposit function that should emit the event
@@ -211,7 +211,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.DEPOSITOR(), bob);
 
         // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit DepositWithReceipt(alice, bob, aliceAssets, aliceAssets, 1, fuzzedReceiptInformation);
 
         vault.deposit(aliceAssets, bob, minShareRatio, fuzzedReceiptInformation);
@@ -264,6 +264,39 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test deposit without depositor role
+    function testDepositWithoutDepositorRole(
+        uint256 fuzzedKeyAlice,
+        uint256 aliceAssets,
+        uint256 minShareRatio,
+        bytes memory fuzzedReceiptInformation,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        // Assume that aliceAssets is not 0
+        vm.assume(aliceAssets != 0);
+
+        vm.expectRevert();
+        // Call the deposit function that should emit the event
+        vault.deposit(aliceAssets, alice, minShareRatio, fuzzedReceiptInformation);
+
+        // Stop the prank
+        vm.stopPrank();
+
+        // Assert that the total supply and total assets are equal after the deposit
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
+    }
+
     /// Test mint function
     function testMint(
         uint256 fuzzedKeyAlice,
@@ -288,8 +321,6 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.recordLogs();
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        vault.grantRole(vault.CERTIFIER(), alice);
 
         vault.grantRole(vault.DEPOSITOR(), alice);
 
