@@ -14,6 +14,7 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
     function testAuthorizeReceiptTransferRevert(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
+        uint256 warpTimestamp,
         string memory assetName,
         string memory assetSymbol
     ) external {
@@ -25,9 +26,15 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
+        warpTimestamp = bound(warpTimestamp, 1, 1e6);
+
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, alice, bob, 0, block.timestamp));
+        // Warp the block timestamp to a non-zero value
+        vm.warp(warpTimestamp);
+
+        // Use the same timestamp in the expectRevert check
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, alice, bob, 0, warpTimestamp));
 
         vault.authorizeReceiptTransfer(alice, bob);
     }
