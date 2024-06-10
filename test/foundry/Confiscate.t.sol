@@ -65,9 +65,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber
+        uint256 referenceBlockNumber,
+        uint256 blockNumber
     ) external {
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -75,7 +76,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
@@ -113,7 +117,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber
+        uint256 referenceBlockNumber,
+        uint256 blockNumber
     ) external {
         minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -123,7 +128,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
@@ -201,7 +209,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber
+        uint256 referenceBlockNumber,
+        uint256 blockNumber
     ) external {
         minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -211,7 +220,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
@@ -249,7 +261,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         bytes memory justification,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber
+        uint256 referenceBlockNumber,
+        uint256 blockNumber
     ) external {
         minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -259,7 +272,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
