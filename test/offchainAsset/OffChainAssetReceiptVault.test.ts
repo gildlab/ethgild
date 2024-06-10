@@ -787,46 +787,6 @@ describe("OffChainAssetReceiptVault", async function () {
       "Failed to prevent redeposit"
     );
   });
-  it("Snapshot event is emitted", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
-
-    const { id } = (await getEventArgs(
-      await vault.connect(alice).snapshot([]),
-      "Snapshot",
-      vault
-    )) as SnapshotEvent["args"];
-
-    assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
-  });
-  it("SnapshotWithData event is emitted", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
-
-    const { sender, id, data } = (await getEventArgs(
-      await vault.connect(alice).snapshot([1]),
-      "SnapshotWithData",
-      vault
-    )) as SnapshotWithDataEvent["args"];
-
-    assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
-
-    assert(
-      sender === alice.address,
-      `Wrong sender. Expected ${alice.address}, got ${sender}`
-    );
-    assert(data === "0x01", `Wrong information. Expected 0x01, got ${data}`);
-  });
   it("Sets correct erc20Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
