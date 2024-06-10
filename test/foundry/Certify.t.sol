@@ -23,7 +23,8 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
         bytes memory data,
-        uint256 blockNumber
+        uint256 blockNumber,
+        bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -42,10 +43,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Expect the Certify event
         vm.expectEmit(true, true, true, true);
-        emit Certify(alice, certifyUntil, referenceBlockNumber, false, data);
+        emit Certify(alice, certifyUntil, referenceBlockNumber, forceUntil, data);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
         vm.stopPrank();
     }
@@ -57,7 +58,8 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
-        uint256 blockNumber
+        uint256 blockNumber,
+        bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -79,7 +81,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector, alice));
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
         vm.stopPrank();
     }
@@ -92,7 +94,8 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         bytes memory data,
         uint256 fuzzedFutureBlockNumber,
-        uint256 blockNumber
+        uint256 blockNumber,
+        bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -115,7 +118,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.expectRevert(abi.encodeWithSelector(FutureReferenceBlock.selector, alice, fuzzedFutureBlockNumber));
 
         // Call the certify function
-        vault.certify(certifyUntil, fuzzedFutureBlockNumber, false, data);
+        vault.certify(certifyUntil, fuzzedFutureBlockNumber, forceUntil, data);
 
         vm.stopPrank();
     }
