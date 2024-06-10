@@ -32,7 +32,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-        certifyUntil = bound(certifyUntil, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, type(uint256).max);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -141,7 +141,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         blockNumber = bound(block.number, 0, type(uint256).max);
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-        certifyUntil = bound(certifyUntil, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, type(uint256).max);
         vm.assume(certifyUntil > certifyUntilPast && certifyUntilPast != 0);
 
         // Prank as Alice for the transaction
