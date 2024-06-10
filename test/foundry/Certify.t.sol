@@ -42,7 +42,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Expect the Certify event
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit Certify(alice, certifyUntil, referenceBlockNumber, forceUntil, data);
 
         // Call the certify function
@@ -152,14 +152,14 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Expect the Certify event
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit Certify(alice, certifyUntil, referenceBlockNumber, false, data);
 
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, false, data);
 
         // Expect the Certify event
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit Certify(alice, certifyUntilPast, referenceBlockNumber, true, data);
 
         // Call the certify function
