@@ -28,8 +28,8 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -130,7 +130,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address alice = vm.addr(fuzzedKeyAlice);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
         vm.assume(certifyUntil > certifyUntilPast && certifyUntilPast != 0);
 
         // Prank as Alice for the transaction
