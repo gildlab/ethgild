@@ -145,7 +145,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, justification);
 
-        // Assume that aliceAssets is less than totalSupply
+        // Assume that aliceAssets is less than uint256 max
         aliceAssets = bound(aliceAssets, 1, type(uint256).max);
 
         vault.deposit(aliceAssets, bob, minShareRatio, justification);
@@ -206,8 +206,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 minShareRatio,
         uint256 aliceAssets,
         string memory assetName,
-        string memory assetSymbol,
-        bytes memory justification,
+        bytes memory data,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
         uint256 blockNumber,
@@ -227,26 +226,26 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
+        // Assume that aliceAssets is less than uint256 max
+        aliceAssets = bound(aliceAssets, 1, type(uint256).max);
+
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetName);
         vault.grantRole(vault.CONFISCATOR(), alice);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, type(uint256).max);
-
-        vault.deposit(aliceAssets, bob, minShareRatio, justification);
+        vault.deposit(aliceAssets, bob, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit ConfiscateReceipt(alice, bob, 1, aliceAssets, justification);
+        emit ConfiscateReceipt(alice, bob, 1, aliceAssets, data);
 
-        vault.confiscateReceipt(bob, 1, justification);
+        vault.confiscateReceipt(bob, 1, data);
         vm.stopPrank();
     }
 
