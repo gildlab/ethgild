@@ -90,6 +90,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Call the deposit function that should emit the event
         vault.deposit(aliceAssets, alice, minShareRatio, fuzzedReceiptInformation);
 
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
+
         // Set up the event expectation for DepositWithReceipt for the second deposit with increased ID
         vm.expectEmit(false, false, false, true);
         emit DepositWithReceipt(
@@ -264,6 +266,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         emit DepositWithReceipt(alice, bob, aliceAssets, aliceAssets, 1, fuzzedReceiptInformation);
 
         vault.deposit(aliceAssets, bob, minShareRatio, fuzzedReceiptInformation);
+
+        // Assert that the total supply and total assets are equal after the deposit
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
         vm.stopPrank();
     }
 
@@ -341,9 +346,6 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Stop the prank
         vm.stopPrank();
-
-        // Assert that the total supply and total assets are equal after the deposit
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
     }
 
     /// Test mint function
@@ -378,6 +380,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         emit DepositWithReceipt(alice, alice, aliceAssets, aliceAssets, 1, receiptInformation);
 
         vault.mint(aliceAssets, alice, minShareRatio, receiptInformation);
+
+        // Assert that the total supply and total assets are equal after the deposit
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
 
         vm.stopPrank();
     }
