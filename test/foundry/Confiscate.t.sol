@@ -59,7 +59,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
     function testConfiscateShares(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 aliceAssets,
         string memory assetName,
         string memory assetSymbol,
@@ -67,7 +67,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         uint256 referenceBlockNumber
     ) external {
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -76,7 +76,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -94,7 +94,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, upperBound);
 
-        vault.deposit(aliceAssets, bob, shareRatio, justification);
+        vault.deposit(aliceAssets, bob, minShareRatio, justification);
 
         vm.expectEmit(true, true, true, true);
         emit ConfiscateShares(alice, bob, aliceAssets, justification);
@@ -107,7 +107,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
     function testConfiscatedIsTransferred(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 aliceAssets,
         string memory assetName,
         string memory assetSymbol,
@@ -115,7 +115,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         uint256 referenceBlockNumber
     ) external {
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -124,7 +124,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -142,7 +142,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, upperBound);
 
-        vault.deposit(aliceAssets, bob, shareRatio, justification);
+        vault.deposit(aliceAssets, bob, minShareRatio, justification);
 
         vm.expectEmit(true, true, true, true);
         emit Transfer(bob, alice, aliceAssets);
@@ -195,7 +195,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
     function testConfiscateReceipt(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 aliceAssets,
         string memory assetName,
         string memory assetSymbol,
@@ -203,7 +203,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         uint256 referenceBlockNumber
     ) external {
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -212,7 +212,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -230,7 +230,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, upperBound);
 
-        vault.deposit(aliceAssets, bob, shareRatio, justification);
+        vault.deposit(aliceAssets, bob, minShareRatio, justification);
 
         vm.expectEmit(true, true, true, true);
         emit ConfiscateReceipt(alice, bob, 1, aliceAssets, justification);
@@ -243,7 +243,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
     function testConfiscatedReceiptIsTransferred(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 aliceAssets,
         string memory assetName,
         string memory assetSymbol,
@@ -251,7 +251,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         uint256 referenceBlockNumber
     ) external {
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 1, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -260,7 +260,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr(fuzzedKeyBob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        certifyUntil = bound(certifyUntil, 1, 1e6);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -278,8 +278,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that aliceAssets is less than totalSupply
         aliceAssets = bound(aliceAssets, 1, upperBound);
 
-        vault.deposit(aliceAssets, bob, shareRatio, justification);
-        vault.deposit(aliceAssets, bob, shareRatio, justification);
+        vault.deposit(aliceAssets, bob, minShareRatio, justification);
+        vault.deposit(aliceAssets, bob, minShareRatio, justification);
 
         vm.expectEmit(true, true, true, true);
         emit TransferSingle(address(vault), bob, alice, 1, aliceAssets);
