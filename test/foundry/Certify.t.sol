@@ -22,13 +22,15 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
-        bytes memory data
+        bytes memory data,
+        uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
+        vm.roll(blockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, 1e6);
 
         // Prank as Alice for the transaction
@@ -54,13 +56,15 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 referenceBlockNumber,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory data
+        bytes memory data,
+        uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        vm.roll(blockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
 
         uint256 certifyUntil = 0;
 
@@ -86,18 +90,19 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        uint256 fuzzedBlockNumber,
         bytes memory data,
-        uint256 fuzzedFutureBlockNumber
+        uint256 fuzzedFutureBlockNumber,
+        uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        fuzzedFutureBlockNumber = bound(block.number + 1, 1, 1e6);
+        blockNumber = bound(block.number, 0, type(uint256).max);
+        vm.roll(blockNumber);
+        fuzzedFutureBlockNumber = bound(fuzzedFutureBlockNumber, blockNumber + 1, type(uint256).max - 1);
 
-        fuzzedBlockNumber = bound(fuzzedBlockNumber, 1, 1e6);
-        certifyUntil = bound(certifyUntil, 1, fuzzedBlockNumber);
+        certifyUntil = bound(certifyUntil, 1, blockNumber);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -123,13 +128,16 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 certifyUntil,
         uint256 certifyUntilPast,
         uint256 referenceBlockNumber,
-        bytes memory data
+        bytes memory data,
+        uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        blockNumber = bound(block.number, 0, type(uint256).max);
+        vm.roll(blockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, 1e6);
         vm.assume(certifyUntil > certifyUntilPast && certifyUntilPast != 0);
 
