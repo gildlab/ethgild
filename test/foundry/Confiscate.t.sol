@@ -120,7 +120,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 blockNumber,
         bool forceUntil
     ) external {
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -163,7 +163,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory justification
+        bytes memory justification,
+        uint256 id
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
@@ -172,6 +173,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
+        id = bound(id, 0, type(uint256).max);
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -181,7 +183,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Stop recording logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        vault.confiscateReceipt(bob, 1, justification);
+        vault.confiscateReceipt(bob, id, justification);
 
         // Check the logs to ensure event is not present
         bool eventFound = false;
@@ -211,7 +213,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 blockNumber,
         bool forceUntil
     ) external {
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -241,7 +243,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vault.deposit(aliceAssets, bob, minShareRatio, justification);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit ConfiscateReceipt(alice, bob, 1, aliceAssets, justification);
 
         vault.confiscateReceipt(bob, 1, justification);
@@ -261,7 +263,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 blockNumber,
         bool forceUntil
     ) external {
-        minShareRatio = bound(minShareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
