@@ -214,9 +214,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(
-            alice, bob, aliceAssets, aliceAssets, 1, data
-        );
+        emit DepositWithReceipt(alice, bob, aliceAssets, aliceAssets, 1, data);
         vault.deposit(aliceAssets, bob, minShareRatio, data);
 
         vm.stopPrank();
