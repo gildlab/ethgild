@@ -23,10 +23,10 @@ contract SnapshotTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.ERC20SNAPSHOTTER(), alice);
 
         // Expect the Snapshot and SnapshotWithData events
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit Snapshot(1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit SnapshotWithData(alice, 1, data);
 
         uint256 snapshotId = vault.snapshot(data);
@@ -53,10 +53,10 @@ contract SnapshotTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.ERC20SNAPSHOTTER(), alice);
 
         // Expect the Snapshot and SnapshotWithData events
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit Snapshot(1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit SnapshotWithData(alice, 1, data);
 
         uint256 snapshotId = vault.snapshot(data);
@@ -65,10 +65,10 @@ contract SnapshotTest is Test, CreateOffchainAssetReceiptVaultFactory {
         assertEq(snapshotId, 1);
 
         // Expect the Snapshot and SnapshotWithData events
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit Snapshot(2);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit(false, false, false, true);
         emit SnapshotWithData(alice, 2, data);
 
         snapshotId = vault.snapshot(data);
