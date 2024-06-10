@@ -81,7 +81,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.roll(blockNumber);
 
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-        certifyUntil = bound(certifyUntil, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, type(uint256).max);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
