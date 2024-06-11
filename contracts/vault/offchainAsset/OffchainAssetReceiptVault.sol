@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from

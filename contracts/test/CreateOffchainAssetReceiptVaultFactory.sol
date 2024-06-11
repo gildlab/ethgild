@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
 import {OffchainAssetReceiptVault} from "../vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {ReceiptFactory} from "../vault/receipt/ReceiptFactory.sol";

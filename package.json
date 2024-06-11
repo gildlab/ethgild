@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "@rainprotocol/rain-protocol": "git://github.com/rainprotocol/rain-protocol.git#33275a8c9ef751c3d1187dc9a66b37d77aca6848",
-    "solc": "=0.8.17"
+    "solc": "=0.8.25"
   }
 }

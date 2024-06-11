@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
 import "./IPriceOracleV1.sol";
 import "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
