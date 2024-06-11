@@ -30,8 +30,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
@@ -65,8 +64,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
@@ -101,8 +99,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         blockNumber = bound(block.number, 0, type(uint256).max);
         vm.roll(blockNumber);
@@ -188,11 +185,9 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address bob = vm.addr(fuzzedKeyBob);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
