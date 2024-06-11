@@ -4,11 +4,11 @@ pragma solidity =0.8.17;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IPriceOracleV1} from "../oracle/price/IPriceOracleV1.sol";
 
-/// @title OwnedOracle
+/// @title OwnableOracle
 /// A simple oracle that allows the owner to set the price.
 /// This is useful for testing and development purposes.
 /// Strongly discouraged for production use.
-contract OwnedOracle is Ownable, IPriceOracleV1 {
+contract OwnableOracle is Ownable, IPriceOracleV1 {
     /// @inheritdoc IPriceOracleV1
     uint256 public price;
 
