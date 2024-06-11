@@ -386,6 +386,41 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     /// Test deposit without depositor role
     function testDepositWithoutDepositorRole(
         uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory fuzzedReceiptInformation,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        // Assume that assets is not 0
+        vm.assume(assets != 0);
+
+        vm.expectRevert();
+        // Call the deposit function that should emit the event
+        vault.deposit(assets, alice, minShareRatio, fuzzedReceiptInformation);
+
+        // Stop the prank
+        vm.stopPrank();
+    }
+
+    /// Test deposit without depositor role for admin
+    function testDepositWithoutDepositorRoleForAdmin(
+        uint256 fuzzedKeyAlice,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory fuzzedReceiptInformation,
