@@ -36,9 +36,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), alice);
@@ -71,9 +72,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         uint256 certifyUntil = 0;
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), alice);
@@ -107,9 +109,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         certifyUntil = bound(certifyUntil, 1, blockNumber);
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), alice);
@@ -153,9 +156,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
         certifyUntilPast = bound(certifyUntilPast, 1, blockNumber);
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice to grant role
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), bob);
@@ -212,9 +216,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntilFuture = bound(certifyUntilFuture, blockNumber + 1, type(uint32).max);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice to grant role
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), bob);
@@ -269,9 +274,10 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice to grant role
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), bob);
