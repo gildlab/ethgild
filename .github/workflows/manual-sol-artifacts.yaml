@@ -29,17 +29,22 @@ on:
           - ownable-oracle-vault
 
       receipt-vault-asset:
-        description: 'Asset that is deposited into deployed receipt vault (if any).'
+        description: 'Asset that is deposited into deployed receipt vault.'
         required: false
         type: string
 
       receipt-vault-name:
-        description: 'Name of the share token for the deployed receipt vault (if any).'
+        description: 'Name of the share token for the deployed receipt vault.'
         required: false
         type: string
 
       receipt-vault-symbol:
-        description: 'Symbol of the share token for the deployed receipt vault (if any).'
+        description: 'Symbol of the share token for the deployed receipt vault.'
+        required: false
+        type: string
+
+      owner:
+        description: 'Owner of any ownable contracts deployed.'
         required: false
         type: string
 

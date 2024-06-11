@@ -27,6 +27,7 @@ contract Deploy is Script {
 
         // Deploy OwnableOracle
         OwnableOracle oracle = new OwnableOracle();
+        oracle.transferOwnership(vm.envAddress("OWNER_ADDRESS"));
 
         factory.createChild(
             abi.encode(
