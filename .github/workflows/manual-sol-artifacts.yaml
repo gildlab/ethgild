@@ -52,6 +52,7 @@ jobs:
       - name: deploy to ${{ inputs.network }}
         run: nix develop -c rainix-sol-artifacts
         env:
+          DEPLOYMENT_SUITE: ${{ inputs.suite }}
           DEPLOY_BROADCAST: '1'
           DEPLOYMENT_KEY: ${{ secrets.CI_PRIVATE_KEY }}
           ETH_RPC_URL: ${{ secrets[env.rpc_secret_name] || vars[env.rpc_secret_name] || '' }}
