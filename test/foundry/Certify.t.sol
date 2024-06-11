@@ -21,6 +21,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     /// Test certify event
     function testCertify(
         uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
@@ -31,6 +32,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
@@ -38,15 +40,18 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        // Prank as Alice for the transaction
+        // Prank as Alice to grant role
         vm.startPrank(alice);
 
         // Grant CERTIFIER role to Alice
-        vault.grantRole(vault.CERTIFIER(), alice);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(alice, certifyUntil, referenceBlockNumber, forceUntil, data);
+        emit Certify(bob, certifyUntil, referenceBlockNumber, forceUntil, data);
 
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
@@ -57,6 +62,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     /// Test certify reverts on zero certify until
     function testCertifyRevertOnZeroCertifyUntil(
         uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
         uint256 referenceBlockNumber,
         string memory assetName,
         string memory assetSymbol,
@@ -66,6 +72,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
@@ -74,14 +81,17 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        // Prank as Alice for the transaction
+        // Prank as Alice to grant role
         vm.startPrank(alice);
 
         // Grant CERTIFIER role to Alice
-        vault.grantRole(vault.CERTIFIER(), alice);
+        vault.grantRole(vault.CERTIFIER(), bob);
 
-        // Expect the Certify event
-        vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector, alice));
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        // Expect to revert
+        vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector, bob));
 
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
@@ -92,6 +102,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     /// Test certify reverts on future reference
     function testCertifyRevertOnFutureReferenceBlock(
         uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
@@ -102,6 +113,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
         blockNumber = bound(block.number, 0, type(uint256).max);
         vm.roll(blockNumber);
@@ -111,14 +123,17 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        // Prank as Alice for the transaction
+        // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        // Grant CERTIFIER role to Alice
-        vault.grantRole(vault.CERTIFIER(), alice);
+        // Grant CERTIFIER role to bob
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
 
         // Expect the Certify event
-        vm.expectRevert(abi.encodeWithSelector(FutureReferenceBlock.selector, alice, fuzzedFutureBlockNumber));
+        vm.expectRevert(abi.encodeWithSelector(FutureReferenceBlock.selector, bob, fuzzedFutureBlockNumber));
 
         // Call the certify function
         vault.certify(certifyUntil, fuzzedFutureBlockNumber, forceUntil, data);
@@ -161,7 +176,6 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), bob);
         vault.grantRole(vault.DEPOSITOR(), bob);
 
