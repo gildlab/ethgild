@@ -20,13 +20,13 @@ on:
           - sepolia
           - songbird
 
-    suite:
-      description: 'Suite to deploy'
-      required: true
-      type: choice
-      options:
-        - oracle-vault-factory
-        - ownable-oracle-vault
+      suite:
+        description: 'Suite to deploy'
+        required: true
+        type: choice
+        options:
+          - oracle-vault-factory
+          - ownable-oracle-vault
 
 jobs:
   deploy:
