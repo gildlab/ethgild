@@ -352,7 +352,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    //Test PreviewMint reverts without depositor role
+    //Test PreviewMint without depositor role
     function testPreviewMintRevertWithoutRole(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -367,6 +367,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
+
+        shares = bound(shares, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
