@@ -33,9 +33,9 @@ contract Deploy is Script {
                 ERC20PriceOracleVaultConfig({
                     priceOracle: address(oracle),
                     vaultConfig: VaultConfig({
-                        asset: vm.envAddress("ERC20_PRICE_ORACLE_RECEIPT_VAULT_ASSET"),
-                        name: vm.envString("ERC20_PRICE_ORACLE_RECEIPT_VAULT_NAME"),
-                        symbol: vm.envString("ERC20_PRICE_ORACLE_RECEIPT_VAULT_SYMBOL")
+                        asset: vm.envAddress("RECEIPT_VAULT_ASSET"),
+                        name: vm.envString("RECEIPT_VAULT_NAME"),
+                        symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
                     })
                 })
             )
