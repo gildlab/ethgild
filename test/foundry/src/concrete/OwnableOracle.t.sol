@@ -7,6 +7,27 @@ import {OwnableOracle} from "contracts/concrete/OwnableOracle.sol";
 contract OwnableOracleTest is Test {
     event Price(uint256 oldPrice, uint256 newPrice);
 
+    function checkAnonCantSetPrice(OwnableOracle oracle, address anon, uint256 newPrice) internal {
+        uint256 price = oracle.price();
+
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(anon);
+        oracle.setPrice(newPrice);
+
+        assertEq(oracle.price(), price);
+    }
+
+    function checkOwnerCanSetPrice(OwnableOracle oracle, address owner, uint256 newPrice) internal {
+        uint256 price = oracle.price();
+
+        vm.expectEmit(false, false, false, true);
+        emit Price(price, newPrice);
+        vm.prank(owner);
+        oracle.setPrice(newPrice);
+
+        assertEq(oracle.price(), newPrice);
+    }
+
     /// The owner can set the price.
     /// Anon can't set the price.
     function testSetPrice(uint256 ownerSeed, uint256 anonSeed, uint256 newPrice0, uint256 newPrice1) external {
@@ -19,39 +40,10 @@ contract OwnableOracleTest is Test {
 
         assertEq(oracle.price(), 0);
 
-        // Anon can't set the price.
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(anon);
-        oracle.setPrice(newPrice0);
-
-        assertEq(oracle.price(), 0);
-
-        // Owner can set the price.
-        vm.expectEmit(false, false, false, true);
-        emit Price(0, newPrice0);
-        vm.prank(owner);
-        oracle.setPrice(newPrice0);
-
-        assertEq(oracle.price(), newPrice0);
-
-        // Anon can't set the price.
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(anon);
-        oracle.setPrice(newPrice1);
-
-        assertEq(oracle.price(), newPrice0);
-
-        // Owner can set the price again.
-        vm.expectEmit(false, false, false, true);
-        emit Price(newPrice0, newPrice1);
-        vm.prank(owner);
-        oracle.setPrice(newPrice1);
-
-        assertEq(oracle.price(), newPrice1);
-
-        // Anon can't set the price.
-        vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(anon);
-        oracle.setPrice(newPrice0);
+        checkAnonCantSetPrice(oracle, anon, newPrice0);
+        checkOwnerCanSetPrice(oracle, owner, newPrice0);
+        checkAnonCantSetPrice(oracle, anon, newPrice1);
+        checkOwnerCanSetPrice(oracle, owner, newPrice1);
+        checkAnonCantSetPrice(oracle, anon, newPrice0);
     }
 }
