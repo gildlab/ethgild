@@ -16,3 +16,6 @@
 [submodule "lib/rain.math.fixedpoint"]
 	path = lib/rain.math.fixedpoint
 	url = https://github.com/rainlanguage/rain.math.fixedpoint
+[submodule "lib/rain.flare"]
+	path = lib/rain.flare
+	url = https://github.com/rainlanguage/rain.flare
