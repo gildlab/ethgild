@@ -131,21 +131,21 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
-        uint256 certifyUntil,
+        uint256 certifyUntilFuture,
         uint256 certifyUntilPast,
         uint256 referenceBlockNumber,
         bytes memory data,
         uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
+        // Ensure blockNumber is within the valid range
         blockNumber = bound(block.number, 0, type(uint256).max);
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
-        vm.assume(certifyUntil > certifyUntilPast && certifyUntilPast != 0);
+        certifyUntilFuture = bound(certifyUntilFuture, blockNumber + 1, type(uint32).max);
+        certifyUntilPast = bound(certifyUntilPast, 1, blockNumber);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -154,19 +154,20 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Grant CERTIFIER role to Alice
         vault.grantRole(vault.CERTIFIER(), alice);
 
-        // Expect the Certify event
-        vm.expectEmit(false, false, false, true);
-        emit Certify(alice, certifyUntil, referenceBlockNumber, false, data);
-
-        // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
-
-        // Expect the Certify event
+        // Force certify in the past
         vm.expectEmit(false, false, false, true);
         emit Certify(alice, certifyUntilPast, referenceBlockNumber, true, data);
-
-        // Call the certify function
         vault.certify(certifyUntilPast, referenceBlockNumber, true, data);
+
+        // Force certify in the present
+        vm.expectEmit(false, false, false, true);
+        emit Certify(alice, blockNumber, referenceBlockNumber, true, data);
+        vault.certify(blockNumber, referenceBlockNumber, true, data);
+
+        // Force certify in the future
+        vm.expectEmit(false, false, false, true);
+        emit Certify(alice, certifyUntilFuture, referenceBlockNumber, true, data);
+        vault.certify(certifyUntilFuture, referenceBlockNumber, true, data);
 
         vm.stopPrank();
     }
