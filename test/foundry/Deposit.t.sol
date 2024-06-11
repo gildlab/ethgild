@@ -352,7 +352,32 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    //Test PreviewDeposit returns correct assets
+    //Test PreviewMint reverts without depositor role
+    function testPreviewMintRevertWithoutRole(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 shares
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        address bob = vm.addr(fuzzedKeyBob);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        vm.startPrank(bob);
+        vm.expectRevert();
+        vault.previewMint(shares);
+
+        vm.stopPrank();
+    }
+
+    //Test PreviewMint returns correct assets
     function testPreviewMintReturnedAssets(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -368,9 +393,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         address bob = vm.addr(fuzzedKeyBob);
 
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.DEPOSITOR(), bob);
         // Prank as Bob for the transactions
