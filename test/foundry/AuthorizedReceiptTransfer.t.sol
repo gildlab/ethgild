@@ -10,6 +10,8 @@ import {
 import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
 
 contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFactory {
+    event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
+
     ///Test AuthorizeReceiptTransfer reverts if system not certified
     function testAuthorizeReceiptTransferRevert(
         uint256 fuzzedKeyAlice,
@@ -38,6 +40,52 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         // Assuming that the certification is expired
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, 0, warpTimestamp));
 
+        // Attempt to authorize receipt transfer, should revert
+        vault.authorizeReceiptTransfer(bob, alice);
+
+        vm.stopPrank();
+    }
+
+    /// Test AuthorizeReceiptTransfer when system certified
+    function testAuthorizeReceiptTransfer(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        bytes memory data,
+        uint256 blockNumber,
+        bool forceUntil
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        vm.assume(alice != bob);
+
+        blockNumber = bound(blockNumber, 0, type(uint32).max);
+        vm.roll(blockNumber);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Prank Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        // Expect the Certify event
+        vm.expectEmit(false, false, false, true);
+        emit Certify(bob, certifyUntil, referenceBlockNumber, forceUntil, data);
+
+        // Call the certify function
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
         // Attempt to authorize receipt transfer, should revert
         vault.authorizeReceiptTransfer(bob, alice);
 
