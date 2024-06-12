@@ -141,178 +141,57 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    /// Test certify with force until true in the past
-    function testCertifyWithForceUntilTrueInPast(
+    /// Test certify with force until true
+    function testCertifyWithForceUntilTrue(
         uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        uint256 assets,
         string memory assetName,
         string memory assetSymbol,
-        uint256 certifyUntil,
-        uint256 certifyUntilPast,
-        uint256 referenceBlockNumber,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
         bytes memory data,
-        uint256 blockNumber,
-        uint256 minShareRatio
+        uint256 certifyUntil,
+        uint256 forceCertifyUntil,
+        uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
         minShareRatio = bound(minShareRatio, 0, 1e18);
-
-        // Assume that assets is less uint256 max
-        assets = bound(assets, 1, type(uint256).max);
-
-        // Ensure blockNumber is within the valid range
-        blockNumber = bound(block.number, 0, type(uint256).max);
-        vm.roll(blockNumber);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
-        certifyUntilPast = bound(certifyUntilPast, 1, blockNumber);
+        forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max);
+        vm.assume(certifyUntil != forceCertifyUntil);
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        // Assume that assets are within a valid range
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        // Prank as Alice to grant role
+        // Prank as Alice to set role
         vm.startPrank(alice);
-
-        vault.grantRole(vault.CERTIFIER(), bob);
         vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+        vm.stopPrank();
 
-        // Prank Bob for the transaction
+        // Prank as Bob for the transaction
         vm.startPrank(bob);
 
-        // Non-Force certify to be overwritten later
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, referenceBlockNumber, false, data);
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+        // Certify system
+        vault.certify(certifyUntil, blockNumber, false, data);
 
-        // Force certify in the past
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntilPast, referenceBlockNumber, true, data);
-        vault.certify(certifyUntilPast, referenceBlockNumber, true, data);
+        // Certify with forceUntil true
+        vault.certify(forceCertifyUntil, blockNumber, true, data);
 
         // Call deposit to make sure system is certified
         vm.expectEmit(false, false, false, true);
         emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
-        vault.deposit(assets, alice, minShareRatio, data);
 
-        vm.stopPrank();
-    }
-
-    /// Test certify with force until true in future
-    function testCertifyWithForceUntilTrueInFuture(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 certifyUntilFuture,
-        uint256 certifyUntil,
-        uint256 referenceBlockNumber,
-        bytes memory data,
-        uint256 blockNumber,
-        uint256 minShareRatio
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        minShareRatio = bound(minShareRatio, 0, 1e18);
-
-        // Assume that assets is less uint256 max
-        assets = bound(assets, 1, type(uint256).max);
-
-        // Ensure blockNumber is within the valid range
-        blockNumber = bound(block.number, 0, type(uint256).max);
-        vm.roll(blockNumber);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-        certifyUntilFuture = bound(certifyUntilFuture, blockNumber + 1, type(uint32).max);
-        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
-
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        // Grant CERTIFIER role to Alice
-        vault.grantRole(vault.CERTIFIER(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-
-        // Prank Bob for the transaction
-        vm.startPrank(bob);
-
-        // Non-Force certify to be overwritten later
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, referenceBlockNumber, false, data);
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
-
-        // Force certify in the future
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntilFuture, referenceBlockNumber, true, data);
-        vault.certify(certifyUntilFuture, referenceBlockNumber, true, data);
-
-        // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
-        vault.deposit(assets, alice, minShareRatio, data);
-
-        vm.stopPrank();
-    }
-
-    /// Test certify with force until true in present
-    function testCertifyWithForceUntilTrueInPresent(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 certifyUntil,
-        uint256 referenceBlockNumber,
-        bytes memory data,
-        uint256 blockNumber,
-        uint256 minShareRatio
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        minShareRatio = bound(minShareRatio, 0, 1e18);
-
-        // Assume that assets is less uint256 max
-        assets = bound(assets, 1, type(uint256).max);
-
-        // Ensure blockNumber is within the valid range
-        blockNumber = bound(block.number, 0, type(uint256).max);
-        vm.roll(blockNumber);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
-
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        // Grant CERTIFIER role to Alice
-        vault.grantRole(vault.CERTIFIER(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-
-        // Prank Bob for the transaction
-        vm.startPrank(bob);
-
-        // Non-Force certify to be overwritten later
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, referenceBlockNumber, false, data);
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
-
-        // Force certify in the future
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, blockNumber, referenceBlockNumber, true, data);
-        vault.certify(blockNumber, referenceBlockNumber, true, data);
-
-        // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        // Attempt to deposit, should revert
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.stopPrank();
