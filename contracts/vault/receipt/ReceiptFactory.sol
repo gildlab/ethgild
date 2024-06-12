@@ -16,9 +16,9 @@ contract ReceiptFactory is Factory {
     /// Builds the `Receipt` reference implementation that all children will be
     /// a proxy to.
     constructor() {
-        address implementation_ = address(new Receipt());
-        implementation = implementation_;
-        emit Implementation(msg.sender, implementation_);
+        address receiptImplementation = address(new Receipt());
+        implementation = receiptImplementation;
+        emit Implementation(msg.sender, receiptImplementation);
     }
 
     /// The owner is `msg.sender` because this is intended to be used by the
@@ -26,9 +26,9 @@ contract ReceiptFactory is Factory {
     /// ownership to the `ReceiptVault` that it creates.
     /// @inheritdoc Factory
     function _createChild(bytes memory) internal virtual override returns (address) {
-        address clone_ = Clones.clone(implementation);
-        Receipt(clone_).initialize();
-        Receipt(clone_).transferOwnership(msg.sender);
-        return clone_;
+        address clone = Clones.clone(implementation);
+        Receipt(clone).initialize();
+        Receipt(clone).transferOwnership(msg.sender);
+        return clone;
     }
 }
