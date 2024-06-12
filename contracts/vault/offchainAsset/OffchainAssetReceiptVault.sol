@@ -3,10 +3,10 @@ pragma solidity =0.8.25;
 
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from
-    "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
-import "../receipt/IReceiptV1.sol";
-import {MathUpgradeable as Math} from "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+    "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {IReceiptV1} from "../receipt/IReceiptV1.sol";
+import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
+import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();

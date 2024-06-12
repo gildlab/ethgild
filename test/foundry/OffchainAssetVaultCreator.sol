@@ -6,9 +6,6 @@ import {
     OffchainAssetVaultConfig
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {OffchainAssetReceiptVaultFactory} from
-    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 
 library OffchainAssetVaultCreator {
     /// Helper to create child offchainAssetReceiptVault.

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.25;
 
-import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20Upgradeable as IERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction} from "../receipt/ReceiptVault.sol";
-import "../../oracle/price/IPriceOracleV1.sol";
+import {IPriceOracleV1} from "../../oracle/price/IPriceOracleV1.sol";
 
 /// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
 /// receipt. Typically the receipt will be deployed and ownership transferred

@@ -2,7 +2,6 @@
 pragma solidity =0.8.25;
 
 import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 import {
     OffchainAssetReceiptVault,
@@ -13,7 +12,7 @@ import {
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
 
-contract OffChainAssetReceiptVaultTest is Test, CreateOffchainAssetReceiptVaultFactory {
+contract OffChainAssetReceiptVaultTest is Test {
     /// Test that admin is not address zero
     function testZeroAdmin(string memory assetName, string memory assetSymbol) external {
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});

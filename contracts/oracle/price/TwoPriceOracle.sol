@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.25;
 
-import "./IPriceOracleV1.sol";
-import "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
+import {IPriceOracleV1} from "./IPriceOracleV1.sol";
+import {LibFixedPointDecimalArithmeticOpenZeppelin, Math} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 
 /// Construction config for `TwoPriceOracle`.
 /// @param base The base price of the merged pair, will be the numerator.
@@ -21,7 +21,7 @@ struct TwoPriceOracleConfig {
 /// For example, an ETH/USD (base) and an XAU/USD (quote) price can be combined
 /// to a single ETH/XAU price as (ETH/USD) / (XAU/USD).
 contract TwoPriceOracle is IPriceOracleV1 {
-    using LibFixedPointMath for uint256;
+    using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Emitted upon deployment and construction.
     event Construction(address sender, TwoPriceOracleConfig config);

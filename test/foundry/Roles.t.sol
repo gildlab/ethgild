@@ -2,15 +2,12 @@
 pragma solidity =0.8.25;
 
 import {VaultConfig, MinShareRatio} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,
     OffchainAssetReceiptVaultConfig
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultFactory} from
-    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
 import {StringsUpgradeable} from "../../lib/openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "../../contracts/test/TestErc20.sol";
 import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";

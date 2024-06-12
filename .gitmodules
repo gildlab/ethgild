@@ -19,3 +19,6 @@
 [submodule "lib/rain.flare"]
 	path = lib/rain.flare
 	url = https://github.com/rainlanguage/rain.flare
+[submodule "lib/rain.tier.interface"]
+	path = lib/rain.tier.interface
+	url = https://github.com/rainlanguage/rain.tier.interface

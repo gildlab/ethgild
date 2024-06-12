@@ -2,17 +2,18 @@
 pragma solidity =0.8.25;
 
 import {ERC20SnapshotUpgradeable as ERC20Snapshot} from
-    "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
-import {IERC4626Upgradeable as IERC4626} from "@openzeppelin/contracts-upgradeable/interfaces/IERC4626Upgradeable.sol";
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
+import {IERC4626Upgradeable as IERC4626} from "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC4626Upgradeable.sol";
 import {ReentrancyGuardUpgradeable as ReentrancyGuard} from
-    "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+    "openzeppelin-contracts-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
+import {IERC20Upgradeable as IERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable as SafeERC20} from
-    "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {MulticallUpgradeable as Multicall} from "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "./IReceiptV1.sol";
-import "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
-import "./IReceiptOwnerV1.sol";
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {MulticallUpgradeable as Multicall} from "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
+import {IReceiptV1} from "./IReceiptV1.sol";
+import {IReceiptOwnerV1} from "./IReceiptOwnerV1.sol";
+import {LibFixedPointDecimalArithmeticOpenZeppelin, Math} from
+    "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 
 /// Thrown when an ID can't be deposited or withdrawn.
 /// @param id The invalid ID.
@@ -105,7 +106,7 @@ struct ReceiptVaultConfig {
 /// each other in parallel, allowing trust to be "policed" at the liquidity and
 /// free market layer.
 contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snapshot, IERC4626 {
-    using LibFixedPointMath for uint256;
+    using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
 
     /// Similar to receipt information but for the entire vault. Anyone can emit
