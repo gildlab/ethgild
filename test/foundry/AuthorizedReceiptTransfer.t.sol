@@ -19,24 +19,29 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         string memory assetSymbol
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address bob = vm.addr(fuzzedKeyBob);
+        vm.assume(alice != bob);
 
-        warpTimestamp = bound(warpTimestamp, 1, 1e6);
+        // Bound warpTimestamp from 1 to avoid potential issues with timestamp 0.
+        warpTimestamp = bound(warpTimestamp, 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Warp the block timestamp to a non-zero value
         vm.warp(warpTimestamp);
 
-        // Use the same timestamp in the expectRevert check
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, alice, bob, 0, warpTimestamp));
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
 
-        vault.authorizeReceiptTransfer(alice, bob);
+        // Assuming that the certification is expired
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, 0, warpTimestamp));
+
+        // Attempt to authorize receipt transfer, should revert
+        vault.authorizeReceiptTransfer(bob, alice);
+
+        vm.stopPrank();
     }
 
     ///Test AuthorizeReceiptTransfer does not reverts without certification if FROM has a handler role
