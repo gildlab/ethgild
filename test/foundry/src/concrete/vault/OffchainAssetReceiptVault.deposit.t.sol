@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import {Test, Vm} from "forge-std/Test.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/vault/receipt/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetReceiptVaultConfig,
     CertificationExpired
-} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
-import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
+} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "../../../../../contracts/vault/receipt/IReceiptV1.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 
-contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    using LibFixedPointMath for uint256;
+contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
+    using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
@@ -39,7 +41,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -84,7 +86,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         assets = bound(assets, 1, type(uint256).max / 2);
         assetsSecondDeposit = bound(assetsSecondDeposit, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
@@ -135,7 +137,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -168,7 +170,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         uint256 assets = 0;
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
@@ -201,7 +203,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -239,7 +241,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -285,7 +287,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max - 1);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -334,7 +336,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -369,7 +371,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -400,7 +402,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         shares = bound(shares, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         vm.startPrank(bob);
         vm.expectRevert();
@@ -422,7 +424,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -457,7 +459,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -484,7 +486,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -517,7 +519,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault =
+            LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, alice, assetName, assetSymbol);
 
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);

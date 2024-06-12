@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {Test, Vm} from "forge-std/Test.sol";
-import {OffchainAssetReceiptVault} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {OffchainAssetReceiptVault} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 
-contract SnapshotTest is Test, CreateOffchainAssetReceiptVaultFactory {
+contract SnapshotTest is OffchainAssetReceiptVaultTest {
     event Snapshot(uint256 id);
     event SnapshotWithData(address sender, uint256 id, bytes data);
 
@@ -18,7 +17,7 @@ contract SnapshotTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.ERC20SNAPSHOTTER(), alice);
 
         // Expect the Snapshot and SnapshotWithData events
@@ -48,7 +47,7 @@ contract SnapshotTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.ERC20SNAPSHOTTER(), alice);
 
         // Expect the Snapshot and SnapshotWithData events

@@ -2,7 +2,10 @@
 pragma solidity =0.8.25;
 
 import {IPriceOracleV1} from "./IPriceOracleV1.sol";
-import {LibFixedPointDecimalArithmeticOpenZeppelin, Math} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 
 /// Construction config for `TwoPriceOracle`.
 /// @param base The base price of the merged pair, will be the numerator.

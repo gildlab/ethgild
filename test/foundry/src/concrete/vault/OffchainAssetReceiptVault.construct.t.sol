@@ -1,24 +1,27 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {Test, Vm} from "forge-std/Test.sol";
+import {VaultConfig} from "contracts/vault/receipt/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,
     OffchainAssetReceiptVaultConfig,
     ZeroAdmin,
     NonZeroAsset
-} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../contracts/vault/receipt/IReceiptV1.sol";
+} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "contracts/vault/receipt/IReceiptV1.sol";
 
-contract OffChainAssetReceiptVaultTest is Test {
+contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
     function testZeroAdmin(string memory assetName, string memory assetSymbol) external {
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
-        factory.createChildTyped(OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig}));
+        iFactory.clone(
+            address(iImplementation),
+            abi.encode(OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig}))
+        );
     }
 
     /// Test that asset is address zero
@@ -33,7 +36,9 @@ contract OffChainAssetReceiptVaultTest is Test {
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
-        factory.createChildTyped(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}));
+        iFactory.clone(
+            address(iImplementation), abi.encode(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}))
+        );
     }
 
     /// Test that offchainAssetReceiptVault constructs well
@@ -53,7 +58,8 @@ contract OffChainAssetReceiptVaultTest is Test {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault =
+            OffchainAssetReceiptVault(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)));
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -82,7 +88,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         // Assert that the event log was found
         assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
 
-        assertEq(msgSender, address(factory));
+        assertEq(msgSender, address(iFactory));
         assertEq(admin, alice);
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
@@ -103,7 +109,8 @@ contract OffChainAssetReceiptVaultTest is Test {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = factory.createChildTyped(offchainAssetVaultConfig);
+        OffchainAssetReceiptVault vault =
+            OffchainAssetReceiptVault(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)));
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -132,7 +139,7 @@ contract OffChainAssetReceiptVaultTest is Test {
         // Check that the receipt address is not zero
         assert(receiptAddress != address(0));
         // Check sender
-        assertEq(msgSender, address(factory));
+        assertEq(msgSender, address(iFactory));
 
         // Interact with the receipt contract
         address owner = receipt.owner();

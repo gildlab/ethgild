@@ -2,10 +2,12 @@
 pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
-import {OwnableOracle} from "contracts/concrete/OwnableOracle.sol";
-import {ERC20PriceOracleReceiptVault} from "contracts/vault/priceOracle/ERC20PriceOracleReceiptVault.sol";
+import {OwnableOracle} from "contracts/concrete/oracle/OwnableOracle.sol";
+import {
+    ERC20PriceOracleReceiptVault,
+    ERC20PriceOracleVaultConfig
+} from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {VaultConfig} from "contracts/vault/receipt/ReceiptVault.sol";
-import {ERC20PriceOracleVaultConfig} from "contracts/vault/priceOracle/ERC20PriceOracleReceiptVault.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_ORACLE_VAULT_FACTORY = keccak256("oracle-vault-factory");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");

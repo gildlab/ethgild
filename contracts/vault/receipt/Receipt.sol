@@ -4,7 +4,8 @@ pragma solidity =0.8.25;
 import {IReceiptOwnerV1} from "./IReceiptOwnerV1.sol";
 import {IReceiptV1} from "./IReceiptV1.sol";
 
-import {ERC1155Upgradeable as ERC1155} from "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
+import {ERC1155Upgradeable as ERC1155} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 
 /// @dev the ERC1155 URI is always the pinned metadata on ipfs.

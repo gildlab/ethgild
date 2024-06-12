@@ -33,15 +33,16 @@ contract ChainlinkFeedPriceOracle is IPriceOracleV1 {
     /// Immutable copy of `ConstructionConfig.staleAfter`.
     uint256 public immutable staleAfter;
 
-    /// @param config_ Config required to interface with Chainlink.
-    constructor(ChainlinkFeedPriceOracleConfig memory config_) {
-        feed = config_.feed;
-        staleAfter = config_.staleAfter;
-        emit Construction(msg.sender, config_);
+    /// @param config Config required to interface with Chainlink.
+    constructor(ChainlinkFeedPriceOracleConfig memory config) {
+        feed = config.feed;
+        staleAfter = config.staleAfter;
+        emit Construction(msg.sender, config);
     }
 
     /// @inheritdoc IPriceOracleV1
     function price() external view virtual returns (uint256) {
-        return LibChainlink.price(feed, staleAfter);
+        // Round down, don't saturate.
+        return LibChainlink.price(feed, staleAfter, 0);
     }
 }

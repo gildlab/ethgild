@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.25;
 
-import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId} from "../receipt/ReceiptVault.sol";
+import {
+    ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId
+} from "../../vault/receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
-import {IReceiptV1} from "../receipt/IReceiptV1.sol";
+import {IReceiptV1} from "../../vault/receipt/IReceiptV1.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 

@@ -2,7 +2,7 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
-import {OwnableOracle} from "contracts/concrete/OwnableOracle.sol";
+import {OwnableOracle} from "contracts/concrete/oracle/OwnableOracle.sol";
 
 contract OwnableOracleTest is Test {
     event Price(uint256 oldPrice, uint256 newPrice);
@@ -37,6 +37,7 @@ contract OwnableOracleTest is Test {
 
         vm.prank(owner);
         OwnableOracle oracle = new OwnableOracle();
+        assertEq(oracle.owner(), owner);
 
         assertEq(oracle.price(), 0);
 

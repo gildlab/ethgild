@@ -3,17 +3,22 @@ pragma solidity =0.8.25;
 
 import {ERC20SnapshotUpgradeable as ERC20Snapshot} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
-import {IERC4626Upgradeable as IERC4626} from "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC4626Upgradeable.sol";
+import {IERC4626Upgradeable as IERC4626} from
+    "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC4626Upgradeable.sol";
 import {ReentrancyGuardUpgradeable as ReentrancyGuard} from
     "openzeppelin-contracts-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
-import {IERC20Upgradeable as IERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20Upgradeable as IERC20} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {MulticallUpgradeable as Multicall} from "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
+import {MulticallUpgradeable as Multicall} from
+    "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptV1} from "./IReceiptV1.sol";
 import {IReceiptOwnerV1} from "./IReceiptOwnerV1.sol";
-import {LibFixedPointDecimalArithmeticOpenZeppelin, Math} from
-    "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 
 /// Thrown when an ID can't be deposited or withdrawn.
 /// @param id The invalid ID.

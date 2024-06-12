@@ -12,3 +12,7 @@ optimizer = false
 optimizer_runs = 100000
 
 fuzz.runs = 2056
+
+remappings = [
+    "rain.factory/=lib/rain.factory/src/"
+]
