@@ -46,6 +46,55 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         vm.stopPrank();
     }
 
+    /// Test AuthorizeReceiptTransfer reverts if system certification is expired
+    function testAuthorizeReceiptTransferRevertExpiredCertification(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 timestamp,
+        uint256 nextTimestamp,
+        uint256 blockNumber,
+        bytes memory data
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        vm.assume(alice != bob);
+
+        // Bound warpTimestamp from 1 to avoid potential issues with timestamp 0.
+        timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
+        nextTimestamp = bound(nextTimestamp, timestamp + 1, type(uint32).max);
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, data);
+
+        // Set nextTimestamp as timestamp
+        vm.warp(nextTimestamp);
+
+        // Expect revert because the certification is expired
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, timestamp, nextTimestamp));
+
+        // Attempt to authorize receipt transfer, should revert
+        vault.authorizeReceiptTransfer(bob, alice);
+
+        vm.stopPrank();
+    }
+
     /// Test AuthorizeReceiptTransfer when system certified
     function testAuthorizeReceiptTransfer(
         uint256 fuzzedKeyAlice,
