@@ -257,6 +257,63 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
+    /// Test deposit to someone else reverts if system certification expired
+    function testDepositToSomeoneElseExpiredCertification(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory receiptInformation,
+        uint256 timestamp,
+        uint256 nextTimestamp,
+        uint256 blockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
+        nextTimestamp = bound(nextTimestamp, timestamp + 1, type(uint32).max);
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        // Assume that assets are within a valid range
+        assets = bound(assets, 1, type(uint256).max - 1);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+        vm.stopPrank();
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, receiptInformation);
+
+        // Set nextTimestamp as timestamp
+        vm.warp(nextTimestamp);
+
+        // Expect revert because the certification is expired
+        vm.expectRevert(
+            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, timestamp, nextTimestamp)
+        );
+
+        // Attempt to deposit, should revert
+        vault.deposit(assets, alice, minShareRatio, receiptInformation);
+
+        vm.stopPrank();
+    }
+
     /// Test deposit to someone else with DEPOSITOR role
     function testDepositToSomeoneElseWithDepositorRole(
         uint256 fuzzedKeyAlice,
