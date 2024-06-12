@@ -34,12 +34,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         minShareRatio = bound(minShareRatio, 0, 1e18);
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -77,12 +75,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetSymbol
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         // Bound assets
         assets = bound(assets, 1, type(uint256).max / 2);
@@ -132,13 +128,12 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bytes memory receiptInformation
     ) external {
         minShareRatio = bound(minShareRatio, 1e18 + 1, type(uint256).max);
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
         // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -168,11 +163,10 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         uint256 assets = 0;
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -200,15 +194,12 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bytes memory receiptInformation
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -234,19 +225,20 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyBob,
         uint256 assets,
         uint256 minShareRatio,
-        bytes memory receiptInformation
+        bytes memory receiptInformation,
+        uint256 timestamp
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        timestamp = bound(timestamp, 1, type(uint32).max);
 
-        vm.assume(alice != bob);
+        // Assume that assets is less uint256 max
+        assets = bound(assets, 1, type(uint256).max);
+
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
@@ -256,7 +248,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as bob for transaction
         vm.startPrank(bob);
 
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, 0, 1));
+        vm.warp(timestamp);
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, 0, timestamp));
 
         vault.deposit(assets, alice, minShareRatio, receiptInformation);
 
@@ -275,15 +269,13 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
-        vm.assume(alice != bob);
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        // Assume that assets is less uint256 max
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -317,9 +309,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -347,9 +338,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
         shares = bound(shares, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
@@ -371,9 +362,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
@@ -401,21 +391,19 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
         // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+        // Assume that assets is less uint256 max
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
-
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
 
         vm.expectRevert();
         // Call the deposit function that should emit the event
@@ -444,8 +432,8 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        // Assume that assets is less uint256 max
+        assets = bound(assets, 1, type(uint256).max);
 
         vm.expectRevert();
         // Call the deposit function that should emit the event
@@ -465,18 +453,17 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         bytes memory receiptInformation,
         uint256 minShareRatio
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
         // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        // Assume that assets is not 0
-        vm.assume(assets != 0);
+        // Assume that assets is less uint256 max
+        assets = bound(assets, 1, type(uint256).max);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
