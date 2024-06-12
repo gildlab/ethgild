@@ -21,7 +21,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory justification
+        bytes memory data
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -36,7 +36,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Stop recording logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        vault.confiscateShares(bob, justification);
+        vault.confiscateShares(bob, data);
 
         // Check the logs to ensure event is not present
         bool eventFound = false;
@@ -52,15 +52,15 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.stopPrank();
     }
 
-    /// Test to checks ConfiscateShares
+    /// Test to check ConfiscateShares
     function testConfiscateShares(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 minShareRatio,
-        uint256 aliceAssets,
+        uint256 assets,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory justification,
+        bytes memory data,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
         uint256 blockNumber,
@@ -78,25 +78,30 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(alice != bob);
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
+
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-        vault.grantRole(vault.CONFISCATOR(), alice);
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+        vault.grantRole(vault.CONFISCATOR(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for transactions
+        vm.startPrank(bob);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, type(uint256).max);
+        // Assume that assets is less than totalSupply
+        assets = bound(assets, 1, type(uint256).max);
 
-        vault.deposit(aliceAssets, bob, minShareRatio, justification);
+        vault.deposit(assets, alice, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit ConfiscateShares(alice, bob, aliceAssets, justification);
+        emit ConfiscateShares(bob, alice, assets, data);
 
-        vault.confiscateShares(bob, justification);
+        vault.confiscateShares(alice, data);
         vm.stopPrank();
     }
 
@@ -105,10 +110,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 minShareRatio,
-        uint256 aliceAssets,
+        uint256 assets,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory justification,
+        bytes memory data,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
         uint256 blockNumber,
@@ -134,17 +139,17 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-        // Assume that aliceAssets is less than uint256 max
-        aliceAssets = bound(aliceAssets, 1, type(uint256).max);
+        // Assume that assets is less than uint256 max
+        assets = bound(assets, 1, type(uint256).max);
 
-        vault.deposit(aliceAssets, bob, minShareRatio, justification);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit Transfer(bob, alice, aliceAssets);
+        emit Transfer(bob, alice, assets);
 
-        vault.confiscateShares(bob, justification);
+        vault.confiscateShares(bob, data);
         vm.stopPrank();
     }
 
@@ -154,7 +159,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory justification,
+        bytes memory data,
         uint256 id
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -171,7 +176,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Stop recording logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        vault.confiscateReceipt(bob, id, justification);
+        vault.confiscateReceipt(bob, id, data);
 
         // Check the logs to ensure event is not present
         bool eventFound = false;
@@ -192,7 +197,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 minShareRatio,
-        uint256 aliceAssets,
+        uint256 assets,
         string memory assetName,
         bytes memory data,
         uint256 certifyUntil,
@@ -211,8 +216,8 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-        // Assume that aliceAssets is less than uint256 max
-        aliceAssets = bound(aliceAssets, 1, type(uint256).max);
+        // Assume that assets is less than uint256 max
+        assets = bound(assets, 1, type(uint256).max);
 
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
@@ -225,10 +230,10 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-        vault.deposit(aliceAssets, bob, minShareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit ConfiscateReceipt(alice, bob, 1, aliceAssets, data);
+        emit ConfiscateReceipt(alice, bob, 1, assets, data);
 
         vault.confiscateReceipt(bob, 1, data);
         vm.stopPrank();
@@ -239,9 +244,9 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 minShareRatio,
-        uint256 aliceAssets,
+        uint256 assets,
         string memory assetName,
-        bytes memory justification,
+        bytes memory data,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
         uint256 blockNumber,
@@ -267,20 +272,20 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, justification);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
         //set upperBound for assets so it does not overflow
         uint256 upperBound = type(uint256).max / 1e18;
-        // Assume that aliceAssets is less than totalSupply
-        aliceAssets = bound(aliceAssets, 1, upperBound);
+        // Assume that assets is less than totalSupply
+        assets = bound(assets, 1, upperBound);
 
-        vault.deposit(aliceAssets, bob, minShareRatio, justification);
-        vault.deposit(aliceAssets, bob, minShareRatio, justification);
+        vault.deposit(assets, bob, minShareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit TransferSingle(address(vault), bob, alice, 1, aliceAssets);
+        emit TransferSingle(address(vault), bob, alice, 1, assets);
 
-        vault.confiscateReceipt(bob, 1, justification);
+        vault.confiscateReceipt(bob, 1, data);
         vm.stopPrank();
     }
 }
