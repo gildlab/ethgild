@@ -52,20 +52,21 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         string memory assetSymbol
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address bob = vm.addr(fuzzedKeyBob);
+        vm.assume(alice != bob);
 
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        vault.grantRole(vault.HANDLER(), alice);
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (alice, bob)));
-        vault.authorizeReceiptTransfer(alice, bob);
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.HANDLER(), bob);
+
+        vm.startPrank(bob);
+
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
+        vault.authorizeReceiptTransfer(bob, alice);
     }
 
     ///Test AuthorizeReceiptTransfer does not revert without certification if To has a handler role
@@ -76,20 +77,21 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         string memory assetSymbol
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address bob = vm.addr(fuzzedKeyBob);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
+        vm.assume(alice != bob);
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        vault.grantRole(vault.HANDLER(), bob);
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (alice, bob)));
-        vault.authorizeReceiptTransfer(alice, bob);
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.HANDLER(), alice);
+
+        vm.startPrank(bob);
+
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
+        vault.authorizeReceiptTransfer(bob, alice);
     }
 
     ///Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
@@ -100,19 +102,20 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         string memory assetSymbol
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address bob = vm.addr(fuzzedKeyBob);
+        vm.assume(alice != bob);
 
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
-        vault.grantRole(vault.CONFISCATOR(), bob);
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (alice, bob)));
-        vault.authorizeReceiptTransfer(alice, bob);
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.CONFISCATOR(), alice);
+
+        vm.startPrank(bob);
+
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
+        vault.authorizeReceiptTransfer(bob, alice);
     }
 }
