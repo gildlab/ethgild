@@ -9,6 +9,7 @@ import {AccessControlUpgradeable as AccessControl} from
 import {IReceiptV1} from "../../vault/receipt/IReceiptV1.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
@@ -112,7 +113,7 @@ struct OffchainAssetReceiptVaultConfig {
 /// - Fine grained standard Open Zeppelin access control for all system roles
 /// - Snapshots from `ReceiptVault` exposed under a role to ease potential
 ///   future migrations or disaster recovery plans.
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, ICloneableV2 {
     using Math for uint256;
 
     /// Snapshot event similar to Open Zeppelin `Snapshot` event but with
@@ -257,17 +258,18 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// The admin provided will be admin of all roles and can reassign and revoke
     /// this as appropriate according to standard Open Zeppelin access control
     /// logic.
-    /// @param config_ All config required to initialize.
-    function initialize(OffchainAssetReceiptVaultConfig memory config_) external initializer {
-        __ReceiptVault_init(config_.receiptVaultConfig);
+    /// @param data All config required to initialize abi encoded.
+    function initialize(bytes memory data) external override initializer returns (bytes32) {
+        OffchainAssetReceiptVaultConfig memory config = abi.decode(data, (OffchainAssetReceiptVaultConfig));
+        __ReceiptVault_init(config.receiptVaultConfig);
         __AccessControl_init();
 
         // There is no asset, the asset is offchain.
-        if (config_.receiptVaultConfig.vaultConfig.asset != address(0)) {
+        if (config.receiptVaultConfig.vaultConfig.asset != address(0)) {
             revert NonZeroAsset();
         }
         // The config admin MUST be set.
-        if (config_.admin == address(0)) {
+        if (config.admin == address(0)) {
             revert ZeroAdmin();
         }
 
@@ -299,16 +301,18 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
 
         // Grant every admin role to the configured admin.
-        _grantRole(CERTIFIER_ADMIN, config_.admin);
-        _grantRole(CONFISCATOR_ADMIN, config_.admin);
-        _grantRole(DEPOSITOR_ADMIN, config_.admin);
-        _grantRole(ERC1155TIERER_ADMIN, config_.admin);
-        _grantRole(ERC20SNAPSHOTTER_ADMIN, config_.admin);
-        _grantRole(ERC20TIERER_ADMIN, config_.admin);
-        _grantRole(HANDLER_ADMIN, config_.admin);
-        _grantRole(WITHDRAWER_ADMIN, config_.admin);
+        _grantRole(CERTIFIER_ADMIN, config.admin);
+        _grantRole(CONFISCATOR_ADMIN, config.admin);
+        _grantRole(DEPOSITOR_ADMIN, config.admin);
+        _grantRole(ERC1155TIERER_ADMIN, config.admin);
+        _grantRole(ERC20SNAPSHOTTER_ADMIN, config.admin);
+        _grantRole(ERC20TIERER_ADMIN, config.admin);
+        _grantRole(HANDLER_ADMIN, config.admin);
+        _grantRole(WITHDRAWER_ADMIN, config.admin);
 
-        emit OffchainAssetReceiptVaultInitialized(msg.sender, config_);
+        emit OffchainAssetReceiptVaultInitialized(msg.sender, config);
+
+        return ICLONEABLE_V2_SUCCESS;
     }
 
     /// Apply standard transfer restrictions to receipt transfers.
