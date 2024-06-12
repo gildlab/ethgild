@@ -30,9 +30,9 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         minShareRatio = bound(minShareRatio, 0, 1e18);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
@@ -218,7 +218,7 @@ contract DepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
     }
 
     /// Test deposit to someone else reverts if system not certified
-    function testDepositToSomeoneElseExpiredCertification(
+    function testDepositToSomeoneElseNotCertified(
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
