@@ -131,12 +131,16 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(alice != bob);
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
         OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
-        vault.grantRole(vault.CONFISCATOR(), alice);
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+        vault.grantRole(vault.CONFISCATOR(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for transactions
+        vm.startPrank(bob);
 
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
@@ -144,12 +148,12 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets is less than uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        vault.deposit(assets, bob, minShareRatio, data);
+        vault.deposit(assets, alice, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit Transfer(bob, alice, assets);
+        emit Transfer(alice, bob, assets);
 
-        vault.confiscateShares(bob, data);
+        vault.confiscateShares(alice, data);
         vm.stopPrank();
     }
 
