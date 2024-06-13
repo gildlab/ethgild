@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/vault/receipt/ReceiptVault.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetReceiptVaultConfig,
     CertificationExpired
 } from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../../../../contracts/vault/receipt/IReceiptV1.sol";
+import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math

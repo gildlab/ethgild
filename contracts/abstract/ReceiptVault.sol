@@ -13,8 +13,8 @@ import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
-import {IReceiptV1} from "./IReceiptV1.sol";
-import {IReceiptOwnerV1} from "./IReceiptOwnerV1.sol";
+import {IReceiptV1} from "../interface/IReceiptV1.sol";
+import {IReceiptOwnerV1} from "../interface/IReceiptOwnerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math

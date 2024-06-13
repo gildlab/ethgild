@@ -2,7 +2,7 @@
 pragma solidity =0.8.25;
 
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
-import {VaultConfig, MinShareRatio} from "contracts/vault/receipt/ReceiptVault.sol";
+import {VaultConfig, MinShareRatio} from "contracts/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,

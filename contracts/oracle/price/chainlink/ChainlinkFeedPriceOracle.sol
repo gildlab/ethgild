@@ -3,7 +3,7 @@ pragma solidity =0.8.25;
 
 import {LibChainlink} from "rain.chainlink/lib/LibChainlink.sol";
 
-import {IPriceOracleV1} from "../IPriceOracleV1.sol";
+import {IPriceOracleV1} from "../../../interface/IPriceOracleV1.sol";
 
 /// Config for construction of `ChainlinkFeedPriceOracle`.
 /// @param feed The address of the underlying Chainlink oracle.

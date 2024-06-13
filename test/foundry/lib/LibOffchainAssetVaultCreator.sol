@@ -5,7 +5,7 @@ import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.so
 import {
     OffchainAssetReceiptVault, OffchainAssetVaultConfig
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {VaultConfig} from "contracts/vault/receipt/ReceiptVault.sol";
+import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
 
 library LibOffchainAssetVaultCreator {
     /// Helper to create child offchainAssetReceiptVault.

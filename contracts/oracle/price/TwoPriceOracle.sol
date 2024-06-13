@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.25;
 
-import {IPriceOracleV1} from "./IPriceOracleV1.sol";
+import {IPriceOracleV1} from "../../interface/IPriceOracleV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math

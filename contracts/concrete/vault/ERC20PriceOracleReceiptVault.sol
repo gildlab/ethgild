@@ -10,8 +10,8 @@ import {
     ShareAction,
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfig
-} from "../../vault/receipt/ReceiptVault.sol";
-import {IPriceOracleV1} from "../../oracle/price/IPriceOracleV1.sol";
+} from "../../abstract/ReceiptVault.sol";
+import {IPriceOracleV1} from "../../interface/IPriceOracleV1.sol";
 
 /// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
 /// receipt. Typically the receipt will be deployed and ownership transferred

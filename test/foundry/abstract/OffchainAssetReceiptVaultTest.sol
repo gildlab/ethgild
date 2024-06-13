@@ -9,7 +9,7 @@ import {
     ReceiptVaultConstructionConfig
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.sol";
-import {Receipt as ReceiptContract} from "contracts/vault/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
