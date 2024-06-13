@@ -17,7 +17,7 @@ contract OwnableOracle is Ownable, IPriceOracleV1 {
     /// @param newPrice The new price.
     event Price(uint256 oldPrice, uint256 newPrice);
 
-    constructor() Ownable() {
+    constructor() {
         _transferOwnership(msg.sender);
     }
 

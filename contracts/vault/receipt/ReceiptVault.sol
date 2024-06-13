@@ -204,6 +204,9 @@ abstract contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, E
         __ERC20Snapshot_init();
         sAsset = IERC20(config.asset);
 
+        // Slither false positive here due to it being impossible to set the
+        // receipt before it has been deployed.
+        // slither-disable-next-line reentrancy-benign
         IReceiptV1 receipt = IReceiptV1(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
         sReceipt = receipt;
 

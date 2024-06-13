@@ -140,6 +140,9 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
 
         __ReceiptVault_init(config.vaultConfig);
 
+        // Slither false positive due to needing sReceipt to be set so that the
+        // event can be emitted with the correct data.
+        // slither-disable-next-line reentrancy-events
         emit ERC20PriceOracleReceiptVaultInitialized(
             msg.sender,
             ERC20PriceOracleReceiptVaultConfig({
