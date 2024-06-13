@@ -90,8 +90,8 @@ contract Deploy is Script {
 
         if (suite == DEPLOYMENT_SUITE_IMPLEMENTATIONS) {
             deployImplementations(deployerPrivateKey);
-        } else if (suite == DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT) {
-            // deployOwnableOracleVault(deployerPrivateKey);
+        } else if (suite == DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT) {
+            deployFlareFTSOOraclePriceVault(deployerPrivateKey);
         } else {
             revert("Unknown deployment suite");
         }
