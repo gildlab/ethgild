@@ -45,7 +45,7 @@ contract Deploy is Script {
     function deployOracleVaultFactory(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
 
-        ERC20PriceOracleReceiptVault implementation = new ERC20PriceOracleReceiptVault();
+        // ERC20PriceOracleReceiptVault implementation = new ERC20PriceOracleReceiptVault();
         // ReceiptFactory receiptFactory = new ReceiptFactory();
 
         // // Deploy ERC20PriceOracleReceiptVaultFactory

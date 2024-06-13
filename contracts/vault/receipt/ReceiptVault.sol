@@ -19,6 +19,8 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 /// Thrown when an ID can't be deposited or withdrawn.
 /// @param id The invalid ID.
@@ -50,6 +52,15 @@ error WrongOwner(address vault, address receipt);
 enum ShareAction {
     Mint,
     Burn
+}
+
+/// Config for the _implementation_ of the `ReceiptVault` contract.
+/// @param factory The factory that will be used to clone the receipt vault.
+/// @param receiptImplementation The receipt implementation that will be cloned
+/// by the factory.
+struct ReceiptVaultConstructionConfig {
+    ICloneableFactoryV2 factory;
+    IReceiptV1 receiptImplementation;
 }
 
 /// All config required to initialize `ReceiptVault` except the receipt address.
@@ -110,7 +121,7 @@ struct ReceiptVaultConfig {
 /// per-vault as new competing vaults can always be deployed and traded against
 /// each other in parallel, allowing trust to be "policed" at the liquidity and
 /// free market layer.
-contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snapshot, IERC4626 {
+abstract contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snapshot, IERC4626, ICloneableV2 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
 
@@ -150,57 +161,67 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
         bytes receiptInformation
     );
 
+    ICloneableFactoryV2 internal immutable iFactory;
+    IReceiptV1 internal immutable iReceiptImplementation;
+
     /// Underlying ERC4626 asset.
-    IERC20 internal _asset;
+    IERC20 internal sAsset;
     /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
     /// mints and enforcing integrity of subsequent burns.
-    IReceiptV1 internal _receipt;
+    IReceiptV1 internal sReceipt;
 
     /// Senders MAY OPTIONALLY set minimum share ratios for ERC4626 deposits.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
     /// the non-standard equivalent functions that take a minimum share ratio
     /// parameter.
     // slither-disable-next-line similar-names
-    mapping(address => uint256) public minShareRatios;
+    mapping(address => uint256) public sMinShareRatios;
 
     /// Users MAY OPTIONALLY set the receipt ID they want to withdraw as a
     /// two step workflow and call the 4626 standard withdraw functions.
     /// Alternatively they MAY avoid the gas cost of modifying storage and call
     /// the non-standard equivalent functions that take a ID parameter.
-    mapping(address => uint256) public withdrawIds;
+    mapping(address => uint256) public sWithdrawIds;
 
     /// `ReceiptVault` is intended to be cloned and initialized by a
     /// `ReceiptVaultFactory` so is an implementation contract that can't itself
     /// be initialized.
-    constructor() {
+    constructor(ReceiptVaultConstructionConfig memory config) {
         _disableInitializers();
+
+        iFactory = config.factory;
+        iReceiptImplementation = config.receiptImplementation;
     }
 
     /// Initialize the `ReceiptVault` and .
-    /// @param config_ All config required for initialization.
+    /// @param config All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase
     // slither-disable-next-line naming-convention
-    function __ReceiptVault_init(ReceiptVaultConfig memory config_) internal virtual {
+    function __ReceiptVault_init(VaultConfig memory config) internal virtual {
         __Multicall_init();
         __ReentrancyGuard_init();
-        __ERC20_init(config_.vaultConfig.name, config_.vaultConfig.symbol);
+        __ERC20_init(config.name, config.symbol);
         __ERC20Snapshot_init();
-        _asset = IERC20(config_.vaultConfig.asset);
+        sAsset = IERC20(config.asset);
 
-        IReceiptV1 receipt_ = IReceiptV1(config_.receipt);
-        address receiptOwner_ = receipt_.owner();
-        if (receiptOwner_ != address(this)) {
-            revert WrongOwner(address(this), receiptOwner_);
+        IReceiptV1 receipt = IReceiptV1(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+
+        // Sanity check here. Should always be true as we cloned the receipt
+        // from the factory ourselves just above.
+        address receiptOwner = receipt.owner();
+        if (receiptOwner != address(this)) {
+            revert WrongOwner(address(this), receiptOwner);
         }
-        _receipt = receipt_;
+
+        sReceipt = receipt;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
     /// vault. Anyone can call this and provide any information. Indexers and
     /// clients MUST take care against corrupt and malicious data.
-    /// @param vaultInformation_ The information to emit for this vault.
-    function receiptVaultInformation(bytes memory vaultInformation_) external virtual {
-        emit ReceiptVaultInformation(msg.sender, vaultInformation_);
+    /// @param vaultInformation The information to emit for this vault.
+    function receiptVaultInformation(bytes memory vaultInformation) external virtual {
+        emit ReceiptVaultInformation(msg.sender, vaultInformation);
     }
 
     /// @inheritdoc IReceiptOwnerV1
@@ -213,110 +234,110 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
 
     /// Standard check to enforce the minimum share ratio. If the share ratio is
     /// less than the minimum the transaction will revert with `MinShareRatio`.
-    /// @param minShareRatio_ The share ratio must be at least this.
-    /// @param shareRatio_ The actual share ratio.
-    function checkMinShareRatio(uint256 minShareRatio_, uint256 shareRatio_) internal pure {
-        if (shareRatio_ < minShareRatio_) {
-            revert MinShareRatio(minShareRatio_, shareRatio_);
+    /// @param minShareRatio The share ratio must be at least this.
+    /// @param shareRatio The actual share ratio.
+    function checkMinShareRatio(uint256 minShareRatio, uint256 shareRatio) internal pure {
+        if (shareRatio < minShareRatio) {
+            revert MinShareRatio(minShareRatio, shareRatio);
         }
     }
 
-    /// Calculate how many `shares_` will be minted in return for `assets_` as
+    /// Calculate how many `shares` will be minted in return for `assets` as
     /// per ERC4626 deposit logic.
-    /// @param assets_ Amount of assets being deposited.
-    /// @param shareRatio_ The ratio of shares to assets to deposit against.
-    /// @param depositMinShareRatio_ The minimum share ratio required by the
-    /// depositor. Will error if `shareRatio_` is less than
-    /// `depositMinShareRatio_`.
-    /// @return shares_ Amount of shares to mint for this deposit.
-    function _calculateDeposit(uint256 assets_, uint256 shareRatio_, uint256 depositMinShareRatio_)
+    /// @param assets Amount of assets being deposited.
+    /// @param shareRatio The ratio of shares to assets to deposit against.
+    /// @param depositMinShareRatio The minimum share ratio required by the
+    /// depositor. Will error if `shareRatio` is less than
+    /// `depositMinShareRatio`.
+    /// @return shares Amount of shares to mint for this deposit.
+    function _calculateDeposit(uint256 assets, uint256 shareRatio, uint256 depositMinShareRatio)
         internal
         pure
         virtual
         returns (uint256)
     {
-        checkMinShareRatio(depositMinShareRatio_, shareRatio_);
+        checkMinShareRatio(depositMinShareRatio, shareRatio);
 
         // IRC4626:
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
         // round down.
-        return assets_.fixedPointMul(shareRatio_, Math.Rounding.Down);
+        return assets.fixedPointMul(shareRatio, Math.Rounding.Down);
     }
 
-    /// Calculate how many `assets_` are needed to mint `shares_` as per ERC4626
+    /// Calculate how many `assets` are needed to mint `shares` as per ERC4626
     /// mint logic.
-    /// @param shares_ Amount of shares desired to be minted.
-    /// @param shareRatio_ The ratio shares are minted at per asset.
-    /// @param mintMinShareRatio_ The minimum ratio required by the minter. Will
-    /// error if `shareRatio_` is less than `mintMinShareRatio_`.
-    /// @return assets_ Amount of assets that must be deposited for this mint.
-    function _calculateMint(uint256 shares_, uint256 shareRatio_, uint256 mintMinShareRatio_)
+    /// @param shares Amount of shares desired to be minted.
+    /// @param shareRatio The ratio shares are minted at per asset.
+    /// @param mintMinShareRatio The minimum ratio required by the minter. Will
+    /// error if `shareRatio` is less than `mintMinShareRatio`.
+    /// @return assets Amount of assets that must be deposited for this mint.
+    function _calculateMint(uint256 shares, uint256 shareRatio, uint256 mintMinShareRatio)
         internal
         view
         virtual
         returns (uint256)
     {
-        checkMinShareRatio(mintMinShareRatio_, shareRatio_);
+        checkMinShareRatio(mintMinShareRatio, shareRatio);
 
         // IERC4626:
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
         // round up.
-        return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Up);
+        return shares.fixedPointDiv(shareRatio, Math.Rounding.Up);
     }
 
-    /// Calculate how many `shares_` to burn to withdraw `assets_` as per ERC4626
+    /// Calculate how many `shares` to burn to withdraw `assets` as per ERC4626
     /// withdraw logic.
-    /// @param assets_ Amount of assets being withdrawn.
-    /// @param shareRatio_ Ratio of shares to assets to withdraw against.
-    /// @return shares_ Amount of shares to burn for this withdrawal.
-    function _calculateWithdraw(uint256 assets_, uint256 shareRatio_) internal pure virtual returns (uint256) {
+    /// @param assets Amount of assets being withdrawn.
+    /// @param shareRatio Ratio of shares to assets to withdraw against.
+    /// @return shares Amount of shares to burn for this withdrawal.
+    function _calculateWithdraw(uint256 assets, uint256 shareRatio) internal pure virtual returns (uint256) {
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
-        return assets_.fixedPointMul(shareRatio_, Math.Rounding.Up);
+        return assets.fixedPointMul(shareRatio, Math.Rounding.Up);
     }
 
-    /// Calculate how many `assets_` to withdraw for burning `shares_` as per
+    /// Calculate how many `assets` to withdraw for burning `shares` as per
     /// ERC4626 redeem logic.
-    /// @param shares_ Amount of shares being burned for redemption.
-    /// @param shareRatio_ Ratio of shares to assets being redeemed against.
-    /// @return assets_ Amount of assets that will be redeemed for the given
+    /// @param shares Amount of shares being burned for redemption.
+    /// @param shareRatio Ratio of shares to assets being redeemed against.
+    /// @return assets Amount of assets that will be redeemed for the given
     /// shares.
-    function _calculateRedeem(uint256 shares_, uint256 shareRatio_) internal pure virtual returns (uint256) {
+    function _calculateRedeem(uint256 shares, uint256 shareRatio) internal pure virtual returns (uint256) {
         // IERC4626:
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
         // round down.
-        return shares_.fixedPointDiv(shareRatio_, Math.Rounding.Down);
+        return shares.fixedPointDiv(shareRatio, Math.Rounding.Down);
     }
 
     /// @inheritdoc IERC4626
     function asset() public view virtual returns (address) {
-        return address(_asset);
+        return address(sAsset);
     }
 
     /// Any address can set their own minimum share ratio.
     /// This is optional as the non-standard ERC4626 equivalent functions accept
     /// a minimum share ratio parameter. This facilitates the ERC4626 interface
     /// by adding one additional initial transaction for the user.
-    /// @param senderMinShareRatio_ The new minimum share ratio for the
+    /// @param senderMinShareRatio The new minimum share ratio for the
     /// `msg.sender` to be used in subsequent deposit calls.
-    function setMinShareRatio(uint256 senderMinShareRatio_) external {
-        minShareRatios[msg.sender] = senderMinShareRatio_;
+    function setMinShareRatio(uint256 senderMinShareRatio) external {
+        sMinShareRatios[msg.sender] = senderMinShareRatio;
     }
 
     /// Any address can set their own ID for withdrawals.
     /// This is optional as the non-standard ERC4626 equivalent functions accept
     /// a withdrawal ID parameter. This facilitates the ERC4626 interface
     /// by adding one initial transaction for the user.
-    /// @param id_ The new withdrawal id_ for the `msg.sender` to be used
+    /// @param id The new withdrawal id for the `msg.sender` to be used
     /// in subsequent withdrawal calls. If the ID does NOT match the ID of a
     /// receipt held by sender then these subsequent withdrawals will fail.
     /// It is the responsibility of the caller to set a valid ID.
-    function setWithdrawId(uint256 id_) external {
-        withdrawIds[msg.sender] = id_;
+    function setWithdrawId(uint256 id) external {
+        sWithdrawIds[msg.sender] = id;
     }
 
     /// This is external NOT public. It is NOT allowed to revert BUT if we were
@@ -330,8 +351,8 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
         // slither puts false positives on `try/catch/returns`.
         // https://github.com/crytic/slither/issues/511
         //slither-disable-next-line
-        returns (uint256 assetBalance_) {
-            return assetBalance_;
+        returns (uint256 assetBalance) {
+            return assetBalance;
         } catch {
             // It's not clear what the balance should be if querying it is
             // throwing an error. The conservative error in most cases should
@@ -352,17 +373,17 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// shares burned on withdraw.
     /// !param receiver_ The receiver of new shares minted on deposit and of
     /// withdrawn assets on withdraw.
-    /// @param id_ The receipt ID being minted/burned in tandem with the shares.
-    /// @param shareAction_ Encodes whether shares are being minted or burned
+    /// @param id The receipt ID being minted/burned in tandem with the shares.
+    /// @param shareAction Encodes whether shares are being minted or burned
     /// (hypothetically or actually) for this ratio calculation.
     /// @return
     function _shareRatio(
         address, // owner_
         address, // receiver_
-        uint256 id_,
-        ShareAction shareAction_
+        uint256 id,
+        ShareAction shareAction
     ) internal view virtual returns (uint256) {
-        return _shareRatioUserAgnostic(id_, shareAction_);
+        return _shareRatioUserAgnostic(id, shareAction);
     }
 
     /// Some functions in ERC4626 mandate the share ratio ignore the user.
@@ -402,8 +423,8 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// > The amount of shares that the Vault would exchange for the amount of
     /// > assets provided
     /// @inheritdoc IERC4626
-    function convertToShares(uint256 assets_) external view returns (uint256) {
-        return _calculateDeposit(assets_, _shareRatioUserAgnostic(_nextId(), ShareAction.Mint), 0);
+    function convertToShares(uint256 assets) external view returns (uint256) {
+        return _calculateDeposit(assets, _shareRatioUserAgnostic(_nextId(), ShareAction.Mint), 0);
     }
 
     /// The spec demands that this function ignores per-user concerns. It seems
@@ -411,9 +432,9 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// > The amount of assets that the Vault would exchange for the amount of
     /// > shares provided
     /// @inheritdoc IERC4626
-    function convertToAssets(uint256 shares_) external view returns (uint256) {
+    function convertToAssets(uint256 shares) external view returns (uint256) {
         return _calculateRedeem(
-            shares_,
+            shares,
             // Not clear what a good ID for a hypothetical context free burn
             // should be. Next ID is technically nonsense but we don't have
             // any other ID to prefer either.
@@ -439,9 +460,9 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     }
 
     /// @inheritdoc IERC4626
-    function previewDeposit(uint256 assets_) external view virtual returns (uint256) {
+    function previewDeposit(uint256 assets) external view virtual returns (uint256) {
         return _calculateDeposit(
-            assets_,
+            assets,
             // Spec doesn't provide us with a receipient but wants a per-user
             // preview so we assume that depositor = receipient.
             _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
@@ -457,14 +478,14 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
             // preferences they set for themselves onchain.
             // If the user did not set a min ratio then the min ratio will
             // be 0 and never revert.
-            minShareRatios[msg.sender]
+            sMinShareRatios[msg.sender]
         );
     }
 
     /// @inheritdoc IERC4626
-    function previewMint(uint256 shares_) public view virtual returns (uint256) {
+    function previewMint(uint256 shares) public view virtual returns (uint256) {
         return _calculateMint(
-            shares_,
+            shares,
             // Spec doesn't provide us with a recipient but wants a per-user
             // preview so we assume that depositor = recipient.
             _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
@@ -480,7 +501,7 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
             // preferences they set for themselves onchain.
             // If the user did not set a min ratio the min ratio will be 0 and
             // never revert.
-            minShareRatios[msg.sender]
+            sMinShareRatios[msg.sender]
         );
     }
 
@@ -489,33 +510,31 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// call. Alternatively they can use the off-spec overloaded `deposit`
     /// method.
     /// @inheritdoc IERC4626
-    function deposit(uint256 assets_, address receiver_) external returns (uint256) {
-        return deposit(assets_, receiver_, minShareRatios[msg.sender], "");
+    function deposit(uint256 assets, address receiver) external returns (uint256) {
+        return deposit(assets, receiver, sMinShareRatios[msg.sender], "");
     }
 
     /// Overloaded `deposit` to allow `depositMinShareRatio_` to be passed
     /// directly without the additional `setMinShareRatio` call, which saves gas
     /// and can provide a better UX overall.
-    /// @param assets_ As per IERC4626 `deposit`.
-    /// @param receiver_ As per IERC4626 `deposit`.
-    /// @param depositMinShareRatio_ Caller can set the minimum share ratio
+    /// @param assets As per IERC4626 `deposit`.
+    /// @param receiver As per IERC4626 `deposit`.
+    /// @param depositMinShareRatio Caller can set the minimum share ratio
     /// they'll accept from the oracle, otherwise the transaction is rolled back.
-    /// @param receiptInformation_ Forwarded to `receiptInformation` to
+    /// @param receiptInformation Forwarded to `receiptInformation` to
     /// optionally emit offchain context about this deposit.
-    /// @return shares_ As per IERC4626 `deposit`.
-    function deposit(
-        uint256 assets_,
-        address receiver_,
-        uint256 depositMinShareRatio_,
-        bytes memory receiptInformation_
-    ) public returns (uint256) {
-        uint256 id_ = _nextId();
+    /// @return shares As per IERC4626 `deposit`.
+    function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes memory receiptInformation)
+        public
+        returns (uint256)
+    {
+        uint256 id = _nextId();
 
-        uint256 shares_ =
-            _calculateDeposit(assets_, _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint), depositMinShareRatio_);
+        uint256 shares =
+            _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), depositMinShareRatio);
 
-        _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
-        return shares_;
+        _deposit(assets, receiver, shares, id, receiptInformation);
+        return shares;
     }
 
     /// Handles minting and emitting events according to spec.
@@ -523,46 +542,44 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// correctly according to spec including rounding, in the calling context.
     /// Depositing reentrantly is never ok so we restrict that here in the
     /// internal function rather than on the external methods.
-    /// @param assets_ As per IERC4626 `deposit`.
-    /// @param receiver_ As per IERC4626 `deposit`.
-    /// @param shares_ Amount of shares to mint for receiver. MAY be different
+    /// @param assets As per IERC4626 `deposit`.
+    /// @param receiver As per IERC4626 `deposit`.
+    /// @param shares Amount of shares to mint for receiver. MAY be different
     /// due to rounding in different contexts so caller MUST calculate
     /// according to the rounding specification.
-    /// @param id_ ID of the 1155 receipt and MUST be provided on withdrawal.
-    /// @param receiptInformation_ As per `Receipt` receipt information.
-    function _deposit(
-        uint256 assets_,
-        address receiver_,
-        uint256 shares_,
-        uint256 id_,
-        bytes memory receiptInformation_
-    ) internal virtual nonReentrant {
-        if (assets_ == 0) {
+    /// @param id ID of the 1155 receipt and MUST be provided on withdrawal.
+    /// @param receiptInformation As per `Receipt` receipt information.
+    function _deposit(uint256 assets, address receiver, uint256 shares, uint256 id, bytes memory receiptInformation)
+        internal
+        virtual
+        nonReentrant
+    {
+        if (assets == 0) {
             revert ZeroAssetsAmount();
         }
-        if (shares_ == 0) {
+        if (shares == 0) {
             revert ZeroSharesAmount();
         }
-        if (receiver_ == address(0)) {
+        if (receiver == address(0)) {
             revert ZeroReceiver();
         }
-        if (id_ == 0) {
+        if (id == 0) {
             revert InvalidId(0);
         }
 
-        emit IERC4626.Deposit(msg.sender, receiver_, assets_, shares_);
-        emit DepositWithReceipt(msg.sender, receiver_, assets_, shares_, id_, receiptInformation_);
-        _beforeDeposit(assets_, receiver_, shares_, id_);
+        emit IERC4626.Deposit(msg.sender, receiver, assets, shares);
+        emit DepositWithReceipt(msg.sender, receiver, assets, shares, id, receiptInformation);
+        _beforeDeposit(assets, receiver, shares, id);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
         // on it from `ReentrancyGuard`.
         //slither-disable-next-line reentrancy-vulnerabilities-3 reentrancy-vulnerabilities-2
-        _mint(receiver_, shares_);
+        _mint(receiver, shares);
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        _receipt.ownerMint(msg.sender, receiver_, id_, shares_, receiptInformation_);
+        sReceipt.ownerMint(msg.sender, receiver, id, shares, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -570,18 +587,18 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// the `msg.sender` to the receipt vault IN ADDITION to any other checks that
     /// may revert. As per 4626 the owner of the assets being deposited is always
     /// the `msg.sender`.
-    /// @param assets_ Number of assets being deposited.
-    /// !param receiver_ Receiver of shares that will be minted.
-    /// !param shares_ Amount of shares that will be minted.
-    /// !param id_ Recipt ID that will be minted for this deposit.
+    /// @param assets Number of assets being deposited.
+    /// !param receiver Receiver of shares that will be minted.
+    /// !param shares Amount of shares that will be minted.
+    /// !param id Recipt ID that will be minted for this deposit.
     function _beforeDeposit(
-        uint256 assets_,
-        address, // receiver_
-        uint256, // shares_
-        uint256 // id_
+        uint256 assets,
+        address, // receiver
+        uint256, // shares
+        uint256 // id
     ) internal virtual {
         // Default behaviour is to move assets before minting shares.
-        IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets_);
+        IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets);
     }
 
     /// If the sender wants to use the ERC4626 `mint` function and set a
@@ -589,29 +606,29 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// separate call.
     /// Alternatively they can use the off-spec overloaded `mint` method.
     /// @inheritdoc IERC4626
-    function mint(uint256 shares_, address receiver_) external returns (uint256) {
-        return mint(shares_, receiver_, minShareRatios[msg.sender], "");
+    function mint(uint256 shares, address receiver) external returns (uint256) {
+        return mint(shares, receiver, sMinShareRatios[msg.sender], "");
     }
 
     /// Overloaded version of IERC4626 `mint` that allows directly passing the
     /// minimum share ratio to avoid additional gas and transactions.
-    /// @param shares_ As per IERC4626 `mint`.
-    /// @param receiver_ As per IERC4626 `mint`.
-    /// @param mintMinShareRatio_ Caller can set the minimum ratio they'll accept
+    /// @param shares As per IERC4626 `mint`.
+    /// @param receiver As per IERC4626 `mint`.
+    /// @param mintMinShareRatio Caller can set the minimum ratio they'll accept
     /// minting shares at, otherwise the transaction is rolled back.
-    /// @param receiptInformation_ Forwarded to `receiptInformation` to
+    /// @param receiptInformation Forwarded to `receiptInformation` to
     /// optionally emit offchain context about this deposit.
-    /// @return assets_ As per IERC4626 `mint`.
-    function mint(uint256 shares_, address receiver_, uint256 mintMinShareRatio_, bytes memory receiptInformation_)
+    /// @return assets As per IERC4626 `mint`.
+    function mint(uint256 shares, address receiver, uint256 mintMinShareRatio, bytes memory receiptInformation)
         public
         returns (uint256)
     {
-        uint256 id_ = _nextId();
-        uint256 shareRatio_ = _shareRatio(msg.sender, receiver_, id_, ShareAction.Mint);
+        uint256 id = _nextId();
+        uint256 shareRatio = _shareRatio(msg.sender, receiver, id, ShareAction.Mint);
 
-        uint256 assets_ = _calculateMint(shares_, shareRatio_, mintMinShareRatio_);
-        _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
-        return assets_;
+        uint256 assets = _calculateMint(shares, shareRatio, mintMinShareRatio);
+        _deposit(assets, receiver, shares, id, receiptInformation);
+        return assets;
     }
 
     /// As withdrawal requires a ID the vault deposits are non fungible. This
@@ -622,8 +639,8 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// overloaded `maxWithdraw` that has the withdraw ID paramaterised. This
     /// can be looped over to build a view over several withdraw IDs.
     /// @inheritdoc IERC4626
-    function maxWithdraw(address owner_) external view virtual returns (uint256) {
-        return maxWithdraw(owner_, withdrawIds[owner_]);
+    function maxWithdraw(address owner) external view virtual returns (uint256) {
+        return maxWithdraw(owner, sWithdrawIds[owner]);
     }
 
     /// Overloaded `maxWithdraw` that allows passing a receipt id directly. The
@@ -632,19 +649,19 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// to the balance of a ID-bound ERC1155. If a user has multiple 1155
     /// receipts they will need to call `maxWithdraw` multiple times to
     /// calculate a global withdrawal limit across all receipts.
-    /// @param owner_ As per IERC4626 `maxWithdraw`.
-    /// @param id_ The reference id to check the max withdrawal against
+    /// @param owner As per IERC4626 `maxWithdraw`.
+    /// @param id The reference id to check the max withdrawal against
     /// for a specific receipt the owner presumably holds. Max withdrawal will
     /// be 0 if the user does not hold a receipt.
-    /// @return maxAssets_ As per IERC4626 `maxWithdraw`.
-    function maxWithdraw(address owner_, uint256 id_) public view returns (uint256) {
+    /// @return maxAssets As per IERC4626 `maxWithdraw`.
+    function maxWithdraw(address owner, uint256 id) public view returns (uint256) {
         // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
         return _calculateRedeem(
-            _receipt.balanceOf(owner_, id_),
+            sReceipt.balanceOf(owner, id),
             // Assume the owner is hypothetically withdrawing for themselves.
-            _shareRatio(owner_, owner_, id_, ShareAction.Burn)
+            _shareRatio(owner, owner, id, ShareAction.Burn)
         );
     }
 
@@ -654,21 +671,21 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// easier to use the overloaded version that allows IDs to be passed in
     /// as arguments.
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 assets_) external view returns (uint256) {
-        return previewWithdraw(assets_, withdrawIds[msg.sender]);
+    function previewWithdraw(uint256 assets) external view returns (uint256) {
+        return previewWithdraw(assets, sWithdrawIds[msg.sender]);
     }
 
     /// Overloaded version of IERC4626 that allows caller to pass in the ID
     /// to preview. Multiple receipt holders will need to call this function
     /// for each recieipt ID to preview all their withdrawals.
-    /// @param assets_ As per IERC4626 `previewWithdraw`.
-    /// @param id_ The receipt to preview a withdrawal against.
-    /// @return shares_ As per IERC4626 `previewWithdraw`.
-    function previewWithdraw(uint256 assets_, uint256 id_) public view virtual returns (uint256) {
+    /// @param assets As per IERC4626 `previewWithdraw`.
+    /// @param id The receipt to preview a withdrawal against.
+    /// @return shares As per IERC4626 `previewWithdraw`.
+    function previewWithdraw(uint256 assets, uint256 id) public view virtual returns (uint256) {
         return _calculateWithdraw(
-            assets_,
+            assets,
             // Assume that owner and receiver are the sender for a preview
-            _shareRatio(msg.sender, msg.sender, id_, ShareAction.Burn)
+            _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn)
         );
     }
 
@@ -678,24 +695,24 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// each withdrawal. The overloaded `withdraw` function allows passing in a
     /// receipt ID directly, which may be cheaper and more convenient.
     /// @inheritdoc IERC4626
-    function withdraw(uint256 assets_, address receiver_, address owner_) external returns (uint256) {
-        return withdraw(assets_, receiver_, owner_, withdrawIds[owner_], "");
+    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256) {
+        return withdraw(assets, receiver, owner, sWithdrawIds[owner], "");
     }
 
     /// Overloaded version of IERC4626 `withdraw` that allows the id to be
     /// passed directly.
-    /// @param assets_ As per IERC4626 `withdraw`.
-    /// @param receiver_ As per IERC4626 `withdraw`.
-    /// @param owner_ As per IERC4626 `withdraw`.
-    /// @param id_ As per `_withdraw`.
-    /// @param receiptInformation_ As per `_withdraw`.
-    function withdraw(uint256 assets_, address receiver_, address owner_, uint256 id_, bytes memory receiptInformation_)
+    /// @param assets As per IERC4626 `withdraw`.
+    /// @param receiver As per IERC4626 `withdraw`.
+    /// @param owner As per IERC4626 `withdraw`.
+    /// @param id As per `_withdraw`.
+    /// @param receiptInformation As per `_withdraw`.
+    function withdraw(uint256 assets, address receiver, address owner, uint256 id, bytes memory receiptInformation)
         public
         returns (uint256)
     {
-        uint256 shares_ = _calculateWithdraw(assets_, _shareRatio(owner_, receiver_, id_, ShareAction.Burn));
-        _withdraw(assets_, receiver_, owner_, shares_, id_, receiptInformation_);
-        return shares_;
+        uint256 shares = _calculateWithdraw(assets, _shareRatio(owner, receiver, id, ShareAction.Burn));
+        _withdraw(assets, receiver, owner, shares, id, receiptInformation);
+        return shares;
     }
 
     /// Handles burning shares, withdrawing assets and emitting events to spec.
@@ -703,42 +720,42 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// according to spec including rounding, in the calling context.
     /// Withdrawing reentrantly is never ok so we restrict that here in the
     /// internal function rather than on the external methods.
-    /// @param assets_ As per IERC4626 `withdraw`.
-    /// @param receiver_ As per IERC4626 `withdraw`.
-    /// @param owner_ As per IERC4626 `withdraw`.
-    /// @param shares_ Caller MUST calculate the correct shares to burn for
+    /// @param assets As per IERC4626 `withdraw`.
+    /// @param receiver As per IERC4626 `withdraw`.
+    /// @param owner As per IERC4626 `withdraw`.
+    /// @param shares Caller MUST calculate the correct shares to burn for
     /// withdrawal at `shareRatio_`. It is caller's responsibility to handle
     /// rounding correctly as per 4626 spec.
-    /// @param id_ The receipt id to withdraw against. The owner MUST hold the
+    /// @param id The receipt id to withdraw against. The owner MUST hold the
     /// receipt for the ID in addition to the shares being burned for
     /// withdrawal.
-    /// @param receiptInformation_ New receipt information for the withdraw.
+    /// @param receiptInformation New receipt information for the withdraw.
     function _withdraw(
-        uint256 assets_,
-        address receiver_,
-        address owner_,
-        uint256 shares_,
-        uint256 id_,
-        bytes memory receiptInformation_
+        uint256 assets,
+        address receiver,
+        address owner,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
     ) internal nonReentrant {
-        if (assets_ == 0) {
+        if (assets == 0) {
             revert ZeroAssetsAmount();
         }
-        if (shares_ == 0) {
+        if (shares == 0) {
             revert ZeroSharesAmount();
         }
-        if (receiver_ == address(0)) {
+        if (receiver == address(0)) {
             revert ZeroReceiver();
         }
-        if (owner_ == address(0)) {
+        if (owner == address(0)) {
             revert ZeroOwner();
         }
-        if (id_ == 0) {
-            revert InvalidId(id_);
+        if (id == 0) {
+            revert InvalidId(id);
         }
 
-        emit IERC4626.Withdraw(msg.sender, receiver_, owner_, assets_, shares_);
-        emit WithdrawWithReceipt(msg.sender, receiver_, owner_, assets_, shares_, id_, receiptInformation_);
+        emit IERC4626.Withdraw(msg.sender, receiver, owner, assets, shares);
+        emit WithdrawWithReceipt(msg.sender, receiver, owner, assets, shares, id, receiptInformation);
 
         // IERC4626:
         // > MUST support a withdraw flow where the shares are burned from owner
@@ -746,23 +763,23 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
         // > approval over the shares of owner.
         // Note that we do NOT require the caller has allowance over the receipt
         // in order to burn the shares to withdraw assets.
-        if (owner_ != msg.sender) {
-            _spendAllowance(owner_, msg.sender, shares_);
+        if (owner != msg.sender) {
+            _spendAllowance(owner, msg.sender, shares);
         }
 
         // ERC20 burn.
-        _burn(owner_, shares_);
+        _burn(owner, shares);
 
         // ERC1155 burn.
-        _receipt.ownerBurn(msg.sender, owner_, id_, shares_, receiptInformation_);
+        sReceipt.ownerBurn(msg.sender, owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
-        _afterWithdraw(assets_, receiver_, owner_, shares_, id_);
+        _afterWithdraw(assets, receiver, owner, shares, id);
     }
 
-    function _afterWithdraw(uint256 assets_, address receiver_, address, uint256, uint256) internal virtual {
+    function _afterWithdraw(uint256 assets, address receiver, address, uint256, uint256) internal virtual {
         // Default is to send assets after burning shares.
-        IERC20(asset()).safeTransfer(receiver_, assets_);
+        IERC20(asset()).safeTransfer(receiver, assets);
     }
 
     /// Max redemption is only relevant to the currently set withdraw ID for
@@ -771,63 +788,63 @@ contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, ERC20Snaps
     /// transaction. The overloaded maxRedeem function allows the ID being
     /// checked against to be passed in directly.
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner_) external view returns (uint256) {
-        return maxRedeem(owner_, withdrawIds[owner_]);
+    function maxRedeem(address owner) external view returns (uint256) {
+        return maxRedeem(owner, sWithdrawIds[owner]);
     }
 
     /// Overloaded maxRedeem function that allows the redemption ID to be
     /// passed directly. The maximum number of shares that can be redeemed is
     /// simply the balance of the associated receipt NFT the user holds for the
     /// given ID.
-    /// @param owner_ As per IERC4626 `maxRedeem`.
-    /// @param id_ The reference id to check the owner's 1155 balance for.
-    /// @return maxShares_ As per IERC4626 `maxRedeem`.
-    function maxRedeem(address owner_, uint256 id_) public view returns (uint256) {
-        return _receipt.balanceOf(owner_, id_);
+    /// @param owner As per IERC4626 `maxRedeem`.
+    /// @param id The reference id to check the owner's 1155 balance for.
+    /// @return maxShares As per IERC4626 `maxRedeem`.
+    function maxRedeem(address owner, uint256 id) public view returns (uint256) {
+        return sReceipt.balanceOf(owner, id);
     }
 
     /// Preview redeem is only relevant to the currently set withdraw ID for
     /// the caller. The overloaded previewRedeem allows the ID to be passed
     /// directly which may avoid gas costs and additional transactions.
     /// @inheritdoc IERC4626
-    function previewRedeem(uint256 shares_) external view returns (uint256) {
-        return _calculateRedeem(shares_, withdrawIds[msg.sender]);
+    function previewRedeem(uint256 shares) external view returns (uint256) {
+        return _calculateRedeem(shares, sWithdrawIds[msg.sender]);
     }
 
     /// Overloaded previewRedeem that allows ID to redeem for to be passed
     /// directly.
-    /// @param shares_ As per IERC4626.
-    /// @param id_ The receipt id_ to calculate redemption against.
-    function previewRedeem(uint256 shares_, uint256 id_) public view virtual returns (uint256) {
-        return _calculateRedeem(shares_, id_);
+    /// @param shares As per IERC4626.
+    /// @param id The receipt id to calculate redemption against.
+    function previewRedeem(uint256 shares, uint256 id) public view virtual returns (uint256) {
+        return _calculateRedeem(shares, id);
     }
 
     /// Redeems with the currently set withdraw ID for the owner. The
     /// overloaded redeem function allows the ID to be passed in rather than
     /// set separately in storage.
     /// @inheritdoc IERC4626
-    function redeem(uint256 shares_, address receiver_, address owner_) external returns (uint256) {
-        return redeem(shares_, receiver_, owner_, withdrawIds[owner_], "");
+    function redeem(uint256 shares, address receiver, address owner) external returns (uint256) {
+        return redeem(shares, receiver, owner, sWithdrawIds[owner], "");
     }
 
     /// Overloaded redeem that allows the ID to redeem with to be passed in.
-    /// @param shares_ As per IERC4626 `redeem`.
-    /// @param receiver_ As per IERC4626 `redeem`.
-    /// @param owner_ As per IERC4626 `redeem`.
-    /// @param id_ The reference id to redeem against. The owner MUST hold
-    /// a receipt with id_ and it will be used to calculate the share ratio.
-    /// @param receiptInformation_ Associated receipt data for the redemption.
-    function redeem(uint256 shares_, address receiver_, address owner_, uint256 id_, bytes memory receiptInformation_)
+    /// @param shares As per IERC4626 `redeem`.
+    /// @param receiver As per IERC4626 `redeem`.
+    /// @param owner As per IERC4626 `redeem`.
+    /// @param id The reference id to redeem against. The owner MUST hold
+    /// a receipt with id and it will be used to calculate the share ratio.
+    /// @param receiptInformation Associated receipt data for the redemption.
+    function redeem(uint256 shares, address receiver, address owner, uint256 id, bytes memory receiptInformation)
         public
         returns (uint256)
     {
-        uint256 assets_ = _calculateRedeem(shares_, _shareRatio(owner_, receiver_, id_, ShareAction.Burn));
-        _withdraw(assets_, receiver_, owner_, shares_, id_, receiptInformation_);
-        return assets_;
+        uint256 assets = _calculateRedeem(shares, _shareRatio(owner, receiver, id, ShareAction.Burn));
+        _withdraw(assets, receiver, owner, shares, id, receiptInformation);
+        return assets;
     }
 
     /// @inheritdoc ERC20Snapshot
-    function _beforeTokenTransfer(address from_, address to_, uint256 amount_) internal virtual override {
-        super._beforeTokenTransfer(from_, to_, amount_);
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
+        super._beforeTokenTransfer(from, to, amount);
     }
 }

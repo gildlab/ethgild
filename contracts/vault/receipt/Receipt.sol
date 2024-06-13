@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.25;
 
+import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
+
 import {IReceiptOwnerV1} from "./IReceiptOwnerV1.sol";
 import {IReceiptV1} from "./IReceiptV1.sol";
 
@@ -15,7 +17,7 @@ string constant RECEIPT_METADATA_URI = "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc2
 /// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows
 /// receipt information to be emitted and mints/burns according to ownership and
 /// owner authorization.
-contract Receipt is IReceiptV1, Ownable, ERC1155 {
+contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
     /// Disables initializers so that the clonable implementation cannot be
     /// initialized and used directly outside a factory deployment.
     constructor() {
@@ -24,9 +26,14 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
 
     /// Initializes the `Receipt` so that it is usable as a clonable
     /// implementation in `ReceiptFactory`.
-    function initialize() external initializer {
+    function initialize(bytes memory data) external override initializer returns (bytes32) {
         __Ownable_init();
         __ERC1155_init(RECEIPT_METADATA_URI);
+
+        address initialOwner = abi.decode(data, (address));
+        _transferOwnership(initialOwner);
+
+        return ICLONEABLE_V2_SUCCESS;
     }
 
     /// @inheritdoc IReceiptV1
@@ -35,63 +42,63 @@ contract Receipt is IReceiptV1, Ownable, ERC1155 {
     }
 
     /// @inheritdoc IReceiptV1
-    function ownerMint(address sender_, address account_, uint256 id_, uint256 amount_, bytes memory data_)
+    function ownerMint(address sender, address account, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
         onlyOwner
     {
-        _receiptInformation(sender_, id_, data_);
-        _mint(account_, id_, amount_, data_);
+        _receiptInformation(sender, id, data);
+        _mint(account, id, amount, data);
     }
 
     /// @inheritdoc IReceiptV1
-    function ownerBurn(address sender_, address account_, uint256 id_, uint256 amount_, bytes memory data_)
+    function ownerBurn(address sender, address account, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
         onlyOwner
     {
-        _receiptInformation(sender_, id_, data_);
-        _burn(account_, id_, amount_);
+        _receiptInformation(sender, id, data);
+        _burn(account, id, amount);
     }
 
     /// @inheritdoc IReceiptV1
-    function ownerTransferFrom(address from_, address to_, uint256 id_, uint256 amount_, bytes memory data_)
+    function ownerTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
         onlyOwner
     {
-        _safeTransferFrom(from_, to_, id_, amount_, data_);
+        _safeTransferFrom(from, to, id, amount, data);
     }
 
     /// Checks with the owner before authorizing transfer IN ADDITION to `super`
     /// inherited checks.
     /// @inheritdoc ERC1155
     function _beforeTokenTransfer(
-        address operator_,
-        address from_,
-        address to_,
-        uint256[] memory ids_,
-        uint256[] memory amounts_,
-        bytes memory data_
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
     ) internal virtual override {
-        super._beforeTokenTransfer(operator_, from_, to_, ids_, amounts_, data_);
-        IReceiptOwnerV1(owner()).authorizeReceiptTransfer(from_, to_);
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+        IReceiptOwnerV1(owner()).authorizeReceiptTransfer(from, to);
     }
 
     /// Emits `ReceiptInformation` if there is any data after checking with the
     /// receipt owner for authorization.
-    /// @param account_ The account that is emitting receipt information.
-    /// @param id_ The id of the receipt this information is for.
-    /// @param data_ The data being emitted as information for the receipt.
-    function _receiptInformation(address account_, uint256 id_, bytes memory data_) internal virtual {
+    /// @param account The account that is emitting receipt information.
+    /// @param id The id of the receipt this information is for.
+    /// @param data The data being emitted as information for the receipt.
+    function _receiptInformation(address account, uint256 id, bytes memory data) internal virtual {
         // No data is noop.
-        if (data_.length > 0) {
-            emit ReceiptInformation(account_, id_, data_);
+        if (data.length > 0) {
+            emit ReceiptInformation(account, id, data);
         }
     }
 
     /// @inheritdoc IReceiptV1
-    function receiptInformation(uint256 id_, bytes memory data_) external virtual {
-        _receiptInformation(msg.sender, id_, data_);
+    function receiptInformation(uint256 id, bytes memory data) external virtual {
+        _receiptInformation(msg.sender, id, data);
     }
 }

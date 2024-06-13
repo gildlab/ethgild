@@ -2,14 +2,19 @@
 pragma solidity =0.8.25;
 
 import {
-    ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction, InvalidId
+    ReceiptVaultConfig,
+    VaultConfig,
+    ReceiptVault,
+    ShareAction,
+    InvalidId,
+    ICLONEABLE_V2_SUCCESS,
+    ReceiptVaultConstructionConfig
 } from "../../vault/receipt/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {IReceiptV1} from "../../vault/receipt/IReceiptV1.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
-import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
@@ -113,7 +118,7 @@ struct OffchainAssetReceiptVaultConfig {
 /// - Fine grained standard Open Zeppelin access control for all system roles
 /// - Snapshots from `ReceiptVault` exposed under a role to ease potential
 ///   future migrations or disaster recovery plans.
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, ICloneableV2 {
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     using Math for uint256;
 
     /// Snapshot event similar to Open Zeppelin `Snapshot` event but with
@@ -254,18 +259,21 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, ICloneableV2 
     /// addresses.
     uint256[] private erc1155TierContext;
 
+    constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
+
     /// Initializes the initial admin and the underlying `ReceiptVault`.
     /// The admin provided will be admin of all roles and can reassign and revoke
     /// this as appropriate according to standard Open Zeppelin access control
     /// logic.
     /// @param data All config required to initialize abi encoded.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
-        OffchainAssetReceiptVaultConfig memory config = abi.decode(data, (OffchainAssetReceiptVaultConfig));
-        __ReceiptVault_init(config.receiptVaultConfig);
+        OffchainAssetVaultConfig memory config = abi.decode(data, (OffchainAssetVaultConfig));
+
+        __ReceiptVault_init(config.vaultConfig);
         __AccessControl_init();
 
         // There is no asset, the asset is offchain.
-        if (config.receiptVaultConfig.vaultConfig.asset != address(0)) {
+        if (config.vaultConfig.asset != address(0)) {
             revert NonZeroAsset();
         }
         // The config admin MUST be set.
@@ -310,7 +318,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, ICloneableV2 
         _grantRole(HANDLER_ADMIN, config.admin);
         _grantRole(WITHDRAWER_ADMIN, config.admin);
 
-        emit OffchainAssetReceiptVaultInitialized(msg.sender, config);
+        emit OffchainAssetReceiptVaultInitialized(
+            msg.sender,
+            OffchainAssetReceiptVaultConfig({
+                admin: config.admin,
+                receiptVaultConfig: ReceiptVaultConfig({receipt: address(sReceipt), vaultConfig: config.vaultConfig})
+            })
+        );
 
         return ICLONEABLE_V2_SUCCESS;
     }
@@ -673,29 +687,29 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, ICloneableV2 
     /// you SHOULD NOT continue to hold the token, exiting systems that play fast
     /// and loose with user assets is the ONLY way to discourage such behaviour.
     ///
-    /// @param confiscatee_ The address that receipts are being confiscated from.
-    /// @param id_ The ID of the receipt to confiscate.
-    /// @param data_ The associated justification of the confiscation, and/or
+    /// @param confiscatee The address that receipts are being confiscated from.
+    /// @param id The ID of the receipt to confiscate.
+    /// @param data The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of receipt confiscated.
-    function confiscateReceipt(address confiscatee_, uint256 id_, bytes memory data_)
+    function confiscateReceipt(address confiscatee, uint256 id, bytes memory data)
         external
         nonReentrant
         onlyRole(CONFISCATOR)
         returns (uint256)
     {
-        uint256 confiscatedReceiptAmount_ = 0;
+        uint256 confiscatedReceiptAmount = 0;
         if (
             address(erc1155Tier) == address(0)
-                || block.timestamp < erc1155Tier.reportTimeForTier(confiscatee_, erc1155MinimumTier, erc1155TierContext)
+                || block.timestamp < erc1155Tier.reportTimeForTier(confiscatee, erc1155MinimumTier, erc1155TierContext)
         ) {
-            IReceiptV1 receipt_ = _receipt;
-            confiscatedReceiptAmount_ = receipt_.balanceOf(confiscatee_, id_);
-            if (confiscatedReceiptAmount_ > 0) {
-                emit ConfiscateReceipt(msg.sender, confiscatee_, id_, confiscatedReceiptAmount_, data_);
-                receipt_.ownerTransferFrom(confiscatee_, msg.sender, id_, confiscatedReceiptAmount_, "");
+            IReceiptV1 receipt = sReceipt;
+            confiscatedReceiptAmount = receipt.balanceOf(confiscatee, id);
+            if (confiscatedReceiptAmount > 0) {
+                emit ConfiscateReceipt(msg.sender, confiscatee, id, confiscatedReceiptAmount, data);
+                receipt.ownerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
             }
         }
-        return confiscatedReceiptAmount_;
+        return confiscatedReceiptAmount;
     }
 }
