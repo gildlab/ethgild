@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity ^0.8.25;
 
 /// @title IReceiptOwnerV1
 /// @notice Owner of an `IReceiptV1` MUST authorize transfers between peers in
