@@ -43,7 +43,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        // Grant CERTIFIER role to Alice
+        // Grant CERTIFIER role to Bob
         vault.grantRole(vault.CERTIFIER(), bob);
 
         // Prank as Bob for the transaction
@@ -84,7 +84,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        // Grant CERTIFIER role to Alice
+        // Grant CERTIFIER role to Bob
         vault.grantRole(vault.CERTIFIER(), bob);
 
         // Prank as Bob for the transaction
@@ -194,7 +194,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.expectEmit(false, false, false, true);
         emit DepositWithReceipt(alice, alice, assets, assets, 1, data);
 
-        // Attempt to deposit, should revert
+        // Attempt to deposit, should not revert
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.stopPrank();
