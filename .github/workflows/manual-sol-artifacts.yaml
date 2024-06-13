@@ -26,6 +26,7 @@ on:
         type: choice
         options:
           - ownable-oracle-vault
+          - implementations
 
       receipt-vault-asset:
         description: 'Asset that is deposited into deployed receipt vault.'
