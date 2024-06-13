@@ -205,6 +205,7 @@ abstract contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, E
         sAsset = IERC20(config.asset);
 
         IReceiptV1 receipt = IReceiptV1(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+        sReceipt = receipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
         // from the factory ourselves just above.
@@ -212,8 +213,6 @@ abstract contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, E
         if (receiptOwner != address(this)) {
             revert WrongOwner(address(this), receiptOwner);
         }
-
-        sReceipt = receipt;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
