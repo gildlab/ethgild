@@ -63,7 +63,7 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
 
         vm.assume(alice != bob);
 
-        // Bound warpTimestamp from 1 to avoid potential issues with timestamp 0.
+        // Bound timestamp from 1 to avoid potential issues with timestamp 0.
         timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
         nextTimestamp = bound(nextTimestamp, timestamp + 1, type(uint32).max);
 
@@ -135,13 +135,13 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
         vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
-        // Attempt to authorize receipt transfer, should revert
+        // Authorize should succeed
         vault.authorizeReceiptTransfer(bob, alice);
 
         vm.stopPrank();
     }
 
-    ///Test AuthorizeReceiptTransfer does not reverts without certification if FROM has a handler role
+    /// Test AuthorizeReceiptTransfer does not revert without certification if FROM has a handler role
     function testAuthorizeReceiptTransferForHandlerFrom(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -166,7 +166,7 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         vault.authorizeReceiptTransfer(bob, alice);
     }
 
-    ///Test AuthorizeReceiptTransfer does not revert without certification if To has a handler role
+    /// Test AuthorizeReceiptTransfer does not revert without certification if To has a handler role
     function testAuthorizeReceiptTransferForHandlerTo(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -191,7 +191,7 @@ contract AuthorizedReceiptTransfer is Test, CreateOffchainAssetReceiptVaultFacto
         vault.authorizeReceiptTransfer(bob, alice);
     }
 
-    ///Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
+    /// Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
     function testAuthorizeReceiptTransferForConfiscatorTo(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
