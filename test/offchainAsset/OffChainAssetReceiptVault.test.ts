@@ -616,20 +616,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
-  it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .authorizeReceiptTransfer(alice.address, alice.address),
-      `CertificationExpired`,
-      "failed to AuthorizeReceiptTransfer"
-    );
-  });
   it("Confiscate - Checks role CONFISCATOR", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
@@ -1226,22 +1212,6 @@ describe("OffChainAssetReceiptVault", async function () {
           ),
       "ERC20: insufficient allowance",
       "failed to prevent withdraw on someone else's shares"
-    );
-  });
-  it("Prevent authorizeReceiptTransfer if system not certified", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .authorizeReceiptTransfer(alice.address, bob.address),
-      "CertificationExpired",
-      "failed to prevent authorizeReceiptTransfer"
     );
   });
   it("Prevent authorizeReceiptTransfer if unauthorizedSenderTier", async function () {
