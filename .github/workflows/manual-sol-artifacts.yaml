@@ -26,6 +26,7 @@ on:
         type: choice
         options:
           - ownable-oracle-vault
+          - flare-ftso-oracle-price-vault
           - implementations
 
       receipt-vault-asset:
@@ -55,6 +56,8 @@ jobs:
       - run: |
           network=${{ inputs.network }}
           echo "clone_factory_name=CI_DEPLOY_${network^^}_CLONE_FACTORY_ADDRESS" >> $GITHUB_ENV
+          echo "erc20_price_oracle_vault_implementation_name=CI_DEPLOY_${network^^}_ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION_ADDRESS" >> $GITHUB_ENV
+
           echo "etherscan_api_key_secret_name=CI_DEPLOY_${network^^}_ETHERSCAN_API_KEY" >> $GITHUB_ENV
           echo "rpc_secret_name=CI_DEPLOY_${network^^}_RPC_URL" >> $GITHUB_ENV
           echo "verify_secret_name=CI_DEPLOY_${network^^}_VERIFY" >> $GITHUB_ENV
@@ -79,6 +82,7 @@ jobs:
           RECEIPT_VAULT_SYMBOL: ${{ inputs.receipt-vault-symbol || '' }}
           OWNER_ADDRESS: ${{ inputs.owner || '' }}
           CLONE_FACTORY : ${{ vars[env.clone_factory_name] || '' }}
+          ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION: ${{ vars[env.erc20_price_oracle_vault_implementation_name] || '' }}
           DEPLOY_BROADCAST: '1'
           DEPLOYMENT_KEY: ${{ secrets.CI_PRIVATE_KEY }}
           ETH_RPC_URL: ${{ secrets[env.rpc_secret_name] || vars[env.rpc_secret_name] || '' }}

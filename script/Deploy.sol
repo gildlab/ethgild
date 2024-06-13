@@ -18,6 +18,7 @@ import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
+bytes32 constant DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT = keccak256("flare-ftso-oracle-price-vault");
 
 /// @title Deploy
 /// This is intended to be run on every commit by CI to a testnet such as mumbai,
@@ -26,7 +27,6 @@ contract Deploy is Script {
     function deployImplementations(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
 
-        new FlareFTSOOracle();
         new OwnableOracle();
         ReceiptContract receipt = new ReceiptContract();
         ReceiptVaultConstructionConfig memory receiptVaultConstructionConfig = ReceiptVaultConstructionConfig({
@@ -36,6 +36,24 @@ contract Deploy is Script {
         // new OffchainAssetReceiptVault(receiptVaultConstructionConfig);
         new ERC20PriceOracleReceiptVault(receiptVaultConstructionConfig);
 
+        vm.stopBroadcast();
+    }
+
+    function deployFlareFTSOOraclePriceVault(uint256 deploymentKey) internal {
+        vm.startBroadcast(deploymentKey);
+        ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")).clone(
+            vm.envAddress("ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION"),
+            abi.encode(
+                ERC20PriceOracleVaultConfig({
+                    priceOracle: address(new FlareFTSOOracle()),
+                    vaultConfig: VaultConfig({
+                        asset: vm.envAddress("RECEIPT_VAULT_ASSET"),
+                        name: vm.envString("RECEIPT_VAULT_NAME"),
+                        symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
+                    })
+                })
+            )
+        );
         vm.stopBroadcast();
     }
 
