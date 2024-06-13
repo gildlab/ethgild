@@ -146,26 +146,25 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
-        uint256 fuzzedKeyBob,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
         uint256 certifyUntil,
         uint256 forceCertifyUntil,
-        uint256 blockNumber
+        uint256 referenceBlockNumber,
+        uint256 nextReferenceBlockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
         forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max);
         vm.assume(certifyUntil != forceCertifyUntil);
 
-        blockNumber = bound(blockNumber, 0, type(uint256).max);
-        vm.roll(blockNumber);
+        nextReferenceBlockNumber = bound(nextReferenceBlockNumber, 0, block.number);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
+        vm.assume(referenceBlockNumber != nextReferenceBlockNumber);
 
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
@@ -174,22 +173,26 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
-        vm.stopPrank();
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.grantRole(vault.CERTIFIER(), alice);
 
-        // Prank as Bob for the transaction
-        vm.startPrank(bob);
+        // Expect the Certify event
+        vm.expectEmit(false, false, false, true);
+        emit Certify(alice, certifyUntil, referenceBlockNumber, false, data);
 
         // Certify system
-        vault.certify(certifyUntil, blockNumber, false, data);
+        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+
+        // Expect the Certify event
+        vm.expectEmit(false, false, false, true);
+        emit Certify(alice, forceCertifyUntil, nextReferenceBlockNumber, true, data);
 
         // Certify with forceUntil true
-        vault.certify(forceCertifyUntil, blockNumber, true, data);
+        vault.certify(forceCertifyUntil, nextReferenceBlockNumber, true, data);
 
         // Call deposit to make sure system is certified
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit DepositWithReceipt(alice, alice, assets, assets, 1, data);
 
         // Attempt to deposit, should revert
         vault.deposit(assets, alice, minShareRatio, data);
