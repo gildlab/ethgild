@@ -572,6 +572,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         }
 
         // Everyone else can only transfer while the certification is valid.
+        // Note: The current implementation does not explicitly handle block.timestamp being 0 (January 1, 1970).
+        // We do not support blockchains that lack timestamps.
         //solhint-disable-next-line not-rely-on-time
         if (block.timestamp > certifiedUntil) {
             revert CertificationExpired(from_, to_, certifiedUntil, block.timestamp);
