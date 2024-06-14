@@ -228,33 +228,54 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit reverts on nonexistent receipt id
     function testReDepositToNonExistentReceipt(
         uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 blockNumber,
+        uint256 id
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-        minShareRatio = bound(minShareRatio, 0, 1e18);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-        // Start recording logs
-        vm.recordLogs();
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+        id = bound(id, 0, type(uint256).max);
+        vm.assume(id != 1); // If id is 1, it will not be an invalid
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        // Assume that assets are within a valid range
+        assets = bound(assets, 1, type(uint256).max / 2);
+
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
-        uint256 upperBound = type(uint256).max / 1e18;
-        // Assume that assets is less than totalSupply
-        assets = bound(assets, 1, upperBound);
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+        vm.stopPrank();
 
-        vault.grantRole(vault.DEPOSITOR(), alice);
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, data);
+
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
-        vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, 0));
-        vault.redeposit(assets, alice, 0, data);
+        // Attempt to deposit, should revert
+        vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, id));
+        vault.redeposit(assets, alice, id, data);
 
         vm.stopPrank();
     }
