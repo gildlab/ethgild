@@ -3,10 +3,12 @@ pragma solidity =0.8.17;
 
 import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
 import {Test, Vm} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 import {
     OffchainAssetReceiptVault,
     ZeroCertifyUntil,
-    FutureReferenceBlock
+    FutureReferenceBlock,
+    CertificationExpired
 } from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultFactory} from
     "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
@@ -195,6 +197,75 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         emit DepositWithReceipt(alice, alice, assets, assets, 1, data);
 
         // Attempt to deposit, should not revert
+        vault.deposit(assets, alice, minShareRatio, data);
+
+        vm.stopPrank();
+    }
+
+    /// Test certify with force until true revert deposit
+    function testCertifyWithForceUntilTrueRevertDeposit(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory data,
+        uint256 certifyUntil,
+        uint256 forceCertifyUntil,
+        uint256 futureTime,
+        uint256 referenceBlockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+        // Subtract 1 for the next bound
+        forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max - 1);
+        // Ensure futureTime is beyond forceCertifyUntil
+        futureTime = bound(futureTime, forceCertifyUntil + 1, type(uint32).max);
+        vm.assume(certifyUntil != forceCertifyUntil);
+
+        referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
+
+        // Assume that assets are within a valid range
+        assets = bound(assets, 1, type(uint256).max);
+
+        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for transactions
+        vm.startPrank(bob);
+
+        // Expect the Certify event
+        vm.expectEmit(false, false, false, true);
+        emit Certify(bob, certifyUntil, referenceBlockNumber, false, data);
+
+        // Certify system
+        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+
+        // Expect the Certify event
+        vm.expectEmit(false, false, false, true);
+        emit Certify(bob, forceCertifyUntil, referenceBlockNumber, true, data);
+
+        // Certify with forceUntil true
+        vault.certify(forceCertifyUntil, referenceBlockNumber, true, data);
+
+        // Warp to a time beyond the forced certification period
+        vm.warp(futureTime);
+
+        // Expect the deposit to revert with the specific reason
+        vm.expectRevert(
+            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, forceCertifyUntil, futureTime)
+        );
+
+        // Attempt to deposit, should revert
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.stopPrank();
