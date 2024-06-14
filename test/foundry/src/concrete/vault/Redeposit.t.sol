@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
-import {InvalidId} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import {Test, Vm} from "forge-std/Test.sol";
+import {InvalidId} from "../../../../../contracts/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+
 import {
     OffchainAssetReceiptVault,
     CertificationExpired
-} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
+} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 
-contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    using LibFixedPointMath for uint256;
+contract RedepositTest is OffchainAssetReceiptVaultTest {
+    using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
@@ -36,7 +39,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
@@ -85,7 +88,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
@@ -126,7 +129,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         {
             //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
@@ -183,7 +186,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         {
             //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
@@ -234,7 +237,7 @@ contract RedepositTest is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
         uint256 upperBound = type(uint256).max / 1e18;
