@@ -59,13 +59,13 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Certify system till the current timestamp
         vault.certify(timestamp, blockNumber, false, data);
 
-        vault.deposit(assets, alice, minShareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assetsToRedeposit, assetsToRedeposit, 1, data);
+        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 1, data);
 
         // Redeposit
-        vault.redeposit(assetsToRedeposit, alice, 1, data);
+        vault.redeposit(assetsToRedeposit, bob, 1, data);
 
         vm.stopPrank();
     }
@@ -178,61 +178,49 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit to someone else While system is certified
     function testReDepositToSomeoneElseWhileCertified(
         uint256 fuzzedKeyAlice,
-        uint256 assets,
         uint256 fuzzedKeyBob,
-        uint256 minShareRatio,
+        uint256 assets,
+        uint256 assetsToRedeposit,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol,
-        uint256 certifyUntil,
-        uint256 referenceBlockNumber
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 blockNumber
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address bob = vm.addr(fuzzedKeyBob);
-
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6 - 1);
+        timestamp = bound(timestamp, 1, type(uint32).max);
 
-        vm.assume(alice != bob);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+        // Bound assets
+        assets = bound(assets, 1, type(uint256).max / 2);
+        assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint256).max / 2);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
 
-        {
-            //set upperBound for assets so it does not overflow while calculating fixedPointDiv or fixedPointMul
-            uint256 upperBound = type(uint256).max / 1e18;
-            // Assume that assets is less than totalSupply
-            assets = bound(assets, 1, upperBound);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
 
-            vault.grantRole(vault.DEPOSITOR(), alice);
-            vault.grantRole(vault.DEPOSITOR(), bob);
-            vault.grantRole(vault.CERTIFIER(), alice);
-        }
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
 
-        // Divide alice assets to 3 to have enough assets for redeposit
-        uint256 assetsToDeposit = assets.fixedPointDiv(3, Math.Rounding.Down);
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, data);
 
-        // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+        vault.deposit(assets, alice, minShareRatio, data);
 
-        vault.deposit(assetsToDeposit, bob, minShareRatio, data);
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(bob, alice, assetsToRedeposit, assetsToRedeposit, 1, data);
 
-        uint256 expectedShares = assetsToDeposit.fixedPointMul(1e18, Math.Rounding.Up);
-
-        // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(true, true, true, true);
-        emit DepositWithReceipt(alice, bob, assetsToDeposit, expectedShares, 1, data);
-
-        // Redeposit same amount
-        vault.redeposit(assetsToDeposit, bob, 1, data);
+        // Redeposit
+        vault.redeposit(assetsToRedeposit, alice, 1, data);
 
         vm.stopPrank();
     }
