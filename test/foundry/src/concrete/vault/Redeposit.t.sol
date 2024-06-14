@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {InvalidId} from "../../../../../contracts/abstract/ReceiptVault.sol";
+import {InvalidId, ZeroAssetsAmount} from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
@@ -66,6 +66,53 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         // Redeposit
         vault.redeposit(assetsToRedeposit, bob, 1, data);
+
+        vm.stopPrank();
+    }
+
+    /// Test redeposit function reverts when assets = 0
+    function testReDepositRevertsWithZeroAssets(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 blockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+        // Bound assets
+        assets = bound(assets, 1, type(uint256).max / 2);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, data);
+
+        vault.deposit(assets, bob, minShareRatio, data);
+
+        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
+
+        // Redeposit
+        vault.redeposit(0, bob, 1, data);
 
         vm.stopPrank();
     }
