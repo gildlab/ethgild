@@ -75,7 +75,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 assetsToRedeposit,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol,
@@ -87,22 +86,25 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        timestamp = bound(timestamp, 1, type(uint32).max - 1); // subtract 1 for next bound
+        timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
         futureTimestamp = bound(futureTimestamp, timestamp + 1, type(uint32).max);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
-        // Bound assets
-        assets = bound(assets, 1, type(uint256).max / 2);
-        assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint256).max / 2);
+
+        // Assume that assets are within a valid range
+        assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-        // Prank as Alice to set roles
-        vm.startPrank(alice);
 
+        // Prank as Alice to set role
+        vm.startPrank(alice);
         vault.grantRole(vault.DEPOSITOR(), bob);
         vault.grantRole(vault.CERTIFIER(), bob);
+        vm.stopPrank();
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -116,12 +118,14 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.warp(futureTimestamp);
+
+        // Expect revert because the certification is expired
         vm.expectRevert(
             abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, timestamp, futureTimestamp)
         );
 
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, alice, 1, data);
+        // Attempt to deposit, should revert
+        vault.redeposit(assets, alice, 1, data);
 
         vm.stopPrank();
     }
