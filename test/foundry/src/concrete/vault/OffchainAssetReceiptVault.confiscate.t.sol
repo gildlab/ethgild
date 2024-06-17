@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import {Test, Vm} from "forge-std/Test.sol";
-import {OffchainAssetReceiptVault} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
-import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 
-contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
-    using LibFixedPointMath for uint256;
-
+contract Confiscate is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
@@ -30,7 +32,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         vault.grantRole(vault.CONFISCATOR(), alice);
 
@@ -79,7 +81,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
@@ -131,7 +133,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(alice != bob);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
@@ -174,7 +176,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         vm.assume(alice != bob);
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         vault.grantRole(vault.CONFISCATOR(), alice);
 
@@ -223,7 +225,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets is less than uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
 
         vm.assume(alice != bob);
         // Prank as Alice to set roles
@@ -272,7 +274,7 @@ contract Confiscate is Test, CreateOffchainAssetReceiptVaultFactory {
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
