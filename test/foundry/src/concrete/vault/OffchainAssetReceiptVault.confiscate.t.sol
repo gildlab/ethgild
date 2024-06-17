@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
+import "forge-std/console.sol";
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
@@ -23,22 +24,45 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory data
+        bytes memory data,
+        uint256 balance,
+        uint256 minShareRatio
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+
+        // Bound balance from 1 so depositing does not revert with ZeroAssetsAmount
+        balance = bound(balance, 1, type(uint256).max);
+
         vm.assume(alice != bob);
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
+
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        vault.grantRole(vault.CONFISCATOR(), alice);
+        // Prank as Alice to set role
+        vm.startPrank(alice);
+        vault.grantRole(vault.CONFISCATOR(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vm.stopPrank();
 
-        // Stop recording logs
+        // Prank as Bob for tranactions
+        vm.startPrank(bob);
+
+        // Deposit to increase bob's balance
+        vault.deposit(balance, bob, minShareRatio, data);
+
+        // Record initial balances
+        uint256 initialBalanceAlice = vault.balanceOf(alice);
+        uint256 initialBalanceBob = vault.balanceOf(bob);
+
+        // Recording logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        vault.confiscateShares(bob, data);
+        vault.confiscateShares(alice, data);
+
+        assertEq(initialBalanceAlice, vault.balanceOf(alice));
+        assertEq(initialBalanceBob, vault.balanceOf(bob));
 
         // Check the logs to ensure event is not present
         bool eventFound = false;
