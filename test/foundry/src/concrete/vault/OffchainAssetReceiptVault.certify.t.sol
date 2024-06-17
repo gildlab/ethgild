@@ -225,17 +225,14 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
-        // Subtract 1 for the next bound
-        forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max - 1);
-        // Ensure futureTime is beyond forceCertifyUntil
-        futureTime = bound(futureTime, forceCertifyUntil + 1, type(uint32).max);
-        vm.assume(certifyUntil != forceCertifyUntil);
+        forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max);
 
+        futureTime = bound(futureTime, forceCertifyUntil + 1, type(uint256).max);
         referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
-
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
 
@@ -245,16 +242,17 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
         vault.grantRole(vault.DEPOSITOR(), bob);
         vault.grantRole(vault.CERTIFIER(), bob);
+        vm.stopPrank();
 
-        // Prank as Bob for transactions
+        // Prank as Bob for the transaction
         vm.startPrank(bob);
 
-        // Expect the Certify event
-        vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, referenceBlockNumber, false, data);
-
-        // Certify system
+        // Certify system till the current timestamp
         vault.certify(certifyUntil, referenceBlockNumber, false, data);
+
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        vault.deposit(assets, alice, minShareRatio, data);
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
@@ -262,11 +260,9 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
 
         // Certify with forceUntil true
         vault.certify(forceCertifyUntil, referenceBlockNumber, true, data);
-
-        // Warp to a time beyond the forced certification period
         vm.warp(futureTime);
 
-        // Expect the deposit to revert with the specific reason
+        // Expect revert because the certification is expired
         vm.expectRevert(
             abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, forceCertifyUntil, futureTime)
         );
