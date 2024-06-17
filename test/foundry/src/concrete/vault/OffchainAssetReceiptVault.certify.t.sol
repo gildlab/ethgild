@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import {Test, Vm} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 import {
-    OffchainAssetReceiptVault,
-    ZeroCertifyUntil,
-    FutureReferenceBlock,
-    CertificationExpired
-} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultFactory} from
-    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
+OffchainAssetReceiptVault,
+ZeroCertifyUntil,
+FutureReferenceBlock,
+CertificationExpired
+} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 
-contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
+contract CertifyTest is OffchainAssetReceiptVaultTest {
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
@@ -40,7 +37,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
@@ -81,7 +78,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         uint256 certifyUntil = 0;
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
@@ -123,7 +120,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         certifyUntil = bound(certifyUntil, 1, blockNumber);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
@@ -171,7 +168,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -233,7 +230,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -302,7 +299,7 @@ contract CertifyTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
