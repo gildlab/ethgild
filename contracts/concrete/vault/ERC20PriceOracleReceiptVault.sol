@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
-import {IERC20Upgradeable as IERC20} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {ReceiptVaultConfig, VaultConfig, ReceiptVault, ShareAction} from "../receipt/ReceiptVault.sol";
-import "../../oracle/price/IPriceOracleV1.sol";
+import {IERC20Upgradeable as IERC20} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {
+    ReceiptVaultConfig,
+    VaultConfig,
+    ReceiptVault,
+    ShareAction,
+    ICLONEABLE_V2_SUCCESS,
+    ReceiptVaultConstructionConfig
+} from "../../abstract/ReceiptVault.sol";
+import {IPriceOracleV1} from "../../interface/IPriceOracleV1.sol";
 
 /// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
 /// receipt. Typically the receipt will be deployed and ownership transferred
@@ -123,11 +131,27 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The price oracle used for all minting calculations.
     IPriceOracleV1 public priceOracle;
 
+    constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
+
     /// Initialization of the underlying receipt vault and price oracle.
-    function initialize(ERC20PriceOracleReceiptVaultConfig memory config_) external initializer {
-        __ReceiptVault_init(config_.receiptVaultConfig);
-        priceOracle = IPriceOracleV1(config_.priceOracle);
-        emit ERC20PriceOracleReceiptVaultInitialized(msg.sender, config_);
+    function initialize(bytes memory data) external override initializer returns (bytes32) {
+        ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
+        priceOracle = IPriceOracleV1(config.priceOracle);
+
+        __ReceiptVault_init(config.vaultConfig);
+
+        // Slither false positive due to needing sReceipt to be set so that the
+        // event can be emitted with the correct data.
+        // slither-disable-next-line reentrancy-events
+        emit ERC20PriceOracleReceiptVaultInitialized(
+            msg.sender,
+            ERC20PriceOracleReceiptVaultConfig({
+                priceOracle: config.priceOracle,
+                receiptVaultConfig: ReceiptVaultConfig({receipt: address(sReceipt), vaultConfig: config.vaultConfig})
+            })
+        );
+
+        return ICLONEABLE_V2_SUCCESS;
     }
 
     /// The ID is the current oracle price always, even if this ID has already
