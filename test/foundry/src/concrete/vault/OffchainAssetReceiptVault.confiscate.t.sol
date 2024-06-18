@@ -53,7 +53,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         // Deposit to increase bob's balance
         vault.deposit(balance, bob, minShareRatio, data);
 
-        bool noBalanceChange = LibConfiscateChecker.checkConfiscateNoop(vault, alice, bob, data);
+        bool noBalanceChange = LibConfiscateChecker.checkConfiscateSharesNoop(vault, alice, bob, data);
 
         assertTrue(noBalanceChange, "Balances should not change");
         vm.stopPrank();
@@ -108,7 +108,10 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         vm.expectEmit(false, false, false, true);
         emit ConfiscateShares(bob, alice, assets, data);
 
-        vault.confiscateShares(alice, data);
+        bool balancesChanged = LibConfiscateChecker.checkConfiscateShares(vault, alice, bob, data);
+
+        assertTrue(balancesChanged, "Balances should change");
+
         vm.stopPrank();
     }
 
@@ -160,7 +163,10 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         vm.expectEmit(false, false, false, true);
         emit Transfer(alice, bob, assets);
 
-        vault.confiscateShares(alice, data);
+        bool balancesChanged = LibConfiscateChecker.checkConfiscateShares(vault, alice, bob, data);
+
+        assertTrue(balancesChanged, "Balances should change");
+
         vm.stopPrank();
     }
 
