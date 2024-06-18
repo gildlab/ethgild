@@ -18,7 +18,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
     event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
     event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
 
-    /// Test to checks ConfiscateShares is NOT emitted on zero balance
+    /// Test to checks ConfiscateShares does not change balances on zero balance
     function testConfiscateOnZeroBalance(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -170,7 +170,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    /// Test to checks ConfiscateReceipt is NOT emitted on zero balance
+    /// Test to checks ConfiscateReceipt does not change balances on zero balance
     function testConfiscateReceiptOnZeroBalance(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -183,29 +183,25 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        id = bound(id, 0, type(uint256).max);
         vm.assume(alice != bob);
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
+
+        id = bound(id, 0, type(uint256).max);
+
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        vault.grantRole(vault.CONFISCATOR(), alice);
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+        vault.grantRole(vault.CONFISCATOR(), bob);
 
-        // Stop recording logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        vault.confiscateReceipt(bob, id, data);
+        vm.stopPrank();
 
-        // Check the logs to ensure event is not present
-        bool eventFound = false;
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
 
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == ConfiscateReceipt.selector) {
-                eventFound = true;
-                break;
-            }
-        }
+        bool noBalanceChange =
+            LibConfiscateChecker.checkConfiscateReceiptNoop(vault, getReceipt(), alice, bob, id, data);
+        assertTrue(noBalanceChange, "ConfiscateReceipt should not change balances");
 
-        assertFalse(eventFound, "ConfiscateReceipt event should not be emitted");
         vm.stopPrank();
     }
 
