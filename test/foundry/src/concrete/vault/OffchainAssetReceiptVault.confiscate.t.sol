@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import "forge-std/console.sol";
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
@@ -11,6 +10,7 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
+import {LibConfiscateChecker} from "test/foundry/lib/LibConfiscateChecker.sol";
 
 contract Confiscate is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
@@ -45,36 +45,17 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
         vault.grantRole(vault.CONFISCATOR(), bob);
         vault.grantRole(vault.DEPOSITOR(), bob);
-        vm.stopPrank();
+        // vm.stopPrank();
 
-        // Prank as Bob for tranactions
+        // // Prank as Bob for tranactions
         vm.startPrank(bob);
 
         // Deposit to increase bob's balance
         vault.deposit(balance, bob, minShareRatio, data);
 
-        // Record initial balances
-        uint256 initialBalanceAlice = vault.balanceOf(alice);
-        uint256 initialBalanceBob = vault.balanceOf(bob);
+        bool noBalanceChange = LibConfiscateChecker.checkConfiscateNoop(vault, alice, bob, data);
 
-        // Recording logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        vault.confiscateShares(alice, data);
-
-        assertEq(initialBalanceAlice, vault.balanceOf(alice));
-        assertEq(initialBalanceBob, vault.balanceOf(bob));
-
-        // Check the logs to ensure event is not present
-        bool eventFound = false;
-
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == ConfiscateShares.selector) {
-                eventFound = true;
-                break;
-            }
-        }
-
-        assertFalse(eventFound, "ConfiscateShares event should not be emitted");
+        assertTrue(noBalanceChange, "Balances should not change");
         vm.stopPrank();
     }
 
