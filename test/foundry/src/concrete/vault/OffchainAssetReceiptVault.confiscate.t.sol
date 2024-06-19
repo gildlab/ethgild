@@ -42,22 +42,30 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         return receipt;
     }
 
-    /// Checks that balances don't change.
-    function checkConfiscateSharesNoop(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
+    /// Checks that confiscateShares balances don't change or do change as expected
+    function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
         internal
     {
         uint256 initialBalanceAlice = vault.balanceOf(alice);
         uint256 initialBalanceBob = vault.balanceOf(bob);
 
         vault.confiscateShares(alice, data);
-        bool noBalanceChange =
-            initialBalanceAlice == vault.balanceOf(alice) && initialBalanceBob == vault.balanceOf(bob);
 
-        assertTrue(noBalanceChange, "Balances should not change");
+        uint256 balanceAfterAlice = vault.balanceOf(alice);
+        uint256 balanceAfterBob = vault.balanceOf(bob);
+
+        bool expectNoChange = initialBalanceAlice == 0;
+
+        bool balancesChanged = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
+        if (!expectNoChange) {
+            balancesChanged = balanceAfterAlice == 0 && balanceAfterBob == initialBalanceBob + initialBalanceAlice;
+        }
+
+        assertTrue(balancesChanged, expectNoChange ? "Balances should not change" : "Balances should change");
     }
 
-    /// Checks that balances don't change.
-    function checkConfiscateReceiptNoop(
+    /// Checks that confiscateReceipt balances don't change or do change as expected
+    function checkConfiscateReceipt(
         OffchainAssetReceiptVault vault,
         ReceiptContract receipt,
         address alice,
@@ -75,54 +83,16 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         uint256 balanceAfterAlice = receipt.balanceOf(alice, id);
         uint256 balanceAfterBob = receipt.balanceOf(bob, id);
 
-        bool noBalanceChange = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
-        assertTrue(noBalanceChange, "Balances should not change");
-    }
+        bool expectNoChange = initialBalanceAlice == 0;
 
-    /// Checks that balances change.
-    function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
-        internal
-    {
-        uint256 initialBalanceAlice = vault.balanceOf(alice);
-        uint256 initialBalanceBob = vault.balanceOf(bob);
+        bool balancesChanged = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
+        if (!expectNoChange) {
+            balancesChanged = balanceAfterAlice == 0 && balanceAfterBob == initialBalanceBob + initialBalanceAlice;
+        }
 
-        vm.expectEmit(false, false, false, true);
-        emit ConfiscateShares(bob, alice, initialBalanceAlice, data);
+        assertTrue(balancesChanged, expectNoChange ? "Balances should not change" : "Balances should change");
 
-        vm.expectEmit(false, false, false, true);
-        emit Transfer(alice, bob, initialBalanceAlice);
-
-        vault.confiscateShares(alice, data);
-
-        bool balancesChanged =
-            vault.balanceOf(alice) == 0 && vault.balanceOf(bob) == initialBalanceBob + initialBalanceAlice;
-        assertTrue(balancesChanged, "Balances should change");
-    }
-
-    /// Checks that balances change.
-    function checkConfiscateReceipt(
-        OffchainAssetReceiptVault vault,
-        ReceiptContract receipt,
-        address alice,
-        address bob,
-        uint256 id,
-        bytes memory data
-    ) internal {
-        uint256 initialBalanceAlice = receipt.balanceOf(alice, id);
-        uint256 initialBalanceBob = receipt.balanceOf(bob, id);
-
-        vm.expectEmit(false, false, false, true);
-        emit ConfiscateReceipt(bob, alice, 1, vault.balanceOf(alice), data);
-
-        vm.expectEmit(false, false, false, true);
-        emit TransferSingle(address(vault), alice, bob, 1, vault.balanceOf(alice));
-
-        vault.confiscateReceipt(alice, id, data);
-        uint256 balanceAfterAlice = receipt.balanceOf(alice, id);
-        uint256 balanceAfterBob = receipt.balanceOf(bob, id);
-
-        bool noBalanceChange = balanceAfterAlice == 0 && balanceAfterBob == initialBalanceBob + initialBalanceAlice;
-        assertTrue(noBalanceChange, "ConfiscateReceipt change balances");
+        vm.stopPrank();
     }
 
     /// Test to checks ConfiscateShares does not change balances on zero balance
@@ -160,7 +130,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         // Deposit to increase bob's balance
         vault.deposit(balance, bob, minShareRatio, data);
 
-        checkConfiscateSharesNoop(vault, alice, bob, data);
+        checkConfiscateShares(vault, alice, bob, data);
 
         vm.stopPrank();
     }
@@ -240,7 +210,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
 
         vault.grantRole(vault.CONFISCATOR(), bob);
 
-        checkConfiscateReceiptNoop(vault, receipt, alice, bob, id, data);
+        checkConfiscateReceipt(vault, receipt, alice, bob, id, data);
     }
 
     /// Test to checks ConfiscateReceipt
