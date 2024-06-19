@@ -11,6 +11,20 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
     event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
     event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
 
+    /// Checks that balances don't change.
+    function checkConfiscateSharesNoop(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
+        internal
+    {
+        uint256 initialBalanceAlice = vault.balanceOf(alice);
+        uint256 initialBalanceBob = vault.balanceOf(bob);
+
+        vault.confiscateShares(alice, data);
+        bool noBalanceChange =
+            initialBalanceAlice == vault.balanceOf(alice) && initialBalanceBob == vault.balanceOf(bob);
+
+        assertTrue(noBalanceChange, "Balances should not change");
+    }
+
     /// Test to checks ConfiscateShares does not change balances on zero balance
     function testConfiscateOnZeroBalance(
         uint256 fuzzedKeyAlice,
@@ -46,9 +60,8 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         // Deposit to increase bob's balance
         vault.deposit(balance, bob, minShareRatio, data);
 
-        bool noBalanceChange = LibConfiscateChecker.checkConfiscateSharesNoop(vault, alice, bob, data);
+        checkConfiscateSharesNoop(vault, alice, bob, data);
 
-        assertTrue(noBalanceChange, "Balances should not change");
         vm.stopPrank();
     }
 
