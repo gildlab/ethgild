@@ -5,19 +5,6 @@ import {OffchainAssetReceiptVault} from "contracts/concrete/vault/OffchainAssetR
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
 
 library LibConfiscateChecker {
-    /// Checks that balances change.
-    function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
-        internal
-        returns (bool)
-    {
-        uint256 initialBalanceAlice = vault.balanceOf(alice);
-        uint256 initialBalanceBob = vault.balanceOf(bob);
-
-        vault.confiscateShares(alice, data);
-
-        return vault.balanceOf(alice) == 0 && vault.balanceOf(bob) == initialBalanceBob + initialBalanceAlice;
-    }
-
     /// Checks that balances don't change.
     function checkConfiscateReceiptNoop(
         OffchainAssetReceiptVault vault,

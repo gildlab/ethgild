@@ -25,6 +25,27 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         assertTrue(noBalanceChange, "Balances should not change");
     }
 
+    /// Checks that balances change.
+    function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
+        internal
+    {
+        uint256 initialBalanceAlice = vault.balanceOf(alice);
+        uint256 initialBalanceBob = vault.balanceOf(bob);
+
+        vm.expectEmit(false, false, false, true);
+        emit ConfiscateShares(bob, alice, initialBalanceAlice, data);
+
+        vm.expectEmit(false, false, false, true);
+        emit Transfer(alice, bob, initialBalanceAlice);
+
+        vault.confiscateShares(alice, data);
+
+        bool balancesChanged =
+            vault.balanceOf(alice) == 0 && vault.balanceOf(bob) == initialBalanceBob + initialBalanceAlice;
+
+        assertTrue(balancesChanged, "Balances should change");
+    }
+
     /// Test to checks ConfiscateShares does not change balances on zero balance
     function testConfiscateOnZeroBalance(
         uint256 fuzzedKeyAlice,
@@ -111,13 +132,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit ConfiscateShares(bob, alice, assets, data);
-
-        bool balancesChanged = LibConfiscateChecker.checkConfiscateShares(vault, alice, bob, data);
-
-        assertTrue(balancesChanged, "Balances should change");
-
+        checkConfiscateShares(vault, alice, bob, data);
         vm.stopPrank();
     }
 
@@ -166,12 +181,7 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit Transfer(alice, bob, assets);
-
-        bool balancesChanged = LibConfiscateChecker.checkConfiscateShares(vault, alice, bob, data);
-
-        assertTrue(balancesChanged, "Balances should change");
+        checkConfiscateShares(vault, alice, bob, data);
 
         vm.stopPrank();
     }
