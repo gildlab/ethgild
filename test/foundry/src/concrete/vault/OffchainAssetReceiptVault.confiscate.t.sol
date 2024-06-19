@@ -10,9 +10,7 @@ import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/rece
 
 contract Confiscate is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
-    event Transfer(address indexed from, address indexed to, uint256 value);
     event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
     event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
 
     /// Get Receipt from event
@@ -48,13 +46,17 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
     {
         uint256 initialBalanceAlice = vault.balanceOf(alice);
         uint256 initialBalanceBob = vault.balanceOf(bob);
+        bool expectNoChange = initialBalanceAlice == 0;
+
+        if (!expectNoChange) {
+            vm.expectEmit(false, false, false, true);
+            emit ConfiscateShares(bob, alice, initialBalanceAlice, data);
+        }
 
         vault.confiscateShares(alice, data);
 
         uint256 balanceAfterAlice = vault.balanceOf(alice);
         uint256 balanceAfterBob = vault.balanceOf(bob);
-
-        bool expectNoChange = initialBalanceAlice == 0;
 
         bool balancesChanged = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
         if (!expectNoChange) {
@@ -75,15 +77,20 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
     ) internal {
         uint256 initialBalanceAlice = receipt.balanceOf(alice, id);
         uint256 initialBalanceBob = receipt.balanceOf(bob, id);
+        bool expectNoChange = initialBalanceAlice == 0;
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
+
+        if (!expectNoChange) {
+            vm.expectEmit(false, false, false, true);
+            emit ConfiscateReceipt(bob, alice, id, initialBalanceAlice, data);
+        }
+
         vault.confiscateReceipt(alice, id, data);
 
         uint256 balanceAfterAlice = receipt.balanceOf(alice, id);
         uint256 balanceAfterBob = receipt.balanceOf(bob, id);
-
-        bool expectNoChange = initialBalanceAlice == 0;
 
         bool balancesChanged = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
         if (!expectNoChange) {
