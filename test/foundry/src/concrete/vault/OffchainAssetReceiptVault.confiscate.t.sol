@@ -96,7 +96,6 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
 
         bool balancesChanged =
             vault.balanceOf(alice) == 0 && vault.balanceOf(bob) == initialBalanceBob + initialBalanceAlice;
-
         assertTrue(balancesChanged, "Balances should change");
     }
 
@@ -244,51 +243,52 @@ contract Confiscate is OffchainAssetReceiptVaultTest {
         checkConfiscateReceiptNoop(vault, receipt, alice, bob, id, data);
     }
 
-    // /// Test to checks ConfiscateReceipt
-    // function testConfiscateReceipt(
-    //     uint256 fuzzedKeyAlice,
-    //     uint256 fuzzedKeyBob,
-    //     uint256 minShareRatio,
-    //     uint256 assets,
-    //     string memory assetName,
-    //     bytes memory data,
-    //     uint256 certifyUntil,
-    //     uint256 referenceBlockNumber,
-    //     uint256 blockNumber,
-    //     bool forceUntil
-    // ) external {
-    //     minShareRatio = bound(minShareRatio, 0, 1e18);
-    //     // Ensure the fuzzed key is within the valid range for secp256k1
-    //     address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //     address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+    /// Test to checks ConfiscateReceipt
+    function testConfiscateReceipt(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 minShareRatio,
+        uint256 assets,
+        string memory assetName,
+        bytes memory data,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        uint256 blockNumber,
+        bool forceUntil
+    ) external {
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-    //     blockNumber = bound(blockNumber, 0, type(uint256).max);
-    //     vm.roll(blockNumber);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
 
-    //     referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
-    //     certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-    //     // Assume that assets is less than uint256 max
-    //     assets = bound(assets, 1, type(uint256).max);
+        // Assume that assets is less than uint256 max
+        assets = bound(assets, 1, type(uint256).max);
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        ReceiptContract receipt = getReceipt();
+        vm.assume(alice != bob);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+        vault.grantRole(vault.CONFISCATOR(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
 
-    //     OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        // Prank as Bob for transactions
+        vm.startPrank(bob);
 
-    //     vm.assume(alice != bob);
-    //     // Prank as Alice to set roles
-    //     vm.startPrank(alice);
-    //     vault.grantRole(vault.CONFISCATOR(), bob);
-    //     vault.grantRole(vault.DEPOSITOR(), bob);
-    //     vault.grantRole(vault.CERTIFIER(), bob);
+        // Call the certify function
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-    //     // Prank as Bob for transactions
-    //     vm.startPrank(bob);
+        vault.deposit(assets, alice, minShareRatio, data);
 
-    //     // Call the certify function
-    //     vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
-
-    //     vault.deposit(assets, alice, minShareRatio, data);
-
-    //     checkConfiscateReceipt(vault, getReceipt(), alice, bob, 1, data);
-    //     vm.stopPrank();
-    // }
+        checkConfiscateReceipt(vault, receipt, alice, bob, 1, data);
+        vm.stopPrank();
+    }
 }
