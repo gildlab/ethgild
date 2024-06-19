@@ -15,7 +15,6 @@ contract OffchainAssetReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable receiptImplementation;
-    ReceiptContract internal immutable receipt;
 
     constructor() {
         iFactory = new CloneFactory();
@@ -30,9 +29,5 @@ contract OffchainAssetReceiptVaultTest is Test {
         returns (OffchainAssetReceiptVault)
     {
         return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, admin, name, symbol);
-    }
-
-    function getReceipt() internal view returns (ReceiptContract) {
-        return receiptImplementation;
     }
 }
