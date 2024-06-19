@@ -32,11 +32,14 @@ library LibConfiscateChecker {
     }
 
     /// Checks that balances don't change.
-    function checkConfiscateReceiptNoop(OffchainAssetReceiptVault vault, ReceiptContract receipt, address alice, address bob, uint256 id, bytes memory data)
-        internal
-        returns (bool)
-    {
-
+    function checkConfiscateReceiptNoop(
+        OffchainAssetReceiptVault vault,
+        ReceiptContract receipt,
+        address alice,
+        address bob,
+        uint256 id,
+        bytes memory data
+    ) internal returns (bool) {
         uint256 initialBalanceAlice = receipt.balanceOf(alice, id);
         uint256 initialBalanceBob = receipt.balanceOf(bob, id);
 
@@ -49,10 +52,14 @@ library LibConfiscateChecker {
     }
 
     /// Checks that balances change.
-    function checkConfiscateReceipt(OffchainAssetReceiptVault vault, ReceiptContract receipt, address alice, address bob, uint256 id, bytes memory data)
-        internal
-        returns (bool)
-    {
+    function checkConfiscateReceipt(
+        OffchainAssetReceiptVault vault,
+        ReceiptContract receipt,
+        address alice,
+        address bob,
+        uint256 id,
+        bytes memory data
+    ) internal returns (bool) {
         uint256 initialBalanceAlice = receipt.balanceOf(alice, id);
         uint256 initialBalanceBob = receipt.balanceOf(bob, id);
 

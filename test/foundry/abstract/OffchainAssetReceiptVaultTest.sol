@@ -32,7 +32,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, admin, name, symbol);
     }
 
-    function getReceipt() internal view returns (ReceiptContract){
+    function getReceipt() internal view returns (ReceiptContract) {
         return receiptImplementation;
     }
 }
