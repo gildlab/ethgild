@@ -5,7 +5,8 @@ import {
     MinShareRatio,
     ZeroReceiver,
     InvalidId,
-    ZeroAssetsAmount
+    ZeroAssetsAmount,
+    ZeroSharesAmount
 } from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
@@ -51,11 +52,17 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         address owner,
         uint256 id,
         uint256 assets,
-        bytes memory data
+        bytes memory data,
+        bytes memory expectedRevertData
     ) internal {
         uint256 initialBalanceOwner = vault.balanceOf(owner);
 
-        vm.expectRevert();
+        // Check if expectedRevertData is provided
+        if (expectedRevertData.length > 0) {
+            vm.expectRevert(expectedRevertData);
+        } else {
+            vm.expectRevert();
+        }
         // Call withdraw function
         vault.withdraw(assets, receiver, owner, id, data);
 
@@ -146,7 +153,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, alice, shareRatio, data);
 
-        checkNoBalanceChange(vault, alice, alice, 1, assets, data);
+        checkNoBalanceChange(vault, alice, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
 
         // Stop the prank
         vm.stopPrank();
@@ -225,7 +232,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        checkNoBalanceChange(vault, bob, bob, id, assetsToWithdraw, data);
+        checkNoBalanceChange(vault, bob, bob, id, assetsToWithdraw, data, bytes(""));
 
         // Stop the prank
         vm.stopPrank();
@@ -265,9 +272,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
-
-        checkNoBalanceChange(vault, bob, bob, id, 0, data);
+        checkNoBalanceChange(vault, bob, bob, id, 0, data, abi.encodeWithSelector(ZeroAssetsAmount.selector));
 
         // Stop the prank
         vm.stopPrank();
@@ -306,9 +311,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // vm.expectRevert(abi.encodeWithSelector(ZeroReceiver.selector))
-
-        checkNoBalanceChange(vault, address(0), bob, id, assets, data);
+        checkNoBalanceChange(vault, address(0), bob, id, assets, data, abi.encodeWithSelector(ZeroReceiver.selector));
         // Stop the prank
         vm.stopPrank();
     }
@@ -346,7 +349,9 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        checkNoBalanceChange(vault, alice, address(0), id, assets, data);
+        checkNoBalanceChange(
+            vault, alice, address(0), id, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector)
+        );
 
         // Stop the prank
         vm.stopPrank();
@@ -383,10 +388,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // withdraw should revert
-        // vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, 0));
-
-        checkNoBalanceChange(vault, bob, bob, 0, assets, data);
+        checkNoBalanceChange(vault, bob, bob, 0, assets, data, abi.encodeWithSelector(InvalidId.selector, 0));
 
         // Stop the prank
         vm.stopPrank();
@@ -436,7 +438,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, alice, shareRatio, data);
 
-        checkNoBalanceChange(vault, bob, alice, 1, assets, data);
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
 
         // Stop the prank
         vm.stopPrank();
