@@ -1,23 +1,16 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
 import {
-    ZeroAssetsAmount,
-    ZeroSharesAmount,
+    MinShareRatio,
     ZeroReceiver,
-    ZeroOwner,
-    InvalidId
-} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import {Test, Vm} from "forge-std/Test.sol";
-import {OffchainAssetReceiptVault} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {LibFixedPointMath, Math} from "@rainprotocol/rain-protocol/contracts/math/LibFixedPointMath.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
-import {Receipt} from "../../contracts/vault/receipt/Receipt.sol";
+    InvalidId,
+    ZeroAssetsAmount
+} from "../../../../../contracts/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 
-contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
-    using LibFixedPointMath for uint256;
-
+contract WithdrawTest is OffchainAssetReceiptVaultTest {
     event WithdrawWithReceipt(
         address sender,
         address receiver,
@@ -44,7 +37,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         // Call withdraw function
         uint256 shares = vault.previewWithdraw(aliceAssets, 1);
@@ -70,16 +63,14 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         vault.grantRole(vault.WITHDRAWER(), alice);
-
-        uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
 
         // Call withdraw function
         uint256 shares = vault.previewWithdraw(aliceAssets, 1);
 
-        assertEq(shares, expectedShares);
+        assertEq(shares, aliceAssets);
         // Stop the prank
         vm.stopPrank();
     }
@@ -103,7 +94,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Call the deposit function
@@ -136,19 +127,16 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
         // Call the deposit function
         vault.deposit(aliceAssets, alice, shareRatio, data);
 
-        // Calculate expected shares
-        uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
-
         // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(alice, alice, alice, aliceAssets, expectedShares, 1, data);
+        emit WithdrawWithReceipt(alice, alice, alice, aliceAssets, aliceAssets, 1, data);
 
         // Call withdraw function
         vault.withdraw(aliceAssets, alice, alice, 1, data);
@@ -178,7 +166,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
@@ -213,7 +201,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
@@ -248,7 +236,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
@@ -283,7 +271,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
@@ -318,7 +306,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
@@ -367,7 +355,7 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
         vault.grantRole(vault.CERTIFIER(), alice);
@@ -415,18 +403,16 @@ contract WithdrawTest is Test, CreateOffchainAssetReceiptVaultFactory {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vault.grantRole(vault.DEPOSITOR(), alice);
         vault.grantRole(vault.WITHDRAWER(), alice);
 
         // Call the deposit function
         vault.deposit(aliceAssets, alice, shareRatio, data);
 
-        // Calculate expected shares
-        uint256 expectedShares = aliceAssets.fixedPointMul(1e18, Math.Rounding.Up);
         // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(alice, bob, alice, aliceAssets, expectedShares, 1, data);
+        emit WithdrawWithReceipt(alice, bob, alice, aliceAssets, aliceAssets, 1, data);
         // Call withdraw function
         vault.withdraw(aliceAssets, bob, alice, 1, data);
 
