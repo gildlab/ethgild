@@ -236,6 +236,52 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong assets. expected ${expectedAssets} got ${aliceBalanceAfter}`
     );
   });
+  it("PreviewWithdraw returns 0 shares if no withdrawer role", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+    const assets = ethers.BigNumber.from(100);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    const id = ethers.BigNumber.from(1);
+
+    const expectedShares = ethers.BigNumber.from(0);
+
+    const shares = await vault
+      .connect(alice)
+      ["previewWithdraw(uint256,uint256)"](assets, id);
+
+    assert(
+      shares.eq(expectedShares),
+      `Wrong shares: expected ${expectedShares} got ${shares} `
+    );
+  });
+  it("PreviewWithdraw returns correct shares", async function () {
+    const [vault] = await deployOffChainAssetReceiptVault();
+    const assets = ethers.BigNumber.from(10);
+
+    const signers = await ethers.getSigners();
+    const alice = signers[0];
+
+    //assets are always deposited 1:1 with shares
+    const id = ONE;
+
+    //grant withdrawer role to alice
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).WITHDRAWER(), alice.address);
+
+    const expectedShares = fixedPointMul(assets, id);
+
+    const shares = await vault
+      .connect(alice)
+      ["previewWithdraw(uint256,uint256)"](assets, id);
+
+    assert(
+      shares.eq(expectedShares),
+      `Wrong shares: expected ${expectedShares} got ${shares} `
+    );
+  });
   it("Cannot Mint to someone else if recipient is not DEPOSITOR or system not certified for them", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
     const signers = await ethers.getSigners();
@@ -261,8 +307,8 @@ describe("OffChainAssetReceiptVault", async function () {
         await vault
           .connect(alice)
           ["mint(uint256,address,uint256,bytes)"](shares, bob.address, ONE, [
-            1,
-          ]),
+          1,
+        ]),
       `CertificationExpired`,
       "Failed to mint"
     );
@@ -348,110 +394,6 @@ describe("OffChainAssetReceiptVault", async function () {
       `wrong assets. expected ${expectedAssets} got ${bobBalanceAfter}`
     );
   });
-  it("Cannot Deposit to someone else if recipient is not DEPOSITOR or system not certified for them", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          ["deposit(uint256,address,uint256,bytes)"](assets, bob.address, ONE, [
-            1,
-          ]),
-      `CertificationExpired`,
-      "Failed to mint"
-    );
-  });
-  it("Deposits to someone else if recipient is not DEPOSITOR but system certified for them", async function () {
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), bob.address);
-
-    await vault.connect(bob).certify(_until, _referenceBlockNumber, false, []);
-
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](assets, bob.address, ONE, [1]);
-    const bobBalanceAfter = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](bob.address, 1);
-
-    assert(
-      bobBalanceAfter.eq(assets),
-      `wrong assets. expected ${assets} got ${bobBalanceAfter}`
-    );
-  });
-  it("Deposits to someone else if recipient is DEPOSITOR", async function () {
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assets = ethers.BigNumber.from(5000);
-    await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(vault.address, assets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), bob.address);
-
-    await vault
-      .connect(alice)
-      ["mint(uint256,address,uint256,bytes)"](assets, bob.address, ONE, [1]);
-    const bobBalanceAfter = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](bob.address, 1);
-
-    assert(
-      bobBalanceAfter.eq(assets),
-      `wrong assets. expected ${assets} got ${bobBalanceAfter}`
-    );
-  });
   it("PreviewRedeem returns correct assets", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
     const shares = ethers.BigNumber.from(100);
@@ -527,218 +469,6 @@ describe("OffChainAssetReceiptVault", async function () {
     assert(
       assets.eq(expectedAssets),
       `Wrong assets: expected ${expectedAssets} got ${assets} `
-    );
-  });
-  it("Redeposits", async function () {
-    const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const receiptId = ethers.BigNumber.from(1);
-    const aliceAssets = ethers.BigNumber.from(20);
-
-    await asset.connect(alice).transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assetToDeposit = aliceAssets.div(2);
-    const assetToReDeposit = ethers.BigNumber.from(10);
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        assetToDeposit,
-        alice.address,
-        receiptId,
-        []
-      );
-
-    const aliceReceiptBalance = await receipt
-      .connect(alice)
-      .balanceOf(alice.address, receiptId);
-
-    await vault
-      .connect(alice)
-      .redeposit(assetToReDeposit, alice.address, 1, [1]);
-
-    const aliceReceiptBalanceAfterRedeposit = await receipt
-      .connect(alice)
-      .balanceOf(alice.address, receiptId);
-
-    assert(
-      aliceReceiptBalanceAfterRedeposit.eq(
-        aliceReceiptBalance.add(assetToReDeposit)
-      ),
-      `Incorrect balance ${aliceReceiptBalance.add(
-        assetToReDeposit
-      )} got ${aliceReceiptBalanceAfterRedeposit}`
-    );
-  });
-  it("Prevents redeposit to someone else while not certified or recipient is not depositor", async function () {
-    const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const receiptId = ethers.BigNumber.from(1);
-    const aliceAssets = ethers.BigNumber.from(20);
-
-    await asset.connect(alice).transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assetToDeposit = aliceAssets.div(2);
-    const assetToReDeposit = ethers.BigNumber.from(10);
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        assetToDeposit,
-        alice.address,
-        receiptId,
-        []
-      );
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .redeposit(assetToReDeposit, bob.address, 1, [1]),
-      `CertificationExpired`,
-      "Failed to redeposit"
-    );
-  });
-  it("Redeposits to someone else while certified", async function () {
-    const signers = await ethers.getSigners();
-    const [vault, receipt] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-    const bob = signers[1];
-
-    const receiptId = ethers.BigNumber.from(1);
-    const aliceAssets = ethers.BigNumber.from(20);
-
-    await asset.connect(alice).transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assetToDeposit = aliceAssets.div(2);
-    const assetToReDeposit = ethers.BigNumber.from(10);
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        assetToDeposit,
-        alice.address,
-        receiptId,
-        []
-      );
-
-    const bobReceiptBalance = await receipt
-      .connect(alice)
-      .balanceOf(bob.address, receiptId);
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-    await vault
-      .connect(alice)
-      .certify(_certifiedUntil, _referenceBlockNumber, false, []);
-
-    await vault.connect(alice).redeposit(assetToReDeposit, bob.address, 1, [1]);
-
-    const bobReceiptBalanceAfterRedeposit = await receipt
-      .connect(alice)
-      .balanceOf(bob.address, receiptId);
-
-    assert(
-      bobReceiptBalanceAfterRedeposit.eq(
-        bobReceiptBalance.add(assetToReDeposit)
-      ),
-      `Incorrect balance ${bobReceiptBalance.add(
-        assetToReDeposit
-      )} got ${bobReceiptBalanceAfterRedeposit}`
-    );
-  });
-  it("Prevents Redeposit on receipt with id 0", async function () {
-    const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const assetToReDeposit = ethers.BigNumber.from(10);
-
-    const id = 0;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .redeposit(assetToReDeposit, alice.address, id, [1]),
-      `InvalidId`,
-      "Failed to redeposit"
-    );
-  });
-  it("Prevents Redeposit on non-existing receipt", async function () {
-    const signers = await ethers.getSigners();
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const alice = signers[0];
-
-    const assetToReDeposit = ethers.BigNumber.from(10);
-
-    const id = 2;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .redeposit(assetToReDeposit, alice.address, id, [1]),
-      `InvalidId(${id})`,
-      "Failed to prevent redeposit"
     );
   });
   it("Snapshot event is emitted", async function () {
@@ -843,207 +573,6 @@ describe("OffChainAssetReceiptVault", async function () {
     assert(
       minimumTier.eq(minTier),
       `wrong minimumTier expected ${minTier} got ${minimumTier}`
-    );
-  });
-  it("Checks Certify event is emitted", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    //get block timestamp and add 100 to get _until
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { sender, certifyUntil, referenceBlockNumber } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_until, _referenceBlockNumber, false, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
-
-    assert(
-      sender === alice.address,
-      `wrong sender expected ${alice.address} got ${sender}`
-    );
-    assert(
-      certifyUntil.eq(_until),
-      `wrong until expected ${_until} got ${certifyUntil}`
-    );
-    assert(
-      referenceBlockNumber.eq(_referenceBlockNumber),
-      `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
-    );
-  });
-  it("Certifies with data", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    //get block timestamp and add 100 to get _until
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { sender, certifyUntil, referenceBlockNumber, data } =
-      (await getEventArgs(
-        await vault
-          .connect(alice)
-          .certify(_until, _referenceBlockNumber, false, [1, 7]),
-        "Certify",
-        vault
-      )) as CertifyEvent["args"];
-
-    assert(
-      sender === alice.address,
-      `wrong sender expected ${alice.address} got ${sender}`
-    );
-    assert(data === "0x0107", `wrong data expected 0x0107 got ${data}`);
-    assert(
-      certifyUntil.eq(_until),
-      `wrong until expected ${_until} got ${certifyUntil}`
-    );
-    assert(
-      referenceBlockNumber.eq(_referenceBlockNumber),
-      `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
-    );
-  });
-  it("Certify in the past relative to the existing certification time with forceUntil true", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { certifyUntil } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_until, _referenceBlockNumber, false, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
-
-    const _untilPast = certifyUntil.sub(100);
-
-    const eventArgs = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_untilPast, _referenceBlockNumber, true, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
-
-    assert(
-      eventArgs.certifyUntil.eq(_untilPast),
-      `wrong until expected ${_untilPast} got ${eventArgs.certifyUntil}`
-    );
-  });
-  it("Checks certifiedUntil is not zero", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = ethers.BigNumber.from(0);
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      `ZeroCertifyUntil`,
-      "failed to certify"
-    );
-  });
-  it("Checks referenceBlockNumber is less than block number", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = blockNum + 10;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      `FutureReferenceBlock`,
-      "failed to certify"
-    );
-  });
-  it("Certifies", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { certifyUntil } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
-
-    assert(
-      certifyUntil.eq(_certifiedUntil),
-      `wrong until expected ${_certifiedUntil} got ${certifyUntil}`
-    );
-  });
-  it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .authorizeReceiptTransfer(alice.address, alice.address),
-      `CertificationExpired`,
-      "failed to AuthorizeReceiptTransfer"
     );
   });
   it("Confiscate - Checks role CONFISCATOR", async function () {
