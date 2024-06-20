@@ -9,6 +9,7 @@ import {
 } from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import "forge-std/console.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     event WithdrawWithReceipt(
@@ -20,6 +21,28 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 id,
         bytes receiptInformation
     );
+
+    /// Checks that balance owner balance changes after wirthdraw
+    function checkBalanceChange(
+        OffchainAssetReceiptVault vault,
+        address receiver,
+        address owner,
+        uint256 id,
+        uint256 assets,
+        bytes memory data
+    ) internal {
+        uint256 initialBalanceOwner = vault.balanceOf(owner);
+
+        // Set up the event expectation for WithdrawWithReceipt
+        vm.expectEmit(true, true, true, true);
+        emit WithdrawWithReceipt(owner, receiver, owner, assets, assets, id, data);
+
+        // Call withdraw function
+        vault.withdraw(assets, receiver, owner, id, data);
+
+        uint256 balanceAfterOwner = vault.balanceOf(owner);
+        assertEq(balanceAfterOwner, initialBalanceOwner - assets);
+    }
 
     /// Test PreviewWithdraw returns 0 shares if no withdrawer role
     function testPreviewWithdrawReturnsZero(
@@ -131,7 +154,6 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         assets = bound(assets, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
@@ -144,12 +166,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // Set up the event expectation for WithdrawWithReceipt
-        vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(bob, bob, bob, assets, assets, 1, data);
-
-        // Call withdraw function
-        vault.withdraw(assets, bob, bob, 1, data);
+        checkBalanceChange(vault, bob, bob, 1, assets, data);
 
         // Stop the prank
         vm.stopPrank();
@@ -443,8 +460,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         shareRatio = bound(shareRatio, 1, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
-
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
@@ -457,11 +474,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // Set up the event expectation for WithdrawWithReceipt
-        vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(bob, alice, bob, assets, assets, 1, data);
-        // Call withdraw function
-        vault.withdraw(assets, alice, bob, 1, data);
+        checkBalanceChange(vault, alice, bob, 1, assets, data);
 
         // Stop the prank
         vm.stopPrank();
