@@ -10,7 +10,6 @@ import {
 } from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
-import "forge-std/console.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     event WithdrawWithReceipt(
