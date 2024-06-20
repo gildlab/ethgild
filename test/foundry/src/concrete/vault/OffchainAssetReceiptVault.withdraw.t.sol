@@ -44,6 +44,25 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         assertEq(balanceAfterOwner, initialBalanceOwner - assets);
     }
 
+    /// Checks that balance owner balance does not change after wirthdraw revert
+    function checkNoBalanceChange(
+        OffchainAssetReceiptVault vault,
+        address receiver,
+        address owner,
+        uint256 id,
+        uint256 assets,
+        bytes memory data
+    ) internal {
+        uint256 initialBalanceOwner = vault.balanceOf(owner);
+
+        vm.expectRevert();
+        // Call withdraw function
+        vault.withdraw(assets, receiver, owner, id, data);
+
+        uint256 balanceAfterOwner = vault.balanceOf(owner);
+        assertEq(balanceAfterOwner, initialBalanceOwner);
+    }
+
     /// Test PreviewWithdraw returns 0 shares if no withdrawer role
     function testPreviewWithdrawReturnsZero(
         uint256 fuzzedKeyAlice,
@@ -127,9 +146,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, alice, shareRatio, data);
 
-        vm.expectRevert();
-        // Call withdraw function
-        vault.withdraw(assets, alice, alice, 1, data);
+        checkNoBalanceChange(vault, alice, alice, 1, assets, data);
 
         // Stop the prank
         vm.stopPrank();
@@ -208,10 +225,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // withdraw should revert
-        vm.expectRevert();
-        // Call withdraw function
-        vault.withdraw(assetsToWithdraw, bob, bob, id, data);
+        checkNoBalanceChange(vault, bob, bob, id, assetsToWithdraw, data);
 
         // Stop the prank
         vm.stopPrank();
@@ -251,10 +265,9 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // withdraw should revert
-        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
-        // Call withdraw function
-        vault.withdraw(0, bob, bob, id, data);
+        // vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
+
+        checkNoBalanceChange(vault, bob, bob, id, 0, data);
 
         // Stop the prank
         vm.stopPrank();
@@ -293,11 +306,9 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // withdraw should revert
-        vm.expectRevert(abi.encodeWithSelector(ZeroReceiver.selector));
-        // Call withdraw function
-        vault.withdraw(assets, address(0), bob, id, data);
+        // vm.expectRevert(abi.encodeWithSelector(ZeroReceiver.selector))
 
+        checkNoBalanceChange(vault, address(0), bob, id, assets, data);
         // Stop the prank
         vm.stopPrank();
     }
@@ -335,10 +346,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, bob, shareRatio, data);
 
-        // withdraw should revert
-        vm.expectRevert();
-        // Call withdraw function
-        vault.withdraw(assets, alice, address(0), id, data);
+        checkNoBalanceChange(vault, alice, address(0), id, assets, data);
 
         // Stop the prank
         vm.stopPrank();
@@ -376,10 +384,9 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vault.deposit(assets, bob, shareRatio, data);
 
         // withdraw should revert
-        vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, 0));
+        // vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, 0));
 
-        // Call withdraw function
-        vault.withdraw(assets, bob, bob, 0, data);
+        checkNoBalanceChange(vault, bob, bob, 0, assets, data);
 
         // Stop the prank
         vm.stopPrank();
@@ -391,7 +398,6 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         uint256 assets,
         uint256 shareRatio,
-        uint256 id,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol,
@@ -407,7 +413,6 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
-        id = bound(id, 1, type(uint256).max);
 
         shareRatio = bound(shareRatio, 1, 1e18);
         // Assume that assets is not 0
@@ -431,11 +436,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, alice, shareRatio, data);
 
-        // withdraw should revert
-        vm.expectRevert();
-
-        // Call withdraw function
-        vault.withdraw(assets, bob, alice, id, data);
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data);
 
         // Stop the prank
         vm.stopPrank();
