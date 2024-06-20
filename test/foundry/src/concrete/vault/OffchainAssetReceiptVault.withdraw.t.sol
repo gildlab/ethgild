@@ -2,7 +2,6 @@
 pragma solidity =0.8.25;
 
 import {
-    MinShareRatio,
     ZeroReceiver,
     InvalidId,
     ZeroAssetsAmount,
@@ -132,14 +131,14 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     function testWithdrawRevertsWithoutRole(
         uint256 fuzzedKeyAlice,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
@@ -150,7 +149,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Call the deposit function
-        vault.deposit(assets, alice, shareRatio, data);
+        vault.deposit(assets, alice, minShareRatio, data);
 
         checkNoBalanceChange(vault, alice, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
 
@@ -163,7 +162,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
@@ -172,7 +171,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
@@ -187,7 +186,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkBalanceChange(vault, bob, bob, 1, assets, data);
 
@@ -201,7 +200,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         uint256 assets,
         uint256 assetsToWithdraw,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 id,
         bytes memory data,
         string memory assetName,
@@ -211,7 +210,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         id = bound(id, 1, type(uint256).max);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
@@ -229,7 +228,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkNoBalanceChange(vault, bob, bob, id, assetsToWithdraw, data, bytes(""));
 
@@ -242,7 +241,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 id,
         bytes memory data,
         string memory assetName,
@@ -252,7 +251,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
         id = bound(id, 1, type(uint256).max);
@@ -269,7 +268,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkNoBalanceChange(vault, bob, bob, id, 0, data, abi.encodeWithSelector(ZeroAssetsAmount.selector));
 
@@ -282,7 +281,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 id,
         bytes memory data,
         string memory assetName,
@@ -291,7 +290,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
         id = bound(id, 1, type(uint256).max);
@@ -308,7 +307,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkNoBalanceChange(vault, address(0), bob, id, assets, data, abi.encodeWithSelector(ZeroReceiver.selector));
         // Stop the prank
@@ -320,7 +319,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         uint256 id,
         bytes memory data,
         string memory assetName,
@@ -329,7 +328,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
         id = bound(id, 1, type(uint256).max);
@@ -346,7 +345,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkNoBalanceChange(
             vault, alice, address(0), id, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector)
@@ -361,7 +360,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
@@ -369,7 +368,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
@@ -385,7 +384,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkNoBalanceChange(vault, bob, bob, 0, assets, data, abi.encodeWithSelector(InvalidId.selector, 0));
 
@@ -398,7 +397,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol,
@@ -415,7 +414,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
@@ -435,7 +434,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
         // Call the deposit function
-        vault.deposit(assets, alice, shareRatio, data);
+        vault.deposit(assets, alice, minShareRatio, data);
 
         checkNoBalanceChange(vault, bob, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
 
@@ -448,7 +447,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
-        uint256 shareRatio,
+        uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
@@ -459,7 +458,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(alice != bob);
 
-        shareRatio = bound(shareRatio, 1, 1e18);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
@@ -474,7 +473,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, shareRatio, data);
+        vault.deposit(assets, bob, minShareRatio, data);
 
         checkBalanceChange(vault, alice, bob, 1, assets, data);
 
