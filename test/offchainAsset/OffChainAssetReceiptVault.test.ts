@@ -39,103 +39,71 @@ describe("OffChainAssetReceiptVault", async function () {
     TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
     await TierV2TestContract.deployed();
   });
-  it("Checks totalAssets", async function () {
-    const signers = await ethers.getSigners();
+  it("Checks SetERC20Tier event is emitted", async function() {
     const [vault] = await deployOffChainAssetReceiptVault();
 
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
+    const signers = await ethers.getSigners();
     const alice = signers[0];
-    const bob = signers[2];
-
-    const shareRatio = ONE;
-    const aliceAssets = ethers.BigNumber.from(1000);
-
-    await asset.connect(alice).transfer(alice.address, aliceAssets);
-
-    await asset.connect(alice).increaseAllowance(vault.address, aliceAssets);
 
     await vault
       .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .grantRole(await vault.connect(alice).ERC20TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(10);
 
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), bob.address);
-
-    await vault.connect(bob).certify(_until, _referenceBlockNumber, false, []);
-
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        aliceAssets,
-        bob.address,
-        shareRatio,
-        []
-      );
-
-    const totalSupply = await vault.connect(alice).totalSupply();
-    const totalAssets = await vault.connect(alice).totalAssets();
+    const { sender, tier, minimumTier, data } = (await getEventArgs(
+      await vault
+        .connect(alice)
+        .setERC20Tier(TierV2TestContract.address, minTier, [], [1]),
+      "SetERC20Tier",
+      vault
+    )) as SetERC20TierEvent["args"];
 
     assert(
-      totalSupply.eq(totalAssets),
-      `Wrong total assets. Expected ${totalSupply} got ${totalAssets}`
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
+    assert(
+      tier === TierV2TestContract.address,
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
+    );
+    assert(
+      minimumTier.eq(minTier),
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
+    );
+    assert(data === "0x01", `wrong data expected 0x01 got ${data}`);
   });
-  it("PreviewDeposit returns correct shares", async function () {
+  it("Checks setERC1155Tier event is emitted", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
-    const assets = ethers.BigNumber.from(100);
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    const hasRoleDepositor = await vault
-      .connect(alice)
-      .hasRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    //Alice does not have role of depositor, so it should throw an error unless role is granted
-    assert(
-      !hasRoleDepositor,
-      `AccessControl: account ${alice.address.toLowerCase()} is missing role DEPOSITOR`
-    );
-
-    //grant depositor role to alice
     await vault
       .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
+      .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(100);
 
-    const shares = await vault.connect(alice).previewDeposit(assets);
+    const { sender, tier, minimumTier, data } = (await getEventArgs(
+      await vault
+        .connect(alice)
+        .setERC1155Tier(TierV2TestContract.address, minTier, [], [1]),
+      "SetERC1155Tier",
+      vault
+    )) as SetERC1155TierEvent["args"];
 
     assert(
-      shares.eq(assets),
-      `Wrong shares: expected ${assets} got ${shares} `
+      sender === alice.address,
+      `wrong sender expected ${alice.address} got ${sender}`
     );
-  });
-  it("PreviewMint returns correct assets", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-    const shares = ethers.BigNumber.from(10);
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    //grant depositor role to alice
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).DEPOSITOR(), alice.address);
-
-    const assets = await vault.connect(alice).previewMint(shares);
-    const expectedAssets = fixedPointDivRound(shares, ONE);
     assert(
-      assets.eq(expectedAssets),
-      `Wrong assets: expected ${expectedAssets} got ${assets}`
+      tier === TierV2TestContract.address,
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
+    assert(
+      minimumTier.eq(minTier),
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
+    );
+    assert(data === "0x01", `wrong data expected 0x01 got ${data}`);
   });
   it("PreviewWithdraw returns 0 shares if no withdrawer role", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
@@ -372,245 +340,68 @@ describe("OffChainAssetReceiptVault", async function () {
       `Wrong assets: expected ${expectedAssets} got ${assets} `
     );
   });
-  it("Snapshot event is emitted", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
-
-    const { id } = (await getEventArgs(
-      await vault.connect(alice).snapshot([]),
-      "Snapshot",
-      vault
-    )) as SnapshotEvent["args"];
-
-    assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
-  });
-  it("SnapshotWithData event is emitted", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).ERC20SNAPSHOTTER(), alice.address);
-
-    const { sender, id, data } = (await getEventArgs(
-      await vault.connect(alice).snapshot([1]),
-      "SnapshotWithData",
-      vault
-    )) as SnapshotWithDataEvent["args"];
-
-    assert(id.eq(ethers.BigNumber.from(1)), `ID not set`);
-
-    assert(
-      sender === alice.address,
-      `Wrong sender. Expected ${alice.address}, got ${sender}`
-    );
-    assert(data === "0x01", `Wrong information. Expected 0x01, got ${data}`);
-  });
-  it("Checks Certify event is emitted", async function () {
+  it("Sets correct erc20Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    //get block timestamp and add 100 to get _until
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
     await vault
       .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+      .grantRole(await vault.connect(alice).ERC20TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(10);
 
-    const { sender, certifyUntil, referenceBlockNumber } = (await getEventArgs(
+    const { tier, minimumTier } = (await getEventArgs(
       await vault
         .connect(alice)
-        .certify(_until, _referenceBlockNumber, false, []),
-      "Certify",
+        .setERC20Tier(TierV2TestContract.address, minTier, [], []),
+      "SetERC20Tier",
       vault
-    )) as CertifyEvent["args"];
+    )) as SetERC20TierEvent["args"];
+
+    await vault
+      .connect(alice)
+      .setERC20Tier(TierV2TestContract.address, minTier, [], []);
 
     assert(
-      sender === alice.address,
-      `wrong sender expected ${alice.address} got ${sender}`
+      tier === TierV2TestContract.address,
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
     assert(
-      certifyUntil.eq(_until),
-      `wrong until expected ${_until} got ${certifyUntil}`
-    );
-    assert(
-      referenceBlockNumber.eq(_referenceBlockNumber),
-      `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
+      minimumTier.eq(minTier),
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
-  it("Certifies with data", async function () {
+  it("Sets correct erc11Tier and mintier", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
 
-    //get block timestamp and add 100 to get _until
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
     await vault
       .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+      .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(10);
 
-    const { sender, certifyUntil, referenceBlockNumber, data } =
-      (await getEventArgs(
-        await vault
-          .connect(alice)
-          .certify(_until, _referenceBlockNumber, false, [1, 7]),
-        "Certify",
-        vault
-      )) as CertifyEvent["args"];
-
-    assert(
-      sender === alice.address,
-      `wrong sender expected ${alice.address} got ${sender}`
-    );
-    assert(data === "0x0107", `wrong data expected 0x0107 got ${data}`);
-    assert(
-      certifyUntil.eq(_until),
-      `wrong until expected ${_until} got ${certifyUntil}`
-    );
-    assert(
-      referenceBlockNumber.eq(_referenceBlockNumber),
-      `wrong referenceBlockNumber expected ${_referenceBlockNumber} got ${referenceBlockNumber}`
-    );
-  });
-  it("Certify in the past relative to the existing certification time with forceUntil true", async function () {
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _until = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { certifyUntil } = (await getEventArgs(
+    const { tier, minimumTier } = (await getEventArgs(
       await vault
         .connect(alice)
-        .certify(_until, _referenceBlockNumber, false, []),
-      "Certify",
+        .setERC1155Tier(TierV2TestContract.address, minTier, [], []),
+      "SetERC1155Tier",
       vault
-    )) as CertifyEvent["args"];
+    )) as SetERC20TierEvent["args"];
 
-    const _untilPast = certifyUntil.sub(100);
-
-    const eventArgs = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_untilPast, _referenceBlockNumber, true, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
+    await vault
+      .connect(alice)
+      .setERC1155Tier(TierV2TestContract.address, minTier, [], []);
 
     assert(
-      eventArgs.certifyUntil.eq(_untilPast),
-      `wrong until expected ${_untilPast} got ${eventArgs.certifyUntil}`
+      tier === TierV2TestContract.address,
+      `wrong tier expected ${TierV2TestContract.address} got ${tier}`
     );
-  });
-  it("Checks certifiedUntil is not zero", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = ethers.BigNumber.from(0);
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      `ZeroCertifyUntil`,
-      "failed to certify"
-    );
-  });
-  it("Checks referenceBlockNumber is less than block number", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = blockNum + 10;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      `FutureReferenceBlock`,
-      "failed to certify"
-    );
-  });
-  it("Certifies", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    const blockNum = await ethers.provider.getBlockNumber();
-    const block = await ethers.provider.getBlock(blockNum);
-    const _certifiedUntil = block.timestamp + 100;
-    const _referenceBlockNumber = block.number;
-
-    await vault
-      .connect(alice)
-      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
-
-    const { certifyUntil } = (await getEventArgs(
-      await vault
-        .connect(alice)
-        .certify(_certifiedUntil, _referenceBlockNumber, false, []),
-      "Certify",
-      vault
-    )) as CertifyEvent["args"];
-
     assert(
-      certifyUntil.eq(_certifiedUntil),
-      `wrong until expected ${_certifiedUntil} got ${certifyUntil}`
-    );
-  });
-  it("AuthorizeReceiptTransfer reverts if certification expired", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-    const [vault] = await deployOffChainAssetReceiptVault();
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          .authorizeReceiptTransfer(alice.address, alice.address),
-      `CertificationExpired`,
-      "failed to AuthorizeReceiptTransfer"
+      minimumTier.eq(minTier),
+      `wrong minimumTier expected ${minTier} got ${minimumTier}`
     );
   });
   it("Confiscate - Checks role CONFISCATOR", async function () {
@@ -1211,20 +1002,43 @@ describe("OffChainAssetReceiptVault", async function () {
       "failed to prevent withdraw on someone else's shares"
     );
   });
-  it("Prevent authorizeReceiptTransfer if system not certified", async function () {
+  it("Prevent authorizeReceiptTransfer if unauthorizedSenderTier", async function () {
     const [vault] = await deployOffChainAssetReceiptVault();
 
     const signers = await ethers.getSigners();
     const alice = signers[0];
     const bob = signers[1];
 
+    const blockNum = await ethers.provider.getBlockNumber();
+    const block = await ethers.provider.getBlock(blockNum);
+
+    const _until = block.timestamp + 100;
+    const _referenceBlockNumber = block.number;
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).CERTIFIER(), alice.address);
+
+    await vault
+      .connect(alice)
+      .certify(_until, _referenceBlockNumber, false, []);
+
+    await vault
+      .connect(alice)
+      .grantRole(await vault.connect(alice).ERC1155TIERER(), alice.address);
+    const minTier = ethers.BigNumber.from(1);
+
+    await vault
+      .connect(alice)
+      .setERC1155Tier(TierV2TestContract.address, minTier, [], []);
+
     await assertError(
       async () =>
         await vault
           .connect(alice)
           .authorizeReceiptTransfer(alice.address, bob.address),
-      "CertificationExpired",
-      "failed to prevent authorizeReceiptTransfer"
+      "UnauthorizedSenderTier",
+      "failed to prevent UnauthorizedSenderTier"
     );
   });
   it("Check negative overflow", async () => {
