@@ -114,7 +114,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
@@ -182,7 +181,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-        vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
