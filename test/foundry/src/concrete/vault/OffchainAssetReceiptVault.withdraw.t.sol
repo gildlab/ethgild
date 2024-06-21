@@ -442,8 +442,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    /// Test withdraw on someone else
-    function testWithdrawOnfSomeoneElse(
+    /// Test someone can withdraw their own assets and set a different recipient
+    function testWithdrawToSomeoneElse(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,
