@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
 import {IERC1155Upgradeable as IERC1155} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol";
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/IERC1155Upgradeable.sol";
 
 /// @title IReceiptV1
 /// @notice IReceiptV1 is an extension to IERC1155 that requires implementers to
