@@ -32,11 +32,8 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         // Assert that the event log was found
         assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
-
-        // Create an receipt contract
-        ReceiptContract receipt = ReceiptContract(receiptAddress);
-
-        return receipt;
+        // Return an receipt contract
+        return ReceiptContract(receiptAddress);
     }
 
     /// Checks that confiscateReceipt balances don't change or do change as expected
@@ -134,6 +131,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
         ReceiptContract receipt = getReceipt();
         vm.assume(alice != bob);
+
         // Prank as Alice to set roles
         vm.startPrank(alice);
         vault.grantRole(vault.CONFISCATOR(), bob);

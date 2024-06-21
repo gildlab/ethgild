@@ -32,11 +32,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         // Assert that the event log was found
         assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
-
-        // Create an receipt contract
-        ReceiptContract receipt = ReceiptContract(receiptAddress);
-
-        return receipt;
+        // Return an receipt contract
+        return ReceiptContract(receiptAddress);
     }
 
     /// Checks that confiscateShares balances don't change or do change as expected
@@ -92,9 +89,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
         vault.grantRole(vault.CONFISCATOR(), bob);
         vault.grantRole(vault.DEPOSITOR(), bob);
-        // vm.stopPrank();
 
-        // // Prank as Bob for tranactions
+        // Prank as Bob for tranactions
         vm.startPrank(bob);
 
         // Deposit to increase bob's balance
