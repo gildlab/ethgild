@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: CAL
-pragma solidity =0.8.17;
+pragma solidity =0.8.25;
 
-import {VaultConfig} from "../../contracts/vault/receipt/ReceiptVault.sol";
-import {CreateOffchainAssetReceiptVaultFactory} from "../../contracts/test/CreateOffchainAssetReceiptVaultFactory.sol";
-import {Test, Vm} from "forge-std/Test.sol";
 import {
-    OffchainAssetReceiptVault,
-    UnauthorizedSenderTier
-} from "../../contracts/vault/offchainAsset/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultFactory} from
-    "../../contracts/vault/offchainAsset/OffchainAssetReceiptVaultFactory.sol";
-import {ReadWriteTier} from "../../contracts/test/ReadWriteTier.sol";
-import {OffchainAssetVaultCreator} from "./OffchainAssetVaultCreator.sol";
-import {ITierV2} from "@rainprotocol/rain-protocol/contracts/tier/ITierV2.sol";
+    UnauthorizedSenderTier,
+    OffchainAssetReceiptVault
+} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
+import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 
-contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
+contract TiersTest is OffchainAssetReceiptVaultTest {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
 
@@ -34,11 +29,11 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
+        // Create the vault
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-
-        // Create the vault
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant the necessary role
         vault.grantRole(vault.ERC20TIERER(), alice);
@@ -70,11 +65,11 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
+        // Create the vault
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-
-        // Create the vault
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         // Grant the necessary role
         vault.grantRole(vault.ERC1155TIERER(), alice);
@@ -119,10 +114,11 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
+        // Create the vault
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.CERTIFIER(), alice);
 
@@ -178,10 +174,11 @@ contract TiersTest is Test, CreateOffchainAssetReceiptVaultFactory {
 
         fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
 
+        // Create the vault
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = OffchainAssetVaultCreator.createVault(factory, alice, assetName, assetSymbol);
 
         vault.grantRole(vault.CERTIFIER(), alice);
 
