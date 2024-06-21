@@ -108,7 +108,8 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
-        address tierAddress
+        address tierAddress,
+        bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -116,7 +117,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.assume(alice != bob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
@@ -138,7 +139,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, false, fuzzedData);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, fuzzedData);
 
         vault.setERC1155Tier(tierAddress, fuzzedMinTier, fuzzedContext, fuzzedData);
 
@@ -170,7 +171,8 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
         uint256 referenceBlockNumber,
-        address tierAddress
+        address tierAddress,
+        bool forceUntil
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -178,7 +180,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.assume(alice != bob);
 
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-        certifyUntil = bound(certifyUntil, 1, 1e6);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(alice != bob);
         vm.assume(tierAddress != address(0));
@@ -200,7 +202,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, false, fuzzedData);
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, fuzzedData);
 
         vault.setERC1155Tier(tierAddress, fuzzedMinTier, fuzzedContext, fuzzedData);
 
