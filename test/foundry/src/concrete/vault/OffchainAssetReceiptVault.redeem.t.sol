@@ -357,131 +357,133 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    // /// Test withdraw reverts on InvalidId when id is 0
-    // function testWithdrawInvalidId(
-    //     uint256 fuzzedKeyAlice,
-    //     uint256 fuzzedKeyBob,
-    //     uint256 assets,
-    //     uint256 minShareRatio,
-    //     bytes memory data,
-    //     string memory assetName,
-    //     string memory assetSymbol
-    // ) external {
-    //     // Ensure the fuzzed key is within the valid range for secp256k1
-    //     address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //     address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-    //     minShareRatio = bound(minShareRatio, 0, 1e18);
-    //     // Assume that assets is not 0
-    //     assets = bound(assets, 1, type(uint256).max);
+    /// Test redeem reverts on InvalidId when id is 0
+    function testRedeemInvalidId(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        // Assume that assets is not 0
+        assets = bound(assets, 1, type(uint256).max);
 
-    //     OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-    //     // Prank as Alice to grant roles
-    //     vm.startPrank(alice);
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
 
-    //     vault.grantRole(vault.DEPOSITOR(), bob);
-    //     vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.WITHDRAWER(), bob);
 
-    //     // Prank Bob for the transaction
-    //     vm.startPrank(bob);
+        // Prank Bob for the transaction
+        vm.startPrank(bob);
 
-    //     // Call the deposit function
-    //     vault.deposit(assets, bob, minShareRatio, data);
+        // Call the deposit function
+        vault.deposit(assets, bob, minShareRatio, data);
 
-    //     checkNoBalanceChange(vault, bob, bob, 0, assets, data, abi.encodeWithSelector(InvalidId.selector, 0));
+        checkNoBalanceChange(vault, bob, bob, 0, assets, data, abi.encodeWithSelector(InvalidId.selector, 0));
 
-    //     // Stop the prank
-    //     vm.stopPrank();
-    // }
+        // Stop the prank
+        vm.stopPrank();
+    }
 
-    // /// Test withdraw function reverts when withdrawing someone else's assets
-    // function testWithdrawOfSomeoneElse(
-    //     uint256 fuzzedKeyAlice,
-    //     uint256 fuzzedKeyBob,
-    //     uint256 assets,
-    //     uint256 minShareRatio,
-    //     bytes memory data,
-    //     string memory assetName,
-    //     string memory assetSymbol,
-    //     uint256 certifyUntil,
-    //     uint256 referenceBlockNumber,
-    //     bool forceUntil
-    // ) external {
-    //     // Ensure the fuzzed key is within the valid range for secp256k1
-    //     address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //     address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+    /// Test redeem function reverts when redeeming someone else's assets
+    function testRedeemOfSomeoneElse(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        bool forceUntil
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-    //     vm.assume(alice != bob);
+        vm.assume(alice != bob);
 
-    //     referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-    //     certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-    //     minShareRatio = bound(minShareRatio, 0, 1e18);
-    //     // Assume that assets is not 0
-    //     assets = bound(assets, 1, type(uint256).max);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        // Assume that assets is not 0
+        assets = bound(assets, 1, type(uint256).max);
 
-    //     OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        uint256 shares = assets.fixedPointMul(minShareRatio, Math.Rounding.Down);
 
-    //     // Prank as Alice to set roles
-    //     vm.startPrank(alice);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-    //     vault.grantRole(vault.DEPOSITOR(), bob);
-    //     vault.grantRole(vault.WITHDRAWER(), bob);
-    //     vault.grantRole(vault.CERTIFIER(), bob);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
 
-    //     // Prank Bob for the transaction
-    //     vm.startPrank(bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
 
-    //     // Certify
-    //     vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        // Prank Bob for the transaction
+        vm.startPrank(bob);
 
-    //     // Call the deposit function
-    //     vault.deposit(assets, alice, minShareRatio, data);
+        // Certify
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-    //     checkNoBalanceChange(vault, bob, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
+        // Call the deposit function
+        vault.deposit(assets, alice, minShareRatio, data);
 
-    //     // Stop the prank
-    //     vm.stopPrank();
-    // }
+        checkNoBalanceChange(vault, bob, alice, minShareRatio, shares, data, bytes(""));
 
-    // /// Test someone can withdraw their own assets and set a different recipient
-    // function testWithdrawToSomeoneElse(
-    //     uint256 fuzzedKeyAlice,
-    //     uint256 fuzzedKeyBob,
-    //     uint256 assets,
-    //     uint256 minShareRatio,
-    //     bytes memory data,
-    //     string memory assetName,
-    //     string memory assetSymbol
-    // ) external {
-    //     // Ensure the fuzzed key is within the valid range for secp256k1
-    //     address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //     address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Stop the prank
+        vm.stopPrank();
+    }
 
-    //     vm.assume(alice != bob);
+    /// Test someone can redeem their own assets and set a different recipient
+    function testRedeemToSomeoneElse(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-    //     minShareRatio = bound(minShareRatio, 0, 1e18);
-    //     // Assume that assets is not 0
-    //     assets = bound(assets, 1, type(uint256).max);
-    //     OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        vm.assume(alice != bob);
 
-    //     // Prank as Alice to set roles
-    //     vm.startPrank(alice);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        // Assume that assets is not 0
+        assets = bound(assets, 1, type(uint256).max);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-    //     vault.grantRole(vault.DEPOSITOR(), bob);
-    //     vault.grantRole(vault.WITHDRAWER(), bob);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
 
-    //     // Prank Bob for the transaction
-    //     vm.startPrank(bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.WITHDRAWER(), bob);
 
-    //     // Call the deposit function
-    //     vault.deposit(assets, bob, minShareRatio, data);
+        // Prank Bob for the transaction
+        vm.startPrank(bob);
 
-    //     checkBalanceChange(vault, alice, bob, 1, assets, data);
+        // Call the deposit function
+        vault.deposit(assets, bob, minShareRatio, data);
 
-    //     // Stop the prank
-    //     vm.stopPrank();
-    // }
+        checkBalanceChange(vault, alice, bob, 1, assets, data);
+
+        // Stop the prank
+        vm.stopPrank();
+    }
 
     // /// Test withdraw function reverts when withdrawing someone else's assets
     // /// deposeted by them
