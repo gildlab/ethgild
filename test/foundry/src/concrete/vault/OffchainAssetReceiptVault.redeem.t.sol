@@ -485,55 +485,55 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    // /// Test withdraw function reverts when withdrawing someone else's assets
-    // /// deposeted by them
-    // function testWithdrawOthersAssetsReverts(
-    //     uint256 fuzzedKeyAlice,
-    //     uint256 fuzzedKeyBob,
-    //     uint256 assets,
-    //     uint256 minShareRatio,
-    //     bytes memory data,
-    //     string memory assetName,
-    //     string memory assetSymbol,
-    //     uint256 certifyUntil,
-    //     uint256 referenceBlockNumber,
-    //     bool forceUntil
-    // ) external {
-    //     // Ensure the fuzzed key is within the valid range for secp256k1
-    //     address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //     address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+    /// Test redeem function reverts when withdrawing someone else's assets
+    /// deposeted by them
+    function testRedeemOthersAssetsReverts(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        bool forceUntil
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
-    //     vm.assume(alice != bob);
+        vm.assume(alice != bob);
 
-    //     referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
-    //     certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
-    //     minShareRatio = bound(minShareRatio, 0, 1e18);
-    //     // Assume that assets is not 0
-    //     assets = bound(assets, 1, type(uint256).max);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        // Assume that assets is not 0
+        assets = bound(assets, 1, type(uint256).max);
 
-    //     OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-    //     // Prank as Alice to set roles
-    //     vm.startPrank(alice);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
 
-    //     vault.grantRole(vault.DEPOSITOR(), bob);
-    //     vault.grantRole(vault.DEPOSITOR(), alice);
-    //     vault.grantRole(vault.WITHDRAWER(), bob);
-    //     vault.grantRole(vault.CERTIFIER(), alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(vault.CERTIFIER(), alice);
 
-    //     // Certify
-    //     vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        // Certify
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-    //     // Alice deposits to herself
-    //     vault.deposit(assets, alice, minShareRatio, data);
+        // Alice deposits to herself
+        vault.deposit(assets, alice, minShareRatio, data);
 
-    //     // Prank Bob for the withdraw transaction
-    //     vm.startPrank(bob);
+        // Prank Bob for the withdraw transaction
+        vm.startPrank(bob);
 
-    //     checkNoBalanceChange(vault, bob, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data, bytes(""));
 
-    //     // Stop the prank
-    //     vm.stopPrank();
-    // }
+        // Stop the prank
+        vm.stopPrank();
+    }
 }
