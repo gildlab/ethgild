@@ -219,11 +219,11 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
-        // Bound assets from 4 to make sure max bound for redeemAmount gets more than min
-        assets = bound(assets, 4, type(uint256).max);
+        // Bound assets from 2 to make sure max bound for redeemAmount gets more than min
+        assets = bound(assets, 2, type(uint256).max);
 
         // Get some part of assets to redeem
-        redeemAmount = bound(redeemAmount, 1, assets / 2);
+        redeemAmount = bound(redeemAmount, 1, assets);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         // Prank as Alice to grant roles
@@ -586,10 +586,12 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 thirdDepositAmount,
+        uint256 firstRedeemAmount,
+        uint256 secondRedeemAmount,
+        uint256 thirdRedeemAmount,
         uint256 minShareRatio,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol
+        string memory assetName
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -605,7 +607,15 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.assume(firstDepositAmount != thirdDepositAmount);
         vm.assume(secondDepositAmount != thirdDepositAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        firstRedeemAmount = bound(firstRedeemAmount, 1, firstDepositAmount);
+        secondRedeemAmount = bound(secondRedeemAmount, 1, secondDepositAmount);
+        thirdRedeemAmount = bound(thirdRedeemAmount, 1, thirdDepositAmount);
+
+        vm.assume(firstRedeemAmount != secondRedeemAmount);
+        vm.assume(firstRedeemAmount != thirdRedeemAmount);
+        vm.assume(secondRedeemAmount != thirdRedeemAmount);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
@@ -624,9 +634,9 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         // Call another deposit deposit function
         vault.deposit(thirdDepositAmount, bob, minShareRatio, data);
 
-        checkBalanceChange(vault, bob, bob, 1, firstDepositAmount, data);
-        checkBalanceChange(vault, bob, bob, 2, secondDepositAmount, data);
-        checkBalanceChange(vault, bob, bob, 3, thirdDepositAmount, data);
+        checkBalanceChange(vault, bob, bob, 1, firstRedeemAmount, data);
+        checkBalanceChange(vault, bob, bob, 2, secondRedeemAmount, data);
+        checkBalanceChange(vault, bob, bob, 3, thirdRedeemAmount, data);
 
         // Stop the prank
         vm.stopPrank();

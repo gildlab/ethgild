@@ -211,11 +211,11 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
-        // Bound assets from 4 to make sure max bound for withdrawAmmount gets more than min
-        assets = bound(assets, 4, type(uint256).max);
+        // Bound assets from 2 to make sure max bound for withdrawAmmount gets more than min
+        assets = bound(assets, 2, type(uint256).max);
 
         // Get some part of assets to redeem
-        withdrawAmmount = bound(withdrawAmmount, 1, assets / 2);
+        withdrawAmmount = bound(withdrawAmmount, 1, assets);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         // Prank as Alice to grant roles
@@ -583,9 +583,11 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 secondDepositAmount,
         uint256 thirdDepositAmount,
         uint256 minShareRatio,
+        uint256 firstWithdrawAmmount,
+        uint256 secondWithdrawAmmount,
+        uint256 thirdWithdrawAmmount,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol
+        string memory assetName
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -601,7 +603,14 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.assume(firstDepositAmount != thirdDepositAmount);
         vm.assume(secondDepositAmount != thirdDepositAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        firstWithdrawAmmount = bound(firstWithdrawAmmount, 1, firstDepositAmount);
+        secondWithdrawAmmount = bound(secondWithdrawAmmount, 1, secondDepositAmount);
+        thirdWithdrawAmmount = bound(thirdWithdrawAmmount, 1, thirdDepositAmount);
+
+        vm.assume(firstWithdrawAmmount != secondWithdrawAmmount);
+        vm.assume(firstWithdrawAmmount != thirdWithdrawAmmount);
+        vm.assume(secondWithdrawAmmount != thirdWithdrawAmmount);
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
@@ -620,9 +629,9 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call another deposit deposit function
         vault.deposit(thirdDepositAmount, bob, minShareRatio, data);
 
-        checkBalanceChange(vault, bob, bob, 1, firstDepositAmount, data);
-        checkBalanceChange(vault, bob, bob, 2, secondDepositAmount, data);
-        checkBalanceChange(vault, bob, bob, 3, thirdDepositAmount, data);
+        checkBalanceChange(vault, bob, bob, 1, firstWithdrawAmmount, data);
+        checkBalanceChange(vault, bob, bob, 2, secondWithdrawAmmount, data);
+        checkBalanceChange(vault, bob, bob, 3, thirdWithdrawAmmount, data);
 
         // Stop the prank
         vm.stopPrank();
