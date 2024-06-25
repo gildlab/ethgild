@@ -532,4 +532,57 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Stop the prank
         vm.stopPrank();
     }
+
+    /// Test Withdraw over several different IDs
+    function testWithdrawOverSeveralIds(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 firstDepositAmount,
+        uint256 secondDepositAmount,
+        uint256 thirdDepositAmount,
+        uint256 minShareRatio,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        // Assume that firstDepositAmount is not 0
+        // Bound with uint64 max so next deposits doesnot cause overflow
+        firstDepositAmount = bound(firstDepositAmount, 1, type(uint64).max);
+        secondDepositAmount = bound(secondDepositAmount, 1, type(uint64).max);
+        thirdDepositAmount = bound(thirdDepositAmount, 1, type(uint64).max);
+        vm.assume(firstDepositAmount != secondDepositAmount);
+        vm.assume(firstDepositAmount != thirdDepositAmount);
+        vm.assume(secondDepositAmount != thirdDepositAmount);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.WITHDRAWER(), bob);
+
+        // Prank Bob for the transaction
+        vm.startPrank(bob);
+
+        // Call the deposit function
+        vault.deposit(firstDepositAmount, bob, minShareRatio, data);
+
+        // Call another deposit deposit function
+        vault.deposit(secondDepositAmount, bob, minShareRatio, data);
+
+        // Call another deposit deposit function
+        vault.deposit(thirdDepositAmount, bob, minShareRatio, data);
+
+        checkBalanceChange(vault, bob, bob, 1, firstDepositAmount, data);
+        checkBalanceChange(vault, bob, bob, 2, secondDepositAmount, data);
+        checkBalanceChange(vault, bob, bob, 3, thirdDepositAmount, data);
+
+        // Stop the prank
+        vm.stopPrank();
+    }
 }
