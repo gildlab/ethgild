@@ -202,6 +202,48 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
+    /// Test Redeem function while redeeming some part of the assets deposited
+    function testRedeemSomePartOfAssetsDeposited(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 assets,
+        uint256 redeemAmount,
+        uint256 minShareRatio,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+
+        // Bound assets from 4 to make sure max bound for redeemAmount gets more than min
+        assets = bound(assets, 4, type(uint256).max);
+
+        // Get some part of assets to redeem
+        redeemAmount = bound(redeemAmount, 1, assets / 2);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.WITHDRAWER(), bob);
+
+        // Prank Bob for the transaction
+        vm.startPrank(bob);
+
+        // Call the deposit function
+        vault.deposit(assets, bob, minShareRatio, data);
+
+        checkBalanceChange(vault, bob, bob, 1, redeemAmount, data);
+
+        // Stop the prank
+        vm.stopPrank();
+    }
+
     /// Test withdraw reverts when withdrawing more than balance
     function testWithdrawMoreThanBalance(
         uint256 fuzzedKeyAlice,
