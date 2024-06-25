@@ -67,7 +67,7 @@ contract Deploy is Script {
                 ERC20PriceOracleVaultConfig({
                     priceOracle: twoPriceOracle,
                     vaultConfig: VaultConfig({
-                        asset: vm.envAddress("RECEIPT_VAULT_ASSET"),
+                        asset: stakedFlr,
                         name: vm.envString("RECEIPT_VAULT_NAME"),
                         symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
                     })
