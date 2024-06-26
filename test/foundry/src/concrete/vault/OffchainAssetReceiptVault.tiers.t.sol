@@ -260,7 +260,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vault.certify(certifyUntil, block.number, forceUntil, fuzzedData);
 
         // Set the tier for token movement restriction
-        vault.setERC20Tier(address(tier), fuzzedMinTier, fuzzedContext, fuzzedData);
+        vault.setERC20Tier(tier, fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Try to move tokens (should be restricted)
         vm.expectRevert();
@@ -268,6 +268,66 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
 
         // Change the tier contract to one that allows token movement
         vault.setERC20Tier(address(0), fuzzedMinTier, fuzzedContext, fuzzedData);
+
+        // Transfer tokens should succeed
+        vault.deposit(transferAmount, alice, minShareRatio, fuzzedData);
+
+        // Stop the prank
+        vm.stopPrank();
+    }
+
+    /// Test ERC1155 tier contract controls token movement
+    function testERC1155TierControlsTokenMovement(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        bytes memory fuzzedData,
+        uint8 fuzzedMinTier,
+        uint256[] memory fuzzedContext,
+        address tier,
+        uint256 certifyUntil,
+        uint256 transferAmount,
+        bool forceUntil,
+        uint256 minShareRatio
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        // referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+        transferAmount = bound(transferAmount, 1, type(uint256).max);
+
+        fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        vm.assume(tier != address(0));
+        // Create the vault
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
+
+        // Grant the necessary role
+        vault.grantRole(vault.ERC1155TIERER(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+        vm.stopPrank();
+
+        // Prank as Bob
+        vm.startPrank(bob);
+
+        vault.certify(certifyUntil, block.number, forceUntil, fuzzedData);
+
+        // Set the tier for token movement restriction
+        vault.setERC1155Tier(tier, fuzzedMinTier, fuzzedContext, fuzzedData);
+
+        // Try to move tokens (should be restricted)
+        vm.expectRevert();
+        vault.deposit(transferAmount, alice, minShareRatio, fuzzedData);
+
+        // Change the tier contract to one that allows token movement
+        vault.setERC1155Tier(address(0), fuzzedMinTier, fuzzedContext, fuzzedData);
 
         // Transfer tokens should succeed
         vault.deposit(transferAmount, alice, minShareRatio, fuzzedData);
