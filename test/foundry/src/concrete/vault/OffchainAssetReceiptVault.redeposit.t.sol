@@ -20,6 +20,29 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
     );
 
+    /// Checks that balance owner balance changes after wirthdraw
+    function checkBalanceChange(
+        OffchainAssetReceiptVault vault,
+        address receiver,
+        address owner,
+        uint256 id,
+        uint256 assets,
+        bytes memory data
+    ) internal {
+        uint256 initialBalanceReceiver = vault.balanceOf(receiver);
+
+        // Set up the event expectation for redeposit
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(owner, receiver, assets, assets, id, data);
+
+        // Redeposit
+        vault.redeposit(assets, receiver, id, data);
+
+        uint256 balanceAfterReceiver = vault.balanceOf(receiver);
+
+        assertEq(balanceAfterReceiver, initialBalanceReceiver + assets);
+    }
+
     /// Test redeposit function
     function testReDeposit(
         uint256 fuzzedKeyAlice,
@@ -372,16 +395,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
         vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 1, data);
-
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, bob, 1, data);
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 2, data);
-
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, bob, 2, data);
+        checkBalanceChange(vault, alice, bob, 1, assetsToRedeposit, data);
+        checkBalanceChange(vault, alice, bob, 2, assetsToRedeposit, data);
 
         vm.stopPrank();
     }
