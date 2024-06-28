@@ -326,4 +326,63 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.stopPrank();
     }
+
+    /// Test redepositing works after there are several IDs due to deposit
+    function testReDepositOverSeveralIds(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 depositAmount,
+        uint256 anotherDepositAmount,
+        uint256 assetsToRedeposit,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 blockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+        // Bound depositAmounts
+        depositAmount = bound(depositAmount, 1, type(uint64).max);
+        anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
+        assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, data);
+
+        vault.deposit(depositAmount, bob, minShareRatio, data);
+        vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
+        vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
+
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 1, data);
+
+        // Redeposit
+        vault.redeposit(assetsToRedeposit, bob, 1, data);
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 2, data);
+
+        // Redeposit
+        vault.redeposit(assetsToRedeposit, bob, 2, data);
+
+        vm.stopPrank();
+    }
 }
