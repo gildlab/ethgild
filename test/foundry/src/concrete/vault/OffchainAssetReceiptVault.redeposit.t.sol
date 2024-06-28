@@ -387,4 +387,59 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.stopPrank();
     }
+
+    /// Test redepositing reverts past the top ID
+    function testReDepositrevertsPastTopID(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 depositAmount,
+        uint256 anotherDepositAmount,
+        uint256 assetsToRedeposit,
+        bytes memory data,
+        string memory assetName,
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 id,
+        uint256 blockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        // Performing two deposits so Max id is gonna be 2.
+        // Need to test over max id, so id is bounded from 3
+        id = bound(id, 3, type(uint256).max);
+
+        // Bound depositAmounts
+        depositAmount = bound(depositAmount, 1, type(uint64).max);
+        anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
+        assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system
+        vault.certify(timestamp, blockNumber, false, data);
+
+        vault.deposit(depositAmount, bob, minShareRatio, data);
+        vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
+
+        // Attempt to redeposit, should revert
+        vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, id));
+        vault.redeposit(assetsToRedeposit, alice, id, data);
+
+        vm.stopPrank();
+    }
 }
