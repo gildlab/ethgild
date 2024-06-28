@@ -3,15 +3,43 @@ pragma solidity =0.8.25;
 
 import {
     UnauthorizedSenderTier,
-    OffchainAssetReceiptVault
+    OffchainAssetReceiptVault,
+    OffchainAssetReceiptVaultConfig
 } from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
+import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
+import "forge-std/console.sol";
 
 contract TiersTest is OffchainAssetReceiptVaultTest {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
+    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
+
+    /// Get Receipt from event
+    function getReceipt() internal returns (ReceiptContract) {
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        address receiptAddress = address(0);
+        bool eventFound = false; // Flag to indicate whether the event log was found
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
+                // Decode the event data
+                (, OffchainAssetReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                receiptAddress = config.receiptVaultConfig.receipt;
+                eventFound = true; // Set the flag to true since event log was found
+                break;
+            }
+        }
+
+        // Assert that the event log was found
+        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
+        // Return an receipt contract
+        return ReceiptContract(receiptAddress);
+    }
 
     /// Test setERC20Tier event
     function testSetERC20Tier(
@@ -333,6 +361,72 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vault.deposit(transferAmount, alice, minShareRatio, fuzzedData);
 
         // Stop the prank
+        vm.stopPrank();
+    }
+
+    /// Test testReceiptTransfer
+    function testReceiptTransfer(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        uint8 fuzzedMinTier,
+        uint256[] memory fuzzedContext,
+        uint256 certifyUntil,
+        uint256 referenceBlockNumber,
+        address tierAddress,
+        bool forceUntil
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max);
+
+        vm.assume(alice != bob);
+        vm.assume(tierAddress != address(0));
+
+        fuzzedMinTier = uint8(bound(fuzzedMinTier, uint256(1), uint256(8)));
+
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        ReceiptContract receipt = getReceipt();
+
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.CERTIFIER(), bob);
+        vault.grantRole(vault.ERC20TIERER(), bob);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+
+        vm.stopPrank();
+
+        // Prank as Bob
+        vm.startPrank(bob);
+        // Call the certify function
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
+
+        vm.warp(certifyUntil);
+
+        // Cannot fuzz assets value due to variable limits
+        vault.deposit(100, bob, 1, bytes(""));
+
+        {
+            ITierV2 tierContract = ITierV2(tierAddress);
+            vault.setERC20Tier(address(tierContract), fuzzedMinTier, fuzzedContext, bytes(""));
+
+            vm.mockCall(
+                address(tierContract),
+                abi.encodeWithSelector(ITierV2.reportTimeForTier.selector, bob, fuzzedMinTier, fuzzedContext),
+                abi.encode(10)
+            );
+
+            vault.authorizeReceiptTransfer(bob, alice);
+
+            receipt.safeTransferFrom(bob, alice, 1, 10, bytes(""));
+            assertEq(receipt.balanceOf(alice, 1), 10);
+        }
         vm.stopPrank();
     }
 }
