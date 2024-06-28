@@ -84,11 +84,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, bob, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 1, data);
-
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, bob, 1, data);
+        checkBalanceChange(vault, bob, bob, 1, assetsToRedeposit, data);
 
         vm.stopPrank();
     }
@@ -235,12 +231,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
-        // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
-
-        // Attempt to deposit, should revert
-        vault.redeposit(assets, alice, 1, data);
+        checkBalanceChange(vault, alice, bob, 1, assets, data);
 
         vm.stopPrank();
     }
@@ -286,11 +277,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assetsToRedeposit, assetsToRedeposit, 1, data);
-
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, alice, 1, data);
+        checkBalanceChange(vault, alice, bob, 1, assets, data);
 
         vm.stopPrank();
     }
