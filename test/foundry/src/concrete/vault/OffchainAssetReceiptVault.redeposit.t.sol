@@ -20,6 +20,29 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
     );
 
+    /// Checks that balance owner balance changes after wirthdraw
+    function checkBalanceChange(
+        OffchainAssetReceiptVault vault,
+        address receiver,
+        address owner,
+        uint256 id,
+        uint256 assets,
+        bytes memory data
+    ) internal {
+        uint256 initialBalanceReceiver = vault.balanceOf(receiver);
+
+        // Set up the event expectation for redeposit
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(owner, receiver, assets, assets, id, data);
+
+        // Redeposit
+        vault.redeposit(assets, receiver, id, data);
+
+        uint256 balanceAfterReceiver = vault.balanceOf(receiver);
+
+        assertEq(balanceAfterReceiver, initialBalanceReceiver + assets);
+    }
+
     /// Test redeposit function
     function testReDeposit(
         uint256 fuzzedKeyAlice,
@@ -61,11 +84,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, bob, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assetsToRedeposit, assetsToRedeposit, 1, data);
-
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, bob, 1, data);
+        checkBalanceChange(vault, bob, bob, 1, assetsToRedeposit, data);
 
         vm.stopPrank();
     }
@@ -212,12 +231,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
-        // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
-
-        // Attempt to deposit, should revert
-        vault.redeposit(assets, alice, 1, data);
+        checkBalanceChange(vault, alice, bob, 1, assets, data);
 
         vm.stopPrank();
     }
@@ -263,11 +277,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assetsToRedeposit, assetsToRedeposit, 1, data);
-
-        // Redeposit
-        vault.redeposit(assetsToRedeposit, alice, 1, data);
+        checkBalanceChange(vault, alice, bob, 1, assets, data);
 
         vm.stopPrank();
     }
@@ -323,6 +333,112 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Attempt to deposit, should revert
         vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, id));
         vault.redeposit(assets, alice, id, data);
+
+        vm.stopPrank();
+    }
+
+    /// Test redepositing works after there are several IDs due to deposit
+    function testReDepositOverSeveralIds(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 depositAmount,
+        uint256 anotherDepositAmount,
+        uint256 assetsToRedeposit,
+        bytes memory data,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 blockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+        // Bound depositAmounts
+        depositAmount = bound(depositAmount, 1, type(uint64).max);
+        anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
+        assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system till the current timestamp
+        vault.certify(timestamp, blockNumber, false, data);
+
+        vault.deposit(depositAmount, bob, minShareRatio, data);
+        vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
+        vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
+
+        checkBalanceChange(vault, alice, bob, 1, assetsToRedeposit, data);
+        checkBalanceChange(vault, alice, bob, 2, assetsToRedeposit, data);
+
+        vm.stopPrank();
+    }
+
+    /// Test redepositing reverts past the top ID
+    function testReDepositrevertsPastTopID(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 depositAmount,
+        uint256 anotherDepositAmount,
+        uint256 assetsToRedeposit,
+        bytes memory data,
+        string memory assetName,
+        uint256 minShareRatio,
+        uint256 timestamp,
+        uint256 id,
+        uint256 blockNumber
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
+        vm.roll(blockNumber);
+
+        // Performing two deposits so Max id is gonna be 2.
+        // Need to test over max id, so id is bounded from 3
+        id = bound(id, 3, type(uint256).max);
+
+        // Bound depositAmounts
+        depositAmount = bound(depositAmount, 1, type(uint64).max);
+        anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
+        assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        // Prank as Alice to set roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.CERTIFIER(), bob);
+
+        // Prank as Bob for the transaction
+        vm.startPrank(bob);
+
+        vm.warp(timestamp);
+        // Certify system
+        vault.certify(timestamp, blockNumber, false, data);
+
+        vault.deposit(depositAmount, bob, minShareRatio, data);
+        vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
+
+        // Attempt to redeposit, should revert
+        vm.expectRevert(abi.encodeWithSelector(InvalidId.selector, id));
+        vault.redeposit(assetsToRedeposit, alice, id, data);
 
         vm.stopPrank();
     }
