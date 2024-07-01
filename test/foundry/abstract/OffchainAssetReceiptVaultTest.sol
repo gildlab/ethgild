@@ -34,7 +34,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, admin, name, symbol);
     }
 
-    function getReceipt(Vm.Log[] memory logs) internal pureeturns(ReceiptContract) {
+    function getReceipt(Vm.Log[] memory logs) internal pure returns(ReceiptContract) {
         // Find the OffchainAssetReceiptVaultInitialized event log
         address receiptAddress = address(0);
         bool eventFound = false; // Flag to indicate whether the event log was found
