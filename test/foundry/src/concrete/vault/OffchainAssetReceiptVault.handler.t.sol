@@ -50,13 +50,15 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 referenceBlockNumber,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
-        bool forceUntil
+        bool forceUntil,
+        uint256 balance
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         address john = vm.addr((fuzzedKeyJohn % (SECP256K1_ORDER - 1)) + 1);
 
+        balance = bound(balance, 1, type(uint256).max); // Bound from one to avoid ZeroAssets
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max - 1); // substruct 1 for next bound
 
@@ -84,16 +86,75 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
 
         // Cannot fuzz assets value due to variable limits
-        vault.deposit(100, bob, 1, bytes(""));
+        vault.deposit(balance, bob, 1, bytes(""));
 
         vm.stopPrank();
-        vm.warp(certifyUntil);
+        vm.warp(futureTimeStamp);
 
         // Prank as Bob
         vm.startPrank(bob);
         vault.authorizeReceiptTransfer(bob, john);
-        receipt.safeTransferFrom(bob, john, 1, 10, bytes(""));
-        assertEq(receipt.balanceOf(john, 1), 10);
+        receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
+        assertEq(receipt.balanceOf(john, 1), balance);
+
+        vm.stopPrank();
+    }
+
+    /// Test testReceiptTransfer with Receiver being a handler
+    function testReceiptTransferHandlerReceiver(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 fuzzedKeyJohn,
+        string memory assetName,
+        uint256 referenceBlockNumber,
+        uint256 certifyUntil,
+        uint256 futureTimeStamp,
+        bool forceUntil,
+        uint256 balance
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address john = vm.addr((fuzzedKeyJohn % (SECP256K1_ORDER - 1)) + 1);
+
+        balance = bound(balance, 1, type(uint256).max); // Bound from one to avoid ZeroAssets
+        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
+        certifyUntil = bound(certifyUntil, 1, type(uint32).max - 1); // substruct 1 for next bound
+
+        // Need setting future timestamp so system gets unsertified but transfer is possible
+        // due to a handler role
+        futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
+
+        vm.assume(alice != bob);
+        vm.assume(alice != john);
+        vm.assume(bob != john);
+
+        // Start recording logs
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        ReceiptContract receipt = getReceipt();
+
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.CERTIFIER(), alice);
+        vault.grantRole(vault.HANDLER(), john);
+        vault.grantRole(vault.DEPOSITOR(), alice);
+
+        // Call the certify function
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
+
+        // Cannot fuzz assets value due to variable limits
+        vault.deposit(balance, bob, 1, bytes(""));
+
+        vm.stopPrank();
+        vm.warp(futureTimeStamp);
+
+        // Prank as Bob
+        vm.startPrank(bob);
+        vault.authorizeReceiptTransfer(bob, john);
+        receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
+        assertEq(receipt.balanceOf(john, 1), balance);
 
         vm.stopPrank();
     }
