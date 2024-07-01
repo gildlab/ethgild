@@ -10,36 +10,10 @@ import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainA
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
-import "forge-std/console.sol";
 
 contract TiersTest is OffchainAssetReceiptVaultTest {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
-    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
-
-    /// Get Receipt from event
-    function getReceipt() internal returns (ReceiptContract) {
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        bool eventFound = false; // Flag to indicate whether the event log was found
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
-                // Decode the event data
-                (, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                eventFound = true; // Set the flag to true since event log was found
-                break;
-            }
-        }
-
-        // Assert that the event log was found
-        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
-        // Return an receipt contract
-        return ReceiptContract(receiptAddress);
-    }
 
     /// Test setERC20Tier event
     function testSetERC20Tier(
@@ -391,7 +365,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
-        ReceiptContract receipt = getReceipt();
+        Vm.Log[] memory logs = vm.getRecordedLogs();
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -423,6 +397,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
             );
 
             vault.authorizeReceiptTransfer(bob, alice);
+            ReceiptContract receipt = getReceipt(logs);
 
             receipt.safeTransferFrom(bob, alice, 1, 10, bytes(""));
             assertEq(receipt.balanceOf(alice, 1), 10);
