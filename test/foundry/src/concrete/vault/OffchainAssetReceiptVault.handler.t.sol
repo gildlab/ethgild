@@ -176,7 +176,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max - 1); // substruct 1 for next bound
 
-        // Need setting future timestamp so system gets unsertified but transfer is possible
+        // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
