@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {
-    OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfig
-} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
@@ -12,34 +9,9 @@ import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/rece
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
-    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
     );
-
-    /// Get Receipt from event
-    function getReceipt() internal returns (ReceiptContract) {
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        bool eventFound = false; // Flag to indicate whether the event log was found
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
-                // Decode the event data
-                (, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                eventFound = true; // Set the flag to true since event log was found
-                break;
-            }
-        }
-
-        // Assert that the event log was found
-        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
-        // Return an receipt contract
-        return ReceiptContract(receiptAddress);
-    }
 
     /// Test testReceiptTransfer to self with handler role
     function testReceiptTransferHandler(
@@ -69,7 +41,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
-        ReceiptContract receipt = getReceipt();
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        ReceiptContract receipt = getReceipt(logs);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -128,7 +102,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
-        ReceiptContract receipt = getReceipt();
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        ReceiptContract receipt = getReceipt(logs);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -187,7 +163,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
-        ReceiptContract receipt = getReceipt();
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        ReceiptContract receipt = getReceipt(logs);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);

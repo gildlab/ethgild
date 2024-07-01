@@ -5,6 +5,7 @@ import {Test, Vm} from "forge-std/Test.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
+    OffchainAssetReceiptVaultConfig,
     OffchainAssetReceiptVault,
     ReceiptVaultConstructionConfig
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
@@ -12,6 +13,8 @@ import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
+    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
+
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable receiptImplementation;
@@ -29,5 +32,23 @@ contract OffchainAssetReceiptVaultTest is Test {
         returns (OffchainAssetReceiptVault)
     {
         return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, admin, name, symbol);
+    }
+
+    function getReceipt(Vm.Log[] memory logs) internal pureeturns(ReceiptContract) {
+        // Find the OffchainAssetReceiptVaultInitialized event log
+        address receiptAddress = address(0);
+        bool eventFound = false; // Flag to indicate whether the event log was found
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
+                // Decode the event data
+                (, OffchainAssetReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                receiptAddress = config.receiptVaultConfig.receipt;
+                eventFound = true; // Set the flag to true since event log was found
+                break;
+            }
+        }
+        // Return an receipt contract
+        return ReceiptContract(receiptAddress);
     }
 }
