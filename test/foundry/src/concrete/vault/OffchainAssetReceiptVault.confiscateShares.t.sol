@@ -10,7 +10,6 @@ import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/rece
 
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
-    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
 
     /// Checks that confiscateShares balances don't change or do change as expected
     function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)

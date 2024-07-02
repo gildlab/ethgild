@@ -10,31 +10,6 @@ import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/rece
 
 contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
     event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
-    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
-
-    /// Get Receipt from event
-    function getReceipt() internal returns (ReceiptContract) {
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        bool eventFound = false; // Flag to indicate whether the event log was found
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitialized.selector) {
-                // Decode the event data
-                (, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                eventFound = true; // Set the flag to true since event log was found
-                break;
-            }
-        }
-
-        // Assert that the event log was found
-        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
-        // Return an receipt contract
-        return ReceiptContract(receiptAddress);
-    }
 
     /// Checks that confiscateReceipt balances don't change or do change as expected
     function checkConfiscateReceipt(
@@ -91,7 +66,9 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-        ReceiptContract receipt = getReceipt();
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        ReceiptContract receipt = getReceipt(logs);
+
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
@@ -117,6 +94,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
@@ -126,11 +104,11 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         // Assume that assets is less than uint256 max
         assets = bound(assets, 1, type(uint256).max);
+
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
-        ReceiptContract receipt = getReceipt();
-        vm.assume(alice != bob);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
@@ -146,7 +124,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        checkConfiscateReceipt(vault, receipt, alice, bob, 1, data);
+        checkConfiscateReceipt(vault, getReceipt(logs), alice, bob, 1, data);
         vm.stopPrank();
     }
 }
