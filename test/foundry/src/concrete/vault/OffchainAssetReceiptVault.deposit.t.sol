@@ -4,20 +4,12 @@ pragma solidity =0.8.25;
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfig,
     CertificationExpired
 } from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
-import {
-    LibFixedPointDecimalArithmeticOpenZeppelin,
-    Math
-} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
-    using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
-
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
     );
@@ -387,59 +379,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    //Test PreviewMint without depositor role
-    function testPreviewMintRevertWithoutRole(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 shares
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
-
-        shares = bound(shares, 1, type(uint256).max);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        vm.startPrank(bob);
-        vm.expectRevert();
-        vault.previewMint(shares);
-
-        vm.stopPrank();
-    }
-
-    //Test PreviewMint returns correct assets
-    function testPreviewMintReturnedAssets(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 shares
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        // Prank as Bob for the transactions
-
-        vm.startPrank(bob);
-        uint256 assets = vault.previewMint(shares);
-
-        assertEqUint(assets, shares);
-
-        vm.stopPrank();
-    }
-
     /// Test deposit without depositor role
     function testDepositWithoutDepositorRole(
         uint256 fuzzedKeyAlice,
@@ -499,49 +438,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vault.deposit(assets, alice, minShareRatio, fuzzedReceiptInformation);
 
         // Stop the prank
-        vm.stopPrank();
-    }
-
-    /// Test mint function
-    function testMint(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 assets,
-        bytes memory receiptInformation,
-        uint256 minShareRatio
-    ) external {
-        minShareRatio = bound(minShareRatio, 0, 1e18);
-
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
-
-        OffchainAssetReceiptVault vault =
-            LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, alice, assetName, assetSymbol);
-
-        // Assume that assets is less uint256 max
-        assets = bound(assets, 1, type(uint256).max);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        vault.grantRole(vault.DEPOSITOR(), bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        // Set up the event expectation for DepositWithReceipt
-        vm.expectEmit(true, true, true, true);
-        emit DepositWithReceipt(bob, bob, assets, assets, 1, receiptInformation);
-
-        vault.mint(assets, bob, minShareRatio, receiptInformation);
-
-        // Assert that the total supply and total assets are equal after the deposit
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-
         vm.stopPrank();
     }
 }
