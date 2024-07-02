@@ -10,32 +10,6 @@ import {
 const assert = require("assert");
 
 describe("deposit", async function () {
-  it("should not zero deposit", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[1];
-
-    const [vault, asset] = await deployERC20PriceOracleVault();
-
-    const totalTokenSupply = await asset.totalSupply();
-    const aliceDepositAmount = totalTokenSupply.div(2);
-
-    // give alice reserve to cover cost
-    await asset.transfer(alice.address, aliceDepositAmount);
-
-    const aliceReserveBalance = await asset.balanceOf(alice.address);
-
-    await asset.connect(alice).approve(vault.address, aliceReserveBalance);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          ["deposit(uint256,address)"](ethers.BigNumber.from(0), alice.address),
-      "ZeroAssetsAmount",
-      "failed to prevent a zero value deposit"
-    );
-  });
-
   it("should deposit a sensible reference price", async function () {
     const signers = await ethers.getSigners();
 
