@@ -13,6 +13,16 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     event DepositWithReceipt(
         address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
     );
+    event ReceiptInformation(address sender, uint256 id, bytes information);
+
+    function generateNonEmptyBytes(uint256 maxLength, uint256 seed) internal pure returns (bytes memory) {
+        uint256 length = (seed % (maxLength - 1)) + 1; // Ensure length is at least 1
+        bytes memory data = new bytes(length);
+        for (uint256 i = 0; i < length; i++) {
+            data[i] = bytes1(uint8(seed % 256)); // Random data
+        }
+        return data;
+    }
 
     /// Test mint function
     function testMint(
@@ -348,6 +358,53 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
+    /// Test ReceiptInformation event
+    function testReceiptInformationEvent(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 fuzzedKeyBob,
+        uint256 shares,
+        uint256 minShareRatio,
+        uint256 fuzzedReceiptSeed
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        bytes memory fuzzedReceiptInformation = generateNonEmptyBytes(100, fuzzedReceiptSeed); // Generate non-empty bytes
+
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+
+        // Assume that shares is less uint256 max
+        shares = bound(shares, 1, type(uint256).max);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
+        // Prank as Alice to grant roles
+        vm.startPrank(alice);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+
+        // Prank as Bob for transaction
+        vm.startPrank(bob);
+
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(bob, alice, shares, shares, 1, fuzzedReceiptInformation);
+        // Set up the event expectation for DepositWithReceipt
+        vm.expectEmit(false, false, false, true);
+        emit ReceiptInformation(bob, 1, fuzzedReceiptInformation);
+
+        vault.mint(shares, alice, minShareRatio, fuzzedReceiptInformation);
+
+        // Assert that the total supply and total shares are equal after the mint
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
+        vm.stopPrank();
+    }
+
     /// Test PreviewMint without depositor role
     function testPreviewMintRevertWithoutRole(
         uint256 fuzzedKeyAlice,
@@ -396,7 +453,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
         uint256 assets = vault.previewMint(shares);
 
-        assertEqUint(shares, shares);
+        assertEqUint(shares, assets);
 
         vm.stopPrank();
     }
