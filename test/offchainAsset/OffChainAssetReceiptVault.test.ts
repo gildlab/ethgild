@@ -28,11 +28,6 @@ const assert = require("assert");
 let TierV2TestContract: ReadWriteTier;
 
 describe("OffChainAssetReceiptVault", async function () {
-  beforeEach(async () => {
-    const TierV2Test = await ethers.getContractFactory("ReadWriteTier");
-    TierV2TestContract = (await TierV2Test.deploy()) as ReadWriteTier;
-    await TierV2TestContract.deployed();
-  });
   it("Check negative overflow", async () => {
     const signers = await ethers.getSigners();
     const alice = signers[0];
