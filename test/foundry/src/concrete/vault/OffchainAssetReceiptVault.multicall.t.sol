@@ -31,7 +31,6 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -81,7 +80,6 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
