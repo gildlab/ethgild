@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity =0.8.25;
 
-import "../vault/receipt/IReceiptV1.sol";
-import "../vault/receipt/IReceiptOwnerV1.sol";
+import "../interface/IReceiptV1.sol";
+import "../interface/IReceiptOwnerV1.sol";
 
 /// Thrown when a transfer is not authorized.
 /// @param from The transfer attempted from this address.
