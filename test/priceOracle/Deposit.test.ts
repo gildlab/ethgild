@@ -10,59 +10,6 @@ import {
 const assert = require("assert");
 
 describe("deposit", async function () {
-  it("should deposit a sensible reference price", async function () {
-    const signers = await ethers.getSigners();
-
-    const [vault, asset, priceOracle] = await deployERC20PriceOracleVault();
-
-    const alice = signers[1];
-
-    const totalTokenSupply = await asset.totalSupply();
-
-    const aliceDepositAmount = totalTokenSupply.div(2);
-
-    // give alice reserve to cover cost
-    await asset.transfer(alice.address, aliceDepositAmount);
-
-    // Min shareRatio MUST be respected
-    const shareRatio = await priceOracle.price();
-
-    await asset
-      .connect(alice)
-      .increaseAllowance(vault.address, aliceDepositAmount);
-
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          ["deposit(uint256,address,uint256,bytes)"](
-            aliceDepositAmount,
-            alice.address,
-            shareRatio.add(1),
-            []
-          ),
-      "MinShareRatio",
-      "failed to respect min price"
-    );
-    await vault
-      .connect(alice)
-      ["deposit(uint256,address,uint256,bytes)"](
-        aliceDepositAmount,
-        alice.address,
-        shareRatio,
-        []
-      );
-
-    const expectedShares = fixedPointMul(shareRatio, aliceDepositAmount);
-    const aliceShares = await vault
-      .connect(alice)
-      ["balanceOf(address)"](alice.address);
-    assert(
-      aliceShares.eq(expectedShares),
-      `wrong alice shares ${expectedShares} ${aliceShares}`
-    );
-  });
-
   it("should deposit and withdraw", async function () {
     const signers = await ethers.getSigners();
 

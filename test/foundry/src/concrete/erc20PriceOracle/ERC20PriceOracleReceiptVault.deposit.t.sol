@@ -50,4 +50,22 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, oraclePrice + 1, oraclePrice));
         vault.deposit(assets, alice, oraclePrice + 1, data);
     }
+
+    /// Test deposit reverts with zero receiver
+    function testDepositWithZeroReceiver(
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory data,
+        uint256 assets
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+        assets = bound(assets, 1, type(uint256).max);
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+
+        vm.expectRevert();
+        vault.deposit(assets, address(0), oraclePrice, data);
+    }
 }
