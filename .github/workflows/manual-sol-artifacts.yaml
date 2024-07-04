@@ -26,7 +26,7 @@ on:
         type: choice
         options:
           - ownable-oracle-vault
-          - flare-ftso-oracle-price-vault
+          - sceptre-staked-flare-price-vault
           - implementations
 
       receipt-vault-asset:
@@ -82,6 +82,7 @@ jobs:
           RECEIPT_VAULT_SYMBOL: ${{ inputs.receipt-vault-symbol || '' }}
           OWNER_ADDRESS: ${{ inputs.owner || '' }}
           CLONE_FACTORY : ${{ vars[env.clone_factory_name] || '' }}
+          SCEPTRE_STAKED_FLR_ADDRESS: ${{ vars.SCEPTRE_STAKED_FLR_ADDRESS || '' }}
           ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION: ${{ vars[env.erc20_price_oracle_vault_implementation_name] || '' }}
           DEPLOY_BROADCAST: '1'
           DEPLOYMENT_KEY: ${{ secrets.CI_PRIVATE_KEY }}
