@@ -41,17 +41,52 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
         vm.prank(alice);
-
         asset.increaseAllowance(address(vault), asset.totalSupply());
+
         vault.deposit(assets, alice, oraclePrice, data);
 
         // Assert that the total assets is equal to deposited assets
         assertEqUint(vault.totalAssets(), assets);
-
         // Assert that the total supply is equal to expectedShares
         assertEqUint(vault.totalSupply(), expectedShares);
         // Check alice balance
         assertEqUint(vault.balanceOf(alice), expectedShares);
+    }
+
+    /// Test deposit to someone else
+    function testDeposit(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        bytes memory data,
+        uint256 assets
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+
+        ERC20PriceOracleReceiptVault vault;
+        TestErc20 asset;
+        (vault, asset) = createVault(address(twoPriceOracle), assetName, assetSymbol);
+
+        // Getting ZeroSharesAmount if bounded from 1
+        assets = bound(assets, 2, asset.totalSupply());
+
+        uint256 oraclePrice = twoPriceOracle.price();
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+
+        vm.prank(alice);
+        asset.increaseAllowance(address(vault), asset.totalSupply());
+
+        vault.deposit(assets, bob, oraclePrice, data);
+        // Assert that the total assets is equal to deposited assets
+        assertEqUint(vault.totalAssets(), assets);
+        // Assert that the total supply is equal to expectedShares
+        assertEqUint(vault.totalSupply(), expectedShares);
+        // Check balance
+        assertEqUint(vault.balanceOf(bob), expectedShares);
     }
 
     /// Test deposit function with zero assets
