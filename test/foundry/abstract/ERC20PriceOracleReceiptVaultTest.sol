@@ -21,13 +21,13 @@ import {MockChainlinkDataFeed, RoundData} from "contracts/test/MockChainlinkData
 contract ERC20PriceOracleReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
-    ReceiptContract internal immutable receiptImplementation;
+    ReceiptContract internal immutable iReceiptImplementation;
 
     constructor() {
         iFactory = new CloneFactory();
-        receiptImplementation = new ReceiptContract();
+        iReceiptImplementation = new ReceiptContract();
         iImplementation = new ERC20PriceOracleReceiptVault(
-            ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: receiptImplementation})
+            ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
     }
 
