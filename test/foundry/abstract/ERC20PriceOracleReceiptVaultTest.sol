@@ -42,9 +42,10 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         return (vault, asset);
     }
 
-    function createTwoPriceOracle() internal returns (TwoPriceOracle twoPriceOracle) {
-        uint8 usdDecimals = 8;
-        uint8 xauDecimals = 8;
+    function createTwoPriceOracle(uint8 usdDecimals, uint8 xauDecimals)
+        internal
+        returns (TwoPriceOracle twoPriceOracle)
+    {
         int256 basePrice = 1e8; // Example price for base
         int256 quotePrice = 1.8e8; // Example price for quote
         uint256 now_ = block.timestamp;

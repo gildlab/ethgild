@@ -24,11 +24,16 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
-        uint256 assets
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
+        // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
 
         ERC20PriceOracleReceiptVault vault;
         TestErc20 asset;
@@ -60,12 +65,17 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
-        uint256 assets
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
+        // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
 
         ERC20PriceOracleReceiptVault vault;
         TestErc20 asset;
@@ -94,11 +104,16 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
-        bytes memory data
+        bytes memory data,
+        uint8 xauDecimals,
+        uint8 usdDecimals
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
+        // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
 
         (ERC20PriceOracleReceiptVault vault,) = createVault(address(twoPriceOracle), assetName, assetSymbol);
 
@@ -114,11 +129,17 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
-        uint256 assets
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
+        // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+
         assets = bound(assets, 1, type(uint256).max);
         (ERC20PriceOracleReceiptVault vault,) = createVault(address(twoPriceOracle), assetName, assetSymbol);
 
@@ -133,10 +154,15 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
-        uint256 assets
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle();
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+
         assets = bound(assets, 1, type(uint256).max);
         (ERC20PriceOracleReceiptVault vault,) = createVault(address(twoPriceOracle), assetName, assetSymbol);
 
