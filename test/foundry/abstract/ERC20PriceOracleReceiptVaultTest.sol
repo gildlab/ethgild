@@ -33,12 +33,13 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
 
     function createVault(address priceOracle, string memory name, string memory symbol)
         internal
-        returns (ERC20PriceOracleReceiptVault)
+        returns (ERC20PriceOracleReceiptVault, TestErc20)
     {
         TestErc20 asset = new TestErc20();
-        return LibERC20PriceOracleReceiptVaultCreator.createVault(
+        ERC20PriceOracleReceiptVault vault = LibERC20PriceOracleReceiptVaultCreator.createVault(
             iFactory, iImplementation, priceOracle, address(asset), name, symbol
         );
+        return (vault, asset);
     }
 
     function createTwoPriceOracle() internal returns (TwoPriceOracle twoPriceOracle) {
