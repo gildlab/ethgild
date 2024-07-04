@@ -38,19 +38,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 initialBalanceOwner = vault.balanceOf(bob);
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSelector(
-            bytes4(keccak256("mint(uint256,address,uint256,bytes)")),
-            firstMintAmount,
-            bob,
-            minShareRatio,
-            receiptInformation
+        data[0] = abi.encodeWithSignature(
+            "mint(uint256,address,uint256,bytes)", firstMintAmount, bob, minShareRatio, receiptInformation
         );
-        data[1] = abi.encodeWithSelector(
-            bytes4(keccak256("mint(uint256,address,uint256,bytes)")),
-            secondMintAmount,
-            bob,
-            minShareRatio,
-            receiptInformation
+        data[1] = abi.encodeWithSignature(
+            "mint(uint256,address,uint256,bytes)", secondMintAmount, bob, minShareRatio, receiptInformation
         );
 
         uint256 totalMint = firstMintAmount + secondMintAmount;
@@ -96,19 +88,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 initialBalanceOwner = vault.balanceOf(bob);
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSelector(
-            bytes4(keccak256("deposit(uint256,address,uint256,bytes)")),
-            firstDepositAmount,
-            bob,
-            minShareRatio,
-            receiptInformation
+        data[0] = abi.encodeWithSignature(
+            "deposit(uint256,address,uint256,bytes)", firstDepositAmount, bob, minShareRatio, receiptInformation
         );
-        data[1] = abi.encodeWithSelector(
-            bytes4(keccak256("deposit(uint256,address,uint256,bytes)")),
-            secondDepositAmount,
-            bob,
-            minShareRatio,
-            receiptInformation
+        data[1] = abi.encodeWithSignature(
+            "deposit(uint256,address,uint256,bytes)", secondDepositAmount, bob, minShareRatio, receiptInformation
         );
 
         uint256 totalMint = firstDepositAmount + secondDepositAmount;
@@ -169,11 +153,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSelector(
-            bytes4(keccak256("redeem(uint256,address,address,uint256,bytes)")), firstDepositAmount, bob, bob, 1, ""
+        data[0] = abi.encodeWithSignature(
+            "redeem(uint256,address,address,uint256,bytes)", firstDepositAmount, bob, bob, 1, ""
         );
-        data[1] = abi.encodeWithSelector(
-            bytes4(keccak256("redeem(uint256,address,address,uint256,bytes)")), secondDepositAmount, bob, bob, 2, ""
+        data[1] = abi.encodeWithSignature(
+            "redeem(uint256,address,address,uint256,bytes)", secondDepositAmount, bob, bob, 2, ""
         );
 
         uint256 totalRedeemed = firstDepositAmount + secondDepositAmount;
@@ -234,11 +218,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSelector(
-            bytes4(keccak256("withdraw(uint256,address,address,uint256,bytes)")), firstDepositAmount, bob, bob, 1, ""
+        data[0] = abi.encodeWithSignature(
+            "withdraw(uint256,address,address,uint256,bytes)", firstDepositAmount, bob, bob, 1, ""
         );
-        data[1] = abi.encodeWithSelector(
-            bytes4(keccak256("withdraw(uint256,address,address,uint256,bytes)")), secondDepositAmount, bob, bob, 2, ""
+        data[1] = abi.encodeWithSignature(
+            "withdraw(uint256,address,address,uint256,bytes)", secondDepositAmount, bob, bob, 2, ""
         );
 
         uint256 totalRedeemed = firstDepositAmount + secondDepositAmount;
