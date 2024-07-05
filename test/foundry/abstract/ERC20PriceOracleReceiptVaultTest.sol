@@ -10,13 +10,15 @@ import {
 } from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
-import {TestErc20} from "contracts/test/TestErc20.sol";
 import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/oracle/price/TwoPriceOracle.sol";
 import {
     ChainlinkFeedPriceOracle,
     ChainlinkFeedPriceOracleConfig
 } from "contracts/oracle/price/chainlink/ChainlinkFeedPriceOracle.sol";
 import {MockChainlinkDataFeed, RoundData} from "contracts/test/MockChainlinkDataFeed.sol";
+import {IERC20Upgradeable as IERC20} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
@@ -31,11 +33,11 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         );
     }
 
-    function createVault(address priceOracle, string memory name, string memory symbol)
+    function createVault(address priceOracle, string memory name, string memory symbol, address erc20Address)
         internal
-        returns (ERC20PriceOracleReceiptVault, TestErc20)
+        returns (ERC20PriceOracleReceiptVault, IERC20)
     {
-        TestErc20 asset = new TestErc20();
+        IERC20 asset = IERC20(erc20Address);
         ERC20PriceOracleReceiptVault vault = LibERC20PriceOracleReceiptVaultCreator.createVault(
             iFactory, iImplementation, priceOracle, address(asset), name, symbol
         );
