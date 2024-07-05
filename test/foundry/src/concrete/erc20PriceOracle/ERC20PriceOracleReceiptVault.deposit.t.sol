@@ -13,6 +13,7 @@ import {
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
+import "forge-std/console.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -221,5 +222,37 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vm.expectRevert();
         vault.deposit(assets, address(0), oraclePrice, data);
+    }
+
+    /// Test PreviewDeposit returns correct shares
+    function testPreviewDepositReturnedShares(
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 assets,
+        uint256 timestamp,
+        address erc20Address,
+        uint8 xauDecimals,
+        uint8 usdDecimals
+    ) external {
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
+
+        assets = bound(assets, 1, type(uint256).max);
+        (ERC20PriceOracleReceiptVault vault,) =
+            createVault(address(twoPriceOracle), assetName, assetSymbol, erc20Address);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+
+        uint256 shares = vault.previewDeposit(assets);
+
+        assertEqUint(shares, expectedShares);
+
+        vm.stopPrank();
     }
 }
