@@ -24,6 +24,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
+        uint256 timestamp,
         uint256 assets,
         uint8 xauDecimals,
         uint8 usdDecimals
@@ -33,7 +34,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Use common decimal bounds for price feeds
         usdDecimals = uint8(bound(usdDecimals, 6, 18));
         xauDecimals = uint8(bound(xauDecimals, 6, 18));
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
 
         ERC20PriceOracleReceiptVault vault;
         TestErc20 asset;
@@ -63,8 +67,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        string memory assetSymbol,
         bytes memory data,
+        uint256 timestamp,
         uint256 assets,
         uint8 xauDecimals,
         uint8 usdDecimals
@@ -75,20 +79,24 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Use common decimal bounds for price feeds
         usdDecimals = uint8(bound(usdDecimals, 6, 18));
         xauDecimals = uint8(bound(xauDecimals, 6, 18));
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
 
         ERC20PriceOracleReceiptVault vault;
-        TestErc20 asset;
-        (vault, asset) = createVault(address(twoPriceOracle), assetName, assetSymbol);
+        {
+            TestErc20 asset;
+            (vault, asset) = createVault(address(twoPriceOracle), assetName, assetName);
 
-        // Getting ZeroSharesAmount if bounded from 1
-        assets = bound(assets, 2, asset.totalSupply());
+            // Getting ZeroSharesAmount if bounded from 1
+            assets = bound(assets, 2, asset.totalSupply());
 
+            vm.prank(alice);
+            asset.increaseAllowance(address(vault), asset.totalSupply());
+        }
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
-        vm.prank(alice);
-        asset.increaseAllowance(address(vault), asset.totalSupply());
 
         vault.deposit(assets, bob, oraclePrice, data);
         // Assert that the total assets is equal to deposited assets
@@ -105,6 +113,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
+        uint256 timestamp,
         uint8 xauDecimals,
         uint8 usdDecimals
     ) external {
@@ -113,7 +122,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Use common decimal bounds for price feeds
         usdDecimals = uint8(bound(usdDecimals, 6, 18));
         xauDecimals = uint8(bound(xauDecimals, 6, 18));
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
 
         (ERC20PriceOracleReceiptVault vault,) = createVault(address(twoPriceOracle), assetName, assetSymbol);
 
@@ -130,6 +142,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetSymbol,
         bytes memory data,
         uint256 assets,
+        uint256 timestamp,
         uint8 xauDecimals,
         uint8 usdDecimals
     ) external {
@@ -138,7 +151,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Use common decimal bounds for price feeds
         usdDecimals = uint8(bound(usdDecimals, 6, 18));
         xauDecimals = uint8(bound(xauDecimals, 6, 18));
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
 
         assets = bound(assets, 1, type(uint256).max);
         (ERC20PriceOracleReceiptVault vault,) = createVault(address(twoPriceOracle), assetName, assetSymbol);
@@ -155,13 +171,17 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetSymbol,
         bytes memory data,
         uint256 assets,
+        uint256 timestamp,
         uint8 xauDecimals,
         uint8 usdDecimals
     ) external {
         // Use common decimal bounds for price feeds
         usdDecimals = uint8(bound(usdDecimals, 6, 18));
         xauDecimals = uint8(bound(xauDecimals, 6, 18));
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals);
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
 
         assets = bound(assets, 1, type(uint256).max);
         (ERC20PriceOracleReceiptVault vault,) = createVault(address(twoPriceOracle), assetName, assetSymbol);
