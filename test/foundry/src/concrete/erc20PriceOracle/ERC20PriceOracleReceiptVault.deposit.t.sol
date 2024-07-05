@@ -34,8 +34,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(erc20Address != address(0));
         // Use common decimal bounds for price feeds
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
         timestamp = bound(timestamp, 0, type(uint32).max);
 
         vm.warp(timestamp);
@@ -88,8 +88,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(erc20Address != address(0));
         // Use common decimal bounds for price feeds
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        // xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        // xauDecimals = uint8(bound(xauDecimals, 6, 18));
         timestamp = bound(timestamp, 0, type(uint32).max);
 
         vm.warp(timestamp);
@@ -140,8 +140,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         // Use common decimal bounds for price feeds
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
         vm.assume(erc20Address != address(0));
         timestamp = bound(timestamp, 0, type(uint32).max);
 
@@ -173,8 +173,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         // Use common decimal bounds for price feeds
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
         timestamp = bound(timestamp, 0, type(uint32).max);
 
         vm.warp(timestamp);
@@ -203,8 +203,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         address erc20Address
     ) external {
         // Use common decimal bounds for price feeds
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
         timestamp = bound(timestamp, 0, type(uint32).max);
 
         vm.warp(timestamp);
@@ -232,8 +232,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint8 answeredInRound
     ) external {
         // Use common decimal bounds for price feeds
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        xauDecimals = uint8(bound(xauDecimals, 6, 18));
         timestamp = bound(timestamp, 0, type(uint32).max);
 
         vm.warp(timestamp);
