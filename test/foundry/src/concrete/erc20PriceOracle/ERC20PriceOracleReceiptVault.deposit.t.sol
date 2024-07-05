@@ -50,10 +50,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
             IERC20 asset;
             (vault, asset) = createVault(address(twoPriceOracle), assetName, assetSymbol, erc20Address);
 
-            vm.mockCall(address(asset), abi.encodeWithSelector(ERC20.totalSupply.selector), abi.encode(1e18));
+            vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
 
             // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(asset), abi.encodeWithSelector(ERC20.balanceOf.selector, alice), abi.encode(assets));
+            vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
             uint256 totalSupply = asset.totalSupply();
             // Getting ZeroSharesAmount if bounded from 1
@@ -64,8 +64,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
                 abi.encode(true)
             );
-
-            // Debug outputs
         }
 
         uint256 oraclePrice = twoPriceOracle.price();
@@ -79,52 +77,59 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assertEqUint(vault.balanceOf(alice), expectedShares);
     }
 
-    // /// Test deposit to someone else
-    // function testDeposit(
-    //     uint256 fuzzedKeyAlice,
-    //     uint256 fuzzedKeyBob,
-    //     string memory assetName,
-    //     bytes memory data,
-    //     uint256 timestamp,
-    //     uint256 assets,
-    //     uint8 xauDecimals,
-    //     uint8 usdDecimals,
-    //     address erc20Address
-    // ) external {
-    //     // Ensure the fuzzed key is within the valid range for secp256
-    //     address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //     address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-    //     vm.assume(erc20Address != address(0));
-    //     // Use common decimal bounds for price feeds
-    //     usdDecimals = uint8(bound(usdDecimals, 6, 18));
-    //     xauDecimals = uint8(bound(xauDecimals, 6, 18));
-    //     timestamp = bound(timestamp, 0, type(uint32).max);
+    /// Test deposit to someone else
+    function testDepositSomeoneElse(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        bytes memory data,
+        uint256 timestamp,
+        uint256 assets,
+        // uint8 xauDecimals,
+        uint8 usdDecimals,
+        address erc20Address
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(erc20Address != address(0));
+        // Use common decimal bounds for price feeds
+        usdDecimals = uint8(bound(usdDecimals, 6, 18));
+        // xauDecimals = uint8(bound(xauDecimals, 6, 18));
+        timestamp = bound(timestamp, 0, type(uint32).max);
 
-    //     vm.warp(timestamp);
-    //     TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp);
+        vm.startPrank(alice);
+        ERC20PriceOracleReceiptVault vault;
+        {
+            IERC20 asset;
+            (vault, asset) = createVault(address(twoPriceOracle), assetName, assetName, erc20Address);
 
-    //     ERC20PriceOracleReceiptVault vault;
-    //     {
-    //         IERC20 asset;
-    //         (vault, asset) = createVault(address(twoPriceOracle), assetName, assetName, erc20Address);
+            vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
 
-    //         // Getting ZeroSharesAmount if bounded from 1
-    //         assets = bound(assets, 2, asset.totalSupply());
+            // Ensure Alice has enough balance and allowance
+            vm.mockCall(address(asset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-    //         vm.prank(alice);
-    //         asset.increaseAllowance(address(vault), asset.totalSupply());
-    //     }
-    //     uint256 oraclePrice = twoPriceOracle.price();
-    //     uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+            uint256 totalSupply = asset.totalSupply();
+            // Getting ZeroSharesAmount if bounded from 1
+            assets = bound(assets, 2, totalSupply);
 
-    //     vault.deposit(assets, bob, oraclePrice, data);
-    //     // Assert that the total assets is equal to deposited assets
-    //     assertEqUint(vault.totalAssets(), assets);
-    //     // Assert that the total supply is equal to expectedShares
-    //     assertEqUint(vault.totalSupply(), expectedShares);
-    //     // Check balance
-    //     assertEqUint(vault.balanceOf(bob), expectedShares);
-    // }
+            vm.mockCall(
+                address(asset),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
+                abi.encode(true)
+            );
+        }
+        uint256 oraclePrice = twoPriceOracle.price();
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+
+        vault.deposit(assets, bob, oraclePrice, data);
+        // Assert that the total supply is equal to expectedShares
+        assertEqUint(vault.totalSupply(), expectedShares);
+        // Check balance
+        assertEqUint(vault.balanceOf(bob), expectedShares);
+    }
 
     // /// Test deposit function with zero assets
     // function testDepositWithZeroAssets(
