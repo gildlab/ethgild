@@ -18,7 +18,6 @@ import {
 import {MockChainlinkDataFeed, RoundData} from "contracts/test/MockChainlinkDataFeed.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;

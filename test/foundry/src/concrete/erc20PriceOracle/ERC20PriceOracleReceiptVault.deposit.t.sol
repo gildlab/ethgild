@@ -4,16 +4,13 @@ pragma solidity =0.8.25;
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {ERC20PriceOracleReceiptVault} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle, TwoPriceOracleConfig} from "../../../../../contracts/oracle/price/TwoPriceOracle.sol";
-import {TestErc20} from "../../../../../contracts/test/TestErc20.sol";
+import {TwoPriceOracle} from "../../../../../contracts/oracle/price/TwoPriceOracle.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
-import "forge-std/console.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -69,7 +66,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
         vault.deposit(assets, alice, oraclePrice, data);
 
         // Assert that the total supply is equal to expectedShares
