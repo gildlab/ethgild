@@ -14,8 +14,6 @@ import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
-import "forge-std/console.sol";
-
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
@@ -63,19 +61,11 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
             vm.mockCall(
                 address(asset),
-                abi.encodeWithSelector(ERC20.approve.selector, address(vault), totalSupply),
-                abi.encode(true)
-            );
-
-            vm.mockCall(
-                address(asset),
-                abi.encodeWithSelector(ERC20.increaseAllowance.selector, address(vault), totalSupply),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
                 abi.encode(true)
             );
 
             // Debug outputs
-            console.log("totalSupply", totalSupply);
-            console.log("assets", assets);
         }
 
         uint256 oraclePrice = twoPriceOracle.price();
@@ -83,12 +73,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vault.deposit(assets, alice, oraclePrice, data);
 
-        // Assert that the total assets is equal to deposited assets
-        // assertEqUint(vault.totalAssets(), assets);
         // Assert that the total supply is equal to expectedShares
-        // assertEqUint(vault.totalSupply(), expectedShares);
+        assertEqUint(vault.totalSupply(), expectedShares);
         // Check alice balance
-        // assertEqUint(vault.balanceOf(alice), expectedShares);
+        assertEqUint(vault.balanceOf(alice), expectedShares);
     }
 
     // /// Test deposit to someone else
