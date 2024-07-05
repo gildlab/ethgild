@@ -43,7 +43,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         return (vault, asset);
     }
 
-    function createTwoPriceOracle(uint8 usdDecimals, uint8 xauDecimals, uint256 timestamp)
+    function createTwoPriceOracle(uint8 usdDecimals, uint8 xauDecimals, uint256 timestamp, uint80 answeredInRound)
         internal
         returns (TwoPriceOracle twoPriceOracle)
     {
@@ -54,14 +54,16 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         MockChainlinkDataFeed basePriceOracle = new MockChainlinkDataFeed();
         basePriceOracle.setDecimals(usdDecimals);
         basePriceOracle.setRoundData(
-            1, RoundData({answer: basePrice, startedAt: timestamp, updatedAt: timestamp, answeredInRound: 1})
+            1,
+            RoundData({answer: basePrice, startedAt: timestamp, updatedAt: timestamp, answeredInRound: answeredInRound})
         );
 
         // Deploy quote price oracle
         MockChainlinkDataFeed quotePriceOracle = new MockChainlinkDataFeed();
         quotePriceOracle.setDecimals(xauDecimals);
         quotePriceOracle.setRoundData(
-            1, RoundData({answer: quotePrice, startedAt: timestamp, updatedAt: timestamp, answeredInRound: 1})
+            1,
+            RoundData({answer: quotePrice, startedAt: timestamp, updatedAt: timestamp, answeredInRound: answeredInRound})
         );
         // Set stale after times
         uint256 baseStaleAfter = 60 * 60; // 1 hour
