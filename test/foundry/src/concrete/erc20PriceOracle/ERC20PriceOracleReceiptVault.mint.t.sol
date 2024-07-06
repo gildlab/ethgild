@@ -54,13 +54,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assets),
                 abi.encode(true)
             );
-
-            // Ensure sufficient allowance is set
-            vm.mockCall(
-                address(asset),
-                abi.encodeWithSelector(IERC20.allowance.selector, alice, address(vault)),
-                abi.encode(assets)
-            );
         }
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -111,13 +104,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 address(asset),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assets),
                 abi.encode(true)
-            );
-
-            // Ensure sufficient allowance is set
-            vm.mockCall(
-                address(asset),
-                abi.encodeWithSelector(IERC20.allowance.selector, alice, address(vault)),
-                abi.encode(assets)
             );
         }
         uint256 oraclePrice = twoPriceOracle.price();
@@ -192,5 +178,35 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, oraclePrice + 1, oraclePrice));
         vault.mint(shares, alice, oraclePrice + 1, bytes(""));
+    }
+
+    /// Test mint reverts with zero receiver
+    function testMintWithZeroReceiver(
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 assets,
+        uint256 timestamp,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound,
+        address erc20Address
+    ) external {
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        assets = bound(assets, 1, type(uint256).max);
+        (ERC20PriceOracleReceiptVault vault,) =
+            createVault(address(twoPriceOracle), assetName, assetSymbol, erc20Address);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+        uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+
+        vm.expectRevert();
+        vault.mint(shares, address(0), oraclePrice, bytes(""));
     }
 }
