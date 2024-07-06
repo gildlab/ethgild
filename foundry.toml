@@ -14,5 +14,6 @@ optimizer_runs = 100000
 fuzz.runs = 2056
 
 remappings = [
-    "rain.factory/=lib/rain.factory/src/"
+    "rain.factory/=lib/rain.factory/src/",
+    "forge-std/=lib/rain.interpreter/lib/forge-std/src/",
 ]
