@@ -180,16 +180,16 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vault.mint(shares, alice, oraclePrice + 1, bytes(""));
     }
 
-    /// Test mint reverts with zero receiver
-    function testMintWithZeroReceiver(
+    /// Test PreviewMint returns correct assets
+    function testPreviewMintReturnedAssets(
         string memory assetName,
         string memory assetSymbol,
-        uint256 assets,
+        uint256 shares,
         uint256 timestamp,
+        address erc20Address,
         uint8 xauDecimals,
         uint8 usdDecimals,
-        uint80 answeredInRound,
-        address erc20Address
+        uint8 answeredInRound
     ) external {
         // Use common decimal bounds for price feeds
         // Use 0-20 so we at least have some coverage higher than 18
@@ -199,14 +199,18 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vm.warp(timestamp);
         TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
-        assets = bound(assets, 1, type(uint256).max);
+
+        shares = bound(shares, 1, type(uint64).max);
         (ERC20PriceOracleReceiptVault vault,) =
             createVault(address(twoPriceOracle), assetName, assetSymbol, erc20Address);
 
         uint256 oraclePrice = twoPriceOracle.price();
-        uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Up);
 
-        vm.expectRevert();
-        vault.mint(shares, address(0), oraclePrice, bytes(""));
+        uint256 resultAssets = vault.previewMint(shares);
+
+        assertEqUint(assets, resultAssets);
+
+        vm.stopPrank();
     }
 }
