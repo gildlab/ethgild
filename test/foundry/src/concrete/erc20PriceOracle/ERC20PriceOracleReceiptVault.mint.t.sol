@@ -120,4 +120,36 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Check balance
         assertEqUint(vault.balanceOf(bob), shares);
     }
+
+    /// Test mint function with zero shares
+    function testMintWithZeroShares(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        address erc20Address,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(erc20Address != address(0));
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault;
+        (vault,) = createVault(address(twoPriceOracle), assetName, assetName, erc20Address);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+
+        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
+        vault.mint(0, alice, oraclePrice, bytes(""));
+    }
 }
