@@ -16,7 +16,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test mint function
-    function testDeposit(
+    function testMint(
         uint256 fuzzedKeyAlice,
         string memory assetName,
         uint256 timestamp,
