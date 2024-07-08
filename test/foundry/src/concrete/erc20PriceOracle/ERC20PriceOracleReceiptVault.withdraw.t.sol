@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {
-    ERC20PriceOracleReceiptVault,
-    ERC20PriceOracleReceiptVaultConfig
-} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {ERC20PriceOracleReceiptVault} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {TwoPriceOracle} from "../../../../../contracts/oracle/price/TwoPriceOracle.sol";
 import {
@@ -27,30 +24,6 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 id,
         bytes receiptInformation
     );
-    event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
-    /// Get Receipt from event
-
-    function getReceipt() internal returns (ReceiptContract) {
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the ERC20PriceOracleReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        bool eventFound = false; // Flag to indicate whether the event log was found
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == ERC20PriceOracleReceiptVaultInitialized.selector) {
-                // Decode the event data
-                (, ERC20PriceOracleReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                eventFound = true; // Set the flag to true since event log was found
-                break;
-            }
-        }
-        // Assert that the event log was found
-        assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
-        // Return an receipt contract
-        return ReceiptContract(receiptAddress);
-    }
 
     /// Checks that balance owner balance changes after wirthdraw
     function checkBalanceChange(
