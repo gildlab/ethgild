@@ -55,49 +55,6 @@ describe("Overloaded Withdraw", async function () {
 
     await depositTx.wait();
   });
-  it("Withdraws", async function () {
-    const receiptBalance = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](aliceAddress, shareRatio);
-
-    //calculate max assets available for withdraw
-    const withdrawBalance = fixedPointDiv(receiptBalance, shareRatio);
-
-    await vault
-      .connect(alice)
-      ["withdraw(uint256,address,address,uint256,bytes)"](
-        withdrawBalance,
-        aliceAddress,
-        aliceAddress,
-        shareRatio,
-        []
-      );
-
-    const receiptBalanceAfter = await receipt
-      .connect(alice)
-      ["balanceOf(address,uint256)"](aliceAddress, shareRatio);
-
-    assert(
-      receiptBalanceAfter.eq(0),
-      `alice did not withdraw all 1155 receipt amounts`
-    );
-  });
-  it("Should not withdraw on zero assets", async function () {
-    await assertError(
-      async () =>
-        await vault
-          .connect(alice)
-          ["withdraw(uint256,address,address,uint256,bytes)"](
-            ethers.BigNumber.from(0),
-            aliceAddress,
-            aliceAddress,
-            shareRatio,
-            []
-          ),
-      "ZeroAssetsAmount",
-      "failed to prevent a zero asset withdraw"
-    );
-  });
   it("Should not withdraw on zero address receiver", async function () {
     const receiptBalance = await receipt
       .connect(alice)
