@@ -16,13 +16,13 @@ import {
     ChainlinkFeedPriceOracleConfig
 } from "contracts/oracle/price/chainlink/ChainlinkFeedPriceOracle.sol";
 import {MockChainlinkDataFeed, RoundData} from "contracts/test/MockChainlinkDataFeed.sol";
-import {IERC20Upgradeable as IERC20} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable iReceiptImplementation;
+    IERC20 immutable iAsset;
 
     constructor() {
         iFactory = new CloneFactory();
@@ -30,17 +30,17 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         iImplementation = new ERC20PriceOracleReceiptVault(
             ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
+        iAsset = IERC20(address(uint160(uint256(keccak256("asset.test")))));
     }
 
-    function createVault(address priceOracle, string memory name, string memory symbol, address erc20Address)
+    function createVault(address priceOracle, string memory name, string memory symbol)
         internal
-        returns (ERC20PriceOracleReceiptVault, IERC20)
+        returns (ERC20PriceOracleReceiptVault)
     {
-        IERC20 asset = IERC20(erc20Address);
         ERC20PriceOracleReceiptVault vault = LibERC20PriceOracleReceiptVaultCreator.createVault(
-            iFactory, iImplementation, priceOracle, address(asset), name, symbol
+            iFactory, iImplementation, priceOracle, address(iAsset), name, symbol
         );
-        return (vault, asset);
+        return vault;
     }
 
     function createTwoPriceOracle(uint8 usdDecimals, uint8 xauDecimals, uint256 timestamp, uint80 answeredInRound)
