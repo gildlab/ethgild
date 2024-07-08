@@ -139,8 +139,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vault.mint(0, alice, oraclePrice, bytes(""));
     }
 
-    /// Test mint reverts with incorret price
-    function testMintWithIncorrectPrice(
+    /// Test mint reverts with min price
+    function testMintWithMinPrice(
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
@@ -149,7 +149,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint8 xauDecimals,
         uint8 usdDecimals,
         uint80 answeredInRound,
-        uint256 incorrectPrice
+        uint256 minPrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -165,11 +165,11 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
 
         uint256 oraclePrice = twoPriceOracle.price();
-        vm.assume(incorrectPrice > oraclePrice);
+        vm.assume(minPrice > oraclePrice);
         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, incorrectPrice, oraclePrice));
-        vault.mint(shares, alice, incorrectPrice, bytes(""));
+        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, minPrice, oraclePrice));
+        vault.mint(shares, alice, minPrice, bytes(""));
     }
 
     /// Test PreviewMint returns correct assets
