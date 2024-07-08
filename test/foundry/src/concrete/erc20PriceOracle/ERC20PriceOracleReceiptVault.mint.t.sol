@@ -148,7 +148,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 timestamp,
         uint8 xauDecimals,
         uint8 usdDecimals,
-        uint80 answeredInRound
+        uint80 answeredInRound,
+        uint256 incorrectPrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -164,10 +165,11 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
 
         uint256 oraclePrice = twoPriceOracle.price();
+        vm.assume(incorrectPrice > oraclePrice);
         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, oraclePrice + 1, oraclePrice));
-        vault.mint(shares, alice, oraclePrice + 1, bytes(""));
+        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, incorrectPrice, oraclePrice));
+        vault.mint(shares, alice, incorrectPrice, bytes(""));
     }
 
     /// Test PreviewMint returns correct assets
