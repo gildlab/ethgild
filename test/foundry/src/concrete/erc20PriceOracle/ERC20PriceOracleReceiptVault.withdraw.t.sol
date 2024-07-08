@@ -15,8 +15,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
 import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "../../../../../contracts/abstract/ReceiptVault.sol";
 
-import "forge-std/console.sol";
-
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
@@ -315,5 +313,41 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             bytes(""),
             abi.encodeWithSelector(ZeroOwner.selector)
         );
+    }
+
+    /// Test PreviewWithdraw returns correct shares
+    function testPreviewWithdraw(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+
+        // Prank as Alice to grant role
+        vm.startPrank(alice);
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+
+        // Call withdraw function
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Up);
+        uint256 shares = vault.previewWithdraw(assets, oraclePrice);
+
+        assertEq(shares, expectedShares);
+        // Stop the prank
+        vm.stopPrank();
     }
 }
