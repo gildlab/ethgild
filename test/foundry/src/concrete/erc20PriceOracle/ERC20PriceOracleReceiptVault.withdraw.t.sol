@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {ERC20PriceOracleReceiptVault, ERC20PriceOracleReceiptVaultConfig} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {
+    ERC20PriceOracleReceiptVault,
+    ERC20PriceOracleReceiptVaultConfig
+} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {TwoPriceOracle} from "../../../../../contracts/oracle/price/TwoPriceOracle.sol";
 import {
@@ -15,7 +18,7 @@ import "forge-std/console.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
-    
+
     event WithdrawWithReceipt(
         address sender,
         address receiver,
@@ -26,7 +29,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         bytes receiptInformation
     );
     event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
-        /// Get Receipt from event
+    /// Get Receipt from event
+
     function getReceipt() internal returns (ReceiptContract) {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
