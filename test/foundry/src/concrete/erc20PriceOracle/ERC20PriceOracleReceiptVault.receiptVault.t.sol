@@ -136,4 +136,204 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         assertEqUint(assets, resultAssets);
     }
+
+    /// Test convertToAssets
+    function testConvertToAssets(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 shares,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+        shares = bound(shares, 1, type(uint64).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+        uint256 expectedAssets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
+        uint256 resultAssets = vault.convertToAssets(shares);
+
+        assertEqUint(expectedAssets, resultAssets);
+    }
+
+    /// Test convertToAssets shows no variations based on caller
+    function testConvertToAssetsDifferentCaller(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 shares,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+        shares = bound(shares, 1, type(uint64).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        uint256 resultAssetsAlice = vault.convertToAssets(shares);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+
+        uint256 resultAssetsBob = vault.convertToAssets(shares);
+
+        assertEqUint(resultAssetsAlice, resultAssetsBob);
+    }
+
+    /// Test convertToShares
+    function testConvertToShares(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+        assets = bound(assets, 1, type(uint256).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        uint256 oraclePrice = twoPriceOracle.price();
+
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 resultShares = vault.convertToShares(assets);
+
+        assertEqUint(expectedShares, resultShares);
+    }
+
+    /// Test convertToShares
+    function testConvertToSharesDifferentCaller(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 assets,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+        assets = bound(assets, 1, type(uint256).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+        uint256 resultSharesAlice = vault.convertToShares(assets);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+
+        uint256 resultSharesBob = vault.convertToShares(assets);
+
+        assertEqUint(resultSharesAlice, resultSharesBob);
+    }
+
+    /// Test vault sets correct max deposit
+    function testMaxDeposit(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        uint256 maxDeposit = vault.maxDeposit(alice);
+
+        assertEqUint(maxDeposit, type(uint256).max);
+    }
+
+    /// Test vault sets correct max Mint
+    function testMaxShares(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        uint256 maxMint = vault.maxMint(alice);
+
+        assertEqUint(maxMint, type(uint256).max);
+    }
 }
