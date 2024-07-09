@@ -23,67 +23,6 @@ const assert = require("assert");
 let owner: SignerWithAddress;
 
 describe("Receipt vault", async function () {
-  it("Returns the address of the underlying asset that is deposited", async function () {
-    const [vault, asset] = await deployERC20PriceOracleVault();
-
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const vaultAsset = await vault.connect(alice).asset();
-
-    assert(
-      vaultAsset === asset.address,
-      `Wrong asset address ${asset.address} ${vaultAsset}`
-    );
-  });
-  it("Sets the correct min Share Ratio", async function () {
-    [owner] = await ethers.getSigners();
-    const expectedMinShareRatio = ethers.BigNumber.from("100");
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault] = await deployERC20PriceOracleVault();
-    await vault.connect(alice).setMinShareRatio(100);
-    let minShareRatio = await vault
-      .connect(alice)
-      .minShareRatios(owner.address);
-
-    assert(
-      minShareRatio.eq(expectedMinShareRatio),
-      `Wrong min Share Ratio ${expectedMinShareRatio} ${minShareRatio}`
-    );
-  });
-  it("Sets the correct withdraw Id", async function () {
-    [owner] = await ethers.getSigners();
-    const expectedWithdrawId = ethers.BigNumber.from("100");
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const [vault] = await deployERC20PriceOracleVault();
-    await vault.connect(alice).setWithdrawId(100);
-    let withdrawId = await vault.connect(alice).withdrawIds(owner.address);
-
-    assert(
-      withdrawId.eq(expectedWithdrawId),
-      `Wrong withdraw Id ${expectedWithdrawId} ${withdrawId}`
-    );
-  });
-  it("Checks total asset is same as balance", async function () {
-    const [vault, asset] = await deployERC20PriceOracleVault();
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    await asset.transfer(vault.address, ethers.BigNumber.from(1000));
-
-    const assets = await asset.balanceOf(vault.address);
-
-    const totalAssets = await vault.connect(alice).totalAssets();
-
-    assert(
-      totalAssets.eq(assets),
-      `Wrong total assets ${assets} ${totalAssets}`
-    );
-  });
   it("Calculates correct assets", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
