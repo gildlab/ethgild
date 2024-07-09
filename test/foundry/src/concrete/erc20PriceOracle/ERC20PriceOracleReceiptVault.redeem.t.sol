@@ -330,4 +330,54 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         // Stop the prank
         vm.stopPrank();
     }
+
+    /// Test Redeem function with more than balance
+    function testRedeemMoreThanBalance(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 assets,
+        uint256 sharesToRedeem,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+        // Start recording logs
+        vm.recordLogs();
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+        ReceiptContract receipt = getReceipt();
+
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
+        // Ensure Alice has enough balance and allowance
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
+
+        uint256 totalSupply = iAsset.totalSupply();
+        // Getting ZeroSharesAmount if bounded from 1
+        assets = bound(assets, 2, totalSupply);
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
+            abi.encode(true)
+        );
+
+        uint256 oraclePrice = twoPriceOracle.price();
+
+        vault.deposit(assets, alice, oraclePrice, bytes(""));
+        uint256 availableReceiptBalance = receipt.balanceOf(alice, oraclePrice);
+
+        // Make sure sharesToRedeem is more than available balance
+        sharesToRedeem = bound(sharesToRedeem, availableReceiptBalance + 1, type(uint256).max);
+        checkNoBalanceChange(vault, alice, alice, oraclePrice, sharesToRedeem, receipt, bytes(""), bytes(""));
+    }
 }
