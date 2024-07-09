@@ -296,39 +296,38 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         );
     }
 
-    //     /// Test PreviewRedeem returns correct assets
-    //     function testPreviewWithdraw(
-    //         uint256 fuzzedKeyAlice,
-    //         string memory assetName,
-    //         uint256 timestamp,
-    //         uint256 assets,
-    //         uint8 xauDecimals,
-    //         uint8 usdDecimals,
-    //         uint80 answeredInRound
-    //     ) external {
-    //         // Ensure the fuzzed key is within the valid range for secp256
-    //         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-    //         // Use common decimal bounds for price feeds
-    //         // Use 0-20 so we at least have some coverage higher than 18
-    //         usdDecimals = uint8(bound(usdDecimals, 0, 20));
-    //         xauDecimals = uint8(bound(xauDecimals, 0, 20));
-    //         timestamp = bound(timestamp, 0, type(uint32).max);
-    //         assets = bound(assets, 1, type(uint256).max);
+    /// Test PreviewRedeem returns correct assets
+    function testPreviewRedeem(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint256 shares,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+        timestamp = bound(timestamp, 0, type(uint32).max);
+        shares = bound(shares, 1, type(uint64).max);
 
-    //         vm.warp(timestamp);
-    //         TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
 
-    //         // Prank as Alice to grant role
-    //         vm.startPrank(alice);
-    //         ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+        // Prank as Alice to grant role
+        vm.startPrank(alice);
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
 
-    //         uint256 oraclePrice = twoPriceOracle.price();
-    //         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Up);
-    //         // Call withdraw function
-    //         uint256 ResultAssets = vault.previewRedeem(shares, oraclePrice);
-
-    //         assertEq(assets, ResultAssets);
-    //         // Stop the prank
-    //         vm.stopPrank();
-    //     }
+        uint256 oraclePrice = twoPriceOracle.price();
+        uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
+        // Call withdraw function
+        uint256 ResultAssets = vault.previewRedeem(shares, oraclePrice);
+        assertEq(assets, ResultAssets);
+        // Stop the prank
+        vm.stopPrank();
+    }
 }
