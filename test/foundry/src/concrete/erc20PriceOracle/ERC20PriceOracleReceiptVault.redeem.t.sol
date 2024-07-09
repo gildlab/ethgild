@@ -11,7 +11,6 @@ import {
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
 import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "../../../../../contracts/abstract/ReceiptVault.sol";
-import "forge-std/console.sol";
 
 contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -43,7 +42,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.expectEmit(true, true, true, true);
         emit WithdrawWithReceipt(owner, receiver, owner, assets, shares, id, data);
 
-        // Call withdraw function
+        // Call redeem function
         vault.redeem(shares, receiver, owner, id, data);
 
         uint256 balanceAfterOwner = receipt.balanceOf(owner, id);
@@ -74,7 +73,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         } else {
             vm.expectRevert();
         }
-        // Call withdraw function
+        // Call redeem function
         vault.redeem(shares, receiver, owner, id, data);
 
         if (owner != address(0)) {
@@ -324,7 +323,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
-        // Call withdraw function
+
         uint256 ResultAssets = vault.previewRedeem(shares, oraclePrice);
         assertEq(assets, ResultAssets);
         // Stop the prank
