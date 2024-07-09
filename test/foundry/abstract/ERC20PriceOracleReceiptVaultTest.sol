@@ -6,7 +6,8 @@ import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.so
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     ERC20PriceOracleReceiptVault,
-    ReceiptVaultConstructionConfig
+    ReceiptVaultConstructionConfig,
+    ERC20PriceOracleReceiptVaultConfig
 } from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
@@ -19,6 +20,8 @@ import {MockChainlinkDataFeed, RoundData} from "contracts/test/MockChainlinkData
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
+    event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
+
     ICloneableFactoryV2 internal immutable iFactory;
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable iReceiptImplementation;
@@ -87,5 +90,28 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         twoPriceOracle = new TwoPriceOracle(config);
 
         return twoPriceOracle;
+    }
+
+    /// Get Receipt from event
+    function getReceipt() internal returns (ReceiptContract) {
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        // Find the ERC20PriceOracleReceiptVaultInitialized event log
+        address receiptAddress = address(0);
+        bool eventFound = false; // Flag to indicate whether the event log was found
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == ERC20PriceOracleReceiptVaultInitialized.selector) {
+                // Decode the event data
+                (, ERC20PriceOracleReceiptVaultConfig memory config) =
+                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
+                receiptAddress = config.receiptVaultConfig.receipt;
+                eventFound = true; // Set the flag to true since event log was found
+                break;
+            }
+        }
+        // Assert that the event log was found
+        assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
+        // Return an receipt contract
+        return ReceiptContract(receiptAddress);
     }
 }
