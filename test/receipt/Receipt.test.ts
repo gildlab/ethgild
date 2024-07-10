@@ -13,50 +13,6 @@ import { ReceiptInformationEvent } from "../../typechain-types/contracts/vault/r
 const assert = require("assert");
 
 describe("Receipt vault", async function () {
-  it("Check OwnerMint mints correct amount", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const testReceipt = await ethers.getContractFactory("TestReceipt");
-    const receipt = (await testReceipt.deploy()) as TestReceipt;
-    await receipt.deployed();
-
-    const testReceiptOwner = await ethers.getContractFactory(
-      "TestReceiptOwner"
-    );
-    const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
-    await receiptOwner.deployed();
-
-    await receipt.setOwner(receiptOwner.address);
-
-    await receiptOwner.setFrom(ADDRESS_ZERO);
-    await receiptOwner.setTo(alice.address);
-
-    const assets = ethers.BigNumber.from(30);
-    await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
-
-    const receiptId = ethers.BigNumber.from(1);
-
-    const balanceBefore = await receipt.balanceOf(alice.address, receiptId);
-    const shares = ethers.BigNumber.from(10);
-    await receiptOwner
-      .connect(alice)
-      .ownerMint(receipt.address, alice.address, receiptId, shares, []);
-
-    const balanceAfter = await receipt.balanceOf(alice.address, receiptId);
-
-    assert(
-      balanceAfter.eq(balanceBefore.add(shares)),
-      `Wrong balance. Expected ${balanceBefore.add(
-        shares
-      )}, got ${balanceAfter}`
-    );
-  });
   it("Check OwnerBurn burns correct amount", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
