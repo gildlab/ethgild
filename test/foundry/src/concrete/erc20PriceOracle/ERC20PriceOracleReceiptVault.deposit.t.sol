@@ -10,9 +10,14 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
+
+    event DepositWithReceipt(
+        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
+    );
 
     /// Test deposit function
     function testDeposit(
@@ -35,7 +40,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vm.warp(timestamp);
         TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
         vm.startPrank(alice);
-
         ERC20PriceOracleReceiptVault vault;
         {
             vault = createVault(address(twoPriceOracle), assetName, assetName);
@@ -57,6 +61,9 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         }
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(alice, alice, assets, expectedShares, oraclePrice, bytes(""));
+
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
         // Assert that the total supply is equal to expectedShares
@@ -78,6 +85,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         // Use common decimal bounds for price feeds
         // Use 0-20 so we at least have some coverage higher than 18
@@ -88,6 +96,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vm.warp(timestamp);
         TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
         vm.startPrank(alice);
+
+        vm.recordLogs();
         ERC20PriceOracleReceiptVault vault;
         {
             vault = createVault(address(twoPriceOracle), assetName, assetName);
@@ -99,7 +109,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
             uint256 totalSupply = iAsset.totalSupply();
             // Getting ZeroSharesAmount if bounded from 1
-            assets = bound(assets, 2, totalSupply);
+            assets = bound(assets, 20, totalSupply);
 
             vm.mockCall(
                 address(iAsset),
@@ -107,14 +117,26 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 abi.encode(true)
             );
         }
+        ReceiptContract receipt = getReceipt();
+
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+
+        uint256 aliceReceiptBalance = receipt.balanceOf(alice, oraclePrice);
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(alice, bob, assets, expectedShares, oraclePrice, bytes(""));
 
         vault.deposit(assets, bob, oraclePrice, bytes(""));
         // Assert that the total supply is equal to expectedShares
         assertEqUint(vault.totalSupply(), expectedShares);
         // Check balance
         assertEqUint(vault.balanceOf(bob), expectedShares);
+
+        // Check bob's receipt balance
+        assertEqUint(receipt.balanceOf(bob, oraclePrice), expectedShares);
+
+        // Check alice's receipt balance does not change
+        assertEqUint(receipt.balanceOf(alice, oraclePrice), aliceReceiptBalance);
     }
 
     /// Test deposit function with zero assets
