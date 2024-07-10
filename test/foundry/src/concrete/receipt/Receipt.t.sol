@@ -22,7 +22,7 @@ contract ReceiptTest is Test {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         vm.startPrank(alice);
-        ReceiptContract receipt = new ReceiptContract();
+        TestReceipt receipt = new TestReceipt();
 
         receipt.setOwner(alice);
 
@@ -31,15 +31,14 @@ contract ReceiptTest is Test {
     }
 
     /// test receipt OwnerMint function
-    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
+    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceipt receipt = new TestReceipt();
         TestReceiptOwner receiptOwner = new TestReceiptOwner();
-        console.log(address(receiptOwner));
-        console.log(address(receipt));
+
         // Set the receipt owner
         receipt.setOwner(address(receiptOwner));
 
@@ -52,5 +51,34 @@ contract ReceiptTest is Test {
 
         // Check the balance of the minted tokens
         assertEq(receipt.balanceOf(alice, id), amount);
+    }
+
+    /// test receipt OwnerBurn function
+    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        amount = bound(amount, 1, type(uint256).max);
+
+        TestReceipt receipt = new TestReceipt();
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        // Set the receipt owner
+        receipt.setOwner(address(receiptOwner));
+
+        // Set the authorized 'from' and 'to' addresses in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        vm.startPrank(alice);
+        receiptOwner.ownerMint(receipt, alice, id, amount, data);
+        uint256 receiptBalance = receipt.balanceOf(alice, id);
+
+        receiptOwner.setFrom(alice);
+        receiptOwner.setTo(address(0));
+
+        receiptOwner.ownerBurn(receipt, alice, id, receiptBalance, data);
+
+        // Check the balance of the minted tokens
+        assertEq(receipt.balanceOf(alice, id), 0);
     }
 }
