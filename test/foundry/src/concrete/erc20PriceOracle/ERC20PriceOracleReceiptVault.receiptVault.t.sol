@@ -14,6 +14,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
+    event ReceiptVaultInformation(address sender, bytes vaultInformation);
+
     /// Test vault asset
     function testVaultAsset(
         uint256 fuzzedKeyAlice,
@@ -335,5 +337,36 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         uint256 maxMint = vault.maxMint(alice);
 
         assertEqUint(maxMint, type(uint256).max);
+    }
+
+    /// Test vault receiptVaultInformation
+    function testReceiptVaultInformation(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 timestamp,
+        uint8 xauDecimals,
+        uint8 usdDecimals,
+        uint80 answeredInRound,
+        bytes memory information
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Use common decimal bounds for price feeds
+        // Use 0-20 so we at least have some coverage higher than 18
+        usdDecimals = uint8(bound(usdDecimals, 0, 20));
+        xauDecimals = uint8(bound(xauDecimals, 0, 20));
+
+        timestamp = bound(timestamp, 0, type(uint32).max);
+
+        vm.warp(timestamp);
+        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        vm.startPrank(alice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
+
+        vm.expectEmit(false, false, false, true);
+        emit ReceiptVaultInformation(alice, information);
+
+        vault.receiptVaultInformation(information);
     }
 }
