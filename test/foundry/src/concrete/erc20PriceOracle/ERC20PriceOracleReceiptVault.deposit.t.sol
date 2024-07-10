@@ -15,6 +15,10 @@ import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/rece
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
+    event DepositWithReceipt(
+        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
+    );
+
     /// Test deposit function
     function testDeposit(
         uint256 fuzzedKeyAlice,
@@ -57,6 +61,9 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         }
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(alice, alice, assets, expectedShares, oraclePrice, bytes(""));
+
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
         // Assert that the total supply is equal to expectedShares
@@ -116,6 +123,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
         uint256 aliceReceiptBalance = receipt.balanceOf(alice, oraclePrice);
+        vm.expectEmit(false, false, false, true);
+        emit DepositWithReceipt(alice, bob, assets, expectedShares, oraclePrice, bytes(""));
 
         vault.deposit(assets, bob, oraclePrice, bytes(""));
         // Assert that the total supply is equal to expectedShares
