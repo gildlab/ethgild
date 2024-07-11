@@ -369,7 +369,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
         // Make sure assetsToWithdraw is more than assets
-        assetsToWithdraw = bound(assetsToWithdraw, assets, type(uint64).max);
+        assetsToWithdraw = bound(assetsToWithdraw, assets + 1, type(uint64).max);
         checkNoBalanceChange(vault, alice, alice, oraclePrice, assetsToWithdraw, receipt, bytes(""), bytes(""));
     }
 }
