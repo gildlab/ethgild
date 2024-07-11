@@ -41,8 +41,8 @@ contract ReceiptTest is Test {
         assertEq(owner, alice);
     }
 
-    /// test receipt OwnerMint function
-    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
+    /// Test receipt OwnerMint function
+    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
@@ -64,8 +64,8 @@ contract ReceiptTest is Test {
         assertEq(receipt.balanceOf(alice, id), amount);
     }
 
-    /// test receipt OwnerBurn function
-    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, uint256 fuzzedReceiptSeed) public {
+    /// Test receipt OwnerBurn function
+    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, uint256 fuzzedReceiptSeed) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
@@ -98,5 +98,41 @@ contract ReceiptTest is Test {
 
         // Check the balance of the minted tokens
         assertEq(receipt.balanceOf(alice, id), 0);
+    }
+
+    /// Test OwnerBurn fails while not enough balance to burn
+    function testOwnerBurnNoTEnoughBalance(
+        uint256 fuzzedKeyAlice,
+        uint256 id,
+        uint256 amount,
+        bytes memory fuzzedReceiptInformation,
+        uint256 burnAmount
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        // Bound with uint256 max - 1 so dowsnot get overflow while bounding burnAmount
+        amount = bound(amount, 1, type(uint256).max - 1);
+        id = bound(id, 0, type(uint256).max);
+
+        TestReceipt receipt = new TestReceipt();
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        // Set the receipt owner
+        receipt.setOwner(address(receiptOwner));
+
+        // Set the authorized 'from' and 'to' addresses in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        vm.startPrank(alice);
+        receiptOwner.ownerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        uint256 receiptBalance = receipt.balanceOf(alice, id);
+        burnAmount = bound(burnAmount, receiptBalance + 1, type(uint256).max);
+
+        receiptOwner.setFrom(alice);
+        receiptOwner.setTo(address(0));
+
+        vm.expectRevert();
+        receiptOwner.ownerBurn(receipt, alice, id, burnAmount, fuzzedReceiptInformation);
     }
 }

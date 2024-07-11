@@ -13,55 +13,6 @@ import { ReceiptInformationEvent } from "../../typechain-types/contracts/vault/r
 const assert = require("assert");
 
 describe("Receipt vault", async function () {
-  it("OwnerBurn fails while not enough balance to burn", async function () {
-    const signers = await ethers.getSigners();
-    const alice = signers[0];
-
-    const testErc20 = await ethers.getContractFactory("TestErc20");
-    const asset = (await testErc20.deploy()) as TestErc20;
-    await asset.deployed();
-
-    const testReceipt = await ethers.getContractFactory("TestReceipt");
-    const receipt = (await testReceipt.deploy()) as TestReceipt;
-    await receipt.deployed();
-
-    const testReceiptOwner = await ethers.getContractFactory(
-      "TestReceiptOwner"
-    );
-    const receiptOwner = (await testReceiptOwner.deploy()) as TestReceiptOwner;
-    await receiptOwner.deployed();
-
-    await receipt.setOwner(receiptOwner.address);
-
-    const assets = ethers.BigNumber.from(30);
-    await asset.transfer(alice.address, assets);
-    await asset.connect(alice).increaseAllowance(receiptOwner.address, assets);
-
-    await receiptOwner.setFrom(ADDRESS_ZERO);
-    await receiptOwner.setTo(alice.address);
-
-    const receiptId = ethers.BigNumber.from(1);
-    const toMint = ethers.BigNumber.from(10);
-    await receiptOwner
-      .connect(alice)
-      .ownerMint(receipt.address, alice.address, receiptId, toMint, []);
-
-    await receiptOwner.setFrom(alice.address);
-    await receiptOwner.setTo(ADDRESS_ZERO);
-
-    const balanceBefore = await receipt.balanceOf(alice.address, receiptId);
-
-    const toBurn = balanceBefore.add(1);
-
-    await assertError(
-      async () =>
-        await receiptOwner
-          .connect(alice)
-          .ownerBurn(receipt.address, alice.address, receiptId, toBurn, []),
-      "ERC1155: burn amount exceeds balance",
-      "failed to prevent ownerBurn"
-    );
-  });
   it("OwnerTransferFrom more than balance", async function () {
     const signers = await ethers.getSigners();
     const alice = signers[0];
