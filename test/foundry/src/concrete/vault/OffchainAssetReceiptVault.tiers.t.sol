@@ -151,7 +151,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
                 abi.encode(999)
             );
 
-            //Expect the revert
+            //Expect the revert with the exact revert reason
             vm.expectRevert();
 
             vault.authorizeReceiptTransfer(bob, alice);
