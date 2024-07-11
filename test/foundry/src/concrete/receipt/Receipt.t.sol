@@ -2,7 +2,6 @@
 pragma solidity ^0.8.25;
 
 import {Test, Vm} from "forge-std/Test.sol";
-import "forge-std/console.sol";
 import {Receipt} from "../../../../../contracts/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "../../../../../contracts/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "../../../../../contracts/test/TestReceipt.sol";
@@ -10,15 +9,6 @@ import {TestReceiptOwner} from "../../../../../contracts/test/TestReceiptOwner.s
 
 contract ReceiptTest is Test {
     event ReceiptInformation(address sender, uint256 id, bytes information);
-
-    function generateNonEmptyBytes(uint256 maxLength, uint256 seed) internal pure returns (bytes memory) {
-        uint256 length = (seed % (maxLength - 1)) + 1; // Ensure length is at least 1
-        bytes memory data = new bytes(length);
-        for (uint256 i = 0; i < length; i++) {
-            data[i] = bytes1(uint8(seed % 256)); // Random data
-        }
-        return data;
-    }
 
     function testInitialize() public {
         TestReceipt receipt = new TestReceipt();
@@ -65,13 +55,15 @@ contract ReceiptTest is Test {
     }
 
     /// Test receipt OwnerBurn function
-    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, uint256 fuzzedReceiptSeed) external {
+    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory fuzzedReceiptInformation)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
-        bytes memory fuzzedReceiptInformation = generateNonEmptyBytes(100, fuzzedReceiptSeed); // Generate non-empty bytes
+        vm.assume(fuzzedReceiptInformation.length > 0);
 
         TestReceipt receipt = new TestReceipt();
         TestReceiptOwner receiptOwner = new TestReceiptOwner();

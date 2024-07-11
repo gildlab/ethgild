@@ -15,15 +15,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     );
     event ReceiptInformation(address sender, uint256 id, bytes information);
 
-    function generateNonEmptyBytes(uint256 maxLength, uint256 seed) internal pure returns (bytes memory) {
-        uint256 length = (seed % (maxLength - 1)) + 1; // Ensure length is at least 1
-        bytes memory data = new bytes(length);
-        for (uint256 i = 0; i < length; i++) {
-            data[i] = bytes1(uint8(seed % 256)); // Random data
-        }
-        return data;
-    }
-
     /// Test mint function
     function testMint(
         uint256 fuzzedKeyAlice,
@@ -366,14 +357,13 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         uint256 shares,
         uint256 minShareRatio,
-        uint256 fuzzedReceiptSeed
+        bytes memory fuzzedReceiptInformation
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
-
-        bytes memory fuzzedReceiptInformation = generateNonEmptyBytes(100, fuzzedReceiptSeed); // Generate non-empty bytes
+        vm.assume(fuzzedReceiptInformation.length > 0);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
