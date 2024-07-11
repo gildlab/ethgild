@@ -60,7 +60,7 @@ contract ReceiptTest is Test {
         vm.startPrank(alice);
         receiptOwner.ownerMint(receipt, alice, id, amount, data);
 
-        // Check the balance of the minted tokens
+        // Check the receipt balance of alice
         assertEq(receipt.balanceOf(alice, id), amount);
     }
 
@@ -96,7 +96,7 @@ contract ReceiptTest is Test {
 
         receiptOwner.ownerBurn(receipt, alice, id, receiptBalance, fuzzedReceiptInformation);
 
-        // Check the balance of the minted tokens
+        // Check the balance of alice
         assertEq(receipt.balanceOf(alice, id), 0);
     }
 
@@ -210,5 +210,44 @@ contract ReceiptTest is Test {
 
         vm.expectRevert();
         receiptOwner.ownerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
+    }
+
+    /// Test receipt OwnerTransferFrom function
+    function testTransferOwnerTransferFrom(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 id,
+        uint256 amount,
+        bytes memory fuzzedReceiptInformation
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        amount = bound(amount, 1, type(uint256).max);
+        id = bound(id, 0, type(uint256).max);
+
+        TestReceipt receipt = new TestReceipt();
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        // Set the receipt owner
+        receipt.setOwner(address(receiptOwner));
+
+        // Set the authorized 'from' and 'to' addresses in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        vm.startPrank(alice);
+        receiptOwner.ownerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        uint256 receiptBalance = receipt.balanceOf(alice, id);
+
+        receiptOwner.setFrom(alice);
+        receiptOwner.setTo(bob);
+
+        receiptOwner.ownerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
+
+        assertEq(receipt.balanceOf(bob, id), receiptBalance);
+        assertEq(receipt.balanceOf(alice, id), 0);
     }
 }
