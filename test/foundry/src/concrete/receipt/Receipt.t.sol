@@ -9,6 +9,17 @@ import {TestReceipt} from "../../../../../contracts/test/TestReceipt.sol";
 import {TestReceiptOwner} from "../../../../../contracts/test/TestReceiptOwner.sol";
 
 contract ReceiptTest is Test {
+    event ReceiptInformation(address sender, uint256 id, bytes information);
+
+    function generateNonEmptyBytes(uint256 maxLength, uint256 seed) internal pure returns (bytes memory) {
+        uint256 length = (seed % (maxLength - 1)) + 1; // Ensure length is at least 1
+        bytes memory data = new bytes(length);
+        for (uint256 i = 0; i < length; i++) {
+            data[i] = bytes1(uint8(seed % 256)); // Random data
+        }
+        return data;
+    }
+
     function testInitialize() public {
         TestReceipt receipt = new TestReceipt();
         TestReceiptOwner mockOwner = new TestReceiptOwner();
@@ -31,7 +42,7 @@ contract ReceiptTest is Test {
     }
 
     /// test receipt OwnerMint function
-    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
+    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
@@ -54,10 +65,13 @@ contract ReceiptTest is Test {
     }
 
     /// test receipt OwnerBurn function
-    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) public {
+    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, uint256 fuzzedReceiptSeed) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
+        id = bound(id, 0, type(uint256).max);
+
+        bytes memory fuzzedReceiptInformation = generateNonEmptyBytes(100, fuzzedReceiptSeed); // Generate non-empty bytes
 
         TestReceipt receipt = new TestReceipt();
         TestReceiptOwner receiptOwner = new TestReceiptOwner();
@@ -70,13 +84,17 @@ contract ReceiptTest is Test {
         receiptOwner.setTo(alice);
 
         vm.startPrank(alice);
-        receiptOwner.ownerMint(receipt, alice, id, amount, data);
+        receiptOwner.ownerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
 
         receiptOwner.setFrom(alice);
         receiptOwner.setTo(address(0));
 
-        receiptOwner.ownerBurn(receipt, alice, id, receiptBalance, data);
+        // Set up the event expectation for ReceiptInformation
+        vm.expectEmit(false, false, false, true);
+        emit ReceiptInformation(alice, id, fuzzedReceiptInformation);
+
+        receiptOwner.ownerBurn(receipt, alice, id, receiptBalance, fuzzedReceiptInformation);
 
         // Check the balance of the minted tokens
         assertEq(receipt.balanceOf(alice, id), 0);
