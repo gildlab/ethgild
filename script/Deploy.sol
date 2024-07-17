@@ -116,7 +116,7 @@ contract Deploy is Script {
         } else if (suite == DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT) {
             deployFlareFTSOOraclePriceVault(deployerPrivateKey);
         } else if (suite == DEPLOYMENT_SUITE_OFFCHAINASSET_RECEIPT_VAULT) {
-            deployFactory(deployerPrivateKey);
+            deployOffchainAssetReceiptVaultFactory(deployerPrivateKey);
         } else {
             revert("Unknown deployment suite");
         }
