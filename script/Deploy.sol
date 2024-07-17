@@ -9,16 +9,19 @@ import {
 } from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
+import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {FlareFTSOOracle} from "contracts/concrete/oracle/FlareFTSOOracle.sol";
 import {
     OffchainAssetReceiptVault,
     ReceiptVaultConstructionConfig
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
+import "forge-std/console.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
 bytes32 constant DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT = keccak256("flare-ftso-oracle-price-vault");
+bytes32 constant DEPLOYMENT_SUITE_OFFCHAINASSET_RECEIPT_VAULT = keccak256("offchain-asset-receipt-vault");
 
 /// @title Deploy
 /// This is intended to be run on every commit by CI to a testnet such as mumbai,
@@ -57,6 +60,35 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
+    function deployFactory(uint256 deploymentKey) internal {
+        vm.startBroadcast(deploymentKey);
+
+        // Deploy the factory
+        CloneFactory factory = new CloneFactory();
+        console.log("Factory address:", address(factory));
+
+        // Deploy the receipt implementation
+        ReceiptContract receiptImplementation = new ReceiptContract();
+        console.log("ReceiptContract address:", address(receiptImplementation));
+
+        // Deploy the OffchainAssetReceiptVault using the factory
+        OffchainAssetReceiptVault iImplementation = new OffchainAssetReceiptVault(
+            ReceiptVaultConstructionConfig({factory: factory, receiptImplementation: receiptImplementation})
+        );
+        console.log("OffchainAssetReceiptVault address:", address(iImplementation));
+
+        vm.stopBroadcast();
+
+        //factory 0xeEbC089D9CbeC08BB10CdE85D2A17502EeA04544
+
+        //         module.exports = [
+        //   {
+        //     implementation: "0x6DB9F75C0B79E0351B09311c4856F556b09F67a5",
+        //     receiptFactory: "0xbECC502aF9E8476cb9A0616F7C1549D31670a806",
+        //   },
+        // ];
+    }
+
     // function deployOwnableOracleVault(uint256 deploymentKey) internal {
     //     ICloneableFactoryV2 factory =
     //         ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY"));
@@ -92,6 +124,8 @@ contract Deploy is Script {
             deployImplementations(deployerPrivateKey);
         } else if (suite == DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT) {
             deployFlareFTSOOraclePriceVault(deployerPrivateKey);
+        } else if (suite == DEPLOYMENT_SUITE_OFFCHAINASSET_RECEIPT_VAULT) {
+            deployFactory(deployerPrivateKey);
         } else {
             revert("Unknown deployment suite");
         }
