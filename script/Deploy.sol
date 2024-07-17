@@ -60,7 +60,7 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
-    function deployFactory(uint256 deploymentKey) internal {
+    function deployOffchainAssetReceiptVaultFactory(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
 
         // Deploy the factory
@@ -75,18 +75,9 @@ contract Deploy is Script {
         OffchainAssetReceiptVault iImplementation = new OffchainAssetReceiptVault(
             ReceiptVaultConstructionConfig({factory: factory, receiptImplementation: receiptImplementation})
         );
-        console.log("OffchainAssetReceiptVault address:", address(iImplementation));
+        console.log("OffchainAssetReceiptVault Implemantation address:", address(iImplementation));
 
         vm.stopBroadcast();
-
-        //factory 0xeEbC089D9CbeC08BB10CdE85D2A17502EeA04544
-
-        //         module.exports = [
-        //   {
-        //     implementation: "0x6DB9F75C0B79E0351B09311c4856F556b09F67a5",
-        //     receiptFactory: "0xbECC502aF9E8476cb9A0616F7C1549D31670a806",
-        //   },
-        // ];
     }
 
     // function deployOwnableOracleVault(uint256 deploymentKey) internal {
