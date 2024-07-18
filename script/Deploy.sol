@@ -16,7 +16,6 @@ import {
     ReceiptVaultConstructionConfig
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
-import "forge-std/console.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
@@ -65,17 +64,14 @@ contract Deploy is Script {
 
         // Deploy the factory
         CloneFactory factory = new CloneFactory();
-        console.log("Factory address:", address(factory));
 
         // Deploy the receipt implementation
         ReceiptContract receiptImplementation = new ReceiptContract();
-        console.log("ReceiptContract address:", address(receiptImplementation));
 
         // Deploy the OffchainAssetReceiptVault using the factory
         OffchainAssetReceiptVault iImplementation = new OffchainAssetReceiptVault(
             ReceiptVaultConstructionConfig({factory: factory, receiptImplementation: receiptImplementation})
         );
-        console.log("OffchainAssetReceiptVault Implemantation address:", address(iImplementation));
 
         vm.stopBroadcast();
     }
