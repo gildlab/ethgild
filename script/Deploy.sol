@@ -33,7 +33,7 @@ contract Deploy is Script {
             factory: ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")),
             receiptImplementation: receipt
         });
-        // new OffchainAssetReceiptVault(receiptVaultConstructionConfig);
+        new OffchainAssetReceiptVault(receiptVaultConstructionConfig);
         new ERC20PriceOracleReceiptVault(receiptVaultConstructionConfig);
 
         vm.stopBroadcast();

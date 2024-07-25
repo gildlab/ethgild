@@ -8,7 +8,7 @@ cache_path = 'forge-cache'
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
 
 solc = "0.8.25"
-optimizer = false
+optimizer = true
 optimizer_runs = 100000
 
 fuzz.runs = 2056
