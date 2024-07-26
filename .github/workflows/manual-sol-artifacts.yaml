@@ -11,6 +11,7 @@ on:
           - arbitrum_sepolia
           - avalanche
           - base
+          - base_sepolia
           - bsc
           - ethereum
           - flare
