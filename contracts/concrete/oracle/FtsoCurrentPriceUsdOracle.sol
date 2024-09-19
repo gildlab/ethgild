@@ -2,7 +2,7 @@
 pragma solidity =0.8.25;
 
 import {IPriceOracleV1} from "../../interface/IPriceOracleV1.sol";
-import {LibFtsoCurrentPriceUsd} from "rain.flare/src/lib/price/LibFtsoCurrentPriceUsd.sol";
+import {LibFtsoCurrentPriceUsd} from "rain.flare/lib/price/LibFtsoCurrentPriceUsd.sol";
 import {LibIntOrAString, IntOrAString} from "rain.intorastring/lib/LibIntOrAString.sol";
 
 struct FtsoCurrentPriceUsdOracleConfig {

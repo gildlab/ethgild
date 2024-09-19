@@ -20,7 +20,7 @@ import {
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
 import {SceptreStakedFlrOracle} from "contracts/concrete/oracle/SceptreStakedFlrOracle.sol";
 import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/concrete/oracle/TwoPriceOracle.sol";
-import {IStakedFlr} from "contracts/interface/sceptre/IStakedFlr.sol";
+import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");

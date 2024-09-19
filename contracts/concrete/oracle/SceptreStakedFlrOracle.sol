@@ -2,7 +2,7 @@
 pragma solidity =0.8.25;
 
 import {IPriceOracleV1} from "../../interface/IPriceOracleV1.sol";
-import {IStakedFlr} from "../../interface/sceptre/IStakedFlr.sol";
+import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
 
 contract SceptreStakedFlrOracle is IPriceOracleV1 {
     IStakedFlr public immutable iStakedFlr;
