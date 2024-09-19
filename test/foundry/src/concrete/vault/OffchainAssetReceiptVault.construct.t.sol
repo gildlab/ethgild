@@ -28,9 +28,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     function testNonZeroAsset(uint256 fuzzedKeyAlice, address asset, string memory assetName, string memory assetSymbol)
         external
     {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.assume(asset != address(0));
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
@@ -44,8 +42,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that offchainAssetReceiptVault constructs well
     function testConstruction(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         address asset = address(0);
 
@@ -100,8 +97,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         OffchainAssetVaultConfig memory offchainAssetVaultConfig =
@@ -144,5 +140,38 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         // Interact with the receipt contract
         address owner = receipt.owner();
         assertEq(owner, address(vault));
+    }
+
+    /// Test creating several different vaults
+    function testCreatingSeveralVaults(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        string memory assetNameTwo,
+        string memory assetSymbolTwo
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        // Simulate transaction from alice
+        vm.prank(alice);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
+        assert(address(vault) != address(0));
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+
+        // Simulate transaction from alice
+        vm.prank(bob);
+
+        OffchainAssetReceiptVault vaultTwo = createVault(bob, assetNameTwo, assetSymbolTwo);
+
+        assert(address(vaultTwo) != address(0));
+        assertEq(keccak256(bytes(vaultTwo.name())), keccak256(bytes(assetNameTwo)));
+        assertEq(keccak256(bytes(vaultTwo.symbol())), keccak256(bytes(assetSymbolTwo)));
     }
 }
