@@ -11,7 +11,7 @@ import {
 } from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
-import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/oracle/price/TwoPriceOracle.sol";
+import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/concrete/oracle/TwoPriceOracle.sol";
 import {
     ChainlinkFeedPriceOracle,
     ChainlinkFeedPriceOracleConfig

@@ -10,7 +10,7 @@ import {
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "contracts/test/TestErc20.sol";
-import {ReadWriteTier} from "contracts/test/ReadWriteTier.sol";
+import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted

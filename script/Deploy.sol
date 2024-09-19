@@ -9,16 +9,22 @@ import {
 } from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {FlareFTSOOracle} from "contracts/concrete/oracle/FlareFTSOOracle.sol";
+import {
+    FtsoCurrentPriceUsdOracle,
+    FtsoCurrentPriceUsdOracleConfig
+} from "contracts/concrete/oracle/FtsoCurrentPriceUsdOracle.sol";
 import {
     OffchainAssetReceiptVault,
     ReceiptVaultConstructionConfig
 } from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
+import {SceptreStakedFlrOracle} from "contracts/concrete/oracle/SceptreStakedFlrOracle.sol";
+import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/concrete/oracle/TwoPriceOracle.sol";
+import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
-bytes32 constant DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT = keccak256("flare-ftso-oracle-price-vault");
+bytes32 constant DEPLOYMENT_SUITE_STAKED_FLR_PRICE_VAULT = keccak256("sceptre-staked-flare-price-vault");
 
 /// @title Deploy
 /// This is intended to be run on every commit by CI to a testnet such as mumbai,
@@ -39,15 +45,29 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
-    function deployFlareFTSOOraclePriceVault(uint256 deploymentKey) internal {
+    function deployStakedFlrPriceVault(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
+        address flareFTSOOracle = address(
+            new FtsoCurrentPriceUsdOracle(
+                FtsoCurrentPriceUsdOracleConfig({
+                    symbol: "FLR",
+                    // 30 mins.
+                    staleAfter: 1800
+                })
+            )
+        );
+        address stakedFlr = vm.envAddress("SCEPTRE_STAKED_FLR_ADDRESS");
+        address stakedFlrOracle = address(new SceptreStakedFlrOracle(IStakedFlr(stakedFlr)));
+        address twoPriceOracle =
+            address(new TwoPriceOracle(TwoPriceOracleConfig({base: flareFTSOOracle, quote: stakedFlrOracle})));
+
         ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")).clone(
             vm.envAddress("ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION"),
             abi.encode(
                 ERC20PriceOracleVaultConfig({
-                    priceOracle: address(new FlareFTSOOracle()),
+                    priceOracle: twoPriceOracle,
                     vaultConfig: VaultConfig({
-                        asset: vm.envAddress("RECEIPT_VAULT_ASSET"),
+                        asset: stakedFlr,
                         name: vm.envString("RECEIPT_VAULT_NAME"),
                         symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
                     })
@@ -90,8 +110,8 @@ contract Deploy is Script {
 
         if (suite == DEPLOYMENT_SUITE_IMPLEMENTATIONS) {
             deployImplementations(deployerPrivateKey);
-        } else if (suite == DEPLOYMENT_SUITE_FLARE_FTSO_ORACLE_PRICE_VAULT) {
-            deployFlareFTSOOraclePriceVault(deployerPrivateKey);
+        } else if (suite == DEPLOYMENT_SUITE_STAKED_FLR_PRICE_VAULT) {
+            deployStakedFlrPriceVault(deployerPrivateKey);
         } else {
             revert("Unknown deployment suite");
         }

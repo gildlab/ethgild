@@ -7,7 +7,7 @@ import {
     ERC20PriceOracleReceiptVaultConfig
 } from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "../../../../../contracts/oracle/price/TwoPriceOracle.sol";
+import {TwoPriceOracle} from "../../../../../contracts/concrete/oracle/TwoPriceOracle.sol";
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constracted
