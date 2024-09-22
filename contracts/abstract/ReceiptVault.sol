@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
 import {ERC20SnapshotUpgradeable as ERC20Snapshot} from
@@ -416,7 +416,7 @@ abstract contract ReceiptVault is IReceiptOwnerV1, Multicall, ReentrancyGuard, E
     // Not sure why slither flags this as dead code. It is used by both `deposit`
     // and `mint`.
     //slither-disable-next-line dead-code
-    function _nextId() internal view virtual returns (uint256) {
+    function _nextId() internal virtual returns (uint256) {
         return 1;
     }
 
