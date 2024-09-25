@@ -255,7 +255,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
-        uint256 shares = vault.previewDeposit(assets);
+        uint256 shares = vault.previewDeposit(assets, 0);
 
         assertEqUint(shares, expectedShares);
 

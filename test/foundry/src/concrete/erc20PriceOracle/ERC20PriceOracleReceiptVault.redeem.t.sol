@@ -11,19 +11,10 @@ import {
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
 import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "../../../../../contracts/abstract/ReceiptVault.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
-
-    event WithdrawWithReceipt(
-        address sender,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares,
-        uint256 id,
-        bytes receiptInformation
-    );
 
     /// Checks that balance owner balance changes after wirthdraw
     function checkBalanceChange(
@@ -40,7 +31,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
         // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(owner, receiver, owner, assets, shares, id, data);
+        emit IReceiptVaultV1.Withdraw(owner, receiver, owner, assets, shares, id, data);
 
         // Call redeem function
         vault.redeem(shares, receiver, owner, id, data);

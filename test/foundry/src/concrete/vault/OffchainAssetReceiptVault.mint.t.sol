@@ -414,7 +414,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         vm.startPrank(bob);
         vm.expectRevert();
-        vault.previewMint(shares);
+        vault.previewMint(shares, 0);
 
         vm.stopPrank();
     }
@@ -441,7 +441,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for the transactions
 
         vm.startPrank(bob);
-        uint256 assets = vault.previewMint(shares);
+        uint256 assets = vault.previewMint(shares, 0);
 
         assertEqUint(shares, assets);
 

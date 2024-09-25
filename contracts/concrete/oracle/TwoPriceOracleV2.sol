@@ -45,7 +45,7 @@ contract TwoPriceOracle is IPriceOracleV2 {
     /// Round UP to avoid edge cases that could return `0` which is disallowed
     /// by `IPriceOracleV2` despite compliant sub-oracles.
     /// @inheritdoc IPriceOracleV2
-    function price() external override payable returns (uint256) {
+    function price() external payable override returns (uint256) {
         return base.price().fixedPointDiv(quote.price(), Math.Rounding.Up);
     }
 }

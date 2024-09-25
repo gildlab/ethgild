@@ -372,7 +372,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob for transaction
         vm.startPrank(bob);
-        uint256 shares = vault.previewDeposit(assets);
+        uint256 shares = vault.previewDeposit(assets, 0);
 
         assertEqUint(shares, assets);
 
