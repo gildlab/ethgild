@@ -6,14 +6,8 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-
-/// Construction config for `TwoPriceOracle`.
-/// @param base The base price of the merged pair, will be the numerator.
-/// @param quote The quote price of the merged pair, will be the denominator.
-struct TwoPriceOracleConfig {
-    address base;
-    address quote;
-}
+import {TwoPriceOracleConfig} from "./TwoPriceOracle.sol";
+import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 
 /// @title TwoPriceOracle
 /// Any time we have two price feeds that share a denominator we can derive the
@@ -23,7 +17,7 @@ struct TwoPriceOracleConfig {
 ///
 /// For example, an ETH/USD (base) and an XAU/USD (quote) price can be combined
 /// to a single ETH/XAU price as (ETH/USD) / (XAU/USD).
-contract TwoPriceOracle is IPriceOracleV2 {
+contract TwoPriceOracleV2 is IPriceOracleV2 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Emitted upon deployment and construction.
@@ -46,6 +40,10 @@ contract TwoPriceOracle is IPriceOracleV2 {
     /// by `IPriceOracleV2` despite compliant sub-oracles.
     /// @inheritdoc IPriceOracleV2
     function price() external payable override returns (uint256) {
-        return base.price().fixedPointDiv(quote.price(), Math.Rounding.Up);
+        uint256 quotePrice = quote.price{value: address(this).balance}();
+        uint256 basePrice = base.price{value: address(this).balance}();
+        uint256 val = basePrice.fixedPointDiv(quotePrice, Math.Rounding.Up);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return val;
     }
 }
