@@ -21,6 +21,8 @@ import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol
 import {SceptreStakedFlrOracle} from "contracts/concrete/oracle/SceptreStakedFlrOracle.sol";
 import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/concrete/oracle/TwoPriceOracle.sol";
 import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
+import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "contracts/concrete/oracle/FtsoV2LTSFeedOracle.sol";
+import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
@@ -47,10 +49,10 @@ contract Deploy is Script {
 
     function deployStakedFlrPriceVault(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
-        address flareFTSOOracle = address(
-            new FtsoCurrentPriceUsdOracle(
-                FtsoCurrentPriceUsdOracleConfig({
-                    symbol: "FLR",
+        address ftsoV2LTSFeedOracle = address(
+            new FtsoV2LTSFeedOracle(
+                FtsoV2LTSFeedOracleConfig({
+                    feedId: FLR_USD_FEED_ID,
                     // 30 mins.
                     staleAfter: 1800
                 })
@@ -59,7 +61,7 @@ contract Deploy is Script {
         address stakedFlr = vm.envAddress("SCEPTRE_STAKED_FLR_ADDRESS");
         address stakedFlrOracle = address(new SceptreStakedFlrOracle(IStakedFlr(stakedFlr)));
         address twoPriceOracle =
-            address(new TwoPriceOracle(TwoPriceOracleConfig({base: flareFTSOOracle, quote: stakedFlrOracle})));
+            address(new TwoPriceOracle(TwoPriceOracleConfig({base: ftsoV2LTSFeedOracle, quote: stakedFlrOracle})));
 
         ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")).clone(
             vm.envAddress("ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION"),
