@@ -12,13 +12,10 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract RedepositTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
-
-    event DepositWithReceipt(
-        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
-    );
 
     /// Checks that balance owner balance changes after wirthdraw
     function checkBalanceChange(
@@ -33,7 +30,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         // Set up the event expectation for redeposit
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(owner, receiver, assets, assets, id, data);
+        emit IReceiptVaultV1.Deposit(owner, receiver, assets, assets, id, data);
 
         // Redeposit
         vault.redeposit(assets, receiver, id, data);
@@ -180,7 +177,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vault.certify(timestamp, blockNumber, false, data);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.warp(futureTimestamp);
@@ -228,7 +225,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         checkBalanceChange(vault, alice, bob, 1, assets, data);
@@ -327,7 +324,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vault.certify(timestamp, blockNumber, false, data);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         // Attempt to deposit, should revert

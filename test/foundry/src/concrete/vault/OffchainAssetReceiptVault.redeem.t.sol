@@ -13,19 +13,10 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract RedeemTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
-
-    event WithdrawWithReceipt(
-        address sender,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares,
-        uint256 id,
-        bytes receiptInformation
-    );
 
     /// Checks that balance owner balance changes after wirthdraw
     function checkBalanceChange(
@@ -40,7 +31,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
         // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(owner, receiver, owner, shares, shares, id, data);
+        emit IReceiptVaultV1.Withdraw(owner, receiver, owner, shares, shares, id, data);
 
         // Call redeem function
         vault.redeem(shares, receiver, owner, id, data);

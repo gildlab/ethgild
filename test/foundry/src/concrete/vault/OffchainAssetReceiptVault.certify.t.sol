@@ -10,12 +10,10 @@ import {
 import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract CertifyTest is OffchainAssetReceiptVaultTest {
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
-    event DepositWithReceipt(
-        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
-    );
 
     /// Test certify event
     function testCertify(
@@ -190,7 +188,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vault.certify(timestamp, referenceBlockNumber, false, data);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.warp(forceCertifyUntil);
@@ -202,7 +200,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vault.certify(forceCertifyUntil, referenceBlockNumber, true, data);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 2, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 2, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.stopPrank();
@@ -251,7 +249,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vault.certify(certifyUntil, referenceBlockNumber, false, data);
 
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         // Expect the Certify event
@@ -316,9 +314,8 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, data);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
 
         vm.stopPrank();

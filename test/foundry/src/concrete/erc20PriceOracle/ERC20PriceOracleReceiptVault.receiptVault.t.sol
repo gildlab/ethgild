@@ -10,11 +10,10 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
-
-    event ReceiptVaultInformation(address sender, bytes vaultInformation);
 
     /// Test vault asset
     function testVaultAsset(
@@ -307,7 +306,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
 
         vm.expectEmit(false, false, false, true);
-        emit ReceiptVaultInformation(alice, information);
+        emit IReceiptVaultV1.ReceiptVaultInformation(alice, information);
 
         vault.receiptVaultInformation(information);
     }

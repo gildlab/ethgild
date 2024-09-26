@@ -8,12 +8,9 @@ import {
 } from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
-    event DepositWithReceipt(
-        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
-    );
-
     /// Test deposit function
     function testDeposit(
         uint256 fuzzedKeyAlice,
@@ -43,9 +40,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for the transaction
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assets, assets, 1, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, bob, assets, assets, 1, fuzzedReceiptInformation);
 
         // Call the deposit function that should emit the event
         vault.deposit(assets, bob, minShareRatio, fuzzedReceiptInformation);
@@ -88,18 +84,16 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for transactions
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assets, assets, 1, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, bob, assets, assets, 1, fuzzedReceiptInformation);
 
         // Call the deposit function that should emit the event
         vault.deposit(assets, bob, minShareRatio, fuzzedReceiptInformation);
 
         assertEqUint(vault.totalSupply(), vault.totalAssets());
 
-        // Set up the event expectation for DepositWithReceipt for the second deposit with increased ID
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, assetsSecondDeposit, assetsSecondDeposit, 2, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, bob, assetsSecondDeposit, assetsSecondDeposit, 2, fuzzedReceiptInformation);
 
         // Call the deposit function that should emit the event
         vault.deposit(assetsSecondDeposit, bob, minShareRatio, fuzzedReceiptInformation);
@@ -339,9 +333,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for transaction
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, assets, assets, 1, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, fuzzedReceiptInformation);
 
         vault.deposit(assets, alice, minShareRatio, fuzzedReceiptInformation);
 
