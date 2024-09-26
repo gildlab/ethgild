@@ -20,6 +20,7 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
+import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 
 /// Thrown when an ID can't be deposited or withdrawn.
 /// @param id The invalid ID.
@@ -173,6 +174,98 @@ abstract contract ReceiptVault is
         if (receiptOwner != address(this)) {
             revert WrongOwner(address(this), receiptOwner);
         }
+    }
+
+    /// The spec demands this function ignores per-user concerns. It seems to
+    /// imply minting but doesn't provide a sibling conversion for burning.
+    /// > The amount of shares that the Vault would exchange for the amount of
+    /// > assets provided
+    /// @inheritdoc IReceiptVaultV1
+    function convertToShares(uint256 assets, uint256 id) external payable returns (uint256) {
+        uint256 val = _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return val;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function previewDeposit(uint256 assets, uint256 minShareRatio) external payable virtual returns (uint256) {
+        uint256 val = _calculateDeposit(
+            assets,
+            // Spec doesn't provide us with a receipient but wants a per-user
+            // preview so we assume that depositor = receipient.
+            _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
+            // IERC4626:
+            // > MUST NOT revert due to vault specific user/global limits.
+            // > MAY revert due to other conditions that would also cause
+            // > deposit to revert.
+            // Unclear if the min share ratio set by the user for themselves
+            // is a "vault specific user limit" or "other conditions that
+            // would also cause deposit to revert".
+            // The conservative interpretation is that the user will WANT
+            // the preview calculation to revert according to their own
+            // preferences they set for themselves onchain.
+            // If the user did not set a min ratio then the min ratio will
+            // be 0 and never revert.
+            minShareRatio
+        );
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return val;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function previewMint(uint256 shares, uint256 minShareRatio) external payable virtual returns (uint256) {
+        uint256 val = _calculateMint(
+            shares,
+            // Spec doesn't provide us with a recipient but wants a per-user
+            // preview so we assume that depositor = recipient.
+            _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
+            // IERC4626:
+            // > MUST NOT revert due to vault specific user/global limits.
+            // > MAY revert due to other conditions that would also cause mint
+            // > to revert.
+            // Unclear if the min share ratio set by the user for themselves is
+            // a "vault specific user limit" or "other conditions that would
+            // also cause mint to revert".
+            // The conservative interpretation is that the user will WANT
+            // the preview calculation to revert according to their own
+            // preferences they set for themselves onchain.
+            // If the user did not set a min ratio the min ratio will be 0 and
+            // never revert.
+            minShareRatio
+        );
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return val;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes memory receiptInformation)
+        external
+        payable
+        returns (uint256)
+    {
+        uint256 id = _nextId();
+
+        uint256 shares =
+            _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), depositMinShareRatio);
+
+        _deposit(assets, receiver, shares, id, receiptInformation);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return shares;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function mint(uint256 shares, address receiver, uint256 mintMinShareRatio, bytes memory receiptInformation)
+        external
+        payable
+        returns (uint256)
+    {
+        uint256 id = _nextId();
+        uint256 shareRatio = _shareRatio(msg.sender, receiver, id, ShareAction.Mint);
+
+        uint256 assets = _calculateMint(shares, shareRatio, mintMinShareRatio);
+        _deposit(assets, receiver, shares, id, receiptInformation);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return assets;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
@@ -355,15 +448,6 @@ abstract contract ReceiptVault is
         return 1;
     }
 
-    /// The spec demands this function ignores per-user concerns. It seems to
-    /// imply minting but doesn't provide a sibling conversion for burning.
-    /// > The amount of shares that the Vault would exchange for the amount of
-    /// > assets provided
-    /// @inheritdoc IReceiptVaultV1
-    function convertToShares(uint256 assets, uint256 id) external payable returns (uint256) {
-        return _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
-    }
-
     /// The spec demands that this function ignores per-user concerns. It seems
     /// to imply burning but doesn't provide a sibling conversion for minting.
     /// > The amount of assets that the Vault would exchange for the amount of
@@ -394,67 +478,6 @@ abstract contract ReceiptVault is
     /// @inheritdoc IReceiptVaultV1
     function maxMint(address) external pure virtual returns (uint256) {
         return type(uint256).max;
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function previewDeposit(uint256 assets, uint256 minShareRatio) external payable virtual returns (uint256) {
-        return _calculateDeposit(
-            assets,
-            // Spec doesn't provide us with a receipient but wants a per-user
-            // preview so we assume that depositor = receipient.
-            _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
-            // IERC4626:
-            // > MUST NOT revert due to vault specific user/global limits.
-            // > MAY revert due to other conditions that would also cause
-            // > deposit to revert.
-            // Unclear if the min share ratio set by the user for themselves
-            // is a "vault specific user limit" or "other conditions that
-            // would also cause deposit to revert".
-            // The conservative interpretation is that the user will WANT
-            // the preview calculation to revert according to their own
-            // preferences they set for themselves onchain.
-            // If the user did not set a min ratio then the min ratio will
-            // be 0 and never revert.
-            minShareRatio
-        );
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function previewMint(uint256 shares, uint256 minShareRatio) public payable virtual returns (uint256) {
-        return _calculateMint(
-            shares,
-            // Spec doesn't provide us with a recipient but wants a per-user
-            // preview so we assume that depositor = recipient.
-            _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
-            // IERC4626:
-            // > MUST NOT revert due to vault specific user/global limits.
-            // > MAY revert due to other conditions that would also cause mint
-            // > to revert.
-            // Unclear if the min share ratio set by the user for themselves is
-            // a "vault specific user limit" or "other conditions that would
-            // also cause mint to revert".
-            // The conservative interpretation is that the user will WANT
-            // the preview calculation to revert according to their own
-            // preferences they set for themselves onchain.
-            // If the user did not set a min ratio the min ratio will be 0 and
-            // never revert.
-            minShareRatio
-        );
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes memory receiptInformation)
-        public
-        payable
-        returns (uint256)
-    {
-        uint256 id = _nextId();
-
-        uint256 shares =
-            _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), depositMinShareRatio);
-
-        _deposit(assets, receiver, shares, id, receiptInformation);
-        return shares;
     }
 
     /// Handles minting and emitting events according to spec.
@@ -518,20 +541,6 @@ abstract contract ReceiptVault is
     ) internal virtual {
         // Default behaviour is to move assets before minting shares.
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets);
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function mint(uint256 shares, address receiver, uint256 mintMinShareRatio, bytes memory receiptInformation)
-        public
-        payable
-        returns (uint256)
-    {
-        uint256 id = _nextId();
-        uint256 shareRatio = _shareRatio(msg.sender, receiver, id, ShareAction.Mint);
-
-        uint256 assets = _calculateMint(shares, shareRatio, mintMinShareRatio);
-        _deposit(assets, receiver, shares, id, receiptInformation);
-        return assets;
     }
 
     /// @inheritdoc IReceiptVaultV1
