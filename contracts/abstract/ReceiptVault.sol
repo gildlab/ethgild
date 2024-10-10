@@ -497,15 +497,18 @@ abstract contract ReceiptVault is
         virtual
         nonReentrant
     {
+        //slither-disable-next-line incorrect-equality
         if (assets == 0) {
             revert ZeroAssetsAmount();
         }
+        //slither-disable-next-line incorrect-equality
         if (shares == 0) {
             revert ZeroSharesAmount();
         }
         if (receiver == address(0)) {
             revert ZeroReceiver();
         }
+        //slither-disable-next-line incorrect-equality
         if (id == 0) {
             revert InvalidId(0);
         }
@@ -597,9 +600,11 @@ abstract contract ReceiptVault is
         uint256 id,
         bytes memory receiptInformation
     ) internal nonReentrant {
+        //slither-disable-next-line incorrect-equality
         if (assets == 0) {
             revert ZeroAssetsAmount();
         }
+        //slither-disable-next-line incorrect-equality
         if (shares == 0) {
             revert ZeroSharesAmount();
         }

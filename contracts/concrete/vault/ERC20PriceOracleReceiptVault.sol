@@ -161,6 +161,10 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     function _nextId() internal virtual override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
+        // This contract is never intended to hold gas, it's only here to pay the
+        // oracles that might need to be paid. The contract's assets are always
+        // ERC20 tokens. This means the slither detector here is a false positive.
+        //slither-disable-next-line arbitrary-send-eth
         try priceOracle.price{value: address(this).balance}()
         // slither puts false positives on `try/catch/returns`.
         // https://github.com/crytic/slither/issues/511

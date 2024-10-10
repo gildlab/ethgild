@@ -40,7 +40,12 @@ contract TwoPriceOracleV2 is IPriceOracleV2 {
     /// by `IPriceOracleV2` despite compliant sub-oracles.
     /// @inheritdoc IPriceOracleV2
     function price() external payable override returns (uint256) {
+        // This contract is never intended to hold gas, it's only here to pay the
+        // oracles that might need to be paid.
+        // This means the slither detector here is a false positive.
+        //slither-disable-next-line arbitrary-send-eth
         uint256 quotePrice = quote.price{value: address(this).balance}();
+        //slither-disable-next-line arbitrary-send-eth
         uint256 basePrice = base.price{value: address(this).balance}();
         uint256 val = basePrice.fixedPointDiv(quotePrice, Math.Rounding.Up);
         Address.sendValue(payable(msg.sender), address(this).balance);
