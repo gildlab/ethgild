@@ -94,6 +94,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         usdDecimals = uint8(bound(usdDecimals, 0, 20));
         xauDecimals = uint8(bound(xauDecimals, 0, 20));
 
+        id = bound(id, 1, type(uint256).max);
         timestamp = bound(timestamp, 0, type(uint32).max);
         shares = bound(shares, 1, type(uint64).max);
 
@@ -103,8 +104,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
 
-        uint256 oraclePrice = twoPriceOracle.price();
-        uint256 expectedAssets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
+        uint256 expectedAssets = shares.fixedPointDiv(id, Math.Rounding.Down);
         uint256 resultAssets = vault.convertToAssets(shares, id);
 
         assertEqUint(expectedAssets, resultAssets);
@@ -130,6 +130,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         usdDecimals = uint8(bound(usdDecimals, 0, 20));
         xauDecimals = uint8(bound(xauDecimals, 0, 20));
 
+        id = bound(id, 1, type(uint256).max);
         timestamp = bound(timestamp, 0, type(uint32).max);
         shares = bound(shares, 1, type(uint64).max);
 
@@ -167,8 +168,9 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         usdDecimals = uint8(bound(usdDecimals, 0, 20));
         xauDecimals = uint8(bound(xauDecimals, 0, 20));
 
+        id = bound(id, 0, type(uint128).max);
         timestamp = bound(timestamp, 0, type(uint32).max);
-        assets = bound(assets, 1, type(uint256).max);
+        assets = bound(assets, 1, type(uint128).max);
 
         vm.warp(timestamp);
         TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
@@ -176,9 +178,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetName);
 
-        uint256 oraclePrice = twoPriceOracle.price();
-
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(id, Math.Rounding.Down);
         uint256 resultShares = vault.convertToShares(assets, id);
 
         assertEqUint(expectedShares, resultShares);
@@ -204,8 +204,13 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         usdDecimals = uint8(bound(usdDecimals, 0, 20));
         xauDecimals = uint8(bound(xauDecimals, 0, 20));
 
+        // Bound the ID to a range that could actually be a price.
+        id = bound(id, 0, type(uint128).max);
+
         timestamp = bound(timestamp, 0, type(uint32).max);
-        assets = bound(assets, 1, type(uint256).max);
+
+        // Bound the assets to a reasonable range
+        assets = bound(assets, 1, type(uint128).max);
 
         vm.warp(timestamp);
         TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);

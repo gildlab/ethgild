@@ -203,4 +203,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vm.stopPrank();
     }
+
+    fallback() external {}
 }
