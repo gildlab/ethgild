@@ -11,7 +11,7 @@ import {
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfig
 } from "../../abstract/ReceiptVault.sol";
-import {IPriceOracleV1} from "../../interface/IPriceOracleV1.sol";
+import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 
 /// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
 /// receipt. Typically the receipt will be deployed and ownership transferred
@@ -129,14 +129,14 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
 
     /// The price oracle used for all minting calculations.
-    IPriceOracleV1 public priceOracle;
+    IPriceOracleV2 public priceOracle;
 
     constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
 
     /// Initialization of the underlying receipt vault and price oracle.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
         ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
-        priceOracle = IPriceOracleV1(config.priceOracle);
+        priceOracle = IPriceOracleV2(config.priceOracle);
 
         __ReceiptVault_init(config.vaultConfig);
 
@@ -158,15 +158,19 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// been issued for some other receipt, it will simply result in multiple
     /// holders of receipts with amounts of the same ID.
     /// @inheritdoc ReceiptVault
-    function _nextId() internal view virtual override returns (uint256) {
+    function _nextId() internal virtual override returns (uint256) {
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
-        try priceOracle.price()
+        // This contract is never intended to hold gas, it's only here to pay the
+        // oracles that might need to be paid. The contract's assets are always
+        // ERC20 tokens. This means the slither detector here is a false positive.
+        //slither-disable-next-line arbitrary-send-eth
+        try priceOracle.price{value: address(this).balance}()
         // slither puts false positives on `try/catch/returns`.
         // https://github.com/crytic/slither/issues/511
         //slither-disable-next-line
-        returns (uint256 price_) {
-            return price_;
+        returns (uint256 price) {
+            return price;
         } catch {
             // Depositing assets while the price oracle is erroring will give 0
             // shares (a real deposit will revert due to 0 ratio).

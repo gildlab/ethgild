@@ -34,11 +34,11 @@ contract TwoPriceOracle is IPriceOracleV1 {
     /// As per `ConstructionConfig.quote`.
     IPriceOracleV1 public immutable quote;
 
-    /// @param config_ Config required to construct.
-    constructor(TwoPriceOracleConfig memory config_) {
-        base = IPriceOracleV1(config_.base);
-        quote = IPriceOracleV1(config_.quote);
-        emit Construction(msg.sender, config_);
+    /// @param config Config required to construct.
+    constructor(TwoPriceOracleConfig memory config) {
+        base = IPriceOracleV1(config.base);
+        quote = IPriceOracleV1(config.quote);
+        emit Construction(msg.sender, config);
     }
 
     /// Calculates the price as `base / quote` using fixed point 18 decimal math.

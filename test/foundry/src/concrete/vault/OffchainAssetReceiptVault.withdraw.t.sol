@@ -9,18 +9,9 @@ import {
 } from "../../../../../contracts/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
-    event WithdrawWithReceipt(
-        address sender,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares,
-        uint256 id,
-        bytes receiptInformation
-    );
-
     /// Checks that balance owner balance changes after wirthdraw
     function checkBalanceChange(
         OffchainAssetReceiptVault vault,
@@ -34,7 +25,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
 
         // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit WithdrawWithReceipt(owner, receiver, owner, assets, assets, id, data);
+        emit IReceiptVaultV1.Withdraw(owner, receiver, owner, assets, assets, id, data);
 
         // Call withdraw function
         vault.withdraw(assets, receiver, owner, id, data);

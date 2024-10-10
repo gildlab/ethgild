@@ -8,13 +8,10 @@ import {
 } from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
+import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
+import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
-    event DepositWithReceipt(
-        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
-    );
-    event ReceiptInformation(address sender, uint256 id, bytes information);
-
     /// Test mint function
     function testMint(
         uint256 fuzzedKeyAlice,
@@ -46,9 +43,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for transaction
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(true, true, true, true);
-        emit DepositWithReceipt(bob, bob, assets, assets, 1, receiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, bob, assets, assets, 1, receiptInformation);
 
         vault.mint(assets, bob, minShareRatio, receiptInformation);
 
@@ -89,18 +85,16 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for transactions
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, shares, shares, 1, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, bob, shares, shares, 1, fuzzedReceiptInformation);
 
         // Call the mint function that should emit the event
         vault.mint(shares, bob, minShareRatio, fuzzedReceiptInformation);
 
         assertEqUint(vault.totalSupply(), vault.totalAssets());
 
-        // Set up the event expectation for DepositWithReceipt for the second mint with increased ID
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, bob, sharesSecondMint, sharesSecondMint, 2, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, bob, sharesSecondMint, sharesSecondMint, 2, fuzzedReceiptInformation);
 
         // Call the mint function that should emit the event
         vault.mint(sharesSecondMint, bob, minShareRatio, fuzzedReceiptInformation);
@@ -338,9 +332,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for transaction
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, shares, shares, 1, fuzzedReceiptInformation);
+        emit IReceiptVaultV1.Deposit(bob, alice, shares, shares, 1, fuzzedReceiptInformation);
 
         vault.mint(shares, alice, minShareRatio, fuzzedReceiptInformation);
 
@@ -381,12 +374,10 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for transaction
         vm.startPrank(bob);
 
-        // Set up the event expectation for DepositWithReceipt
         vm.expectEmit(false, false, false, true);
-        emit DepositWithReceipt(bob, alice, shares, shares, 1, fuzzedReceiptInformation);
-        // Set up the event expectation for DepositWithReceipt
+        emit IReceiptVaultV1.Deposit(bob, alice, shares, shares, 1, fuzzedReceiptInformation);
         vm.expectEmit(false, false, false, true);
-        emit ReceiptInformation(bob, 1, fuzzedReceiptInformation);
+        emit IReceiptV1.ReceiptInformation(bob, 1, fuzzedReceiptInformation);
 
         vault.mint(shares, alice, minShareRatio, fuzzedReceiptInformation);
 
@@ -414,7 +405,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         vm.startPrank(bob);
         vm.expectRevert();
-        vault.previewMint(shares);
+        vault.previewMint(shares, 0);
 
         vm.stopPrank();
     }
@@ -441,7 +432,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for the transactions
 
         vm.startPrank(bob);
-        uint256 assets = vault.previewMint(shares);
+        uint256 assets = vault.previewMint(shares, 0);
 
         assertEqUint(shares, assets);
 
