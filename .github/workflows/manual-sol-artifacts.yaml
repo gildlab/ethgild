@@ -21,6 +21,7 @@ on:
           - sepolia
           - songbird
           - amoy
+          - epn
 
       suite:
         description: 'Suite to deploy'
