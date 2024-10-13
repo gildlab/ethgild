@@ -6,7 +6,7 @@ import {
     UnauthorizedSenderTier,
     OffchainAssetReceiptVault,
     OffchainAssetReceiptVaultConfig
-} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "../../../../../src/concrete/receipt/Receipt.sol";

@@ -31,9 +31,9 @@ contract OwnableOracleTest is Test {
     /// The owner can set the price.
     /// Anon can't set the price.
     function testSetPrice(uint256 ownerSeed, uint256 anonSeed, uint256 newPrice0, uint256 newPrice1) external {
-        vm.assume(ownerSeed != anonSeed);
         address owner = vm.addr((ownerSeed % (SECP256K1_ORDER - 1)) + 1);
         address anon = vm.addr((anonSeed % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(owner != anon);
 
         vm.prank(owner);
         OwnableOracle oracle = new OwnableOracle();
