@@ -2,10 +2,10 @@
 pragma solidity ^0.8.25;
 
 import {Test, Vm} from "forge-std/Test.sol";
-import {Receipt} from "../../../../../contracts/concrete/receipt/Receipt.sol";
-import {IReceiptOwnerV1} from "../../../../../contracts/interface/IReceiptOwnerV1.sol";
-import {TestReceipt} from "../../../../../contracts/test/TestReceipt.sol";
-import {TestReceiptOwner} from "../../../../../contracts/test/TestReceiptOwner.sol";
+import {Receipt} from "../../../../../src/concrete/receipt/Receipt.sol";
+import {IReceiptOwnerV1} from "../../../../../src/interface/IReceiptOwnerV1.sol";
+import {TestReceipt} from "test/concrete/TestReceipt.sol";
+import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 
 contract ReceiptTest is Test {
     event ReceiptInformation(address sender, uint256 id, bytes information);

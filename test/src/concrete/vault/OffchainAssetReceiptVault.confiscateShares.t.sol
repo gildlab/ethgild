@@ -4,9 +4,9 @@ pragma solidity =0.8.25;
 import {
     OffchainAssetReceiptVault,
     OffchainAssetReceiptVaultConfig
-} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
-import {Receipt as ReceiptContract} from "../../../../../contracts/concrete/receipt/Receipt.sol";
+} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {Receipt as ReceiptContract} from "../../../../../src/concrete/receipt/Receipt.sol";
 
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);

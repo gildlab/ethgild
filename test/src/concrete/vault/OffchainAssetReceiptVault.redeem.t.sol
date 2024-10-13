@@ -2,18 +2,15 @@
 pragma solidity =0.8.25;
 
 import {
-    ZeroReceiver,
-    InvalidId,
-    ZeroAssetsAmount,
-    ZeroSharesAmount
-} from "../../../../../contracts/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+    ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount
+} from "../../../../../src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
 
 contract RedeemTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;

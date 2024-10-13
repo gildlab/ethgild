@@ -5,8 +5,8 @@ import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.so
 import {
     ERC20PriceOracleReceiptVault,
     ERC20PriceOracleVaultConfig
-} from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
+} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 
 library LibERC20PriceOracleReceiptVaultCreator {
     /// Helper to create child erc20PriceOracleVault.

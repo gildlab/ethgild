@@ -8,9 +8,9 @@ import {
     OffchainAssetReceiptVaultConfig,
     OffchainAssetReceiptVault,
     ReceiptVaultConstructionConfig
-} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.sol";
-import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
     event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
-import {VaultConfig, MinShareRatio} from "contracts/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {VaultConfig, MinShareRatio} from "src/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,
     OffchainAssetReceiptVaultConfig
-} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
-import {TestErc20} from "contracts/test/TestErc20.sol";
+import {TestErc20} from "../../../concrete/TestErc20.sol";
 import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {

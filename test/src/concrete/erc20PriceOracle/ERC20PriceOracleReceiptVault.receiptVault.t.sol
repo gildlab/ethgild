@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
-import {ERC20PriceOracleReceiptVault} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "../../../../../contracts/concrete/oracle/TwoPriceOracle.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../src/abstract/ReceiptVault.sol";
+import {ERC20PriceOracleReceiptVault} from "../../../../../src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
+import {TwoPriceOracle} from "../../../../../src/concrete/oracle/TwoPriceOracle.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
 
 contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;

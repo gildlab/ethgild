@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfig,
     OffchainAssetReceiptVaultConfig,
     ZeroAdmin,
     NonZeroAsset
-} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "contracts/interface/IReceiptV1.sol";
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "src/interface/IReceiptV1.sol";
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero

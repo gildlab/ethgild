@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {InvalidId, ZeroAssetsAmount} from "../../../../../contracts/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
+import {InvalidId, ZeroAssetsAmount} from "../../../../../src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
     CertificationExpired
-} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
+} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
+import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
+import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
 
 contract RedepositTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;

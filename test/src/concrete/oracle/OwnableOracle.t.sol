@@ -2,7 +2,7 @@
 pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
-import {OwnableOracle} from "contracts/concrete/oracle/OwnableOracle.sol";
+import {OwnableOracle} from "src/concrete/oracle/OwnableOracle.sol";
 
 contract OwnableOracleTest is Test {
     event Price(uint256 oldPrice, uint256 newPrice);

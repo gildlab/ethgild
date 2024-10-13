@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import "../concrete/receipt/Receipt.sol";
+import "src/concrete/receipt/Receipt.sol";
 
 /// @title TestReceipt
 /// @notice TEST contract that inherits `Receipt` and allows anon to set the

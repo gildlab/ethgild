@@ -2,10 +2,8 @@
 pragma solidity =0.8.25;
 
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {
-    OffchainAssetReceiptVault, OffchainAssetVaultConfig
-} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault, OffchainAssetVaultConfig} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 
 library LibOffchainAssetVaultCreator {
     /// Helper to create child offchainAssetReceiptVault.

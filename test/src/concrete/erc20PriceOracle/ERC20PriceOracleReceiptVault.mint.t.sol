@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../contracts/abstract/ReceiptVault.sol";
-import {ERC20PriceOracleReceiptVault} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "../../../../../contracts/concrete/oracle/TwoPriceOracle.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../src/abstract/ReceiptVault.sol";
+import {ERC20PriceOracleReceiptVault} from "../../../../../src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
+import {TwoPriceOracle} from "../../../../../src/concrete/oracle/TwoPriceOracle.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math

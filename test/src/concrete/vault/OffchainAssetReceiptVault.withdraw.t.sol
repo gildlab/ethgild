@@ -2,14 +2,11 @@
 pragma solidity =0.8.25;
 
 import {
-    ZeroReceiver,
-    InvalidId,
-    ZeroAssetsAmount,
-    ZeroSharesAmount
-} from "../../../../../contracts/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVault} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
-import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
+    ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount
+} from "../../../../../src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
+import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Checks that balance owner balance changes after wirthdraw

@@ -8,15 +8,15 @@ import {
     ERC20PriceOracleReceiptVault,
     ReceiptVaultConstructionConfig,
     ERC20PriceOracleReceiptVaultConfig
-} from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
-import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
-import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/concrete/oracle/TwoPriceOracle.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPriceOracle.sol";
 import {
     ChainlinkFeedPriceOracle,
     ChainlinkFeedPriceOracleConfig
-} from "contracts/oracle/price/chainlink/ChainlinkFeedPriceOracle.sol";
-import {MockChainlinkDataFeed, RoundData} from "contracts/test/MockChainlinkDataFeed.sol";
+} from "src/oracle/price/chainlink/ChainlinkFeedPriceOracle.sol";
+import {MockChainlinkDataFeed, RoundData} from "test/concrete/MockChainlinkDataFeed.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {

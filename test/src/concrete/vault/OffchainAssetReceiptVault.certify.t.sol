@@ -6,11 +6,11 @@ import {
     ZeroCertifyUntil,
     FutureReferenceBlock,
     CertificationExpired
-} from "../../../../../contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../../../../contracts/interface/IReceiptV1.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/foundry/abstract/OffchainAssetReceiptVaultTest.sol";
-import {LibOffchainAssetVaultCreator} from "test/foundry/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV1} from "../../../../../contracts/interface/IReceiptVaultV1.sol";
+} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "../../../../../src/interface/IReceiptV1.sol";
+import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
+import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
 
 contract CertifyTest is OffchainAssetReceiptVaultTest {
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);

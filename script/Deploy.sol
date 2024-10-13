@@ -2,26 +2,25 @@
 pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
-import {OwnableOracle} from "contracts/concrete/oracle/OwnableOracle.sol";
+import {OwnableOracle} from "src/concrete/oracle/OwnableOracle.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ERC20PriceOracleVaultConfig
-} from "contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {VaultConfig} from "contracts/abstract/ReceiptVault.sol";
+} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {
     FtsoCurrentPriceUsdOracle,
     FtsoCurrentPriceUsdOracleConfig
-} from "contracts/concrete/oracle/FtsoCurrentPriceUsdOracle.sol";
+} from "src/concrete/oracle/FtsoCurrentPriceUsdOracle.sol";
 import {
-    OffchainAssetReceiptVault,
-    ReceiptVaultConstructionConfig
-} from "contracts/concrete/vault/OffchainAssetReceiptVault.sol";
-import {Receipt as ReceiptContract} from "contracts/concrete/receipt/Receipt.sol";
-import {SceptreStakedFlrOracle} from "contracts/concrete/oracle/SceptreStakedFlrOracle.sol";
-import {TwoPriceOracle, TwoPriceOracleConfig} from "contracts/concrete/oracle/TwoPriceOracle.sol";
+    OffchainAssetReceiptVault, ReceiptVaultConstructionConfig
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {SceptreStakedFlrOracle} from "src/concrete/oracle/SceptreStakedFlrOracle.sol";
+import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPriceOracle.sol";
 import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
-import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "contracts/concrete/oracle/FtsoV2LTSFeedOracle.sol";
+import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "src/concrete/oracle/FtsoV2LTSFeedOracle.sol";
 import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");

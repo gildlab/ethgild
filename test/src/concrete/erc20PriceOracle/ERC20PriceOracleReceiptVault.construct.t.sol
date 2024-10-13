@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: CAL
 pragma solidity =0.8.25;
 
-import {ReceiptVaultConfig, VaultConfig} from "../../../../../contracts/abstract/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig} from "../../../../../src/abstract/ReceiptVault.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ERC20PriceOracleReceiptVaultConfig
-} from "../../../../../contracts/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/foundry/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "../../../../../contracts/concrete/oracle/TwoPriceOracle.sol";
+} from "../../../../../src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
+import {TwoPriceOracle} from "../../../../../src/concrete/oracle/TwoPriceOracle.sol";
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constracted
