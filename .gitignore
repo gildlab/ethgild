@@ -1,10 +1,7 @@
-node_modules
 artifacts
 cache
-typechain
 .env
 venv
 bin
-typechain-types
 out
 forge-cache
