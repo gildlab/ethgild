@@ -14,8 +14,7 @@ import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracle
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPriceOracle.sol";
 import {
-    ChainlinkFeedPriceOracle,
-    ChainlinkFeedPriceOracleConfig
+    ChainlinkFeedPriceOracle, ChainlinkFeedPriceOracleConfig
 } from "src/concrete/oracle/ChainlinkFeedPriceOracle.sol";
 import {MockChainlinkDataFeed, RoundData} from "test/concrete/MockChainlinkDataFeed.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
