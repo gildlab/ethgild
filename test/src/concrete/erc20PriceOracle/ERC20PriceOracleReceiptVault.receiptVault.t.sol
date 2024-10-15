@@ -125,6 +125,8 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
         // Use common decimal bounds for price feeds
         // Use 0-20 so we at least have some coverage higher than 18
         usdDecimals = uint8(bound(usdDecimals, 0, 20));
