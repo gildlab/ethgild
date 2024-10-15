@@ -16,7 +16,7 @@ import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPrice
 import {
     ChainlinkFeedPriceOracle,
     ChainlinkFeedPriceOracleConfig
-} from "src/oracle/price/chainlink/ChainlinkFeedPriceOracle.sol";
+} from "src/concrete/oracle/ChainlinkFeedPriceOracle.sol";
 import {MockChainlinkDataFeed, RoundData} from "test/concrete/MockChainlinkDataFeed.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 
