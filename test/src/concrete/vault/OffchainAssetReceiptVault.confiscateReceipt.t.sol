@@ -60,7 +60,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-        
+
         id = bound(id, 0, type(uint256).max);
 
         // Start recording logs
@@ -94,7 +94,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-        
+
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
 
