@@ -13,4 +13,5 @@ remappings = [
     "rain.intorastring/=lib/rain.interpreter/lib/rain.intorastring/src/",
     "forge-std/=lib/rain.interpreter/lib/forge-std/src/",
     "rain.flare/=lib/rain.flare/src/",
+    "chainlink/=lib/rain.chainlink/lib/chainlink/contracts/src/",
 ]
