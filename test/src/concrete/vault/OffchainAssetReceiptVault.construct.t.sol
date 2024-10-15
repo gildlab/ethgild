@@ -11,6 +11,7 @@ import {
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IReceiptV1} from "src/interface/IReceiptV1.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
@@ -151,10 +152,9 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         string memory assetNameTwo,
         string memory assetSymbolTwo
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         // Simulate transaction from alice
         vm.prank(alice);
