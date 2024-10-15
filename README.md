@@ -75,7 +75,7 @@ This repo is REUSE 3.2 compliant https://reuse.software/spec-3.2/ and compatible
 with `reuse` tooling (also available in the nix shell here).
 
 ```
-nix develop -c reuse lint
+nix develop -c rainix-sol-legal
 ```
 
 ## Contributions
