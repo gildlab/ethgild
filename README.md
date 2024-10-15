@@ -77,3 +77,9 @@ with `reuse` tooling (also available in the nix shell here).
 ```
 nix develop -c reuse lint
 ```
+
+## Contributions
+
+Contributions are welcome **under the same license** as above.
+
+Contributors agree and warrant that their contributions are compliant.
