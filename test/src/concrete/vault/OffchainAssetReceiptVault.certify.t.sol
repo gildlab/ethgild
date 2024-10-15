@@ -71,6 +71,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         vm.roll(blockNumber);
         referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
@@ -112,6 +113,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         blockNumber = bound(block.number, 0, type(uint256).max);
         vm.roll(blockNumber);
@@ -289,8 +291,8 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Ensure the fuzzed key is within the valid range for secp256k1
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
 
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
