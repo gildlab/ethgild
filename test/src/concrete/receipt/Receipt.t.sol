@@ -6,6 +6,7 @@ import {Receipt} from "../../../../../src/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "../../../../../src/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ReceiptTest is Test {
     event ReceiptInformation(address sender, uint256 id, bytes information);
@@ -137,10 +138,10 @@ contract ReceiptTest is Test {
         bytes memory fuzzedReceiptInformation,
         uint256 transferAmount
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+
         // Bound with uint256 max - 1 so dowsnot get overflow while bounding transferAmount
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
@@ -175,10 +176,9 @@ contract ReceiptTest is Test {
         uint256 amount,
         bytes memory fuzzedReceiptInformation
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
@@ -212,10 +212,9 @@ contract ReceiptTest is Test {
         uint256 amount,
         bytes memory fuzzedReceiptInformation
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);

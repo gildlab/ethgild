@@ -3,6 +3,7 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 import {OwnableOracle} from "src/concrete/oracle/OwnableOracle.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OwnableOracleTest is Test {
     event Price(uint256 oldPrice, uint256 newPrice);
@@ -31,9 +32,9 @@ contract OwnableOracleTest is Test {
     /// The owner can set the price.
     /// Anon can't set the price.
     function testSetPrice(uint256 ownerSeed, uint256 anonSeed, uint256 newPrice0, uint256 newPrice1) external {
-        address owner = vm.addr((ownerSeed % (SECP256K1_ORDER - 1)) + 1);
-        address anon = vm.addr((anonSeed % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(owner != anon);
+        // Generate unique addresses
+        (address owner, address anon) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, ownerSeed, anonSeed);
 
         vm.prank(owner);
         OwnableOracle oracle = new OwnableOracle();
