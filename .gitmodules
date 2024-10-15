@@ -1,6 +1,3 @@
-[submodule "lib/rain.chainlink"]
-	path = lib/rain.chainlink
-	url = https://github.com/rainlanguage/rain.chainlink
 [submodule "lib/rain.factory"]
 	path = lib/rain.factory
 	url = https://github.com/rainlanguage/rain.factory
