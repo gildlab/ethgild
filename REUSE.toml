@@ -10,7 +10,6 @@ path = [
     ".prettierignore",
     ".prettierrc.yaml",
     ".solhint.json",
-    "CONTRIBUTING.md",
     "README.md",
     "erc1155Metadata/**/",
     "flake.lock",

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 // Chainlink imports.
-import {AggregatorV3Interface} from "rain.chainlink/interface/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "chainlink/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 /// Mimics round data for a chainlink oracle as a struct rather than tuple.
 /// @param answer As per `AggregatorV3Interface.getRoundData`.
