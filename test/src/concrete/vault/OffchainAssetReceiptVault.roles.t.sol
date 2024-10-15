@@ -11,6 +11,7 @@ import {
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "../../../concrete/TestErc20.sol";
 import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
@@ -54,11 +55,9 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-        address bob = vm.addr(fuzzedKeyBob);
-
-        // Constrain the inputs to ensure they are not same
-        vm.assume(alice != bob);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

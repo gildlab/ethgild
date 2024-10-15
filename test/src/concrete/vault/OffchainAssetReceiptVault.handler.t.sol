@@ -25,6 +25,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         john = vm.addr((fuzzedKeyJohn % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob && alice != john);
+        vm.assume(bob != john);
 
         balance = bound(balance, 1, type(uint256).max); // Bound from one to avoid ZeroAssets
         referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
@@ -63,8 +65,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Need setting future timestamp so system gets unsertified but transfer is possible
         // due to a handler role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
-
-        vm.assume(alice != bob);
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
@@ -117,10 +117,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // due to a handler role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
-        vm.assume(alice != bob);
-        vm.assume(alice != john);
-        vm.assume(bob != john);
-
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
         (vault, receipt) = setUpVault(alice, assetName, assetName);
@@ -172,10 +168,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
-
-        vm.assume(alice != bob);
-        vm.assume(alice != john);
-        vm.assume(bob != john);
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;

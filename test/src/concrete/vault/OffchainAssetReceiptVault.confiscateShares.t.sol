@@ -7,6 +7,7 @@ import {
 } from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {Receipt as ReceiptContract} from "../../../../../src/concrete/receipt/Receipt.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
@@ -47,9 +48,9 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         uint256 balance,
         uint256 minShareRatio
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -91,9 +92,9 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         bool forceUntil
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);

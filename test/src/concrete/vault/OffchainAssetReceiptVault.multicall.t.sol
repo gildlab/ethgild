@@ -3,6 +3,7 @@ pragma solidity =0.8.25;
 
 import {OffchainAssetReceiptVault} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Mint multicall
@@ -15,9 +16,9 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstMintAmount is not 0
@@ -65,9 +66,9 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -117,9 +118,9 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -182,9 +183,9 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        // Generate unique addresses
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
