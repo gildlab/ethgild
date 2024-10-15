@@ -66,8 +66,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // due to a handler role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
-        vm.assume(alice != bob);
-
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
         (vault, receipt) = setUpVault(alice, assetName, assetName);
@@ -118,10 +116,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
-
-        vm.assume(alice != bob);
-        vm.assume(alice != john);
-        vm.assume(bob != john);
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
