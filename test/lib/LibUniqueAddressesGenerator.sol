@@ -17,28 +17,4 @@ library LibUniqueAddressesGenerator {
 
         return (alice, bob);
     }
-
-    // Generates unique addresses from the provided fuzzed keys
-    function generateUniqueAddresses(Vm vm, uint256 SECP256K1_ORDER, uint256[] memory fuzzedKeys)
-        internal
-        pure
-        returns (address[] memory addresses)
-    {
-        // Ensure the fuzzed keys are within the valid range for secp256k1
-        uint256 length = fuzzedKeys.length;
-        addresses = new address[](length);
-        for (uint256 i = 0; i < length; i++) {
-            address generatedAddress = vm.addr((fuzzedKeys[i] % (SECP256K1_ORDER - 1)) + 1);
-            addresses[i] = generatedAddress;
-        }
-
-        // Check for uniqueness
-        for (uint256 i = 0; i < length; i++) {
-            for (uint256 j = i + 1; j < length; j++) {
-                vm.assume(addresses[i] != addresses[j]);
-            }
-        }
-
-        return addresses; // Returning the array of addresses
-    }
 }
