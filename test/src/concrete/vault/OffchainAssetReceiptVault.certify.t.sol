@@ -7,11 +7,11 @@ import {
     ZeroCertifyUntil,
     FutureReferenceBlock,
     CertificationExpired
-} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "../../../../../src/interface/IReceiptV1.sol";
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV1} from "src/interface/IReceiptV1.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract CertifyTest is OffchainAssetReceiptVaultTest {
