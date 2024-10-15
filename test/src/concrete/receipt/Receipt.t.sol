@@ -3,8 +3,8 @@
 pragma solidity ^0.8.25;
 
 import {Test, Vm} from "forge-std/Test.sol";
-import {Receipt} from "../../../../../src/concrete/receipt/Receipt.sol";
-import {IReceiptOwnerV1} from "../../../../../src/interface/IReceiptOwnerV1.sol";
+import {Receipt} from "src/concrete/receipt/Receipt.sol";
+import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";

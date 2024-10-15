@@ -2,14 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "../../../../../src/abstract/ReceiptVault.sol";
-import {
-    OffchainAssetReceiptVault,
-    CertificationExpired
-} from "../../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault, CertificationExpired} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV1} from "../../../../../src/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {

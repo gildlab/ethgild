@@ -2,13 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {ReceiptVaultConfig, VaultConfig} from "../../../../../src/abstract/ReceiptVault.sol";
+import {ReceiptVaultConfig, VaultConfig} from "src/abstract/ReceiptVault.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ERC20PriceOracleReceiptVaultConfig
-} from "../../../../../src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "../../../../../src/concrete/oracle/TwoPriceOracle.sol";
+import {TwoPriceOracle} from "src/concrete/oracle/TwoPriceOracle.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
