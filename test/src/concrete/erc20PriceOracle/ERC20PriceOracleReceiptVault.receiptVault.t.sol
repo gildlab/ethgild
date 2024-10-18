@@ -18,11 +18,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test vault asset
-    function testVaultAsset(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        address vaultOracle
-    ) external {
+    function testVaultAsset(uint256 fuzzedKeyAlice, string memory assetName, address vaultOracle) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -34,12 +30,9 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test vault totalAssets
-    function testTotalAssets(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        uint256 assets,
-        address vaultOracle
-    ) external {
+    function testTotalAssets(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, address vaultOracle)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -166,11 +159,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test vault sets correct max deposit
-    function testMaxDeposit(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        address vaultOracle
-    ) external {
+    function testMaxDeposit(uint256 fuzzedKeyAlice, string memory assetName, address vaultOracle) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         vm.startPrank(alice);
@@ -183,11 +172,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test vault sets correct max Mint
-    function testMaxShares(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        address vaultOracle
-    ) external {
+    function testMaxShares(uint256 fuzzedKeyAlice, string memory assetName, address vaultOracle) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -206,7 +191,6 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         string memory assetName,
         bytes memory information,
         address vaultOracle
-
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);

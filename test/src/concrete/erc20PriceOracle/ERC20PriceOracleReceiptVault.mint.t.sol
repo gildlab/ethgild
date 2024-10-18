@@ -68,13 +68,11 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-
         vm.startPrank(alice);
 
         ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
 
         {
-
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
 
             // Ensure Alice has enough balance and allowance

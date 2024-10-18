@@ -13,11 +13,9 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constracted
-    function testCheckConstructionEvent(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol
-    ) external {
+    function testCheckConstructionEvent(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
