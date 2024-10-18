@@ -8,7 +8,7 @@ import {
     ERC20PriceOracleReceiptVaultConfig
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "src/concrete/oracle/TwoPriceOracle.sol";
+import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
@@ -16,28 +16,18 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
     function testCheckConstructionEvent(
         uint256 fuzzedKeyAlice,
         string memory assetName,
-        string memory assetSymbol,
-        uint256 timestamp,
-        uint8 xauDecimals,
-        uint8 usdDecimals,
-        uint80 answeredInRound
+        string memory assetSymbol
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
 
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        address vaultPriceOracle = address(uint160(uint256(keccak256("twoPriceOracle"))));
         vm.startPrank(alice);
 
         // Start recording logs
         vm.recordLogs();
 
-        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(vaultPriceOracle, assetName, assetSymbol);
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
@@ -72,7 +62,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
 
         assertEq(msgSender, address(iFactory));
-        assertEq(priceOracle, address(twoPriceOracle));
+        assertEq(priceOracle, vaultPriceOracle);
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(name)));
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(symbol)));
@@ -104,10 +94,9 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Simulate transaction from alice
         vm.prank(alice);
 
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
+        address vaultPriceOracle = address(uint160(uint256(keccak256("twoPriceOracle"))));
 
-        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(vaultPriceOracle, assetName, assetSymbol);
 
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
@@ -116,7 +105,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Simulate transaction from alice
         vm.prank(bob);
 
-        ERC20PriceOracleReceiptVault vaultTwo = createVault(address(twoPriceOracle), assetNameTwo, assetSymbolTwo);
+        ERC20PriceOracleReceiptVault vaultTwo = createVault(vaultPriceOracle, assetNameTwo, assetSymbolTwo);
 
         assert(address(vaultTwo) != address(0));
         assertEq(keccak256(bytes(vaultTwo.name())), keccak256(bytes(assetNameTwo)));

@@ -22,26 +22,17 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     function testDeposit(
         uint256 fuzzedKeyAlice,
         string memory assetName,
-        uint256 timestamp,
         uint256 assets,
-        uint8 xauDecimals,
-        uint8 usdDecimals,
-        uint80 answeredInRound
+        address vaultOracle,
+        uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
 
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
         vm.startPrank(alice);
         ERC20PriceOracleReceiptVault vault;
         {
-            vault = createVault(address(twoPriceOracle), assetName, assetName);
+            vault = createVault(vaultOracle, assetName, assetName);
 
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
 
@@ -58,7 +49,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 abi.encode(true)
             );
         }
-        uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(alice, alice, assets, expectedShares, oraclePrice, bytes(""));
@@ -76,29 +66,20 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        uint256 timestamp,
         uint256 assets,
-        uint8 usdDecimals,
-        uint80 answeredInRound
+        address vaultOracle,
+        uint256 oraclePrice
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        // xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
-
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
         vm.startPrank(alice);
 
         vm.recordLogs();
         ERC20PriceOracleReceiptVault vault;
         {
-            vault = createVault(address(twoPriceOracle), assetName, assetName);
+            vault = createVault(vaultOracle, assetName, assetName);
 
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
 
@@ -117,7 +98,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         }
         ReceiptContract receipt = getReceipt();
 
-        uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
         uint256 aliceReceiptBalance = receipt.balanceOf(alice, oraclePrice);
@@ -143,25 +123,13 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
-        uint256 timestamp,
-        uint8 xauDecimals,
-        uint8 usdDecimals,
-        uint80 answeredInRound
+        address vaultOracle,
+        uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
 
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
-
-        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
-
-        uint256 oraclePrice = twoPriceOracle.price();
+        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetSymbol);
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
         vault.deposit(0, alice, oraclePrice, data);
@@ -174,26 +142,14 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetSymbol,
         bytes memory data,
         uint256 assets,
-        uint256 timestamp,
-        uint8 xauDecimals,
-        uint8 usdDecimals,
-        uint80 answeredInRound
+        address vaultOracle,
+        uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
-
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
 
         assets = bound(assets, 1, type(uint256).max);
-        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
-
-        uint256 oraclePrice = twoPriceOracle.price();
+        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetSymbol);
 
         vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, oraclePrice + 1, oraclePrice));
         vault.deposit(assets, alice, oraclePrice + 1, data);
@@ -205,24 +161,11 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetSymbol,
         bytes memory data,
         uint256 assets,
-        uint256 timestamp,
-        uint8 xauDecimals,
-        uint8 usdDecimals,
-        uint80 answeredInRound
+        address vaultOracle,
+        uint256 oraclePrice
     ) external {
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
-
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
-
         assets = bound(assets, 1, type(uint256).max);
-        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
-
-        uint256 oraclePrice = twoPriceOracle.price();
+        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetSymbol);
 
         vm.expectRevert();
         vault.deposit(assets, address(0), oraclePrice, data);
@@ -233,24 +176,12 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         uint256 assets,
-        uint256 timestamp,
-        uint8 xauDecimals,
-        uint8 usdDecimals,
-        uint8 answeredInRound
+        address vaultOracle,
+        uint256 oraclePrice
     ) external {
-        // Use common decimal bounds for price feeds
-        // Use 0-20 so we at least have some coverage higher than 18
-        usdDecimals = uint8(bound(usdDecimals, 0, 20));
-        xauDecimals = uint8(bound(xauDecimals, 0, 20));
-        timestamp = bound(timestamp, 0, type(uint32).max);
-
-        vm.warp(timestamp);
-        TwoPriceOracle twoPriceOracle = createTwoPriceOracle(usdDecimals, usdDecimals, timestamp, answeredInRound);
-
         assets = bound(assets, 1, type(uint256).max);
-        ERC20PriceOracleReceiptVault vault = createVault(address(twoPriceOracle), assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetSymbol);
 
-        uint256 oraclePrice = twoPriceOracle.price();
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
         uint256 shares = vault.previewDeposit(assets, 0);

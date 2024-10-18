@@ -75,33 +75,6 @@ contract Deploy is Script {
         vm.stopBroadcast();
     }
 
-    // function deployOwnableOracleVault(uint256 deploymentKey) internal {
-    //     ICloneableFactoryV2 factory =
-    //         ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY"));
-
-    //     vm.startBroadcast(deploymentKey);
-
-    //     // Deploy OwnableOracle
-    //     OwnableOracle oracle = new OwnableOracle();
-    //     oracle.transferOwnership(vm.envAddress("OWNER_ADDRESS"));
-
-    //     factory.clone(
-    //         vm.envAddress("ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION"),
-    //         abi.encode(
-    //             ERC20PriceOracleVaultConfig({
-    //                 priceOracle: address(oracle),
-    //                 vaultConfig: VaultConfig({
-    //                     asset: vm.envAddress("RECEIPT_VAULT_ASSET"),
-    //                     name: vm.envString("RECEIPT_VAULT_NAME"),
-    //                     symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
-    //                 })
-    //             })
-    //         )
-    //     );
-
-    //     vm.stopBroadcast();
-    // }
-
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_KEY");
         bytes32 suite = keccak256(bytes(vm.envString("DEPLOYMENT_SUITE")));
