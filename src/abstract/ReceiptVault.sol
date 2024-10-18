@@ -400,17 +400,17 @@ abstract contract ReceiptVault is
     /// Share ratios are always number of shares per unit of assets in both mint
     /// and burn scenarios, and are 18 decimal fixed point numbers.
     ///
-    /// !param owner_ The owner of assets deposited on deposit and owner of
+    /// !param owner The owner of assets deposited on deposit and owner of
     /// shares burned on withdraw.
-    /// !param receiver_ The receiver of new shares minted on deposit and of
+    /// !param receiver The receiver of new shares minted on deposit and of
     /// withdrawn assets on withdraw.
     /// @param id The receipt ID being minted/burned in tandem with the shares.
     /// @param shareAction Encodes whether shares are being minted or burned
     /// (hypothetically or actually) for this ratio calculation.
     /// @return
     function _shareRatio(
-        address, // owner_
-        address, // receiver_
+        address, // owner
+        address, // receiver
         uint256 id,
         ShareAction shareAction
     ) internal view virtual returns (uint256) {
@@ -419,11 +419,11 @@ abstract contract ReceiptVault is
 
     /// Some functions in ERC4626 mandate the share ratio ignore the user.
     /// Otherwise identical to `_shareRatio`.
-    /// !param id_ As per `_shareRatio`.
-    /// !param shareAction_ As per `_shareRatio`.
+    /// !param id As per `_shareRatio`.
+    /// !param shareAction As per `_shareRatio`.
     function _shareRatioUserAgnostic(
-        uint256, // id_
-        ShareAction // shareAction_
+        uint256, // id
+        ShareAction // shareAction
     ) internal view virtual returns (uint256) {
         // Default is 1:1 shares to assets.
         return 1e18;
