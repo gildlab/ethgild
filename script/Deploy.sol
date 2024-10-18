@@ -11,10 +11,6 @@ import {
 import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {
-    FtsoCurrentPriceUsdOracle,
-    FtsoCurrentPriceUsdOracleConfig
-} from "src/concrete/oracle/FtsoCurrentPriceUsdOracle.sol";
-import {
     OffchainAssetReceiptVault, ReceiptVaultConstructionConfig
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";

@@ -1,6 +1,3 @@
-[submodule "lib/rain.interpreter"]
-	path = lib/rain.interpreter
-	url = https://github.com/rainlanguage/rain.interpreter
 [submodule "lib/rain.flare"]
 	path = lib/rain.flare
 	url = https://github.com/rainlanguage/rain.flare
@@ -19,3 +16,6 @@
 [submodule "lib/rain.math.fixedpoint"]
 	path = lib/rain.math.fixedpoint
 	url = https://github.com/rainlanguage/rain.math.fixedpoint
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
