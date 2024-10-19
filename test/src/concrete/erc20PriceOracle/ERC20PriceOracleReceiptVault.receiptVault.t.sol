@@ -18,21 +18,19 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test vault asset
-    function testVaultAsset(uint256 fuzzedKeyAlice, string memory assetName, address vaultOracle) external {
+    function testVaultAsset(uint256 fuzzedKeyAlice, string memory assetName) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         assertEq(vault.asset(), address(iAsset));
     }
 
     /// Test vault totalAssets
-    function testTotalAssets(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, address vaultOracle)
-        external
-    {
+    function testTotalAssets(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -40,7 +38,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         vm.mockCall(
             address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), abi.encode(assets)
@@ -52,13 +50,9 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test convertToAssets
-    function testConvertToAssets(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        uint256 shares,
-        uint256 id,
-        address vaultOracle
-    ) external {
+    function testConvertToAssets(uint256 fuzzedKeyAlice, string memory assetName, uint256 shares, uint256 id)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -67,7 +61,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         uint256 expectedAssets = shares.fixedPointDiv(id, Math.Rounding.Down);
         uint256 resultAssets = vault.convertToAssets(shares, id);
@@ -81,8 +75,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         uint256 fuzzedKeyBob,
         string memory assetName,
         uint256 shares,
-        uint256 id,
-        address vaultOracle
+        uint256 id
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -93,7 +86,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         uint256 resultAssetsAlice = vault.convertToAssets(shares, id);
         vm.stopPrank();
@@ -106,13 +99,9 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test convertToShares
-    function testConvertToShares(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        uint256 assets,
-        uint256 id,
-        address vaultOracle
-    ) external {
+    function testConvertToShares(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 id)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -121,7 +110,7 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         uint256 expectedShares = assets.fixedPointMul(id, Math.Rounding.Down);
         uint256 resultShares = vault.convertToShares(assets, id);
@@ -135,19 +124,20 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
         uint256 fuzzedKeyBob,
         string memory assetName,
         uint256 assets,
-        uint256 id,
-        address vaultOracle
+        uint256 id
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         // Bound the ID to a range that could actually be a price.
-        id = bound(id, 0, type(uint128).max);
+        id = bound(id, 0.001e18, 100e18);
+        assets = bound(assets, 1, type(uint128).max);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+
         uint256 resultSharesAlice = vault.convertToShares(assets, id);
         vm.stopPrank();
 
@@ -159,12 +149,12 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test vault sets correct max deposit
-    function testMaxDeposit(uint256 fuzzedKeyAlice, string memory assetName, address vaultOracle) external {
+    function testMaxDeposit(uint256 fuzzedKeyAlice, string memory assetName) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         uint256 maxDeposit = vault.maxDeposit(alice);
 
@@ -172,13 +162,13 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test vault sets correct max Mint
-    function testMaxShares(uint256 fuzzedKeyAlice, string memory assetName, address vaultOracle) external {
+    function testMaxShares(uint256 fuzzedKeyAlice, string memory assetName) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         uint256 maxMint = vault.maxMint(alice);
 
@@ -186,18 +176,15 @@ contract ERC20PriceOracleReceiptVaultreceiptVaultTest is ERC20PriceOracleReceipt
     }
 
     /// Test vault receiptVaultInformation
-    function testReceiptVaultInformation(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        bytes memory information,
-        address vaultOracle
-    ) external {
+    function testReceiptVaultInformation(uint256 fuzzedKeyAlice, string memory assetName, bytes memory information)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.ReceiptVaultInformation(alice, information);
