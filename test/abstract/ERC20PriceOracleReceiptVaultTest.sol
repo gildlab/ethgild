@@ -16,8 +16,8 @@ import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPrice
 import {
     ChainlinkFeedPriceOracle, ChainlinkFeedPriceOracleConfig
 } from "src/concrete/oracle/ChainlinkFeedPriceOracle.sol";
-import {MockChainlinkDataFeed, RoundData} from "test/concrete/MockChainlinkDataFeed.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
     event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
@@ -26,6 +26,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable iReceiptImplementation;
     IERC20 immutable iAsset;
+    address immutable iVaultOracle;
 
     constructor() {
         iFactory = new CloneFactory();
@@ -34,6 +35,11 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
             ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
         iAsset = IERC20(address(uint160(uint256(keccak256("asset.test")))));
+        iVaultOracle = address(uint160(uint256(keccak256("vault.oracle"))));
+    }
+
+    function setVaultOraclePrice(uint256 oraclePrice) internal {
+        vm.mockCall(iVaultOracle, abi.encodeWithSelector(IPriceOracleV2.price.selector), abi.encode(oraclePrice));
     }
 
     function createVault(address priceOracle, string memory name, string memory symbol)
@@ -44,52 +50,6 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
             iFactory, iImplementation, priceOracle, address(iAsset), name, symbol
         );
         return vault;
-    }
-
-    function createTwoPriceOracle(uint8 usdDecimals, uint8 xauDecimals, uint256 timestamp, uint80 answeredInRound)
-        internal
-        returns (TwoPriceOracle twoPriceOracle)
-    {
-        int256 basePrice = 1e8; // Example price for base
-        int256 quotePrice = 1.8e8; // Example price for quote
-
-        // Deploy base price oracle
-        MockChainlinkDataFeed basePriceOracle = new MockChainlinkDataFeed();
-        basePriceOracle.setDecimals(usdDecimals);
-        basePriceOracle.setRoundData(
-            1,
-            RoundData({answer: basePrice, startedAt: timestamp, updatedAt: timestamp, answeredInRound: answeredInRound})
-        );
-
-        // Deploy quote price oracle
-        MockChainlinkDataFeed quotePriceOracle = new MockChainlinkDataFeed();
-        quotePriceOracle.setDecimals(xauDecimals);
-        quotePriceOracle.setRoundData(
-            1,
-            RoundData({answer: quotePrice, startedAt: timestamp, updatedAt: timestamp, answeredInRound: answeredInRound})
-        );
-        // Set stale after times
-        uint256 baseStaleAfter = 60 * 60; // 1 hour
-        uint256 quoteStaleAfter = 48 * 60 * 60; // 48 hours
-
-        // Deploy Chainlink Feed Price Oracle for base and quote
-        address chainlinkFeedPriceOracleBase = address(
-            new ChainlinkFeedPriceOracle(
-                ChainlinkFeedPriceOracleConfig({feed: address(basePriceOracle), staleAfter: baseStaleAfter})
-            )
-        );
-        address chainlinkFeedPriceOracleQuote = address(
-            new ChainlinkFeedPriceOracle(
-                ChainlinkFeedPriceOracleConfig({feed: address(quotePriceOracle), staleAfter: quoteStaleAfter})
-            )
-        );
-
-        // Deploy TwoPriceOracle
-        TwoPriceOracleConfig memory config =
-            TwoPriceOracleConfig({base: chainlinkFeedPriceOracleBase, quote: chainlinkFeedPriceOracleQuote});
-        twoPriceOracle = new TwoPriceOracle(config);
-
-        return twoPriceOracle;
     }
 
     /// Get Receipt from event
