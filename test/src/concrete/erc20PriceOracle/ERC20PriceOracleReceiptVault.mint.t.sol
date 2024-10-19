@@ -17,21 +17,19 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test mint function
-    function testMint(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        uint256 timestamp,
-        uint256 assets,
-        address vaultOracle,
-        uint256 oraclePrice
-    ) external {
+    function testMintBasic(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 oraclePrice)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
 
         vm.startPrank(alice);
         ERC20PriceOracleReceiptVault vault;
         {
-            vault = createVault(vaultOracle, assetName, assetName);
+            vault = createVault(iVaultOracle, assetName, assetName);
 
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
 
@@ -39,7 +37,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
             uint256 totalSupply = iAsset.totalSupply();
-            assets = bound(assets, 2, totalSupply);
+            assets = bound(assets, 1, totalSupply);
+            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
             vm.mockCall(
                 address(iAsset),
@@ -61,7 +60,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 fuzzedKeyBob,
         string memory assetName,
         uint256 assets,
-        address vaultOracle,
         uint256 oraclePrice
     ) external {
         // Generate unique addresses
@@ -70,7 +68,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         {
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
@@ -79,7 +80,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
             uint256 totalSupply = iAsset.totalSupply();
-            assets = bound(assets, 2, totalSupply);
+            assets = bound(assets, 1, totalSupply);
+            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
             vm.mockCall(
                 address(iAsset),
@@ -96,18 +98,16 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     }
 
     /// Test mint function with zero shares
-    function testMintWithZeroShares(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        address vaultOracle,
-        uint256 oraclePrice
-    ) external {
+    function testMintWithZeroShares(uint256 fuzzedKeyAlice, string memory assetName, uint256 oraclePrice) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
         vault.mint(0, alice, oraclePrice, bytes(""));
@@ -120,14 +120,18 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetSymbol,
         uint256 assets,
         uint256 minPrice,
-        address vaultOracle,
         uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
-        assets = bound(assets, 1, type(uint256).max);
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetSymbol);
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
+        assets = bound(assets, 1, type(uint128).max);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
 
         vm.assume(minPrice > oraclePrice);
         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -141,11 +145,15 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         string memory assetName,
         string memory assetSymbol,
         uint256 shares,
-        address vaultOracle,
         uint256 oraclePrice
     ) external {
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
         shares = bound(shares, 1, type(uint64).max);
-        ERC20PriceOracleReceiptVault vault = createVault(vaultOracle, assetName, assetSymbol);
+        vm.assume(shares.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
 
         uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Up);
 
