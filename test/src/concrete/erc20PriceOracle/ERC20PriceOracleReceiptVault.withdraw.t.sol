@@ -36,8 +36,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Call withdraw function
         vault.withdraw(assets, receiver, owner, id, data);
 
-        // uint256 balanceAfterOwner = receipt.balanceOf(owner, id);
-        // assertEq(balanceAfterOwner, initialBalanceOwner - shares);
+        uint256 balanceAfterOwner = receipt.balanceOf(owner, id);
+        assertEq(balanceAfterOwner, initialBalanceOwner - shares);
     }
 
     /// Checks that balance owner balance does not change after wirthdraw revert
@@ -103,8 +103,9 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         setVaultOraclePrice(oraclePrice);
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
-        uint256 availableReceiptBalance = receipt.balanceOf(alice, oraclePrice);
-        checkBalanceChange(vault, alice, alice, oraclePrice, assets, receipt, bytes(""));
+        uint256 withdrawAssets =
+            assets.fixedPointMul(oraclePrice, Math.Rounding.Down).fixedPointDiv(oraclePrice, Math.Rounding.Down);
+        checkBalanceChange(vault, alice, alice, oraclePrice, withdrawAssets, receipt, bytes(""));
     }
 
     /// Test Withdraw function reverts on zero assets
@@ -112,16 +113,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 fuzzedKeyAlice,
         string memory assetName,
         uint256 assets,
-        address vaultAddress,
         uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(vaultAddress, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
@@ -129,8 +132,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
         uint256 totalSupply = iAsset.totalSupply();
-        // Getting ZeroSharesAmount if bounded from 1
-        assets = bound(assets, 2, totalSupply);
+
+        assets = bound(assets, 1, totalSupply);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
@@ -197,16 +202,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 fuzzedKeyAlice,
         string memory assetName,
         uint256 assets,
-        address vaultAddress,
         uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(vaultAddress, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
@@ -214,8 +221,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
         uint256 totalSupply = iAsset.totalSupply();
-        // Getting ZeroSharesAmount if bounded from 1
-        assets = bound(assets, 2, totalSupply);
+
+        assets = bound(assets, 1, totalSupply);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
@@ -238,19 +247,21 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     }
 
     /// Test PreviewWithdraw returns correct shares
-    function testPreviewWithdraw(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        uint256 assets,
-        address vaultAddress,
-        uint256 oraclePrice
-    ) external {
+    function testPreviewWithdraw(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 oraclePrice)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
+        assets = bound(assets, 1, type(uint64).max);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
         // Prank as Alice to grant role
         vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(vaultAddress, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         // Call withdraw function
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Up);
@@ -267,16 +278,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         string memory assetName,
         uint256 assets,
         uint256 assetsToWithdraw,
-        address vaultAddress,
         uint256 oraclePrice
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(vaultAddress, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
@@ -284,8 +297,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
         uint256 totalSupply = iAsset.totalSupply();
-        // Getting ZeroSharesAmount if bounded from 1
-        assets = bound(assets, 2, totalSupply);
+
+        assets = bound(assets, 1, totalSupply);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
