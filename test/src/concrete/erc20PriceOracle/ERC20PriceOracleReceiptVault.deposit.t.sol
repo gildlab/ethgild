@@ -208,5 +208,24 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vm.stopPrank();
     }
 
+    function testDepositFlareFork() public {
+        // Contract address on Flare
+        address payable CONTRACT_ADDRESS = payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4);
+
+        // Sender address
+        address SENDER_ADDRESS = 0xf08bCbce72f62c95Dcb7c07dCb5Ed26ACfCfBc11;
+
+        vm.createSelectFork("https://flare-api.flare.network/ext/C/rpc", 31725348);
+
+        vm.startPrank(SENDER_ADDRESS);
+
+        // Load the contract interface
+        ERC20PriceOracleReceiptVault vault = ERC20PriceOracleReceiptVault(CONTRACT_ADDRESS);
+
+        // Make the deposit
+        vault.deposit(1000000000000000000, SENDER_ADDRESS, 0, hex"00");
+        vm.stopPrank();
+    }
+
     fallback() external {}
 }
