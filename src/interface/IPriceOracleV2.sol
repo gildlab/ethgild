@@ -28,4 +28,10 @@ pragma solidity ^0.8.0;
 interface IPriceOracleV2 {
     /// Returns the current/latest price according to the oracle.
     function price() external payable returns (uint256);
+
+    /// Need to accept refunds from the oracle.
+    fallback() external payable;
+
+    /// Need to accept refunds from the oracle.
+    receive() external payable;
 }

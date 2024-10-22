@@ -7,8 +7,15 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {TwoPriceOracleConfig} from "./TwoPriceOracle.sol";
 import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
+
+/// Construction config for `TwoPriceOracle`.
+/// @param base The base price of the merged pair, will be the numerator.
+/// @param quote The quote price of the merged pair, will be the denominator.
+struct TwoPriceOracleConfigV2 {
+    IPriceOracleV2 base;
+    IPriceOracleV2 quote;
+}
 
 /// @title TwoPriceOracle
 /// Any time we have two price feeds that share a denominator we can derive the
@@ -22,7 +29,7 @@ contract TwoPriceOracleV2 is IPriceOracleV2 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Emitted upon deployment and construction.
-    event Construction(address sender, TwoPriceOracleConfig config);
+    event Construction(address sender, TwoPriceOracleConfigV2 config);
 
     /// As per `ConstructionConfig.base`.
     IPriceOracleV2 public immutable base;
@@ -30,7 +37,7 @@ contract TwoPriceOracleV2 is IPriceOracleV2 {
     IPriceOracleV2 public immutable quote;
 
     /// @param config Config required to construct.
-    constructor(TwoPriceOracleConfig memory config) {
+    constructor(TwoPriceOracleConfigV2 memory config) {
         base = IPriceOracleV2(config.base);
         quote = IPriceOracleV2(config.quote);
         emit Construction(msg.sender, config);
@@ -52,4 +59,10 @@ contract TwoPriceOracleV2 is IPriceOracleV2 {
         Address.sendValue(payable(msg.sender), address(this).balance);
         return val;
     }
+
+    /// Need to accept refunds from the oracle.
+    fallback() external payable {}
+
+    /// Need to accept refunds from the oracle.
+    receive() external payable {}
 }
