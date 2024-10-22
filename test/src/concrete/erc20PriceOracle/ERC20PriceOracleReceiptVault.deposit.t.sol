@@ -210,7 +210,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
     function testDepositFlareFork() public {
         // Contract address on Flare
-        address CONTRACT_ADDRESS = 0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4;
+        address payable CONTRACT_ADDRESS = payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4);
+
         // Sender address
         address SENDER_ADDRESS = 0xf08bCbce72f62c95Dcb7c07dCb5Ed26ACfCfBc11;
 
