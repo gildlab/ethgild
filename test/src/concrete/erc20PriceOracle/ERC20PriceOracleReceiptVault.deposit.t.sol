@@ -231,11 +231,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
             // Ensure Alice has enough balance and allowance
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-            uint256 totalSupply = iAsset.totalSupply();
-
-            assets = bound(assets, 1, totalSupply);
-            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
             vm.mockCall(
                 address(iAsset),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
