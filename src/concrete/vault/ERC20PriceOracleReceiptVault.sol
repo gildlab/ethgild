@@ -20,7 +20,7 @@ import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 /// @param priceOracle as per `ERC20PriceOracleReceiptVaultConfig`.
 /// @param vaultConfig config for the underlying `ReceiptVault`.
 struct ERC20PriceOracleVaultConfig {
-    address priceOracle;
+    IPriceOracleV2 priceOracle;
     VaultConfig vaultConfig;
 }
 
@@ -28,7 +28,7 @@ struct ERC20PriceOracleVaultConfig {
 /// `ERC20PriceOracleVault` upon initialization.
 /// @param receiptVaultConfig All config for the underlying receipt vault.
 struct ERC20PriceOracleReceiptVaultConfig {
-    address priceOracle;
+    IPriceOracleV2 priceOracle;
     ReceiptVaultConfig receiptVaultConfig;
 }
 

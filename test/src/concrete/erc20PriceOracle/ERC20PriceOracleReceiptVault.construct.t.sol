@@ -19,7 +19,8 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
-        address vaultPriceOracle = address(uint160(uint256(keccak256("twoPriceOracle"))));
+        IPriceOracleV2 vaultPriceOracle =
+            IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
         vm.startPrank(alice);
 
         // Start recording logs
@@ -32,7 +33,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Note: To use vm.expectEmit receipt address is needed to be known.
         // Find the OffchainAssetReceiptVaultInitialized event log
         address msgSender = address(0);
-        address priceOracle = address(0);
+        IPriceOracleV2 priceOracle = IPriceOracleV2(payable(0));
         address assetAddress = address(0);
         string memory name = "";
         string memory symbol = "";
@@ -60,7 +61,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
 
         assertEq(msgSender, address(iFactory));
-        assertEq(priceOracle, vaultPriceOracle);
+        assertEq(address(priceOracle), address(vaultPriceOracle));
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(name)));
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(symbol)));

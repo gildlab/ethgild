@@ -15,10 +15,11 @@ import {
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {SceptreStakedFlrOracle} from "src/concrete/oracle/SceptreStakedFlrOracle.sol";
-import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPriceOracle.sol";
+import {TwoPriceOracleV2, TwoPriceOracleConfigV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
 import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
 import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "src/concrete/oracle/FtsoV2LTSFeedOracle.sol";
 import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
+import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
@@ -45,7 +46,7 @@ contract Deploy is Script {
 
     function deployStakedFlrPriceVault(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
-        address ftsoV2LTSFeedOracle = address(
+        IPriceOracleV2 ftsoV2LTSFeedOracle = IPriceOracleV2(
             new FtsoV2LTSFeedOracle(
                 FtsoV2LTSFeedOracleConfig({
                     feedId: FLR_USD_FEED_ID,
@@ -55,9 +56,10 @@ contract Deploy is Script {
             )
         );
         address stakedFlr = vm.envAddress("SCEPTRE_STAKED_FLR_ADDRESS");
-        address stakedFlrOracle = address(new SceptreStakedFlrOracle(IStakedFlr(stakedFlr)));
-        address twoPriceOracle =
-            address(new TwoPriceOracle(TwoPriceOracleConfig({base: ftsoV2LTSFeedOracle, quote: stakedFlrOracle})));
+        IPriceOracleV2 stakedFlrOracle = IPriceOracleV2(new SceptreStakedFlrOracle(IStakedFlr(stakedFlr)));
+        IPriceOracleV2 twoPriceOracle = IPriceOracleV2(
+            new TwoPriceOracleV2(TwoPriceOracleConfigV2({base: ftsoV2LTSFeedOracle, quote: stakedFlrOracle}))
+        );
 
         ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")).clone(
             vm.envAddress("ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION"),
