@@ -152,6 +152,12 @@ abstract contract ReceiptVault is
         iReceiptImplementation = config.receiptImplementation;
     }
 
+    /// Deposits are payable so this allows refunds.
+    fallback() external payable {}
+
+    /// Deposits are payable so this allows refunds.
+    receive() external payable {}
+
     /// Initialize the `ReceiptVault` and .
     /// @param config All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase

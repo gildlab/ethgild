@@ -21,6 +21,8 @@ library LibOffchainAssetVaultCreator {
         });
 
         // Use the factory to create the child contract
-        return OffchainAssetReceiptVault(factory.clone(address(implementation), abi.encode(offchainAssetVaultConfig)));
+        return OffchainAssetReceiptVault(
+            payable(factory.clone(address(implementation), abi.encode(offchainAssetVaultConfig)))
+        );
     }
 }

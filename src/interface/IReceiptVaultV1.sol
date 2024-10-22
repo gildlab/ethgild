@@ -104,4 +104,10 @@ interface IReceiptVaultV1 {
     function redeem(uint256 shares, address receiver, address owner, uint256 id, bytes calldata receiptInformation)
         external
         returns (uint256);
+
+    /// Need to accept refunds from the oracle.
+    fallback() external payable;
+
+    /// Need to accept refunds from the oracle.
+    receive() external payable;
 }
