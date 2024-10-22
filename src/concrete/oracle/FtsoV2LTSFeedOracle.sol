@@ -30,4 +30,10 @@ contract FtsoV2LTSFeedOracle is IPriceOracleV2 {
         Address.sendValue(payable(msg.sender), address(this).balance);
         return val;
     }
+
+    /// Need to accept refunds from the oracle.
+    fallback() external payable {}
+
+    /// Need to accept refunds from the oracle.
+    receive() external payable {}
 }

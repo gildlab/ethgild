@@ -8,13 +8,14 @@ import {
     ERC20PriceOracleVaultConfig
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 library LibERC20PriceOracleReceiptVaultCreator {
     /// Helper to create child erc20PriceOracleVault.
     function createVault(
         ICloneableFactoryV2 factory,
         ERC20PriceOracleReceiptVault implementation,
-        address priceOracle,
+        IPriceOracleV2 priceOracle,
         address asset,
         string memory name,
         string memory symbol

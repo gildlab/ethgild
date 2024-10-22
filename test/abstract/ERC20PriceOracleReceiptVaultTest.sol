@@ -26,7 +26,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable iReceiptImplementation;
     IERC20 immutable iAsset;
-    address immutable iVaultOracle;
+    IPriceOracleV2 immutable iVaultOracle;
 
     constructor() {
         iFactory = new CloneFactory();
@@ -35,14 +35,16 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
             ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
         iAsset = IERC20(address(uint160(uint256(keccak256("asset.test")))));
-        iVaultOracle = address(uint160(uint256(keccak256("vault.oracle"))));
+        iVaultOracle = IPriceOracleV2(payable(address(uint160(uint256(keccak256("vault.oracle"))))));
     }
 
     function setVaultOraclePrice(uint256 oraclePrice) internal {
-        vm.mockCall(iVaultOracle, abi.encodeWithSelector(IPriceOracleV2.price.selector), abi.encode(oraclePrice));
+        vm.mockCall(
+            address(iVaultOracle), abi.encodeWithSelector(IPriceOracleV2.price.selector), abi.encode(oraclePrice)
+        );
     }
 
-    function createVault(address priceOracle, string memory name, string memory symbol)
+    function createVault(IPriceOracleV2 priceOracle, string memory name, string memory symbol)
         internal
         returns (ERC20PriceOracleReceiptVault)
     {
