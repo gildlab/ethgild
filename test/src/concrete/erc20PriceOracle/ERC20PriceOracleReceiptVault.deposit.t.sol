@@ -209,9 +209,12 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     }
 
     /// Test deposit function reproduction
-    function testDepositBasicReproduction(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 oraclePrice)
-    external
-    {
+    function testDepositBasicReproduction(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 assets,
+        uint256 oraclePrice
+    ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
