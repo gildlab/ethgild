@@ -26,6 +26,8 @@ library LibERC20PriceOracleReceiptVaultCreator {
         });
 
         // Use the factory to create the child contract
-        return ERC20PriceOracleReceiptVault(factory.clone(address(implementation), abi.encode(erc20PriceOracleVault)));
+        return ERC20PriceOracleReceiptVault(
+            payable(factory.clone(address(implementation), abi.encode(erc20PriceOracleVault)))
+        );
     }
 }

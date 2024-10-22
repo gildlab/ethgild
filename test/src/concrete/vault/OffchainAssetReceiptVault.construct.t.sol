@@ -57,8 +57,9 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault =
-            OffchainAssetReceiptVault(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)));
+        OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(
+            payable(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)))
+        );
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -107,8 +108,9 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault =
-            OffchainAssetReceiptVault(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)));
+        OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(
+            payable(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)))
+        );
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
