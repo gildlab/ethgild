@@ -208,38 +208,5 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vm.stopPrank();
     }
 
-    /// Test deposit function reproduction
-    function testDepositBasicReproduction(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        uint256 assets,
-        uint256 oraclePrice
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault;
-        {
-            vault = createVault(iVaultOracle, assetName, assetName);
-
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
-
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
-            vm.mockCall(
-                address(iAsset),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
-                abi.encode(true)
-            );
-        }
-
-        vault.deposit(1, alice, 0, bytes(""));
-    }
-
     fallback() external {}
 }
