@@ -214,7 +214,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Sender address
         address SENDER_ADDRESS = 0xf08bCbce72f62c95Dcb7c07dCb5Ed26ACfCfBc11;
 
-        vm.createSelectFork("https://flare-api.flare.network/ext/C/rpc", 31714610);
+        vm.createSelectFork("https://flare-api.flare.network/ext/C/rpc", 31722279);
 
         vm.startPrank(SENDER_ADDRESS);
 
