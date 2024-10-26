@@ -20,6 +20,7 @@ import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
 import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "src/concrete/oracle/FtsoV2LTSFeedOracle.sol";
 import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
+import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
@@ -55,8 +56,7 @@ contract Deploy is Script {
                 })
             )
         );
-        address stakedFlr = vm.envAddress("SCEPTRE_STAKED_FLR_ADDRESS");
-        IPriceOracleV2 stakedFlrOracle = IPriceOracleV2(new SceptreStakedFlrOracle(IStakedFlr(stakedFlr)));
+        IPriceOracleV2 stakedFlrOracle = new SceptreStakedFlrOracle();
         IPriceOracleV2 twoPriceOracle = IPriceOracleV2(
             new TwoPriceOracleV2(TwoPriceOracleConfigV2({base: ftsoV2LTSFeedOracle, quote: stakedFlrOracle}))
         );
@@ -67,7 +67,7 @@ contract Deploy is Script {
                 ERC20PriceOracleVaultConfig({
                     priceOracle: twoPriceOracle,
                     vaultConfig: VaultConfig({
-                        asset: stakedFlr,
+                        asset: address(SFLR_CONTRACT),
                         name: vm.envString("RECEIPT_VAULT_NAME"),
                         symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
                     })
