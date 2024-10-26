@@ -7,7 +7,6 @@ import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 
 contract SceptreStakedFlrOracle is IPriceOracleV2 {
-
     /// @inheritdoc IPriceOracleV2
     function price() external payable override returns (uint256) {
         uint256 val = LibSceptreStakedFlare.getSFLRPerFLR18();
