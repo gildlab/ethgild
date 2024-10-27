@@ -3,7 +3,6 @@
 pragma solidity =0.8.25;
 
 import {Script} from "forge-std/Script.sol";
-import {OwnableOracle} from "src/concrete/oracle/OwnableOracle.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ERC20PriceOracleVaultConfig
@@ -33,7 +32,6 @@ contract Deploy is Script {
     function deployImplementations(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
 
-        new OwnableOracle();
         ReceiptContract receipt = new ReceiptContract();
         ReceiptVaultConstructionConfig memory receiptVaultConstructionConfig = ReceiptVaultConstructionConfig({
             factory: ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")),

@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "src/concrete/oracle/TwoPriceOracle.sol";
+import {TwoPriceOracleV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math

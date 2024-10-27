@@ -12,7 +12,7 @@ import {
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {TwoPriceOracle, TwoPriceOracleConfig} from "src/concrete/oracle/TwoPriceOracle.sol";
+import {TwoPriceOracleV2, TwoPriceOracleConfigV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
