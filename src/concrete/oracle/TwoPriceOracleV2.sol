@@ -2,12 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
+import {PriceOracleV2, IPriceOracleV2} from "src/abstract/PriceOracleV2.sol";
 
 /// Construction config for `TwoPriceOracle`.
 /// @param base The base price of the merged pair, will be the numerator.
@@ -25,7 +24,7 @@ struct TwoPriceOracleConfigV2 {
 ///
 /// For example, an ETH/USD (base) and an XAU/USD (quote) price can be combined
 /// to a single ETH/XAU price as (ETH/USD) / (XAU/USD).
-contract TwoPriceOracleV2 is IPriceOracleV2 {
+contract TwoPriceOracleV2 is PriceOracleV2 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Emitted upon deployment and construction.
@@ -46,8 +45,8 @@ contract TwoPriceOracleV2 is IPriceOracleV2 {
     /// Calculates the price as `base / quote` using fixed point 18 decimal math.
     /// Round UP to avoid edge cases that could return `0` which is disallowed
     /// by `IPriceOracleV2` despite compliant sub-oracles.
-    /// @inheritdoc IPriceOracleV2
-    function price() external payable override returns (uint256) {
+    /// @inheritdoc PriceOracleV2
+    function _price() internal virtual override returns (uint256) {
         // This contract is never intended to hold gas, it's only here to pay the
         // oracles that might need to be paid.
         // This means the slither detector here is a false positive.
@@ -55,14 +54,6 @@ contract TwoPriceOracleV2 is IPriceOracleV2 {
         uint256 quotePrice = quote.price{value: address(this).balance}();
         //slither-disable-next-line arbitrary-send-eth
         uint256 basePrice = base.price{value: address(this).balance}();
-        uint256 val = basePrice.fixedPointDiv(quotePrice, Math.Rounding.Up);
-        Address.sendValue(payable(msg.sender), address(this).balance);
-        return val;
+        return basePrice.fixedPointDiv(quotePrice, Math.Rounding.Up);
     }
-
-    /// Need to accept refunds from the oracle.
-    fallback() external payable {}
-
-    /// Need to accept refunds from the oracle.
-    receive() external payable {}
 }
