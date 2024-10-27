@@ -2,24 +2,17 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {OracleTest} from "test/abstract/OracleTest.sol";
 import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "src/concrete/oracle/FtsoV2LTSFeedOracle.sol";
 import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
-import {LibFork} from "rain.flare/../test/fork/LibFork.sol";
 import {StalePrice} from "rain.flare/err/ErrFtso.sol";
 import {IFeeCalculator} from "flare-smart-contracts-v2/userInterfaces/IFeeCalculator.sol";
 import {LibFlareContractRegistry} from "rain.flare/lib/registry/LibFlareContractRegistry.sol";
 import {IGoverned, IGovernanceSettings} from "rain.flare/interface/IGoverned.sol";
 import {IGovernedFeeCalculator} from "rain.flare/interface/IGovernedFeeCalculator.sol";
 
-uint256 constant BLOCK_NUMBER = 31993648;
-
-contract FtsoV2LTSFeedOracleTest is Test {
-    address constant ALICE = address(uint160(uint256(keccak256("ALICE"))));
-
+contract FtsoV2LTSFeedOracleTest is OracleTest {
     function testFtsoV2LTSFeedOracle() external {
-        vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
-
         FtsoV2LTSFeedOracle oracle =
             new FtsoV2LTSFeedOracle(FtsoV2LTSFeedOracleConfig({feedId: FLR_USD_FEED_ID, staleAfter: 60}));
 
@@ -28,8 +21,6 @@ contract FtsoV2LTSFeedOracleTest is Test {
     }
 
     function testFtsoV2LTSFeedOracleStale() external {
-        vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
-
         FtsoV2LTSFeedOracle oracle =
             new FtsoV2LTSFeedOracle(FtsoV2LTSFeedOracleConfig({feedId: FLR_USD_FEED_ID, staleAfter: 60}));
 
@@ -44,7 +35,6 @@ contract FtsoV2LTSFeedOracleTest is Test {
     /// forge-config: default.fuzz.runs = 1
     function testFtsoV2LTSFeedOraclePaid(uint128 fee) external {
         vm.assume(fee > 0);
-        vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
 
         uint256 timelock;
         {
