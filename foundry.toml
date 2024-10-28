@@ -6,8 +6,6 @@ solc = "0.8.25"
 optimizer = true
 optimizer_runs = 100000
 
-fuzz.runs = 2056
-
 remappings = [
     "rain.factory/=lib/rain.factory/src/",
     "rain.intorastring/=lib/rain.interpreter/lib/rain.intorastring/src/",
