@@ -2,16 +2,15 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
+import {PriceOracleV2} from "../../abstract/PriceOracleV2.sol";
 import {LibFtsoV2LTS} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
-import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 
 struct FtsoV2LTSFeedOracleConfig {
     bytes21 feedId;
     uint256 staleAfter;
 }
 
-contract FtsoV2LTSFeedOracle is IPriceOracleV2 {
+contract FtsoV2LTSFeedOracle is PriceOracleV2 {
     event Construction(address sender, FtsoV2LTSFeedOracleConfig config);
 
     bytes21 public immutable iFeedId;
@@ -24,16 +23,8 @@ contract FtsoV2LTSFeedOracle is IPriceOracleV2 {
         emit Construction(msg.sender, config);
     }
 
-    /// @inheritdoc IPriceOracleV2
-    function price() external payable override returns (uint256) {
-        uint256 val = LibFtsoV2LTS.ftsoV2LTSGetFeed(iFeedId, iStaleAfter);
-        Address.sendValue(payable(msg.sender), address(this).balance);
-        return val;
+    /// @inheritdoc PriceOracleV2
+    function _price() internal virtual override returns (uint256) {
+        return LibFtsoV2LTS.ftsoV2LTSGetFeed(iFeedId, iStaleAfter);
     }
-
-    /// Need to accept refunds from the oracle.
-    fallback() external payable {}
-
-    /// Need to accept refunds from the oracle.
-    receive() external payable {}
 }

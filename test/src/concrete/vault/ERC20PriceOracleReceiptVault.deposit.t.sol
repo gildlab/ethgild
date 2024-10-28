@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracle} from "src/concrete/oracle/TwoPriceOracle.sol";
+import {TwoPriceOracleV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -33,14 +33,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         {
             vault = createVault(iVaultOracle, assetName, assetName);
 
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
-
             // Ensure Alice has enough balance and allowance
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-            uint256 totalSupply = iAsset.totalSupply();
-
-            assets = bound(assets, 1, totalSupply);
+            assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
             vm.mockCall(
@@ -83,14 +79,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         {
             vault = createVault(iVaultOracle, assetName, assetName);
 
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
-
             // Ensure Alice has enough balance and allowance
             vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-            uint256 totalSupply = iAsset.totalSupply();
-
-            assets = bound(assets, 1, totalSupply);
+            assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
             vm.mockCall(
