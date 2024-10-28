@@ -89,10 +89,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
-        uint256 totalSupply = iAsset.totalSupply();
-
-        assets = bound(assets, 2, totalSupply);
+        assets = bound(assets, 2, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         // Ensure Alice has enough balance and allowance
@@ -129,13 +126,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
         // Ensure Alice has enough balance and allowance
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-        uint256 totalSupply = iAsset.totalSupply();
-
-        assets = bound(assets, 1, totalSupply);
+        assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
@@ -170,10 +164,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
-        uint256 totalSupply = iAsset.totalSupply();
-
-        assets = bound(assets, 1, totalSupply);
+        assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         // Ensure Alice has enough balance and allowance
@@ -219,13 +210,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
         // Ensure Alice has enough balance and allowance
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-        uint256 totalSupply = iAsset.totalSupply();
-
-        assets = bound(assets, 1, totalSupply);
+        assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
@@ -295,13 +283,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(1e18));
         // Ensure Alice has enough balance and allowance
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
-        uint256 totalSupply = iAsset.totalSupply();
-
-        assets = bound(assets, 1, totalSupply);
+        assets = bound(assets, 1, type(uint128).max - 1);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
@@ -313,7 +298,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
         // Make sure assetsToWithdraw is more than assets
-        assetsToWithdraw = bound(assetsToWithdraw, assets + 1, type(uint64).max);
+        assetsToWithdraw = bound(assetsToWithdraw, assets + 1, type(uint128).max);
         checkNoBalanceChange(vault, alice, alice, oraclePrice, assetsToWithdraw, receipt, bytes(""), bytes(""));
     }
 }
