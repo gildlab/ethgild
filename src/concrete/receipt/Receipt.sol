@@ -56,9 +56,9 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
 
     function uri(uint256 id) public view virtual override returns (string memory) {
         bytes memory json = abi.encodePacked(
-            "{\"name\":\"Receipt for lock price at ",
+            "{\"name\":\"Receipt for cyclo lock at ",
             fixedPoint18ToDecimalString(id),
-            "\",\"description\":\"1 of these receipts can be burned alongside 1 cysFLR to redeem ",
+            " USD per sFLR\",\"description\":\"1 of these receipts can be burned alongside 1 cysFLR to redeem ",
             fixedPoint18ToDecimalString(
                 id > 0 ? LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(1e18, id, Math.Rounding.Down) : 0
             ),
