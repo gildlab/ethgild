@@ -167,7 +167,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         amount = bound(amount, 1, type(uint128).max);
         // Contract address on Flare
         ERC20PriceOracleReceiptVault vault =
-                        ERC20PriceOracleReceiptVault(payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4));
+            ERC20PriceOracleReceiptVault(payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4));
         // Sender address
         address alice = address(uint160(uint256(keccak256("ALICE"))));
         uint256 BLOCK_NUMBER = 31725348;
