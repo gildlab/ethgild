@@ -16,6 +16,7 @@ import {LibFork} from "rain.flare/../test/fork/LibFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
+import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -165,18 +166,14 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// forge-config: default.fuzz.runs = 1
     function testMintFlareFork(uint256 amount) public {
         amount = bound(amount, 1, type(uint128).max);
-        // Contract address on Flare
-        ERC20PriceOracleReceiptVault vault =
-            ERC20PriceOracleReceiptVault(payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4));
-        // Sender address
-        address alice = address(uint160(uint256(keccak256("ALICE"))));
-        uint256 BLOCK_NUMBER = 31725348;
-        vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
-        // Fund Alice with `amount`
+
+        // Approve an amount slightly larger than `amount` to avoid allowance issues
+        (ERC20PriceOracleReceiptVault vault, address alice) =
+            LibERC20PriceOracleReceiptVaultFork.setup(vm, amount + 1000);
+
         deal(address(SFLR_CONTRACT), alice, amount);
         vm.startPrank(alice);
-        // Approve an amount slightly larger than `amount` to avoid allowance issues
-        IERC20(address(SFLR_CONTRACT)).approve(address(vault), amount + 1000);
+
         // Expected calculations based on rate (keeping previous calculations for consistency)
         uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
         uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();

@@ -14,6 +14,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import "forge-std/StdCheats.sol";
 import {LibFork} from "rain.flare/../test/fork/LibFork.sol";
@@ -208,22 +209,13 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// forge-config: default.fuzz.runs = 1
     function testDepositFlareFork(uint256 deposit) public {
         deposit = bound(deposit, 1, type(uint128).max);
-        // Contract address on Flare
-        ERC20PriceOracleReceiptVault vault =
-            ERC20PriceOracleReceiptVault(payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4));
 
-        // Sender address
-        address alice = address(uint160(uint256(keccak256("ALICE"))));
-
-        uint256 BLOCK_NUMBER = 31725348;
-        vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
+        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, deposit);
 
         deal(address(SFLR_CONTRACT), alice, deposit);
 
         vm.startPrank(alice);
 
-        // Make the deposit
-        IERC20(address(SFLR_CONTRACT)).approve(payable(vault), deposit);
         vault.deposit(deposit, alice, 0, hex"00");
         vm.stopPrank();
 
