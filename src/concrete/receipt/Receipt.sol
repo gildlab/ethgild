@@ -10,6 +10,12 @@ import {IReceiptV1} from "../../interface/IReceiptV1.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
+import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 
 /// @dev the ERC1155 URI is always the pinned metadata on ipfs.
 string constant RECEIPT_METADATA_URI = "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley";
@@ -35,6 +41,33 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
         _transferOwnership(initialOwner);
 
         return ICLONEABLE_V2_SUCCESS;
+    }
+
+    function fixedPoint18ToDecimalString(uint256 value) internal pure returns (string memory) {
+        string memory decimals = Strings.toString((value % 1e18) + 1e18);
+        // Remove the leading "1" from decimals.
+        assembly ("memory-safe") {
+            mstore(add(decimals, 1), sub(mload(decimals), 1))
+            decimals := add(decimals, 1)
+        }
+
+        return string(abi.encodePacked(Strings.toString(value / 1e18), ".", decimals));
+    }
+
+    function uri(uint256 id) public view virtual override returns (string memory) {
+        bytes memory json = abi.encodePacked(
+            "{\"name\":\"Receipt for lock price at ",
+            fixedPoint18ToDecimalString(id),
+            "\",",
+            "\"description\":\"1 of these receipts can be burned alongside 1 cysFLR to redeem ",
+            fixedPoint18ToDecimalString(
+                id > 0 ? LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(1e18, id, Math.Rounding.Down) : 0
+            ),
+            " sFLR. Reedem at https://cyclo.finance.\",",
+            "\"image\":\"ipfs://QmVRJLhDfFMVQGKBiVw1GVSFJjqu4U54UQ9LPr2DUs8HFy\"}"
+        );
+
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(json)));
     }
 
     /// @inheritdoc IReceiptV1
