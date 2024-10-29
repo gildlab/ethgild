@@ -58,13 +58,11 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
         bytes memory json = abi.encodePacked(
             "{\"name\":\"Receipt for lock price at ",
             fixedPoint18ToDecimalString(id),
-            "\",",
-            "\"description\":\"1 of these receipts can be burned alongside 1 cysFLR to redeem ",
+            "\",\"description\":\"1 of these receipts can be burned alongside 1 cysFLR to redeem ",
             fixedPoint18ToDecimalString(
                 id > 0 ? LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(1e18, id, Math.Rounding.Down) : 0
             ),
-            " sFLR. Reedem at https://cyclo.finance.\",",
-            "\"image\":\"ipfs://QmVRJLhDfFMVQGKBiVw1GVSFJjqu4U54UQ9LPr2DUs8HFy\"}"
+            " sFLR. Reedem at https://cyclo.finance.\",\"image\":\"ipfs://QmVRJLhDfFMVQGKBiVw1GVSFJjqu4U54UQ9LPr2DUs8HFy\"}"
         );
 
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(json)));
