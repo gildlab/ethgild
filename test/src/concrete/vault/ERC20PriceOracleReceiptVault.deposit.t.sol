@@ -17,8 +17,6 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import "forge-std/StdCheats.sol";
-import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
-import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -219,9 +217,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vm.stopPrank();
 
         uint256 shareBalance = vault.balanceOf(alice);
-        uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
-        uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();
-        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Up);
+        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
 
         assertEqUint(deposit.fixedPointMul(rate, Math.Rounding.Down), shareBalance);
     }

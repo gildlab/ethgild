@@ -11,6 +11,8 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
+import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
+import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 
 library LibERC20PriceOracleReceiptVaultFork {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -30,5 +32,13 @@ library LibERC20PriceOracleReceiptVaultFork {
 
         IERC20(address(SFLR_CONTRACT)).approve(payable(vault), amount);
         return (vault, alice);
+    }
+
+    function getRate() internal returns (uint256) {
+        uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
+        uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();
+        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Up);
+
+        return rate;
     }
 }

@@ -14,8 +14,6 @@ import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "src/abstract/ReceiptVault.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
-import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
-import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
@@ -315,13 +313,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.startPrank(alice);
 
-        uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
-        uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();
-        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Up);
-
         vault.deposit(deposit, alice, 0, hex"00");
 
         uint256 shareBalance = vault.balanceOf(alice);
+        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
 
         // Call withdraw function
         vault.withdraw(shareBalance, alice, alice, rate, hex"00");

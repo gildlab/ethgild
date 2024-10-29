@@ -13,8 +13,6 @@ import {
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
-import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
-import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
@@ -173,10 +171,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         deal(address(SFLR_CONTRACT), alice, amount);
         vm.startPrank(alice);
 
-        // Expected calculations based on rate (keeping previous calculations for consistency)
-        uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
-        uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();
-        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Up);
+        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
+
         uint256 shares = amount.fixedPointMul(rate, Math.Rounding.Down);
         // Execute mint
         vault.mint(shares, alice, 0, hex"00");
