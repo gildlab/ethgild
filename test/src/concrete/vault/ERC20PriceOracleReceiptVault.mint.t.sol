@@ -188,7 +188,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         // Verify the balance of shares minted to Alice
         uint256 shareBalance = vault.balanceOf(alice);
         // Assert the calculated share balance
-        assertEqUint(amount.fixedPointMul(rate, Math.Rounding.Down), shareBalance);
+        assertEqUint(shares, shareBalance);
     }
 
     fallback() external {}
