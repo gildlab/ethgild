@@ -12,6 +12,10 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {LibFork} from "rain.flare/../test/fork/LibFork.sol";
+import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
+import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
+import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -156,6 +160,35 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assertEqUint(assets, resultAssets);
 
         vm.stopPrank();
+    }
+
+    /// forge-config: default.fuzz.runs = 1
+    function testMintFlareFork(uint256 amount) public {
+        amount = bound(amount, 1, type(uint128).max);
+        // Contract address on Flare
+        ERC20PriceOracleReceiptVault vault =
+                        ERC20PriceOracleReceiptVault(payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4));
+        // Sender address
+        address alice = address(uint160(uint256(keccak256("ALICE"))));
+        uint256 BLOCK_NUMBER = 31725348;
+        vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
+        // Fund Alice with `amount`
+        deal(address(SFLR_CONTRACT), alice, amount);
+        vm.startPrank(alice);
+        // Approve an amount slightly larger than `amount` to avoid allowance issues
+        IERC20(address(SFLR_CONTRACT)).approve(address(vault), amount + 1000);
+        // Expected calculations based on rate (keeping previous calculations for consistency)
+        uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
+        uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();
+        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Up);
+        uint256 shares = amount.fixedPointMul(rate, Math.Rounding.Down);
+        // Execute mint
+        vault.mint(shares, alice, 0, hex"00");
+        vm.stopPrank();
+        // Verify the balance of shares minted to Alice
+        uint256 shareBalance = vault.balanceOf(alice);
+        // Assert the calculated share balance
+        assertEqUint(amount.fixedPointMul(rate, Math.Rounding.Down), shareBalance);
     }
 
     fallback() external {}
