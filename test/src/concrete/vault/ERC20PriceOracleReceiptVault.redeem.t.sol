@@ -13,7 +13,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "src/abstract/ReceiptVault.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
-import {LibFork} from "rain.flare/../test/fork/LibFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibFtsoV2LTS, FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
