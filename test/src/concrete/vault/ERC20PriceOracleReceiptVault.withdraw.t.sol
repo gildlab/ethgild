@@ -312,7 +312,6 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         deal(address(SFLR_CONTRACT), alice, deposit);
 
         vm.startPrank(alice);
-
         vault.deposit(deposit, alice, 0, hex"00");
 
         uint256 shareBalance = vault.balanceOf(alice);

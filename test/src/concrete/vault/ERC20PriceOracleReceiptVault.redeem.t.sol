@@ -325,9 +325,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         deal(address(SFLR_CONTRACT), alice, deposit);
 
         vm.startPrank(alice);
-
         uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
-
         vault.deposit(deposit, alice, 0, hex"00");
 
         uint256 shareBalance = vault.balanceOf(alice);
@@ -337,7 +335,6 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vault.redeem(shares, alice, alice, rate, hex"00");
 
         uint256 shareBalanceAft = vault.balanceOf(alice);
-
         assertEqUint(shareBalanceAft, shareBalance - shares);
         vm.stopPrank();
     }
