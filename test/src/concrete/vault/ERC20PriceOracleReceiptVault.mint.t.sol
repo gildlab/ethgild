@@ -164,9 +164,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     function testMintFlareFork(uint256 amount) public {
         amount = bound(amount, 1, type(uint128).max);
 
-        // Approve an amount slightly larger than `amount` to avoid allowance issues
-        (ERC20PriceOracleReceiptVault vault, address alice) =
-            LibERC20PriceOracleReceiptVaultFork.setup(vm, amount + 1000);
+        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, amount);
 
         deal(address(SFLR_CONTRACT), alice, amount);
         vm.startPrank(alice);

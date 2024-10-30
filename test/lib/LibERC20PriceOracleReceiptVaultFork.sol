@@ -29,8 +29,10 @@ library LibERC20PriceOracleReceiptVaultFork {
         vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
 
         vm.startPrank(alice);
+        uint256 assets = vault.previewMint(amount, 0);
 
-        IERC20(address(SFLR_CONTRACT)).approve(payable(vault), amount);
+        IERC20(address(SFLR_CONTRACT)).approve(payable(vault), assets);
+
         return (vault, alice);
     }
 
