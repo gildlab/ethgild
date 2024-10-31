@@ -13,6 +13,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "src/abstract/ReceiptVault.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
+import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
+import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -300,5 +302,29 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Make sure assetsToWithdraw is more than assets
         assetsToWithdraw = bound(assetsToWithdraw, assets + 1, type(uint128).max);
         checkNoBalanceChange(vault, alice, alice, oraclePrice, assetsToWithdraw, receipt, bytes(""), bytes(""));
+    }
+
+    /// forge-config: default.fuzz.runs = 1
+    function testWithdrawFlareFork(uint256 deposit) public {
+        deposit = bound(deposit, 1, type(uint128).max);
+        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, deposit);
+
+        deal(address(SFLR_CONTRACT), alice, deposit);
+
+        vm.startPrank(alice);
+        vault.deposit(deposit, alice, 0, hex"00");
+
+        uint256 shareBalance = vault.balanceOf(alice);
+        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
+
+        // Call withdraw function
+        vault.withdraw(shareBalance, alice, alice, rate, hex"00");
+
+        uint256 shares = shareBalance.fixedPointMul(rate, Math.Rounding.Up);
+        uint256 shareBalanceAft = vault.balanceOf(alice);
+
+        assertEqUint(shareBalanceAft, shareBalance - shares);
+
+        vm.stopPrank();
     }
 }
