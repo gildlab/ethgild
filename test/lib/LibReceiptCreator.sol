@@ -9,11 +9,10 @@ import {TestReceipt} from "test/concrete/TestReceipt.sol";
 
 library LibReceiptCreator {
     /// Helper to create child receipt.
-    function createReceipt(
-        ICloneableFactoryV2 factory,
-        Receipt receiptImplementation,
-        address owner
-    ) internal returns (TestReceipt) {
+    function createReceipt(ICloneableFactoryV2 factory, Receipt receiptImplementation, address owner)
+        internal
+        returns (TestReceipt)
+    {
         // Clone TestReceipt using the factory and initialize it with the owner
         address clone = factory.clone(address(receiptImplementation), abi.encode(owner));
         // Return the clone cast to TestReceipt type
