@@ -2,21 +2,19 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity ^0.8.25;
 
-import {Test, Vm} from "forge-std/Test.sol";
 import {Receipt} from "src/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
 
-contract ReceiptTest is Test {
+contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
 
     function testInitialize() public {
-        TestReceipt receipt = new TestReceipt();
         TestReceiptOwner mockOwner = new TestReceiptOwner();
-
-        receipt.setOwner(address(mockOwner));
+        TestReceipt receipt = createReceipt(address(mockOwner));
         assertEq(receipt.owner(), address(mockOwner));
     }
 
