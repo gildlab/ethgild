@@ -41,17 +41,18 @@ contract ReceiptTest is ReceiptFactoryTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
 
-        TestReceipt receipt = new TestReceipt();
+        TestReceipt receipt = createReceipt(alice);
         TestReceiptOwner receiptOwner = new TestReceiptOwner();
 
+        vm.startPrank(alice);
+
         // Set the receipt owner
-        receipt.setOwner(address(receiptOwner));
+        receipt.transferOwnership(address(receiptOwner));
 
         // Set the authorized 'from' and 'to' addresses in receiptOwner
         receiptOwner.setFrom(address(0));
         receiptOwner.setTo(alice);
 
-        vm.startPrank(alice);
         receiptOwner.ownerMint(receipt, alice, id, amount, data);
 
         // Check the receipt balance of alice
