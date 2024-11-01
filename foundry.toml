@@ -1,0 +1,15 @@
+[profile.default]
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config
+
+solc = "0.8.25"
+optimizer = true
+optimizer_runs = 100000
+
+remappings = [
+    "rain.factory/=lib/rain.factory/src/",
+    "rain.intorastring/=lib/rain.interpreter/lib/rain.intorastring/src/",
+    "rain.flare/=lib/rain.flare/src/",
+    "chainlink/=lib/rain.chainlink/lib/chainlink/contracts/src/",
+    "rain.math.fixedpoint/=lib/rain.math.fixedpoint/src/",
+]
