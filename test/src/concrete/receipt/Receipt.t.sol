@@ -99,7 +99,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test OwnerBurn fails while not enough balance to burn
-    function testOwnerBurnNoTEnoughBalance(
+    function testOwnerBurnNotEnoughBalance(
         uint256 fuzzedKeyAlice,
         uint256 id,
         uint256 amount,
@@ -151,11 +151,13 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
 
-        TestReceipt receipt = new TestReceipt();
+        TestReceipt receipt = createReceipt(alice);
         TestReceiptOwner receiptOwner = new TestReceiptOwner();
 
+        vm.startPrank(alice);
+
         // Set the receipt owner
-        receipt.setOwner(address(receiptOwner));
+        receipt.transferOwnership(address(receiptOwner));
 
         // Set the authorized 'from' and 'to' addresses in receiptOwner
         receiptOwner.setFrom(address(0));
