@@ -112,17 +112,17 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
 
-        TestReceipt receipt = new TestReceipt();
+        TestReceipt receipt = createReceipt(alice);
         TestReceiptOwner receiptOwner = new TestReceiptOwner();
+        vm.startPrank(alice);
 
         // Set the receipt owner
-        receipt.setOwner(address(receiptOwner));
+        receipt.transferOwnership(address(receiptOwner));
 
         // Set the authorized 'from' and 'to' addresses in receiptOwner
         receiptOwner.setFrom(address(0));
         receiptOwner.setTo(alice);
 
-        vm.startPrank(alice);
         receiptOwner.ownerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
         burnAmount = bound(burnAmount, receiptBalance + 1, type(uint256).max);
