@@ -49,9 +49,7 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
     /// @param id As per `IReceiptV1.ownerMint`.
     /// @param amount As per `IReceiptV1.ownerMint`.
     /// @param data As per `IReceiptV1.ownerMint`.
-    function ownerMint(IReceiptV1 receipt, address account, uint256 id, uint256 amount, bytes memory data)
-        external
-    {
+    function ownerMint(IReceiptV1 receipt, address account, uint256 id, uint256 amount, bytes memory data) external {
         receipt.ownerMint(msg.sender, account, id, amount, data);
     }
 
@@ -61,13 +59,9 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
     /// @param id As per `IReceiptV1.ownerBurn`.
     /// @param amount As per `IReceiptV1.ownerBurn`.
     /// @param receiptInformation As per `IReceiptV1.ownerBurn`.
-    function ownerBurn(
-        IReceiptV1 receipt,
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory receiptInformation
-    ) external {
+    function ownerBurn(IReceiptV1 receipt, address account, uint256 id, uint256 amount, bytes memory receiptInformation)
+        external
+    {
         receipt.ownerBurn(msg.sender, account, id, amount, receiptInformation);
     }
 
