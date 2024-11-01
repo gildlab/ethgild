@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import "src/interface/IReceiptV1.sol";
-import "src/interface/IReceiptOwnerV1.sol";
+import {IReceiptV1} from "src/interface/IReceiptV1.sol";
+import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
 
 /// Thrown when a transfer is not authorized.
 /// @param from The transfer attempted from this address.
@@ -16,76 +16,76 @@ error UnauthorizedTransfer(address from, address to);
 /// insecure, intended for use only by the test harness to drive ownership tests.
 contract TestReceiptOwner is IReceiptOwnerV1 {
     /// The address that is authorized to send transfers.
-    address internal from;
+    address internal sFrom;
     /// The address that is authorized to receive transfers.
-    address internal to;
+    address internal sTo;
 
     /// Anon can set the from address.
-    /// @param from_ The new `from` address.
-    function setFrom(address from_) external {
-        from = from_;
+    /// @param from The new `from` address.
+    function setFrom(address from) external {
+        sFrom = from;
     }
 
     /// Anon can set the to address.
-    /// @param to_ The new `to` address.
-    function setTo(address to_) external {
-        to = to_;
+    /// @param to The new `to` address.
+    function setTo(address to) external {
+        sTo = to;
     }
 
     /// Only transfers between `from` and `to` are authorized.
     /// @inheritdoc IReceiptOwnerV1
-    function authorizeReceiptTransfer(address from_, address to_) external view {
-        if (from_ != from) {
-            revert UnauthorizedTransfer(from_, to_);
+    function authorizeReceiptTransfer(address from, address to) external view {
+        if (from != sFrom) {
+            revert UnauthorizedTransfer(from, to);
         }
-        if (to_ != to) {
-            revert UnauthorizedTransfer(from_, to_);
+        if (to != sTo) {
+            revert UnauthorizedTransfer(from, to);
         }
     }
 
     /// Exposes `IReceiptV1.ownerMint` to anon.
-    /// @param receipt_ The `IReceiptV1` contract to call.
-    /// @param account_ As per `IReceiptV1.ownerMint`.
-    /// @param id_ As per `IReceiptV1.ownerMint`.
-    /// @param amount_ As per `IReceiptV1.ownerMint`.
-    /// @param data_ As per `IReceiptV1.ownerMint`.
-    function ownerMint(IReceiptV1 receipt_, address account_, uint256 id_, uint256 amount_, bytes memory data_)
+    /// @param receipt The `IReceiptV1` contract to call.
+    /// @param account As per `IReceiptV1.ownerMint`.
+    /// @param id As per `IReceiptV1.ownerMint`.
+    /// @param amount As per `IReceiptV1.ownerMint`.
+    /// @param data As per `IReceiptV1.ownerMint`.
+    function ownerMint(IReceiptV1 receipt, address account, uint256 id, uint256 amount, bytes memory data)
         external
     {
-        receipt_.ownerMint(msg.sender, account_, id_, amount_, data_);
+        receipt.ownerMint(msg.sender, account, id, amount, data);
     }
 
     /// Exposes `IReceiptV1.ownerBurn` to anon.
-    /// @param receipt_ The `IReceiptV1` contract to call.
-    /// @param account_ As per `IReceiptV1.ownerBurn`.
-    /// @param id_ As per `IReceiptV1.ownerBurn`.
-    /// @param amount_ As per `IReceiptV1.ownerBurn`.
-    /// @param receiptInformation_ As per `IReceiptV1.ownerBurn`.
+    /// @param receipt The `IReceiptV1` contract to call.
+    /// @param account As per `IReceiptV1.ownerBurn`.
+    /// @param id As per `IReceiptV1.ownerBurn`.
+    /// @param amount As per `IReceiptV1.ownerBurn`.
+    /// @param receiptInformation As per `IReceiptV1.ownerBurn`.
     function ownerBurn(
-        IReceiptV1 receipt_,
-        address account_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory receiptInformation_
+        IReceiptV1 receipt,
+        address account,
+        uint256 id,
+        uint256 amount,
+        bytes memory receiptInformation
     ) external {
-        receipt_.ownerBurn(msg.sender, account_, id_, amount_, receiptInformation_);
+        receipt.ownerBurn(msg.sender, account, id, amount, receiptInformation);
     }
 
     /// Exposes `IReceiptV1.ownerTransferFrom` to anon.
-    /// @param receipt_ The `IReceiptV1` contract to call.
-    /// @param from_ As per `IReceiptV1.ownerTransferFrom`.
-    /// @param to_ As per `IReceiptV1.ownerTransferFrom`.
-    /// @param id_ As per `IReceiptV1.ownerTransferFrom`.
-    /// @param amount_ As per `IReceiptV1.ownerTransferFrom`.
-    /// @param data_ As per `IReceiptV1.ownerTransferFrom`.
+    /// @param receipt The `IReceiptV1` contract to call.
+    /// @param from As per `IReceiptV1.ownerTransferFrom`.
+    /// @param to As per `IReceiptV1.ownerTransferFrom`.
+    /// @param id As per `IReceiptV1.ownerTransferFrom`.
+    /// @param amount As per `IReceiptV1.ownerTransferFrom`.
+    /// @param data As per `IReceiptV1.ownerTransferFrom`.
     function ownerTransferFrom(
-        IReceiptV1 receipt_,
-        address from_,
-        address to_,
-        uint256 id_,
-        uint256 amount_,
-        bytes memory data_
+        IReceiptV1 receipt,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
     ) external {
-        receipt_.ownerTransferFrom(from_, to_, id_, amount_, data_);
+        receipt.ownerTransferFrom(from, to, id, amount, data);
     }
 }

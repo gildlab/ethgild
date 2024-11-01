@@ -28,7 +28,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Make mockOwner call setOwner to change to alice
         vm.startPrank(address(mockOwner));
-        receipt.setOwner(alice);
+        receipt.transferOwnership(alice);
 
         address owner = receipt.owner();
         assertEq(owner, alice);
