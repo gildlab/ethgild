@@ -8,6 +8,7 @@ import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
+import {console} from "forge-std/console.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
@@ -20,15 +21,18 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     // Test receipt sets owner
     function testReceiptOwnerIsSet(uint256 fuzzedKeyAlice) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        vm.startPrank(alice);
-        TestReceipt receipt = new TestReceipt();
+        TestReceiptOwner mockOwner = new TestReceiptOwner();
+        TestReceipt receipt = createReceipt(address(mockOwner));
 
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+
+        // Make mockOwner call setOwner to change to alice
+        vm.startPrank(address(mockOwner));
         receipt.setOwner(alice);
 
         address owner = receipt.owner();
         assertEq(owner, alice);
+        vm.stopPrank();
     }
 
     /// Test receipt OwnerMint function
