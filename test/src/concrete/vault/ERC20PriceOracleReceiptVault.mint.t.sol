@@ -12,6 +12,8 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
+import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -156,6 +158,27 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assertEqUint(assets, resultAssets);
 
         vm.stopPrank();
+    }
+
+    /// forge-config: default.fuzz.runs = 1
+    function testMintFlareFork(uint256 amount) public {
+        amount = bound(amount, 1, type(uint128).max);
+
+        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, amount);
+
+        deal(address(SFLR_CONTRACT), alice, amount);
+        vm.startPrank(alice);
+
+        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
+
+        uint256 shares = amount.fixedPointMul(rate, Math.Rounding.Down);
+        // Execute mint
+        vault.mint(shares, alice, 0, hex"00");
+        vm.stopPrank();
+        // Verify the balance of shares minted to Alice
+        uint256 shareBalance = vault.balanceOf(alice);
+        // Assert the calculated share balance
+        assertEqUint(shares, shareBalance);
     }
 
     fallback() external {}
