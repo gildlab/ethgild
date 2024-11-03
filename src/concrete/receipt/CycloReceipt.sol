@@ -14,6 +14,9 @@ import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstan
 /// @dev The SVG of Cyclo logo is pinned on IPFS.
 string constant CYCLO_RECEIPT_SVG_URI = "ipfs://bafybeidjgkxfpk7nujlnx7jwvjvmtcbkfg53vnlc2cc6ftqfhapqkmtahq";
 
+/// @dev The prefix for data URIs as base64 encoded JSON.
+string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
+
 contract CycloReceipt is Receipt {
     function uri(uint256 id) public view virtual override returns (string memory) {
         bytes memory json = abi.encodePacked(
@@ -30,6 +33,6 @@ contract CycloReceipt is Receipt {
             "\"}"
         );
 
-        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(json)));
+        return string(abi.encodePacked(DATA_URI_BASE64_PREFIX, Base64.encode(json)));
     }
 }
