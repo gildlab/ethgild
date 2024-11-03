@@ -8,9 +8,8 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {
-    LibFixedPointDecimalFormat
-} from "rain.math.fixedpoint/lib/format/LibFixedPointDecimalFormat.sol";
+import {LibFixedPointDecimalFormat} from "rain.math.fixedpoint/lib/format/LibFixedPointDecimalFormat.sol";
+import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstants.sol";
 
 /// @dev The SVG of Cyclo logo is pinned on IPFS.
 string constant CYCLO_RECEIPT_SVG_URI = "ipfs://bafybeidjgkxfpk7nujlnx7jwvjvmtcbkfg53vnlc2cc6ftqfhapqkmtahq";
@@ -22,9 +21,13 @@ contract CycloReceipt is Receipt {
             LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
             " USD per sFLR.\",\"description\":\"1 of these receipts can be burned alongside 1 cysFLR to redeem ",
             LibFixedPointDecimalFormat.fixedPointToDecimalString(
-                id > 0 ? LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(1e18, id, Math.Rounding.Down) : 0
+                id > 0
+                    ? LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+                    : 0
             ),
-            " sFLR. Reedem at https://cyclo.finance.\",\"image\":\"", CYCLO_RECEIPT_SVG_URI, "\"}"
+            " sFLR. Reedem at https://cyclo.finance.\",\"image\":\"",
+            CYCLO_RECEIPT_SVG_URI,
+            "\"}"
         );
 
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(json)));
