@@ -6,7 +6,7 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {PriceOracleV2, IPriceOracleV2} from "src/abstract/PriceOracleV2.sol";
+import {PriceOracleV2, IPriceOracleV2} from "../../abstract/PriceOracleV2.sol";
 
 /// Construction config for `TwoPriceOracle`.
 /// @param base The base price of the merged pair, will be the numerator.
