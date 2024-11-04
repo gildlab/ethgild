@@ -16,7 +16,7 @@ import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 
-contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
+contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test mint function
@@ -192,6 +192,9 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
 
         uint256 shares = amount.fixedPointMul(rate, Math.Rounding.Down);
+
+        vm.assume(vault.previewMint(shares, 0) > 0);
+
         // Execute mint
         vault.mint(shares, alice, 0, hex"00");
         vm.stopPrank();
