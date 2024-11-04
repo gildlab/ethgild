@@ -30,6 +30,9 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         setVaultOraclePrice(oraclePrice);
 
         vm.startPrank(alice);
+
+        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
+        vm.recordLogs();
         ERC20PriceOracleReceiptVault vault;
         {
             vault = createVault(iVaultOracle, assetName, assetName);
@@ -46,12 +49,17 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 abi.encode(true)
             );
         }
+        ReceiptContract receipt = getReceipt();
+
         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
         vault.mint(shares, alice, oraclePrice, bytes(""));
 
         // Check balance
         assertEqUint(vault.balanceOf(alice), shares);
+
+        // Check alice's receipt balance
+        assertEqUint(receipt.balanceOf(alice, oraclePrice), shares);
     }
 
     /// Test mint to someone else
@@ -70,6 +78,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
+
+        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
         vm.recordLogs();
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
