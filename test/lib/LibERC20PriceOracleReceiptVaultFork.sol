@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
-pragma solidity =0.8.25;
+pragma solidity ^0.8.25;
 
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
