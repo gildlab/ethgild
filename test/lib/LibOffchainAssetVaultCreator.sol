@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
-pragma solidity ^0.8.25;
+pragma solidity =0.8.25;
 
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {OffchainAssetReceiptVault, OffchainAssetVaultConfig} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
