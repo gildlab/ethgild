@@ -7,7 +7,6 @@ import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {Test, Vm} from "forge-std/Test.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {LibReceiptCreator} from "test/lib/LibReceiptCreator.sol";
 
 contract ReceiptFactoryTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
@@ -22,6 +21,9 @@ contract ReceiptFactoryTest is Test {
     /// @param owner The address to set as the owner of the new TestReceipt
     /// @return The address of the newly created TestReceipt clone
     function createReceipt(address owner) internal returns (TestReceipt) {
-        return LibReceiptCreator.createReceipt(iFactory, receiptImplementation, owner);
+        // Clone TestReceipt using the factory and initialize it with the owner
+        address clone = iFactory.clone(address(receiptImplementation), abi.encode(owner));
+        // Return the clone cast to TestReceipt type
+        return TestReceipt(clone);
     }
 }
