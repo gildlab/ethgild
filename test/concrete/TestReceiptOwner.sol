@@ -35,10 +35,10 @@ contract TestReceiptOwner is IReceiptOwnerV1 {
     /// Only transfers between `from` and `to` are authorized.
     /// @inheritdoc IReceiptOwnerV1
     function authorizeReceiptTransfer(address from, address to) external view {
-        if (sFrom != from) {
+        if (from != sFrom) {
             revert UnauthorizedTransfer(from, to);
         }
-        if (sTo != to) {
+        if (to != sTo) {
             revert UnauthorizedTransfer(from, to);
         }
     }
