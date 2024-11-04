@@ -14,6 +14,7 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -69,7 +70,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
-
+        vm.recordLogs();
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
 
         {
@@ -85,12 +86,21 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
                 abi.encode(true)
             );
         }
+        ReceiptContract receipt = getReceipt();
+
+        uint256 aliceReceiptBalance = receipt.balanceOf(alice, oraclePrice);
         uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
 
         vault.mint(shares, bob, oraclePrice, bytes(""));
 
         // Check balance
         assertEqUint(vault.balanceOf(bob), shares);
+
+        // Check bob's receipt balance
+        assertEqUint(receipt.balanceOf(bob, oraclePrice), shares);
+
+        // Check alice's receipt balance does not change
+        assertEqUint(receipt.balanceOf(alice, oraclePrice), aliceReceiptBalance);
     }
 
     /// Test mint function with zero shares
