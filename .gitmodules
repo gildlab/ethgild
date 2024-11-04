@@ -16,6 +16,3 @@
 [submodule "lib/rain.tier.interface"]
 	path = lib/rain.tier.interface
 	url = https://github.com/rainlanguage/rain.tier.interface
-[submodule "lib/solady"]
-	path = lib/solady
-	url = https://github.com/Vectorized/solady

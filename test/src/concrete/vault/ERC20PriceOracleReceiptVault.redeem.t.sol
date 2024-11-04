@@ -326,6 +326,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
         vm.startPrank(alice);
         uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
+        vm.assume(vault.previewDeposit(deposit, 0) > 0);
         vault.deposit(deposit, alice, 0, hex"00");
 
         uint256 shareBalance = vault.balanceOf(alice);

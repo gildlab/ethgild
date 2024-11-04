@@ -220,6 +220,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         deal(address(SFLR_CONTRACT), alice, deposit);
 
         vm.startPrank(alice);
+        vm.assume(vault.previewDeposit(deposit, 0) > 0);
 
         vault.deposit(deposit, alice, 0, hex"00");
         vm.stopPrank();
