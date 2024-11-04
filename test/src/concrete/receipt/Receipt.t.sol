@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-DCL-1.0
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
-pragma solidity ^0.8.25;
+pragma solidity =0.8.25;
 
 import {Receipt} from "src/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
@@ -8,7 +8,6 @@ import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
-import {console} from "forge-std/console.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
