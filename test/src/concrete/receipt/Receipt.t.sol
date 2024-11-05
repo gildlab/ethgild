@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {Receipt, RECEIPT_METADATA_DATA_URI, DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
-import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
+import {TestReceiptOwner, UnauthorizedTransfer} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
 import {Base64} from "solady/utils/Base64.sol";
@@ -240,7 +240,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         receiptOwner.setFrom(alice);
         receiptOwner.setTo(address(0));
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedTransfer.selector, alice, bob));
         receiptOwner.ownerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
     }
 
@@ -378,6 +378,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         receiptOwner.setTo(alice);
 
         receiptOwner.ownerMint(receipt, alice, tokenId, amount, "");
+
+        // Check UnauthorizedTransfer reverts
+        vm.expectRevert(abi.encodeWithSelector(UnauthorizedTransfer.selector, alice, bob));
+        receipt.safeTransferFrom(alice, bob, tokenId, amount, "");
 
         receiptOwner.setFrom(alice);
         receiptOwner.setTo(bob);
