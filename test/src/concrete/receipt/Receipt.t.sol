@@ -8,9 +8,16 @@ import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
+import {Base64} from "solady/utils/Base64.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
+
+    struct Metadata {
+        string name;
+        uint256 decimals;
+        string description;
+    }
 
     function testInitialize() public {
         TestReceiptOwner mockOwner = new TestReceiptOwner();
@@ -19,10 +26,21 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     function testReceiptURI() external {
+        // Deploy the Receipt contract
         TestReceiptOwner mockOwner = new TestReceiptOwner();
-
         TestReceipt receipt = createReceipt(address(mockOwner));
-        assertEq(receipt.uri(0), RECEIPT_METADATA_URI, "URI should match the metadata URI constant");
+
+        string memory uri = receipt.uri(0);
+
+        assertEq(uri, RECEIPT_METADATA_URI);
+
+        bytes memory uriDecoded = Base64.decode(uri);
+        bytes memory uriJsonData = vm.parseJson(string(uriDecoded));
+
+        Metadata memory metadataJson = abi.decode(uriJsonData, (Metadata));
+        assertEq(metadataJson.description, "A receipt for a ReceiptVault.");
+        assertEq(metadataJson.decimals, 18);
+        assertEq(metadataJson.name, "Receipt");
     }
 
     // Test receipt sets owner
