@@ -2,20 +2,54 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {Receipt} from "src/concrete/receipt/Receipt.sol";
+import {Receipt, RECEIPT_METADATA_DATA_URI, DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
+import {Base64} from "solady/utils/Base64.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
+
+    struct Metadata {
+        uint256 decimals;
+        string description;
+        string name;
+    }
 
     function testInitialize() public {
         TestReceiptOwner mockOwner = new TestReceiptOwner();
         TestReceipt receipt = createReceipt(address(mockOwner));
         assertEq(receipt.owner(), address(mockOwner));
+    }
+
+    function testReceiptURI(uint256 id) external {
+        // Deploy the Receipt contract
+        TestReceiptOwner mockOwner = new TestReceiptOwner();
+        TestReceipt receipt = createReceipt(address(mockOwner));
+
+        string memory uri = receipt.uri(id);
+
+        uint256 uriLength = bytes(uri).length;
+        assembly ("memory-safe") {
+            mstore(uri, 29)
+        }
+        assertEq(uri, DATA_URI_BASE64_PREFIX);
+        assembly ("memory-safe") {
+            uri := add(uri, 29)
+            mstore(uri, sub(uriLength, 29))
+        }
+        assertEq(uri, RECEIPT_METADATA_DATA_URI);
+
+        string memory uriDecoded = string(Base64.decode(uri));
+        bytes memory uriJsonData = vm.parseJson(uriDecoded);
+
+        Metadata memory metadataJson = abi.decode(uriJsonData, (Metadata));
+        assertEq(metadataJson.description, "A receipt for a ReceiptVault.");
+        assertEq(metadataJson.decimals, 18);
+        assertEq(metadataJson.name, "Receipt");
     }
 
     // Test receipt sets owner
