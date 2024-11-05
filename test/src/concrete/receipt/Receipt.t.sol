@@ -14,7 +14,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
 
     struct Metadata {
-        uint256 decimals;
+        uint8 decimals;
         string description;
         string name;
     }
