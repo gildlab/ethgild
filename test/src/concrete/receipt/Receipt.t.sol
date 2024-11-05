@@ -383,6 +383,11 @@ contract ReceiptTest is ReceiptFactoryTest {
         vm.expectRevert(abi.encodeWithSelector(UnauthorizedTransfer.selector, alice, bob));
         receipt.safeTransferFrom(alice, bob, tokenId, amount, "");
 
+        // Expect revert on transfer to zero address
+        receiptOwner.setTo(address(0));
+        vm.expectRevert("ERC1155: transfer to the zero address");
+        receipt.safeTransferFrom(alice, address(0), tokenId, amount, "");
+
         receiptOwner.setFrom(alice);
         receiptOwner.setTo(bob);
 
