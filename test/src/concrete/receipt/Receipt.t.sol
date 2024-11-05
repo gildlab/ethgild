@@ -334,4 +334,22 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(balances[0], amountOne);
         assertEq(balances[1], amountTwo);
     }
+
+    function testSetApprovalForAllAndIsApprovedForAll(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob) public {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        TestReceipt receipt = createReceipt(alice);
+
+        vm.startPrank(alice);
+        // Alice approves operator
+        receipt.setApprovalForAll(bob, true);
+        assertTrue(receipt.isApprovedForAll(alice, bob));
+
+        // Alice revokes approval
+        receipt.setApprovalForAll(bob, false);
+        assertFalse(receipt.isApprovedForAll(alice, bob));
+    }
 }
