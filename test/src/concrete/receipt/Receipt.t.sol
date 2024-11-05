@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 thedavidmeister
 pragma solidity =0.8.25;
 
-import {Receipt} from "src/concrete/receipt/Receipt.sol";
+import {Receipt, RECEIPT_METADATA_URI} from "src/concrete/receipt/Receipt.sol";
 import {IReceiptOwnerV1} from "src/interface/IReceiptOwnerV1.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
@@ -19,7 +19,6 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     function testReceiptURI() external {
-        string memory RECEIPT_METADATA_URI = "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley";
         TestReceiptOwner mockOwner = new TestReceiptOwner();
 
         TestReceipt receipt = createReceipt(address(mockOwner));
