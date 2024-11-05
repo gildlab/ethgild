@@ -9,7 +9,6 @@ import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
 import {Base64} from "solady/utils/Base64.sol";
-import {console2} from "forge-std/Test.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
