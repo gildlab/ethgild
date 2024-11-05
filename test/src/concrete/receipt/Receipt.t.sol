@@ -283,4 +283,55 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(receipt.balanceOf(bob, id), receiptBalance);
         assertEq(receipt.balanceOf(alice, id), 0);
     }
+
+    /// Test ERC1155 testBalanceOfBatch function
+    function testBalanceOfBatch(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 idOne,
+        uint256 idTwo,
+        uint256 amountOne,
+        uint256 amountTwo,
+        bytes memory data
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        amountOne = bound(amountOne, 1, type(uint256).max);
+        amountTwo = bound(amountTwo, 1, type(uint256).max);
+        vm.assume(amountOne != amountTwo);
+
+        TestReceipt receipt = createReceipt(alice);
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        vm.startPrank(alice);
+
+        // Set the receipt owner
+        receipt.transferOwnership(address(receiptOwner));
+
+        // Set the authorized 'from' and 'to' addresses in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        receiptOwner.ownerMint(receipt, alice, idOne, amountOne, data);
+
+        receiptOwner.setTo(bob);
+        receiptOwner.ownerMint(receipt, bob, idTwo, amountTwo, data);
+
+        address[] memory addresses = new address[](2);
+        addresses[0] = alice;
+        addresses[1] = bob;
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = idOne;
+        tokenIds[1] = idTwo;
+
+        uint256[] memory balances = receipt.balanceOfBatch(addresses, tokenIds);
+
+        // Check the receipt balance of alice
+        assertEq(balances[0], amountOne);
+        assertEq(balances[1], amountTwo);
+    }
 }
