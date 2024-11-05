@@ -335,6 +335,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(balances[1], amountTwo);
     }
 
+    /// Test ERC1155 testSetApprovalForAll And IsApprovedForAll function
     function testSetApprovalForAllAndIsApprovedForAll(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -351,5 +352,39 @@ contract ReceiptTest is ReceiptFactoryTest {
         // Alice revokes approval
         receipt.setApprovalForAll(bob, false);
         assertFalse(receipt.isApprovedForAll(alice, bob));
+    }
+
+    /// Test ERC1155 testSafeTransferFrom function
+    function testSafeTransferFrom(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob, uint256 tokenId, uint256 amount)
+        public
+    {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        amount = bound(amount, 1, type(uint256).max);
+
+        TestReceipt receipt = createReceipt(alice);
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        vm.startPrank(alice);
+
+        // Set the receipt owner
+        receipt.transferOwnership(address(receiptOwner));
+
+        // Set the authorized 'from' and 'to' addresses in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        receiptOwner.ownerMint(receipt, alice, tokenId, amount, "");
+
+        receiptOwner.setFrom(alice);
+        receiptOwner.setTo(bob);
+
+        // Perform transfer
+        receipt.safeTransferFrom(alice, bob, tokenId, amount, "");
+        assertEq(receipt.balanceOf(alice, tokenId), 0);
+        assertEq(receipt.balanceOf(bob, tokenId), amount);
     }
 }
