@@ -18,6 +18,14 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(receipt.owner(), address(mockOwner));
     }
 
+    function testReceiptURI() external {
+        string memory RECEIPT_METADATA_URI = "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley";
+        TestReceiptOwner mockOwner = new TestReceiptOwner();
+
+        TestReceipt receipt = createReceipt(address(mockOwner));
+        assertEq(receipt.uri(0), RECEIPT_METADATA_URI, "URI should match the metadata URI constant");
+    }
+
     // Test receipt sets owner
     function testReceiptOwnerIsSet(uint256 fuzzedKeyAlice) external {
         TestReceiptOwner mockOwner = new TestReceiptOwner();
