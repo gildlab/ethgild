@@ -284,7 +284,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(receipt.balanceOf(alice, id), 0);
     }
 
-    /// Test ERC1155 testBalanceOf function
+    /// Test ERC1155 balanceOf function
     function testBalanceOf(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -311,7 +311,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(balance, amount);
     }
 
-    /// Test ERC1155 testBalanceOfBatch function
+    /// Test ERC1155 balanceOfBatch function
     function testBalanceOfBatch(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -362,7 +362,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(balances[1], amountTwo);
     }
 
-    /// Test ERC1155 testSetApprovalForAll And IsApprovedForAll function
+    /// Test ERC1155 setApprovalForAll And IsApprovedForAll function
     function testSetApprovalForAllAndIsApprovedForAll(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
@@ -381,7 +381,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertFalse(receipt.isApprovedForAll(alice, bob));
     }
 
-    /// Test ERC1155 testSafeTransferFrom function
+    /// Test ERC1155 safeTransferFrom function
     function testSafeTransferFrom(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob, uint256 tokenId, uint256 amount)
         public
     {
@@ -422,5 +422,63 @@ contract ReceiptTest is ReceiptFactoryTest {
         receipt.safeTransferFrom(alice, bob, tokenId, amount, "");
         assertEq(receipt.balanceOf(alice, tokenId), 0);
         assertEq(receipt.balanceOf(bob, tokenId), amount);
+    }
+
+    /// Test ERC1155 safeBatchTransferFrom function
+    function testSafeBatchTransferFrom(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 tokenId1,
+        uint256 tokenId2,
+        uint256 amount1,
+        uint256 amount2
+    ) public {
+        // Ensure the fuzzed keys are within the valid range for secp256k1
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        // Ensure amounts are bounded to avoid zero transfers
+        amount1 = bound(amount1, 1, type(uint256).max);
+        amount2 = bound(amount2, 1, type(uint256).max);
+        vm.assume(amount1 != amount2);
+
+        // Define arrays with token IDs and amounts
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = amount1;
+        amounts[1] = amount2;
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = tokenId1;
+        tokenIds[1] = tokenId2;
+        // Create a new receipt and receipt owner
+        TestReceipt receipt = createReceipt(alice);
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        vm.startPrank(alice);
+
+        // Transfer ownership to the receipt owner
+        receipt.transferOwnership(address(receiptOwner));
+
+        // Authorize alice as the sender and receiver in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        // Mint the specified token IDs and amounts to alice
+        receiptOwner.ownerMint(receipt, alice, tokenId1, amount1, "");
+        receiptOwner.ownerMint(receipt, alice, tokenId2, amount2, "");
+
+        // Set the valid from/to addresses for the transfer
+        receiptOwner.setFrom(alice);
+        receiptOwner.setTo(bob);
+
+        // Perform batch transfer
+        receipt.safeBatchTransferFrom(alice, bob, tokenIds, amounts, "");
+
+        // Verify balances are updated correctly
+        assertEq(receipt.balanceOf(alice, tokenId1), 0);
+        assertEq(receipt.balanceOf(bob, tokenId1), amount1);
+        assertEq(receipt.balanceOf(alice, tokenId2), 0);
+        assertEq(receipt.balanceOf(bob, tokenId2), amount2);
     }
 }
