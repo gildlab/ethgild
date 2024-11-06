@@ -63,9 +63,9 @@ contract FtsoV2LTSFeedOracleTest is OracleTest {
         assertEq(oracle.price{value: fee}(), 0.0141082e18);
         assertEq(ALICE.balance, 0);
 
-        vm.deal(ALICE, fee + 5);
+        vm.deal(ALICE, uint256(fee) + 5);
         vm.prank(ALICE);
-        assertEq(oracle.price{value: fee + 5}(), 0.0141082e18);
+        assertEq(oracle.price{value: uint256(fee) + 5}(), 0.0141082e18);
         assertEq(ALICE.balance, 5);
 
         vm.deal(ALICE, fee);

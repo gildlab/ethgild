@@ -10,9 +10,16 @@ import {IReceiptV1} from "../../interface/IReceiptV1.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 
-/// @dev the ERC1155 URI is always the pinned metadata on ipfs.
-string constant RECEIPT_METADATA_URI = "ipfs://bafkreih7cvpjocgrk7mgdel2hvjpquc26j4jo2jkez5y2qdaojfil7vley";
+/// @dev The prefix for data URIs as base64 encoded JSON.
+string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
+
+// @notice The URI for the metadata of the `Receipt` contract.
+// Decodes to a simple generic receipt metadata object.
+// `{"name":"Receipt","decimals":18,"description":"A receipt for a ReceiptVault."}`
+string constant RECEIPT_METADATA_DATA_URI =
+    "eyJuYW1lIjoiUmVjZWlwdCIsImRlY2ltYWxzIjoxOCwiZGVzY3JpcHRpb24iOiJBIHJlY2VpcHQgZm9yIGEgUmVjZWlwdFZhdWx0LiJ9";
 
 /// @title Receipt
 /// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows
@@ -29,7 +36,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
     /// implementation in `ReceiptFactory`.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
         __Ownable_init();
-        __ERC1155_init(RECEIPT_METADATA_URI);
+        __ERC1155_init(string.concat(DATA_URI_BASE64_PREFIX, RECEIPT_METADATA_DATA_URI));
 
         address initialOwner = abi.decode(data, (address));
         _transferOwnership(initialOwner);

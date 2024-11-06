@@ -1,5 +1,0 @@
-{
-  "name": "Receipt",
-  "decimals": 18,
-  "description": "A receipt for a ReceiptVault."
-}
