@@ -284,6 +284,33 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(receipt.balanceOf(alice, id), 0);
     }
 
+    /// Test ERC1155 testBalanceOf function
+    function testBalanceOf(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+
+        amount = bound(amount, 1, type(uint256).max);
+
+        TestReceipt receipt = createReceipt(alice);
+        TestReceiptOwner receiptOwner = new TestReceiptOwner();
+
+        vm.startPrank(alice);
+
+        // Set the receipt owner
+        receipt.transferOwnership(address(receiptOwner));
+
+        // Set the authorized 'from' and 'to' addresses in receiptOwner
+        receiptOwner.setFrom(address(0));
+        receiptOwner.setTo(alice);
+
+        receiptOwner.ownerMint(receipt, alice, id, amount, data);
+
+        uint256 balance = receipt.balanceOf(alice, id);
+
+        // Check the receipt balance of alice
+        assertEq(balance, amount);
+    }
+
     /// Test ERC1155 testBalanceOfBatch function
     function testBalanceOfBatch(
         uint256 fuzzedKeyAlice,
