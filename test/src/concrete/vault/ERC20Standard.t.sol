@@ -221,7 +221,7 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
 
         vault.decreaseAllowance(bob, decreaseAmount);
 
-        // Check that allowance increased correctly
+        // Check that allowance decreased correctly
         assertEq(vault.allowance(alice, bob), amount - decreaseAmount);
     }
 }
