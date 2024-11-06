@@ -81,6 +81,7 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
@@ -115,6 +116,8 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     function testERC20AllowanceAndApprove(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob, uint256 amount) external {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
         amount = bound(amount, 1, type(uint256).max);
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
@@ -125,5 +128,51 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
 
         // Check allowance
         assertEq(vault.allowance(alice, bob), amount);
+    }
+
+    // Test ERC20 transferFrom()
+    function testERC20TransferFrom(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 amount,
+        uint256 transferFromAmount,
+        uint256 oraclePrice
+    ) external {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+        amount = bound(amount, 1, type(uint128).max);
+        transferFromAmount = bound(transferFromAmount, 1, type(uint128).max);
+
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+
+        vm.startPrank(alice);
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
+            abi.encode(true)
+        );
+
+        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.assume(transferFromAmount < expectedShares);
+
+        vault.deposit(amount, alice, oraclePrice, bytes(""));
+
+        uint256 aliceBalanceBeforeTransfer = vault.balanceOf(alice);
+
+        vault.approve(bob, expectedShares);
+
+        vm.stopPrank();
+        vm.startPrank(bob);
+
+        // Bob transfers from Alice's account to his own
+        vault.transferFrom(alice, bob, transferFromAmount);
+
+        assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
+        assertEqUint(vault.balanceOf(bob), transferFromAmount);
     }
 }
