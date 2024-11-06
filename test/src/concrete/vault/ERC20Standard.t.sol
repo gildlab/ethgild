@@ -99,16 +99,15 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
+        uint256 bobInitialBalance = vault.balanceOf(bob);
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vault.deposit(amount, alice, oraclePrice, bytes(""));
 
-        uint256 aliceInitialBalance = vault.balanceOf(alice);
-
         vault.transfer(bob, expectedShares);
 
-        // Check final balances
-        assertEqUint(vault.balanceOf(alice), aliceInitialBalance - expectedShares);
+        // Check balances
+        assertEqUint(bobInitialBalance, 0);
         assertEqUint(vault.balanceOf(bob), expectedShares);
     }
 
