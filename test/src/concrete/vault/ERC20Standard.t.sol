@@ -200,4 +200,29 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
         // Check that allowance increased correctly
         assertEq(vault.allowance(alice, bob), amount + increaseAmount);
     }
+
+    // Test ERC20 decreaseAllowance
+    function testERC20DecreaseAllowance(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 amount,
+        uint256 decreaseAmount
+    ) external {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+        amount = bound(amount, 1, type(uint128).max);
+        decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
+        vm.assume(decreaseAmount < amount);
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+
+        vm.startPrank(alice);
+        vault.approve(bob, amount);
+
+        vault.decreaseAllowance(bob, decreaseAmount);
+
+        // Check that allowance increased correctly
+        assertEq(vault.allowance(alice, bob), amount - decreaseAmount);
+    }
 }
