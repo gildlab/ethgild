@@ -10,7 +10,7 @@ import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOrac
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
-    /// Test ERC20PriceOracleReceiptVault is constracted
+    /// Test ERC20 name symbol and decimals
     function testERC20NameSymbolDecimals(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
         external
     {
