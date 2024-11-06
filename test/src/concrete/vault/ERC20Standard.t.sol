@@ -13,6 +13,7 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import "forge-std/console.sol";
 
 contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -72,5 +73,42 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
         assertEqUint(vault.totalSupply(), expectedShares);
         // Check alice balance
         assertEqUint(vault.balanceOf(alice), expectedShares);
+    }
+
+    // Test ERC20 transfer()
+    function testERC20Transfer(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob, uint256 amount, uint256 oraclePrice)
+        external
+    {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        amount = bound(amount, 1, type(uint128).max);
+
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        vm.assume(amount.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
+        setVaultOraclePrice(oraclePrice);
+
+        // Setup vault and deposit initial balance
+        vm.startPrank(alice);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+
+        // Mock balance and allowance for deposit
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
+            abi.encode(true)
+        );
+
+        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vault.deposit(amount, alice, oraclePrice, bytes(""));
+
+        uint256 aliceInitialBalance = vault.balanceOf(alice);
+
+        vault.transfer(bob, expectedShares);
+
+        // Check final balances
+        assertEqUint(vault.balanceOf(alice), aliceInitialBalance - expectedShares);
+        assertEqUint(vault.balanceOf(bob), expectedShares);
     }
 }
