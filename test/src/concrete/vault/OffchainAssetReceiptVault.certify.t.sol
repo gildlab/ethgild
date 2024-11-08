@@ -11,6 +11,7 @@ import {
 import {IReceiptV1} from "src/interface/IReceiptV1.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
+import {LibOffchainAssetReceiptVaultFork} from "test/lib/LibOffchainAssetReceiptVaultFork.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
@@ -317,6 +318,27 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
         vault.deposit(assets, alice, minShareRatio, data);
+
+        vm.stopPrank();
+    }
+
+    /// forge-config: default.fuzz.runs = 1
+    function testCertifyArbitrumSepoliaFork(uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil)
+        public
+    {
+        (OffchainAssetReceiptVault vault, address alice) = LibOffchainAssetReceiptVaultFork.setup(vm);
+
+        vm.startPrank(alice);
+
+        uint256 blockNumber = block.number; //vm.getBlockNumber();
+        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
+        certifyUntil = bound(certifyUntil, blockNumber, type(uint32).max);
+
+        // Grant CERTIFIER role to alice
+        vault.grantRole(vault.CERTIFIER(), alice);
+
+        // Call the certify function
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, "");
 
         vm.stopPrank();
     }
