@@ -15,7 +15,7 @@ library LibOffchainAssetReceiptVaultFork {
         OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(payable(0xb012B4DE7b960A537ed485771278Ba222c56Aff3));
 
         uint256 BLOCK_NUMBER = 95231758;
-        string memory rpcURL = vm.envString("RPC_URL_ARBITRUM_SEPOLIA_FORK");
+        string memory rpcURL = "https://sepolia-rollup.arbitrum.io/rpc";
 
         vm.createSelectFork(rpcURL, BLOCK_NUMBER);
 
