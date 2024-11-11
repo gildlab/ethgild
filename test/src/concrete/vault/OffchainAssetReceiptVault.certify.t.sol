@@ -14,7 +14,6 @@ import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreato
 import {LibOffchainAssetReceiptVaultFork} from "test/lib/LibOffchainAssetReceiptVaultFork.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import "forge-std/console.sol";
 
 contract CertifyTest is OffchainAssetReceiptVaultTest {
     event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
@@ -330,15 +329,12 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         uint256 referenceBlockNumber = block.number;
-        console.log("referenceBlockNumber", referenceBlockNumber);
-        console.log("timestamp", block.timestamp);
 
         // Grant CERTIFIER role to alice
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Call the certify function  1732910399 95451393 false
         vault.certify(block.timestamp + 100, referenceBlockNumber, forceUntil, "");
-        //vault.certify(1732910399, 95451393, false, "");
 
         vm.stopPrank();
     }
