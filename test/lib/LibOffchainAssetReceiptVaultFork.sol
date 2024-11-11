@@ -11,11 +11,12 @@ library LibOffchainAssetReceiptVaultFork {
     function setup(Vm vm) internal returns (OffchainAssetReceiptVault, address) {
         address alice = address(0xc0D477556c25C9d67E1f57245C7453DA776B51cf);
 
-        // Contract address on arbitrum sepolia
+        // Contract address on Arbitrum Sepolia
         OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(payable(0xb012B4DE7b960A537ed485771278Ba222c56Aff3));
 
+        // Use an environment variable for the RPC URL
+        string memory rpcURL = vm.envString("RPC_URL_ARBITRUM_SEPOLIA_FORK");
         uint256 BLOCK_NUMBER = 95231758;
-        string memory rpcURL = "https://sepolia-rollup.arbitrum.io/rpc";
 
         vm.createSelectFork(rpcURL, BLOCK_NUMBER);
 
