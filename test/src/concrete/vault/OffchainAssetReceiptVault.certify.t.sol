@@ -323,7 +323,8 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
     }
 
     /// forge-config: default.fuzz.runs = 1
-    function testCertifyArbitrumSepoliaFork(bool forceUntil) public {
+    function testCertifyArbitrumSepoliaFork(bool forceUntil, uint256 certifyUntil) public {
+        vm.assume(certifyUntil > block.timestamp);
         (OffchainAssetReceiptVault vault, address alice) = LibOffchainAssetReceiptVaultFork.setup(vm);
 
         vm.startPrank(alice);
@@ -332,9 +333,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
 
         // Grant CERTIFIER role to alice
         vault.grantRole(vault.CERTIFIER(), alice);
-
-        // Call the certify function  1732910399 95451393 false
-        vault.certify(block.timestamp + 100, referenceBlockNumber, forceUntil, "");
+        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, "");
 
         vm.stopPrank();
     }
