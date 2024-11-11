@@ -16,7 +16,7 @@ library LibOffchainAssetReceiptVaultFork {
 
         // Use an environment variable for the RPC URL
         string memory rpcURL = vm.envString("RPC_URL_ARBITRUM_SEPOLIA_FORK");
-        uint256 BLOCK_NUMBER = 95231758;
+        uint256 BLOCK_NUMBER = 96365164;
 
         vm.createSelectFork(rpcURL, BLOCK_NUMBER);
 
