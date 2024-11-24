@@ -265,6 +265,67 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.stopPrank();
     }
 
+    /// Test alice attempting to burn bob's ID.
+    function testWithdrawAliceBurnBobb(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBoB) external {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBoB % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+
+        uint256 alicePrice = 1.23e18;
+        uint256 bobPrice = 4.56e18;
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
+
+        // Alice deposits so that she receives ERC20 shares under her receipt.
+        setVaultOraclePrice(alicePrice);
+
+        vm.startPrank(alice);
+
+        uint256 aliceDeposit = 100e18;
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(aliceDeposit));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, aliceDeposit),
+            abi.encode(true)
+        );
+
+        vault.deposit(aliceDeposit, alice, alicePrice, bytes(""));
+        vm.stopPrank();
+
+        // Bob deposits so that he receives ERC20 shares under his receipt.
+        setVaultOraclePrice(bobPrice);
+
+        vm.startPrank(bob);
+
+        uint256 bobDeposit = 100e18;
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, bob), abi.encode(bobDeposit));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
+            abi.encode(true)
+        );
+
+        vault.deposit(bobDeposit, bob, bobPrice, bytes(""));
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+
+        // Alice attempts to burn Bob's receipt by ID, using herself as owner.
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.withdraw(1e18, alice, alice, bobPrice, bytes(""));
+
+        // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
+        vm.expectRevert("ERC20: insufficient allowance");
+        vault.withdraw(1e18, alice, bob, bobPrice, bytes(""));
+
+        vm.stopPrank();
+
+        // Bob can withdraw his own receipt.
+        vm.startPrank(bob);
+        vault.withdraw(1e18, bob, bob, bobPrice, bytes(""));
+        vm.stopPrank();
+    }
+
     /// Test Withdraw function with more than assets deposied
     function testWithdrawMoreThanAssets(
         uint256 fuzzedKeyAlice,
