@@ -265,8 +265,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.stopPrank();
     }
 
-    /// Test alice attempting to burn bob's ID.
-    function testWithdrawAliceBurnBobb(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBoB) external {
+    /// Test alice attempting to burn bob's ID when the price is different.
+    function testWithdrawAliceBurnBob(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBoB) external {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBoB % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
@@ -323,6 +323,43 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Bob can withdraw his own receipt.
         vm.startPrank(bob);
         vault.withdraw(1e18, bob, bob, bobPrice, bytes(""));
+        vm.stopPrank();
+
+        // If Bob deposits under the same price as Alice, Bob cannot burn Alice's
+        // receipt.
+        setVaultOraclePrice(alicePrice);
+
+        vm.startPrank(bob);
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, bob), abi.encode(bobDeposit));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
+            abi.encode(true)
+        );
+
+        vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        // Bob cannot burn Alice's receipt.
+        vm.expectRevert("ERC20: insufficient allowance");
+        vault.withdraw(1e18, bob, alice, alicePrice, bytes(""));
+
+        // Bob can withdraw his own receipt from alice's price.
+        vault.withdraw(100e18, bob, bob, alicePrice, bytes(""));
+
+        // Bob's balance should be only from his other deposit.
+        assertEqUint(vault.balanceOf(bob), 456e18 - 4.56e18);
+
+        // Bob cannot withdraw any more under alice price.
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
+
+        vm.stopPrank();
+
+        // Alice can withdraw her own receipt.
+        vm.startPrank(alice);
+        vault.withdraw(100e18, alice, alice, alicePrice, bytes(""));
         vm.stopPrank();
     }
 
