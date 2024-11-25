@@ -358,7 +358,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vault.withdraw(maxWithdrawBob, bob, bob, alicePrice, bytes(""));
 
         // Bob's balance should be only from his other deposit.
-        //assertEqUint(vault.balanceOf(bob), ((bobDeposit * bobPrice) / 1e18 ) - bobPrice);
+        assertEqUint(vault.balanceOf(bob), ((bobDeposit * bobPrice) / 1e18) - bobPrice);
 
         // Bob cannot withdraw any more under alice price.
         vm.expectRevert("ERC1155: burn amount exceeds balance");
