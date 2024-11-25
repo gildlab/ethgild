@@ -15,6 +15,7 @@ import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "src/abstract/ReceiptVau
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
+import "forge-std/console.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -352,10 +353,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.expectRevert("ERC20: insufficient allowance");
         vault.withdraw(1e18, bob, alice, alicePrice, bytes(""));
 
-        uint256 maxWithdraw = vault.maxWithdraw(bob, alicePrice);
+        uint256 maxWithdrawBob = vault.maxWithdraw(bob, alicePrice);
 
         // Bob can withdraw his own receipt from alice's price.
-        vault.withdraw(maxWithdraw, bob, bob, alicePrice, bytes(""));
+        vault.withdraw(maxWithdrawBob, bob, bob, alicePrice, bytes(""));
 
         // Bob's balance should be only from his other deposit.
         //assertEqUint(vault.balanceOf(bob), ((bobDeposit * bobPrice) / 1e18 )- bobPrice);
@@ -367,7 +368,9 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.stopPrank();
         // Alice can withdraw her own receipt.
         vm.startPrank(alice);
-        vault.withdraw(100e18, alice, alice, alicePrice, bytes(""));
+
+        uint256 maxWithdrawAlice = vault.maxWithdraw(alice, alicePrice);
+        vault.withdraw(maxWithdrawAlice, alice, alice, alicePrice, bytes(""));
         vm.stopPrank();
     }
 
