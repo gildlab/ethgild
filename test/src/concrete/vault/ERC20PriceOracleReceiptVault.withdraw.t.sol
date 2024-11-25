@@ -15,6 +15,7 @@ import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "src/abstract/ReceiptVau
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
+import "forge-std/console.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -270,12 +271,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 alicePrice,
-        uint256 bobPrice
+        uint256 bobPrice,
+        uint256 aliceDeposit
     ) external {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         alicePrice = bound(alicePrice, 1e18, 100e18);
         bobPrice = bound(bobPrice, 1e18, 100e18);
+        aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);
 
         vm.assume(alice != bob);
 
@@ -286,7 +289,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.startPrank(alice);
 
-        uint256 aliceDeposit = 100e18;
+//        uint256 aliceDeposit = 100e18;
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(aliceDeposit));
         vm.mockCall(
             address(iAsset),
