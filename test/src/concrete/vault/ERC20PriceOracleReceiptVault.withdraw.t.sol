@@ -353,18 +353,19 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Bob can withdraw his own receipt from alice's price.
         vault.withdraw(100e18, bob, bob, alicePrice, bytes(""));
 
+        // Bob's balance should be only from his other deposit.
         assertEqUint(vault.balanceOf(bob), bobPrice * 100 - bobPrice);
 
         // Bob cannot withdraw any more under alice price.
-        //vm.expectRevert("ERC1155: burn amount exceeds balance");
-        //vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.withdraw(1, bob, bob, alicePrice, bytes(""));
 
-        //vm.stopPrank();
+        vm.stopPrank();
 
-        //// Alice can withdraw her own receipt.
-        //vm.startPrank(alice);
-        //vault.withdraw(100e18, alice, alice, alicePrice, bytes(""));
-        //vm.stopPrank();
+        // Alice can withdraw her own receipt.
+        vm.startPrank(alice);
+        vault.withdraw(100e18, alice, alice, alicePrice, bytes(""));
+        vm.stopPrank();
     }
 
     /// Test Withdraw function with more than assets deposied
