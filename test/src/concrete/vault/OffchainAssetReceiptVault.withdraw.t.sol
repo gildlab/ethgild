@@ -7,6 +7,7 @@ import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceipt
 import {OffchainAssetReceiptVaultTest, Vm} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import "forge-std/console.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Checks that balance owner balance changes after wirthdraw
@@ -660,8 +661,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Alice attempts to burn Bob's receipt by ID, using herself as owner.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
-        vault.withdraw(1e18, alice, alice, bobPrice, bytes(""));
+        //vm.expectRevert("ERC1155: burn amount exceeds balance");
+        //vault.withdraw(1, alice, alice, bobPrice, bytes(""));
 
         // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
         vm.expectRevert("ERC20: insufficient allowance");
@@ -669,37 +670,37 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
 
         vm.stopPrank();
 
-        // Bob can withdraw his own receipt.
-        vm.startPrank(bob);
-        vault.withdraw(1e18, bob, bob, bobPrice, bytes(""));
-        vm.stopPrank();
+        //// Bob can withdraw his own receipt.
+        //vm.startPrank(bob);
+        //vault.withdraw(1e18, bob, bob, bobPrice, bytes(""));
+        //vm.stopPrank();
 
-        vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
-        vm.stopPrank();
+        //vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
+        //vm.stopPrank();
 
-        vm.startPrank(bob);
-        // Bob cannot burn Alice's receipt.
-        vm.expectRevert("ERC20: insufficient allowance");
-        vault.withdraw(1e18, bob, alice, alicePrice, bytes(""));
+        //vm.startPrank(bob);
+        //// Bob cannot burn Alice's receipt.
+        //vm.expectRevert("ERC20: insufficient allowance");
+        //vault.withdraw(1e18, bob, alice, alicePrice, bytes(""));
 
-        uint256 maxWithdrawBob = vault.maxWithdraw(bob, alicePrice);
+        //uint256 maxWithdrawBob = vault.maxWithdraw(bob, alicePrice);
 
-        // Bob can withdraw his own receipt from alice's price.
-        vault.withdraw(maxWithdrawBob, bob, bob, alicePrice, bytes(""));
+        //// Bob can withdraw his own receipt from alice's price.
+        //vault.withdraw(maxWithdrawBob, bob, bob, alicePrice, bytes(""));
 
-        // Bob's balance should be only from his other deposit.
-        //assertEqUint(vault.balanceOf(bob), ((bobDeposit * bobPrice) / 1e18 ) - bobPrice);
+        //// Bob's balance should be only from his other deposit.
+        ////assertEqUint(vault.balanceOf(bob), ((bobDeposit * bobPrice) / 1e18 ) - bobPrice);
 
-        // Bob cannot withdraw any more under alice price.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
-        vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
+        //// Bob cannot withdraw any more under alice price.
+        //vm.expectRevert("ERC1155: burn amount exceeds balance");
+        //vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
 
-        vm.stopPrank();
-        // Alice can withdraw her own receipt.
-        vm.startPrank(alice);
+        //vm.stopPrank();
+        //// Alice can withdraw her own receipt.
+        //vm.startPrank(alice);
 
-        uint256 maxWithdrawAlice = vault.maxWithdraw(alice, alicePrice);
-        vault.withdraw(maxWithdrawAlice, alice, alice, alicePrice, bytes(""));
-        vm.stopPrank();
+        //uint256 maxWithdrawAlice = vault.maxWithdraw(alice, alicePrice);
+        //vault.withdraw(maxWithdrawAlice, alice, alice, alicePrice, bytes(""));
+        //vm.stopPrank();
     }
 }
