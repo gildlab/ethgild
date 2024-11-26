@@ -328,4 +328,56 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.stopPrank();
     }
+
+    /// Test oracle vault for multiple prices and historical redemptions.
+    function testMultiplePricesAndHistoricalRedemptions(
+        uint256 fuzzedKeyAlice,
+        uint256 priceOne,
+        uint256 priceTwo,
+        uint256 aliceDeposit
+    ) external {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        priceOne = bound(priceOne, 1e18, 100e18);
+        priceTwo = bound(priceTwo, 1e18, 100e18);
+        aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);
+
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
+
+        // Set initial oracle price and deposit first half
+        setVaultOraclePrice(priceOne);
+        vm.startPrank(alice);
+
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(aliceDeposit));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
+            abi.encode(true)
+        );
+
+        vault.deposit(aliceDeposit / 2, alice, priceOne, bytes(""));
+        vm.stopPrank();
+
+        // Assert receipt balance and vault state after first deposit
+        uint256 expectedSharesOne = (aliceDeposit / 2).fixedPointMul(priceOne, Math.Rounding.Down);
+        assertEq(vault.balanceOf(alice), expectedSharesOne);
+
+        // Set new oracle price and deposit second half
+        setVaultOraclePrice(priceTwo);
+        vm.startPrank(alice);
+
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
+            abi.encode(true)
+        );
+
+        vault.deposit(aliceDeposit / 2, alice, priceTwo, bytes(""));
+        vm.stopPrank();
+
+        // Assert receipt balance and vault state after second deposit
+        uint256 expectedSharesTwo = (aliceDeposit / 2).fixedPointMul(priceTwo, Math.Rounding.Down);
+        uint256 totalShares = expectedSharesOne + expectedSharesTwo;
+
+        assertEq(vault.balanceOf(alice), totalShares);
+    }
 }
