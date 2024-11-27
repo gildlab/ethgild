@@ -341,7 +341,11 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         priceTwo = bound(priceTwo, 1e18, 100e18);
         aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);
 
+        // Start recording logs
+        vm.recordLogs();
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
+
+        ReceiptContract receipt = getReceipt();
 
         // Set initial oracle price and deposit first half
         setVaultOraclePrice(priceOne);
@@ -360,6 +364,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Assert receipt balance and vault state after first deposit
         uint256 expectedSharesOne = (aliceDeposit / 2).fixedPointMul(priceOne, Math.Rounding.Down);
         assertEq(vault.balanceOf(alice), expectedSharesOne);
+
+        // Check receipt balance
+        uint256 receiptBalance = receipt.balanceOf(alice, priceOne);
+        assertEq(receiptBalance, expectedSharesOne);
 
         // Set new oracle price and deposit second half
         setVaultOraclePrice(priceTwo);
