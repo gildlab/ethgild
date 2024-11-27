@@ -330,23 +330,24 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     }
 
     /// Test oracle vault for multiple prices and historical redemptions.
-    function testMultiplePricesAndHistoricalRedemptions(
+    function testMultiplePricesAndHistoricalRedemptionsAndMint(
         uint256 fuzzedKeyAlice,
         uint256 priceOne,
         uint256 priceTwo,
-        uint256 aliceDeposit
+        uint256 aliceDeposit,
+        uint256 aliceMint
     ) external {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         priceOne = bound(priceOne, 1e18, 100e18);
         priceTwo = bound(priceTwo, 1e18, 100e18);
         aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);
+        aliceMint = bound(aliceMint, 100e18, type(uint128).max);
 
         // Start recording logs
         vm.recordLogs();
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
 
         ReceiptContract receipt = getReceipt();
-
         // Set initial oracle price and deposit first half
         setVaultOraclePrice(priceOne);
         vm.startPrank(alice);
@@ -364,15 +365,11 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Assert receipt balance and vault state after first deposit
         uint256 expectedSharesOne = (aliceDeposit / 2).fixedPointMul(priceOne, Math.Rounding.Down);
         assertEq(vault.balanceOf(alice), expectedSharesOne);
-
         // Check receipt balance
-        uint256 receiptBalance = receipt.balanceOf(alice, priceOne);
-        assertEq(receiptBalance, expectedSharesOne);
-
+        assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
         // Set new oracle price and deposit second half
         setVaultOraclePrice(priceTwo);
         vm.startPrank(alice);
-
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
@@ -387,5 +384,24 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 totalShares = expectedSharesOne + expectedSharesTwo;
 
         assertEq(vault.balanceOf(alice), totalShares);
+
+        {
+            // Calculate the required assets for minting the specified shares
+            uint256 assetsRequired = aliceMint.fixedPointDiv(priceTwo, Math.Rounding.Up);
+
+            vm.startPrank(alice);
+            vm.mockCall(
+                address(iAsset),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assetsRequired),
+                abi.encode(true)
+            );
+
+            uint256 assetsMinted = vault.mint(aliceMint, alice, priceTwo, bytes(""));
+            vm.stopPrank();
+
+            // Assert minting state
+            assertEq(assetsMinted, assetsRequired);
+            assertEq(vault.balanceOf(alice), totalShares + aliceMint);
+        }
     }
 }
