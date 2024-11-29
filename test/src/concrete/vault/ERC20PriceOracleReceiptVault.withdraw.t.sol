@@ -304,7 +304,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         checkNoBalanceChange(vault, alice, alice, oraclePrice, assetsToWithdraw, receipt, bytes(""), bytes(""));
     }
 
-    /// Test that approved ERC20 shares can be withdrawn even without receipt approval
+    /// Test withdraw with erc20 approval
     function testWithdrawWithERC20Approval(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
