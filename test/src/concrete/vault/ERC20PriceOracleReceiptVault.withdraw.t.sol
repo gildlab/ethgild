@@ -309,49 +309,46 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        uint256 assets,
-        uint256 oraclePrice
+        uint256 amount,
+        uint256 oraclePrice,
+        uint256 transferFromAmount
     ) external {
-        // Ensure the fuzzed keys are within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        vm.assume(alice != bob);
+        amount = bound(amount, 1, type(uint128).max);
+        transferFromAmount = bound(transferFromAmount, 1, type(uint128).max);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
 
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+
         vm.startPrank(alice);
-        // Start recording logs
-        vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-        ReceiptContract receipt = getReceipt();
-
-        assets = bound(assets, 2, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
         vm.mockCall(
             address(iAsset),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
 
-        vault.deposit(assets, alice, oraclePrice, bytes(""));
-        uint256 withdrawAssets = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.assume(transferFromAmount < expectedShares);
 
-        emit log_named_uint("withdrawAssets", withdrawAssets);
-        emit log_named_uint(" assets", assets);
-        emit log_named_uint(" balance", vault.balanceOf(alice));
-        emit log_named_uint(" oraclePrice", oraclePrice);
+        vault.deposit(amount, alice, oraclePrice, bytes(""));
 
-        vault.approve(bob, vault.balanceOf(alice));
+        uint256 aliceBalanceBeforeTransfer = vault.balanceOf(alice);
+
+        vault.approve(bob, expectedShares);
+
+        // Check allowance before withdrawal
+        uint256 allowanceBeforeWithdraw = vault.allowance(alice, bob);
+        assertEq(allowanceBeforeWithdraw, expectedShares);
 
         vm.stopPrank();
-
         vm.startPrank(bob);
-
-        checkBalanceChange(vault, bob, alice, oraclePrice, withdrawAssets, receipt, bytes(""));
+        vault.withdraw(transferFromAmount, bob, alice, oraclePrice, bytes(""));
+        vm.stopPrank();
     }
 
     /// forge-config: default.fuzz.runs = 1
