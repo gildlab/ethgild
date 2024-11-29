@@ -304,6 +304,56 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         checkNoBalanceChange(vault, alice, alice, oraclePrice, assetsToWithdraw, receipt, bytes(""), bytes(""));
     }
 
+    /// Test that approved ERC20 shares can be withdrawn even without receipt approval
+    function testWithdrawWithERC20Approval(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        uint256 assets,
+        uint256 oraclePrice
+    ) external {
+        // Ensure the fuzzed keys are within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice);
+
+        vm.startPrank(alice);
+        // Start recording logs
+        vm.recordLogs();
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ReceiptContract receipt = getReceipt();
+
+        assets = bound(assets, 2, type(uint128).max);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+
+        // Ensure Alice has enough balance and allowance
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
+
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
+            abi.encode(true)
+        );
+
+        vault.deposit(assets, alice, oraclePrice, bytes(""));
+        uint256 withdrawAssets = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+
+        emit log_named_uint("withdrawAssets", withdrawAssets);
+        emit log_named_uint(" assets", assets);
+        emit log_named_uint(" balance", vault.balanceOf(alice));
+        emit log_named_uint(" oraclePrice", oraclePrice);
+
+        vault.approve(bob, vault.balanceOf(alice));
+
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+
+        checkBalanceChange(vault, bob, alice, oraclePrice, withdrawAssets, receipt, bytes(""));
+    }
+
     /// forge-config: default.fuzz.runs = 1
     function testWithdrawFlareFork(uint256 deposit) public {
         deposit = bound(deposit, 1, type(uint128).max);
