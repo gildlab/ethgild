@@ -28,7 +28,7 @@ interface IReceiptVaultV1 {
     /// @param vaultInformation The vault information.
     event ReceiptVaultInformation(address sender, bytes vaultInformation);
 
-    /// Similar to IERC4626 deposit but with receipt ID and information.
+    /// Similar to IERC4626 `Deposit` but with receipt ID and information.
     /// @param sender As per `IERC4626.Deposit`.
     /// @param owner As per `IERC4626.Deposit`.
     /// @param assets As per `IERC4626.Deposit`.
@@ -37,7 +37,7 @@ interface IReceiptVaultV1 {
     /// @param receiptInformation As per `ReceiptInformation`.
     event Deposit(address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation);
 
-    /// Similar to IERC4626 `withdraw` but with receipt ID.
+    /// Similar to IERC4626 `Withdraw` but with receipt ID.
     /// @param sender As per `IERC4626.Withdraw`.
     /// @param receiver As per `IERC4626.Withdraw`.
     /// @param owner As per `IERC4626.Withdraw`.
@@ -239,9 +239,9 @@ interface IReceiptVaultV1 {
     /// with.
     /// @return shares As per IERC4626 `deposit`.
     function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes calldata receiptInformation)
-    external
-    payable
-    returns (uint256 shares);
+        external
+        payable
+        returns (uint256 shares);
 
     /// Exactly as per IERC4626 `maxMint`.
     ///
@@ -503,8 +503,8 @@ interface IReceiptVaultV1 {
     ///
     /// @param shares As per IERC4626 `previewRedeem`.
     /// @param id The reference id to redeem against.
-    /// @return maxShares As per IERC4626 `previewRedeem`.
-    function previewRedeem(uint256 shares, uint256 id) external view returns (uint256 maxShares);
+    /// @return assets As per IERC4626 `previewRedeem`.
+    function previewRedeem(uint256 shares, uint256 id) external view returns (uint256 assets);
 
     /// Similar to IERC4626 `redeem` but with receipt ID and information.
     ///
