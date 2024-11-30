@@ -426,4 +426,110 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.stopPrank();
     }
+
+    /// Test oracle vault for multiple prices and historical redemptions.
+    function testMultiplePricesAndHistoricalRedemptionsAndMint(
+        uint256 fuzzedKeyAlice,
+        uint256 priceOne,
+        uint256 priceTwo,
+        uint256 priceThree,
+        uint256 aliceDeposit
+    ) external {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        priceOne = bound(priceOne, 1e18, 100e18);
+        priceTwo = bound(priceTwo, 1e18, 100e18);
+        priceThree = bound(priceThree, 1e18, 100e18);
+        vm.assume(priceTwo != priceOne && priceTwo != priceThree);
+        vm.assume(priceOne != priceThree);
+
+        aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);
+
+        // Start recording logs
+        vm.recordLogs();
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
+        ReceiptContract receipt = getReceipt();
+
+        // Set initial oracle price and deposit first half
+        setVaultOraclePrice(priceOne);
+        vm.startPrank(alice);
+
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(aliceDeposit));
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
+            abi.encode(true)
+        );
+
+        vault.deposit(aliceDeposit / 2, alice, priceOne, bytes(""));
+        vm.stopPrank();
+
+        // Assert receipt balance and vault state after first deposit
+        uint256 expectedSharesOne = (aliceDeposit / 2).fixedPointMul(priceOne, Math.Rounding.Down);
+        assertEq(vault.balanceOf(alice), expectedSharesOne);
+        assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
+
+        // Set new oracle price and deposit second half
+        setVaultOraclePrice(priceTwo);
+        vm.startPrank(alice);
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
+            abi.encode(true)
+        );
+
+        vault.deposit(aliceDeposit / 2, alice, priceTwo, bytes(""));
+        vm.stopPrank();
+
+        uint256 expectedSharesTwo = (aliceDeposit / 2).fixedPointMul(priceTwo, Math.Rounding.Down);
+        assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo);
+        assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
+        assertEq(receipt.balanceOf(alice, priceTwo), expectedSharesTwo);
+
+        // Mint additional shares at priceTwo
+        uint256 assetsRequired = aliceDeposit.fixedPointDiv(priceTwo, Math.Rounding.Up);
+        vm.startPrank(alice);
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assetsRequired),
+            abi.encode(true)
+        );
+
+        vault.mint(aliceDeposit, alice, priceTwo, bytes(""));
+        vm.stopPrank();
+
+        assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo + aliceDeposit);
+        assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
+        assertEq(receipt.balanceOf(alice, priceTwo), expectedSharesTwo + aliceDeposit);
+
+        // Set new oracle price without minting
+        setVaultOraclePrice(priceOne);
+        assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo + aliceDeposit);
+
+        // Ensure burns cannot occur at the new oracle price
+        vm.startPrank(alice);
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
+
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.redeem(1e18, alice, alice, priceThree, bytes(""));
+        vm.stopPrank();
+
+        setVaultOraclePrice(priceThree);
+
+        vm.startPrank(alice);
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
+
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.redeem(1e18, alice, alice, priceThree, bytes(""));
+        vm.stopPrank();
+
+        // Ensure burns can occur at the previous oracle price
+        vm.startPrank(alice);
+        vault.withdraw(1e18, alice, alice, priceOne, bytes(""));
+        vault.redeem(1e18, alice, alice, priceOne, bytes(""));
+        vault.withdraw(1e18, alice, alice, priceTwo, bytes(""));
+        vault.redeem(1e18, alice, alice, priceTwo, bytes(""));
+        vm.stopPrank();
+    }
 }
