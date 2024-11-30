@@ -282,6 +282,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         bobDeposit = bound(bobDeposit, 100e18, type(uint128).max);
 
         vm.assume(alice != bob);
+        vm.assume(alicePrice != bobPrice);
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
 
@@ -312,40 +313,55 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             abi.encode(true)
         );
 
-        vault.deposit(bobDeposit, bob, bobPrice, bytes(""));
-        vm.stopPrank();
+        uint256 bobExpectedSharesAfterActions;
+        {
+            uint256 bobSharesDeposit0 = vault.deposit(bobDeposit, bob, bobPrice, bytes(""));
+            vm.stopPrank();
 
-        vm.startPrank(alice);
+            assertEqUint(vault.balanceOf(bob), bobSharesDeposit0);
 
-        // Alice attempts to burn Bob's receipt by ID, using herself as owner.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
-        vault.withdraw(1e18, alice, alice, bobPrice, bytes(""));
+            {
+                vm.startPrank(alice);
 
-        // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
-        vm.expectRevert("ERC20: insufficient allowance");
-        vault.withdraw(1e18, alice, bob, bobPrice, bytes(""));
+                // Alice attempts to burn Bob's receipt by ID, using herself as owner.
+                vm.expectRevert("ERC1155: burn amount exceeds balance");
+                uint256 aliceSharesWithdraw0 = vault.withdraw(1e18, alice, alice, bobPrice, bytes(""));
+                assertEqUint(aliceSharesWithdraw0, 0);
 
-        vm.stopPrank();
+                // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
+                vm.expectRevert("ERC20: insufficient allowance");
+                uint256 aliceSharesWithdraw1 = vault.withdraw(1e18, alice, bob, bobPrice, bytes(""));
+                assertEqUint(aliceSharesWithdraw1, 0);
 
-        // Bob can withdraw his own receipt.
-        vm.startPrank(bob);
-        vault.withdraw(1e18, bob, bob, bobPrice, bytes(""));
-        vm.stopPrank();
+                vm.stopPrank();
+            }
 
-        // If Bob deposits under the same price as Alice, Bob cannot burn Alice's
-        // receipt.
-        setVaultOraclePrice(alicePrice);
+            // Bob can withdraw his own receipt.
+            vm.startPrank(bob);
+            uint256 bobSharesWithdraw0 = vault.withdraw(1e18, bob, bob, bobPrice, bytes(""));
+            vm.stopPrank();
 
-        vm.startPrank(bob);
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, bob), abi.encode(bobDeposit));
-        vm.mockCall(
-            address(iAsset),
-            abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
-            abi.encode(true)
-        );
+            assertTrue(bobSharesWithdraw0 > 0);
+            assertEqUint(vault.balanceOf(bob), bobSharesDeposit0 - bobSharesWithdraw0);
 
-        vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
-        vm.stopPrank();
+            // If Bob deposits under the same price as Alice, Bob cannot burn Alice's
+            // receipt.
+            setVaultOraclePrice(alicePrice);
+
+            vm.startPrank(bob);
+            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, bob), abi.encode(bobDeposit));
+            vm.mockCall(
+                address(iAsset),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
+                abi.encode(true)
+            );
+
+            uint256 bobSharesDeposit1 = vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
+            vm.stopPrank();
+
+            bobExpectedSharesAfterActions = bobSharesDeposit0 + bobSharesDeposit1 - bobSharesWithdraw0;
+            assertEqUint(vault.balanceOf(bob), bobExpectedSharesAfterActions);
+        }
 
         vm.startPrank(bob);
         // Bob cannot burn Alice's receipt.
@@ -355,10 +371,11 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 maxWithdrawBob = vault.maxWithdraw(bob, alicePrice);
 
         // Bob can withdraw his own receipt from alice's price.
-        vault.withdraw(maxWithdrawBob, bob, bob, alicePrice, bytes(""));
+        uint256 bobAliceWithdrawShares = vault.withdraw(maxWithdrawBob, bob, bob, alicePrice, bytes(""));
 
         // Bob's balance should be only from his other deposit.
-        assertEqUint(vault.balanceOf(bob), ((bobDeposit * bobPrice) / 1e18) - bobPrice);
+
+        assertEqUint(vault.balanceOf(bob), bobExpectedSharesAfterActions - bobAliceWithdrawShares);
 
         // Bob cannot withdraw any more under alice price.
         vm.expectRevert("ERC1155: burn amount exceeds balance");
