@@ -438,6 +438,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
+        vm.assume(tokenId1 != tokenId2);
+
         // Ensure amounts are bounded to avoid zero transfers
         amount1 = bound(amount1, 1, type(uint256).max);
         amount2 = bound(amount2, 1, type(uint256).max);
