@@ -4,10 +4,9 @@ pragma solidity =0.8.25;
 
 import {ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount} from "src/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
+import {OffchainAssetReceiptVaultTest, Vm, ReceiptContract} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import "forge-std/console.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Checks that balance owner balance changes after wirthdraw
@@ -627,20 +626,23 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     function testOffchainAssetWithdrawAliceBurnBob(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        uint256 alicePrice,
-        uint256 bobPrice,
+        uint256 aliceMinShareRatio,
+        uint256 bobMinShareRatio,
         uint256 aliceDeposit,
         uint256 bobDeposit
     ) external {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        alicePrice = bound(alicePrice, 1, 1e18);
-        bobPrice = bound(bobPrice, 1, 1e18);
+        aliceMinShareRatio = bound(aliceMinShareRatio, 0, 1e18);
+        bobMinShareRatio = bound(bobMinShareRatio, 0, 1e18);
         aliceDeposit = bound(aliceDeposit, 1, type(uint128).max);
         bobDeposit = bound(bobDeposit, 1, type(uint128).max);
 
         vm.assume(alice != bob);
+        vm.recordLogs();
         OffchainAssetReceiptVault vault = createVault(alice, "Alice", "Alice");
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        ReceiptContract receipt = getReceipt(logs);
 
         vm.startPrank(alice);
 
@@ -650,11 +652,21 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(vault.WITHDRAWER(), alice);
         vault.grantRole(vault.WITHDRAWER(), bob);
 
-        vault.deposit(aliceDeposit, alice, alicePrice, bytes(""));
+        vault.deposit(aliceDeposit, alice, aliceMinShareRatio, bytes(""));
+        assertEqUint(vault.balanceOf(alice), aliceDeposit);
+        assertEqUint(vault.balanceOf(bob), 0);
+        assertEqUint(receipt.balanceOf(alice, 1), aliceDeposit);
+        assertEqUint(receipt.balanceOf(bob, 1), 0);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        vault.deposit(bobDeposit, bob, bobPrice, bytes(""));
+        vault.deposit(bobDeposit, bob, bobMinShareRatio, bytes(""));
+        assertEqUint(vault.balanceOf(alice), aliceDeposit);
+        assertEqUint(vault.balanceOf(bob), bobDeposit);
+        assertEqUint(receipt.balanceOf(alice, 1), aliceDeposit);
+        assertEqUint(receipt.balanceOf(bob, 1), 0);
+        assertEqUint(receipt.balanceOf(alice, 2), 0);
+        assertEqUint(receipt.balanceOf(bob, 2), bobDeposit);
         vm.stopPrank();
 
         vm.startPrank(alice);
@@ -673,7 +685,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 maxWithdraw = vault.maxWithdraw(bob, 2);
         vault.withdraw(maxWithdraw, bob, bob, 2, bytes(""));
 
-        vault.deposit(bobDeposit, bob, alicePrice, bytes("")); //id 3
+        vault.deposit(bobDeposit, bob, aliceMinShareRatio, bytes("")); //id 3
 
         // Bob cannot burn Alice's receipt.
         vm.expectRevert("ERC20: insufficient allowance");
