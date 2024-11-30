@@ -482,6 +482,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         uint256 expectedSharesTwo = (aliceDeposit / 2).fixedPointMul(priceTwo, Math.Rounding.Down);
         assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo);
+        assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
+        assertEq(receipt.balanceOf(alice, priceTwo), expectedSharesTwo);
 
         // Mint additional shares at priceTwo
         uint256 assetsRequired = aliceDeposit.fixedPointDiv(priceTwo, Math.Rounding.Up);
@@ -496,12 +498,22 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.stopPrank();
 
         assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo + aliceDeposit);
+        assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
+        assertEq(receipt.balanceOf(alice, priceTwo), expectedSharesTwo + aliceDeposit);
 
         // Set new oracle price without minting
         setVaultOraclePrice(priceOne);
         assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo + aliceDeposit);
 
         // Ensure burns cannot occur at the new oracle price
+        vm.startPrank(alice);
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
+
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vault.redeem(1e18, alice, alice, priceThree, bytes(""));
+        vm.stopPrank();
+
         setVaultOraclePrice(priceThree);
 
         vm.startPrank(alice);
@@ -510,6 +522,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.expectRevert("ERC1155: burn amount exceeds balance");
         vault.redeem(1e18, alice, alice, priceThree, bytes(""));
+        vm.stopPrank();
+
+        // Ensure burns can occur at the previous oracle price
+        vm.startPrank(alice);
+        vault.withdraw(1e18, alice, alice, priceOne, bytes(""));
+        vault.redeem(1e18, alice, alice, priceOne, bytes(""));
+        vault.withdraw(1e18, alice, alice, priceTwo, bytes(""));
+        vault.redeem(1e18, alice, alice, priceTwo, bytes(""));
         vm.stopPrank();
     }
 }
