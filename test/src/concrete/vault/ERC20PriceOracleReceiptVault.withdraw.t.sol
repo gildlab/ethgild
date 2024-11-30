@@ -433,16 +433,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     function testWithdrawWithERC20Approval(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        string memory assetName,
         uint256 amount,
         uint256 oraclePrice,
-        uint256 transferFromAmount
+        uint256 redeemSharesAmount
     ) external {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
-        transferFromAmount = bound(transferFromAmount, 1, type(uint128).max);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -458,21 +456,38 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         );
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
-        vm.assume(transferFromAmount < expectedShares);
+        vm.assume(expectedShares > 0);
 
-        vault.deposit(amount, alice, oraclePrice, bytes(""));
+        uint256 totalShares = vault.deposit(amount, alice, oraclePrice, bytes(""));
+        assertEqUint(totalShares, expectedShares);
+        redeemSharesAmount = bound(redeemSharesAmount, 1, totalShares);
 
         uint256 aliceBalanceBeforeTransfer = vault.balanceOf(alice);
+        assertEqUint(aliceBalanceBeforeTransfer, totalShares);
 
+        uint256 assetsAmount = vault.previewRedeem(redeemSharesAmount, oraclePrice);
+        vm.assume(assetsAmount > 0);
+        vm.stopPrank();
+
+        // Bob has no allowance so he cannot withdraw.
+        vm.startPrank(bob);
+        vm.expectRevert("ERC20: insufficient allowance");
+        vault.redeem(redeemSharesAmount, bob, alice, oraclePrice, bytes(""));
+        vm.stopPrank();
+
+        // Alice approves Bob to withdraw her shares.
+        vm.startPrank(alice);
         vault.approve(bob, expectedShares);
+        vm.stopPrank();
 
         // Check allowance before withdrawal
         uint256 allowanceBeforeWithdraw = vault.allowance(alice, bob);
         assertEq(allowanceBeforeWithdraw, expectedShares);
 
-        vm.stopPrank();
+        // Bob still cannot withdraw because he has not been assigned as a
+        // reeipt operator.
         vm.startPrank(bob);
-        vault.withdraw(transferFromAmount, bob, alice, oraclePrice, bytes(""));
+        vault.redeem(redeemSharesAmount, bob, alice, oraclePrice, bytes(""));
         vm.stopPrank();
     }
 
