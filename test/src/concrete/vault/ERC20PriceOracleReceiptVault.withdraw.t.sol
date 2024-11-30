@@ -445,7 +445,9 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
 
+        vm.recordLogs();
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ReceiptContract receipt = getReceipt();
 
         vm.startPrank(alice);
         vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
@@ -481,13 +483,24 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.stopPrank();
 
         // Check allowance before withdrawal
-        uint256 allowanceBeforeWithdraw = vault.allowance(alice, bob);
-        assertEq(allowanceBeforeWithdraw, expectedShares);
+        assertEq(vault.allowance(alice, bob), expectedShares);
 
         // Bob still cannot withdraw because he has not been assigned as a
         // reeipt operator.
         vm.startPrank(bob);
+        vm.expectRevert("ERC1155: caller is not token owner or approved");
         vault.redeem(redeemSharesAmount, bob, alice, oraclePrice, bytes(""));
+        vm.stopPrank();
+
+        // Alice makes Bob an operator.
+        vm.startPrank(alice);
+        receipt.setApprovalForAll(bob, true);
+        vm.stopPrank();
+
+        // Bob can now withdraw.
+        vm.startPrank(bob);
+        uint256 redeemedAssets = vault.redeem(redeemSharesAmount, bob, alice, oraclePrice, bytes(""));
+
         vm.stopPrank();
     }
 
