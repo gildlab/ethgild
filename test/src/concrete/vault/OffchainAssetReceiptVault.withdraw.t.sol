@@ -672,7 +672,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Alice attempts to burn Bob's receipt by ID, using herself as owner.
-        vm.expectRevert();
+        vm.expectRevert("ERC1155: burn amount exceeds balance");
         vault.withdraw(1, alice, alice, 2, bytes(""));
 
         // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
