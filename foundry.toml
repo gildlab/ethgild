@@ -6,6 +6,9 @@ solc = "0.8.25"
 optimizer = true
 optimizer_runs = 100000
 
+# pre push0 for maximum compatibility
+evm_version = "paris"
+
 remappings = [
     "rain.factory/=lib/rain.factory/src/",
     "rain.intorastring/=lib/rain.interpreter/lib/rain.intorastring/src/",
