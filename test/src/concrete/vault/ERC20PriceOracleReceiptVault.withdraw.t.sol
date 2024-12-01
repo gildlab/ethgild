@@ -376,6 +376,16 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Bob's balance should be only from his other deposit.
 
         assertEqUint(vault.balanceOf(bob), bobExpectedSharesAfterActions - bobAliceWithdrawShares);
+        vm.stopPrank();
+
+        // Ensure that bob has enough shares to test the receipt withdrawing.
+        // If he doesn't then we'd just run into a share balance before we can
+        // test the receipt balance below.
+        vm.startPrank(alice);
+        vm.assume(vault.previewWithdraw(1e18, alicePrice) <= vault.balanceOf(bob));
+        vm.stopPrank();
+
+        vm.startPrank(bob);
 
         // Bob cannot withdraw any more under alice price.
         vm.expectRevert("ERC1155: burn amount exceeds balance");
