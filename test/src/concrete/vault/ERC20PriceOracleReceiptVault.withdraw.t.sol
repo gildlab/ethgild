@@ -509,8 +509,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         // Bob can now withdraw.
         vm.startPrank(bob);
-        uint256 redeemedAssets = vault.redeem(redeemSharesAmount, bob, alice, oraclePrice, bytes(""));
-
+        vault.redeem(redeemSharesAmount, bob, alice, oraclePrice, bytes(""));
         vm.stopPrank();
     }
 

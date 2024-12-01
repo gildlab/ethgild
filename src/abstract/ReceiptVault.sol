@@ -460,7 +460,7 @@ abstract contract ReceiptVault is
     /// > The amount of assets that the Vault would exchange for the amount of
     /// > shares provided
     /// @inheritdoc IReceiptVaultV1
-    function convertToAssets(uint256 shares, uint256 id) external view returns (uint256) {
+    function convertToAssets(uint256 shares, uint256 id) external view virtual returns (uint256) {
         return _calculateRedeem(
             shares,
             // Not clear what a good ID for a hypothetical context free burn
@@ -554,7 +554,7 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function maxWithdraw(address owner, uint256 id) public view returns (uint256) {
+    function maxWithdraw(address owner, uint256 id) external view virtual returns (uint256) {
         // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
@@ -566,7 +566,7 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function previewWithdraw(uint256 assets, uint256 id) public view virtual returns (uint256) {
+    function previewWithdraw(uint256 assets, uint256 id) external view virtual returns (uint256) {
         return _calculateWithdraw(
             assets,
             // Assume that owner and receiver are the sender for a preview
@@ -576,7 +576,8 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV1
     function withdraw(uint256 assets, address receiver, address owner, uint256 id, bytes memory receiptInformation)
-        public
+        external
+        virtual
         returns (uint256)
     {
         uint256 shares = _calculateWithdraw(assets, _shareRatio(owner, receiver, id, ShareAction.Burn));
@@ -653,18 +654,19 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function maxRedeem(address owner, uint256 id) public view returns (uint256) {
+    function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
         return sReceipt.balanceOf(owner, id);
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function previewRedeem(uint256 shares, uint256 id) public view virtual returns (uint256) {
+    function previewRedeem(uint256 shares, uint256 id) external view virtual returns (uint256) {
         return _calculateRedeem(shares, id);
     }
 
     /// @inheritdoc IReceiptVaultV1
     function redeem(uint256 shares, address receiver, address owner, uint256 id, bytes memory receiptInformation)
-        public
+        external
+        virtual
         returns (uint256)
     {
         uint256 assets = _calculateRedeem(shares, _shareRatio(owner, receiver, id, ShareAction.Burn));
