@@ -635,6 +635,11 @@ abstract contract ReceiptVault is
         // in order to burn the shares to withdraw assets.
         if (owner != msg.sender) {
             _spendAllowance(owner, msg.sender, shares);
+
+            // We additionally require that the sender is an operator of the
+            // receipt in order to burn the owner's shares.
+            // Same error message as Open Zeppelin ERC1155 implementation.
+            require(sReceipt.isApprovedForAll(owner, msg.sender), "ERC1155: caller is not token owner or approved");
         }
 
         // ERC20 burn.
