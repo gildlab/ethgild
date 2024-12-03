@@ -51,8 +51,8 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
         // This is not a perfect test, as an arbitrary contract MAY return a
         // value for `price` that is not valid according to the `IPriceOracleV2`
         // interface, but it should flush out most basic configuration mistakes.
-        uint256 price = _price();
-        (price);
+        uint256 dryRunPrice = _price();
+        (dryRunPrice);
     }
 
     /// Calculates the price as `base / quote` using fixed point 18 decimal math.
