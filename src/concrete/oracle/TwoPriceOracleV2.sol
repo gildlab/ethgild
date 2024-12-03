@@ -40,6 +40,14 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
         base = IPriceOracleV2(config.base);
         quote = IPriceOracleV2(config.quote);
         emit Construction(msg.sender, config);
+
+        // Dry run the price to flush out any trivial issues with the oracles
+        // that cause errors, such as a zero address or corrupted oracle.
+        // This is not a perfect test, as an arbitrary contract MAY return a
+        // value for `price` that is not valid according to the `IPriceOracleV2`
+        // interface, but it should flush out most basic configuration mistakes.
+        uint256 price = _price();
+        (price);
     }
 
     /// Calculates the price as `base / quote` using fixed point 18 decimal math.
