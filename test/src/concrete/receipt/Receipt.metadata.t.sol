@@ -7,7 +7,7 @@ import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import {
-    Receipt, RECEIPT_METADATA_DATA_URI, DATA_URI_BASE64_PREFIX, RECEIPT_NAME
+    Receipt, RECEIPT_METADATA_DATA_URI, DATA_URI_BASE64_PREFIX, RECEIPT_NAME, RECEIPT_SYMBOL
 } from "src/concrete/receipt/Receipt.sol";
 
 contract ReceiptMetadataTest is ReceiptFactoryTest {
@@ -57,6 +57,6 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         TestReceiptOwner mockOwner = new TestReceiptOwner();
         TestReceipt receipt = createReceipt(address(mockOwner));
 
-        assertEq(receipt.symbol(), "RECEIPT");
+        assertEq(receipt.symbol(), RECEIPT_SYMBOL);
     }
 }
