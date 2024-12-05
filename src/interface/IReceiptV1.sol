@@ -32,6 +32,22 @@ interface IReceiptV1 is IERC1155 {
     /// data where the payload is large.
     event ReceiptInformation(address sender, uint256 id, bytes information);
 
+    /// The name of the receipt token.
+    /// This is non-standard and is not part of the ERC1155 interface. It is
+    /// added here to ensure maximum compatibility with offchain tools such as
+    /// block explorers and wallets that may not support inspecting the metadata
+    /// URI.
+    /// @return name The name of the receipt token.
+    function name() external view returns (string memory);
+
+    /// The symbol of the receipt token.
+    /// This is non-standard and is not part of the ERC1155 interface. It is
+    /// added here to ensure maximum compatibility with offchain tools such as
+    /// block explorers and wallets that may not support inspecting the metadata
+    /// URI.
+    /// @return symbol The symbol of the receipt token.
+    function symbol() external view returns (string memory);
+
     /// The address of the `IReceiptOwnerV1`. This mimics the Open Zeppelin
     /// `Ownable.owner` function signature as it is a very common and popular
     /// implementation. `IReceiptV1` has no opinion on how ownership is

@@ -15,11 +15,17 @@ import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
 
-// @notice The URI for the metadata of the `Receipt` contract.
-// Decodes to a simple generic receipt metadata object.
-// `{"name":"Receipt","decimals":18,"description":"A receipt for a ReceiptVault."}`
+/// @dev The URI for the metadata of the `Receipt` contract.
+/// Decodes to a simple generic receipt metadata object.
+/// `{"name":"Receipt","decimals":18,"description":"A receipt for a ReceiptVault."}`
 string constant RECEIPT_METADATA_DATA_URI =
     "eyJuYW1lIjoiUmVjZWlwdCIsImRlY2ltYWxzIjoxOCwiZGVzY3JpcHRpb24iOiJBIHJlY2VpcHQgZm9yIGEgUmVjZWlwdFZhdWx0LiJ9";
+
+/// @dev The symbol for the `Receipt` contract.
+string constant RECEIPT_SYMBOL = "RECEIPT";
+
+/// @dev The name for the `Receipt` contract.
+string constant RECEIPT_NAME = "Receipt";
 
 /// @title Receipt
 /// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows
@@ -30,6 +36,16 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
     /// initialized and used directly outside a factory deployment.
     constructor() {
         _disableInitializers();
+    }
+
+    /// @inheritdoc IReceiptV1
+    function name() external pure virtual returns (string memory) {
+        return RECEIPT_NAME;
+    }
+
+    /// @inheritdoc IReceiptV1
+    function symbol() external pure virtual returns (string memory) {
+        return RECEIPT_SYMBOL;
     }
 
     /// Initializes the `Receipt` so that it is usable as a clonable
