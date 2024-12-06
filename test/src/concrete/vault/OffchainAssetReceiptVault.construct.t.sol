@@ -138,7 +138,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,address,string,string))))"
                     )
             ) {
                 // Decode the event data
