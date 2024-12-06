@@ -7,6 +7,7 @@ import {Receipt as ReceiptContract, ReceiptConfigV1} from "src/concrete/receipt/
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
+import {OnlyManager} from "src/error/ErrReceipt.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     event ReceiptInformation(address sender, uint256 id, bytes information);
@@ -34,6 +35,23 @@ contract ReceiptTest is ReceiptFactoryTest {
         vm.stopPrank();
     }
 
+    /// Check that alice can't mint herself directly on the receipt.
+    function testManagerMintRevertAlice(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data)
+        external
+    {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        amount = bound(amount, 1, type(uint256).max);
+
+        TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
+
+        vm.startPrank(alice);
+
+        vm.expectRevert(abi.encodeWithSelector(OnlyManager.selector));
+        receipt.managerMint(alice, alice, id, amount, data);
+    }
+
     /// Test receipt ManagerMint function
     function testManagerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) external {
         // Ensure the fuzzed key is within the valid range for secp256
@@ -53,6 +71,23 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Check the receipt balance of alice
         assertEq(receipt.balanceOf(alice, id), amount);
+    }
+
+    /// Check that alice can't burn herself directly on the receipt.
+    function testManagerBurnRevertAlice(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data)
+        external
+    {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        amount = bound(amount, 1, type(uint256).max);
+
+        TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
+
+        vm.startPrank(alice);
+
+        vm.expectRevert(abi.encodeWithSelector(OnlyManager.selector));
+        receipt.managerBurn(alice, alice, id, amount, data);
     }
 
     /// Test receipt ManagerBurn function
@@ -194,6 +229,28 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         vm.expectRevert(abi.encodeWithSelector(UnauthorizedTransfer.selector, alice, bob));
         testManager.managerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
+    }
+
+    /// Alice can't transfer to herself using managerTransferFrom.
+    function testManagerTransferFromSelf(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 id,
+        uint256 amount,
+        bytes memory fuzzedReceiptInformation
+    ) external {
+        // Ensure the fuzzed key is within the valid range for secp256
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+
+        TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
+
+        vm.startPrank(alice);
+
+        // Alice can't transfer to herself.
+        vm.expectRevert(abi.encodeWithSelector(OnlyManager.selector));
+        receipt.managerTransferFrom(bob, alice, id, amount, fuzzedReceiptInformation);
     }
 
     /// Test receipt managerTransferFrom function
