@@ -7,6 +7,11 @@ import {IERC1155Upgradeable as IERC1155} from
 import {IERC5313Upgradeable as IERC5313} from
     "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC5313Upgradeable.sol";
 
+struct ReceiptConfigV1 {
+    address receiptManager;
+    address receiptOwner;
+}
+
 /// @title IReceiptV2
 /// @notice IReceiptV2 is an extension to IERC1155 that requires implementers to
 /// provide an interface to allow a manager to UNILATERALLY (e.g. without access

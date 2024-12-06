@@ -12,12 +12,13 @@ library LibOffchainAssetVaultCreator {
         ICloneableFactoryV2 factory,
         OffchainAssetReceiptVault implementation,
         address admin,
+        address receiptOwner,
         string memory name,
         string memory symbol
     ) internal returns (OffchainAssetReceiptVault) {
         OffchainAssetVaultConfig memory offchainAssetVaultConfig = OffchainAssetVaultConfig({
             admin: admin,
-            vaultConfig: VaultConfig({asset: address(0), name: name, symbol: symbol})
+            vaultConfig: VaultConfig({asset: address(0), receiptOwner: receiptOwner, name: name, symbol: symbol})
         });
 
         // Use the factory to create the child contract

@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
-import {IReceiptV2, IERC5313} from "../../interface/IReceiptV2.sol";
+import {IReceiptV2, IERC5313, ReceiptConfigV1} from "../../interface/IReceiptV2.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
@@ -26,11 +26,6 @@ string constant RECEIPT_SYMBOL = "RECEIPT";
 
 /// @dev The name for the `Receipt` contract.
 string constant RECEIPT_NAME = "Receipt";
-
-struct ReceiptConfigV1 {
-    address receiptManager;
-    address receiptOwner;
-}
 
 /// @title Receipt
 /// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows

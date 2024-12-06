@@ -13,7 +13,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV1} from "../interface/IReceiptVaultV1.sol";
-import {IReceiptV2} from "../interface/IReceiptV2.sol";
+import {IReceiptV2, ReceiptConfigV1} from "../interface/IReceiptV2.sol";
 import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -22,31 +22,16 @@ import {
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
-
-/// Thrown when an ID can't be deposited or withdrawn.
-/// @param id The invalid ID.
-error InvalidId(uint256 id);
-
-/// Thrown when the share ratio does not meet the minimum share ratio.
-error MinShareRatio(uint256 minShareRatio, uint256 shareRatio);
-
-/// Thrown when depositing 0 asset amount.
-error ZeroAssetsAmount();
-
-/// Thrown when minting 0 shares amount.
-error ZeroSharesAmount();
-
-/// Thrown when receiver of minted shares is address zero.
-error ZeroReceiver();
-
-/// Thrown when owner of shares withdrawn is address zero.
-error ZeroOwner();
-
-/// Thrown when depositing assets under ID zero.
-error ZeroID();
-
-/// Thrown when the receipt vault does not own the receipt.
-error WrongOwner(address vault, address receipt);
+import {
+    InvalidId,
+    ZeroReceiver,
+    MinShareRatio,
+    ZeroAssetsAmount,
+    ZeroOwner,
+    ZeroSharesAmount,
+    WrongOwner,
+    WrongManager
+} from "../error/ErrReceiptVault.sol";
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
@@ -73,6 +58,7 @@ struct ReceiptVaultConstructionConfig {
 /// @param symbol As per ERC20.
 struct VaultConfig {
     address asset;
+    address receiptOwner;
     string name;
     string symbol;
 }
@@ -172,14 +158,23 @@ abstract contract ReceiptVault is
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
-        IReceiptV2 receipt = IReceiptV2(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+        IReceiptV2 receipt = IReceiptV2(
+            iFactory.clone(
+                address(iReceiptImplementation),
+                abi.encode(ReceiptConfigV1({receiptManager: address(this), receiptOwner: config.receiptOwner}))
+            )
+        );
         sReceipt = receipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
         // from the factory ourselves just above.
         address receiptOwner = receipt.owner();
-        if (receiptOwner != address(this)) {
-            revert WrongOwner(address(this), receiptOwner);
+        if (receiptOwner != config.receiptOwner) {
+            revert WrongOwner(config.receiptOwner, receiptOwner);
+        }
+        address receiptManager = receipt.manager();
+        if (receiptManager != address(this)) {
+            revert WrongManager(address(this), receiptManager);
         }
     }
 

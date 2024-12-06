@@ -19,6 +19,8 @@ import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 contract ERC20PriceOracleReceiptVaultTest is Test {
     event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
 
+    address constant OWNER = address(0x1234567890123456789012345678901234567890);
+
     ICloneableFactoryV2 internal immutable iFactory;
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable iReceiptImplementation;
@@ -46,7 +48,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         returns (ERC20PriceOracleReceiptVault)
     {
         ERC20PriceOracleReceiptVault vault = LibERC20PriceOracleReceiptVaultCreator.createVault(
-            iFactory, iImplementation, priceOracle, address(iAsset), name, symbol
+            iFactory, iImplementation, priceOracle, address(iAsset), OWNER, name, symbol
         );
         return vault;
     }
