@@ -14,7 +14,8 @@ contract ReceiptTest is ReceiptFactoryTest {
     function testInitialize() public {
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt = createReceipt(address(testManager));
-        assertEq(receipt.owner(), address(testManager));
+        assertEq(receipt.manager(), address(testManager));
+        assertEq(receipt.owner(), OWNER);
     }
 
     // Test receipt sets owner
@@ -25,7 +26,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         // Make testManager call setOwner to change to alice
-        vm.startPrank(address(testManager));
+        vm.startPrank(OWNER);
         receipt.transferOwnership(alice);
 
         address owner = receipt.owner();
@@ -33,19 +34,16 @@ contract ReceiptTest is ReceiptFactoryTest {
         vm.stopPrank();
     }
 
-    /// Test receipt OwnerMint function
-    function testOwnerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) external {
+    /// Test receipt ManagerMint function
+    function testManagerMint(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory data) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -57,8 +55,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(receipt.balanceOf(alice, id), amount);
     }
 
-    /// Test receipt OwnerBurn function
-    function testOwnerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory fuzzedReceiptInformation)
+    /// Test receipt ManagerBurn function
+    function testManagerBurn(uint256 fuzzedKeyAlice, uint256 id, uint256 amount, bytes memory fuzzedReceiptInformation)
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256
@@ -68,13 +66,10 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         vm.assume(fuzzedReceiptInformation.length > 0);
 
-        ReceiptContract receipt = createReceipt(alice);
-
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -96,8 +91,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         assertEq(receipt.balanceOf(alice, id), 0);
     }
 
-    /// Test OwnerBurn fails while not enough balance to burn
-    function testOwnerBurnNotEnoughBalance(
+    /// Test ManagerBurn fails while not enough balance to burn
+    function testManagerBurnNotEnoughBalance(
         uint256 fuzzedKeyAlice,
         uint256 id,
         uint256 amount,
@@ -110,12 +105,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
-        vm.startPrank(alice);
+        ReceiptContract receipt = createReceipt(address(testManager));
 
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
+        vm.startPrank(alice);
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -149,13 +142,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -187,13 +177,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -209,8 +196,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.managerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
     }
 
-    /// Test receipt OwnerTransferFrom function
-    function testTransferOwnerTransferFrom(
+    /// Test receipt managerTransferFrom function
+    function testTransferManagerTransferFrom(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 id,
@@ -224,13 +211,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -256,13 +240,10 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         amount = bound(amount, 1, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -295,13 +276,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         amountTwo = bound(amountTwo, 1, type(uint256).max);
         vm.assume(amountOne != amountTwo);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -357,13 +335,10 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         amount = bound(amount, 1, type(uint256).max);
 
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Set the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Set the authorized 'from' and 'to' addresses in testManager
         testManager.setFrom(address(0));
@@ -419,13 +394,10 @@ contract ReceiptTest is ReceiptFactoryTest {
         tokenIds[0] = tokenId1;
         tokenIds[1] = tokenId2;
         // Create a new receipt
-        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         vm.startPrank(alice);
-
-        // Transfer ownership to the receipt owner
-        receipt.transferOwnership(address(testManager));
 
         // Authorize alice as the sender and receiver in testManager
         testManager.setFrom(address(0));
