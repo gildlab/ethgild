@@ -28,9 +28,9 @@ string constant RECEIPT_SYMBOL = "RECEIPT";
 string constant RECEIPT_NAME = "Receipt";
 
 /// @title Receipt
-/// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows
-/// receipt information to be emitted and mints/burns according to ownership and
-/// owner authorization.
+/// @notice The `IReceiptV2` for a `ReceiptVault`. Standard implementation allows
+/// receipt information to be emitted and mints/burns according to manager
+/// authorization.
 contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
     /// The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
@@ -114,8 +114,8 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
         _safeTransferFrom(from, to, id, amount, data);
     }
 
-    /// Checks with the owner before authorizing transfer IN ADDITION to `super`
-    /// inherited checks.
+    /// Checks with the manager before authorizing transfer IN ADDITION to
+    /// `super` inherited checks.
     /// @inheritdoc ERC1155
     function _beforeTokenTransfer(
         address operator,
@@ -130,7 +130,7 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
     }
 
     /// Emits `ReceiptInformation` if there is any data after checking with the
-    /// receipt owner for authorization.
+    /// receipt manager for authorization.
     /// @param account The account that is emitting receipt information.
     /// @param id The id of the receipt this information is for.
     /// @param data The data being emitted as information for the receipt.
