@@ -4,9 +4,9 @@ pragma solidity =0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
-import {IReceiptOwnerV1} from "../../interface/IReceiptOwnerV1.sol";
-import {IReceiptV1} from "../../interface/IReceiptV1.sol";
-
+import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
+import {IReceiptV2} from "../../interface/IReceiptV2.sol";
+import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
@@ -27,23 +27,37 @@ string constant RECEIPT_SYMBOL = "RECEIPT";
 /// @dev The name for the `Receipt` contract.
 string constant RECEIPT_NAME = "Receipt";
 
+struct ReceiptConfigV1 {
+    address receiptManager;
+    address receiptOwner;
+}
+
 /// @title Receipt
 /// @notice The `IReceiptV1` for a `ReceiptVault`. Standard implementation allows
 /// receipt information to be emitted and mints/burns according to ownership and
 /// owner authorization.
-contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
+contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
+    IReceiptManagerV1 internal sManager;
+
     /// Disables initializers so that the clonable implementation cannot be
     /// initialized and used directly outside a factory deployment.
     constructor() {
         _disableInitializers();
     }
 
-    /// @inheritdoc IReceiptV1
+    modifier onlyManager() {
+        if (msg.sender != address(sManager)) {
+            revert OnlyManager();
+        }
+        _;
+    }
+
+    /// @inheritdoc IReceiptV2
     function name() external pure virtual returns (string memory) {
         return RECEIPT_NAME;
     }
 
-    /// @inheritdoc IReceiptV1
+    /// @inheritdoc IReceiptV2
     function symbol() external pure virtual returns (string memory) {
         return RECEIPT_SYMBOL;
     }
@@ -54,42 +68,43 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
         __Ownable_init();
         __ERC1155_init(string.concat(DATA_URI_BASE64_PREFIX, RECEIPT_METADATA_DATA_URI));
 
-        address initialOwner = abi.decode(data, (address));
-        _transferOwnership(initialOwner);
+        ReceiptConfigV1 memory config = abi.decode(data, (ReceiptConfigV1));
+        _transferOwnership(config.receiptOwner);
+        sManager = IReceiptManagerV1(config.receiptManager);
 
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    /// @inheritdoc IReceiptV1
-    function owner() public view virtual override(IReceiptV1, Ownable) returns (address) {
-        return Ownable.owner();
-    }
+    // /// @inheritdoc IReceiptV2
+    // function owner() public view virtual override(IReceiptV2, Ownable) returns (address) {
+    //     return Ownable.owner();
+    // }
 
-    /// @inheritdoc IReceiptV1
-    function ownerMint(address sender, address account, uint256 id, uint256 amount, bytes memory data)
+    /// @inheritdoc IReceiptV2
+    function managerMint(address sender, address account, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
-        onlyOwner
+        onlyManager
     {
         _receiptInformation(sender, id, data);
         _mint(account, id, amount, data);
     }
 
-    /// @inheritdoc IReceiptV1
-    function ownerBurn(address sender, address account, uint256 id, uint256 amount, bytes memory data)
+    /// @inheritdoc IReceiptV2
+    function managerBurn(address sender, address account, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
-        onlyOwner
+        onlyManager
     {
         _receiptInformation(sender, id, data);
         _burn(account, id, amount);
     }
 
-    /// @inheritdoc IReceiptV1
-    function ownerTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
+    /// @inheritdoc IReceiptV2
+    function managerTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
-        onlyOwner
+        onlyManager
     {
         _safeTransferFrom(from, to, id, amount, data);
     }
@@ -106,7 +121,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        IReceiptOwnerV1(owner()).authorizeReceiptTransfer(from, to);
+        sManager.authorizeReceiptTransfer2(from, to);
     }
 
     /// Emits `ReceiptInformation` if there is any data after checking with the
@@ -121,7 +136,7 @@ contract Receipt is IReceiptV1, Ownable, ERC1155, ICloneableV2 {
         }
     }
 
-    /// @inheritdoc IReceiptV1
+    /// @inheritdoc IReceiptV2
     function receiptInformation(uint256 id, bytes memory data) external virtual {
         _receiptInformation(msg.sender, id, data);
     }

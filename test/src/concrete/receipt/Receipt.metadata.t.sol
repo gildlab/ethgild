@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
-import {TestReceiptOwner} from "test/concrete/TestReceiptOwner.sol";
+import {TestReceiptManager} from "test/concrete/TestReceiptManager.sol";
 import {TestReceipt} from "test/concrete/TestReceipt.sol";
 import {Base64} from "solady/utils/Base64.sol";
 import {
@@ -23,8 +23,8 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
 
     function testReceiptURI(uint256 id) external {
         // Deploy the Receipt contract
-        TestReceiptOwner mockOwner = new TestReceiptOwner();
-        TestReceipt receipt = createReceipt(address(mockOwner));
+        TestReceiptManager testManager = new TestReceiptManager();
+        TestReceipt receipt = createReceipt(address(testManager));
 
         string memory uri = receipt.uri(id);
 
@@ -50,16 +50,16 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
 
     function testReceiptName() external {
         // Deploy the Receipt contract
-        TestReceiptOwner mockOwner = new TestReceiptOwner();
-        TestReceipt receipt = createReceipt(address(mockOwner));
+        TestReceiptManager testManager = new TestReceiptManager();
+        TestReceipt receipt = createReceipt(address(testManager));
 
         assertEq(receipt.name(), RECEIPT_NAME);
     }
 
     function testReceiptSymbol() external {
         // Deploy the Receipt contract
-        TestReceiptOwner mockOwner = new TestReceiptOwner();
-        TestReceipt receipt = createReceipt(address(mockOwner));
+        TestReceiptManager testManager = new TestReceiptManager();
+        TestReceipt receipt = createReceipt(address(testManager));
 
         assertEq(receipt.symbol(), RECEIPT_SYMBOL);
     }

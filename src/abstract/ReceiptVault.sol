@@ -13,8 +13,8 @@ import {SafeERC20Upgradeable as SafeERC20} from
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV1} from "../interface/IReceiptVaultV1.sol";
-import {IReceiptV1} from "../interface/IReceiptV1.sol";
-import {IReceiptOwnerV1} from "../interface/IReceiptOwnerV1.sol";
+import {IReceiptV2} from "../interface/IReceiptV2.sol";
+import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -61,7 +61,7 @@ enum ShareAction {
 /// by the factory.
 struct ReceiptVaultConstructionConfig {
     ICloneableFactoryV2 factory;
-    IReceiptV1 receiptImplementation;
+    IReceiptV2 receiptImplementation;
 }
 
 /// All config required to initialize `ReceiptVault` except the receipt address.
@@ -123,7 +123,7 @@ struct ReceiptVaultConfig {
 /// each other in parallel, allowing trust to be "policed" at the liquidity and
 /// free market layer.
 abstract contract ReceiptVault is
-    IReceiptOwnerV1,
+    IReceiptManagerV1,
     Multicall,
     ReentrancyGuard,
     ERC20Snapshot,
@@ -134,13 +134,13 @@ abstract contract ReceiptVault is
     using SafeERC20 for IERC20;
 
     ICloneableFactoryV2 internal immutable iFactory;
-    IReceiptV1 internal immutable iReceiptImplementation;
+    IReceiptV2 internal immutable iReceiptImplementation;
 
     /// Underlying ERC4626 asset.
     IERC20 internal sAsset;
     /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
     /// mints and enforcing integrity of subsequent burns.
-    IReceiptV1 internal sReceipt;
+    IReceiptV2 internal sReceipt;
 
     /// `ReceiptVault` is intended to be cloned and initialized by a
     /// `ReceiptVaultFactory` so is an implementation contract that can't itself
@@ -172,7 +172,7 @@ abstract contract ReceiptVault is
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
-        IReceiptV1 receipt = IReceiptV1(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+        IReceiptV2 receipt = IReceiptV2(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
         sReceipt = receipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
@@ -283,8 +283,8 @@ abstract contract ReceiptVault is
         emit ReceiptVaultInformation(msg.sender, vaultInformation);
     }
 
-    /// @inheritdoc IReceiptOwnerV1
-    function authorizeReceiptTransfer(
+    /// @inheritdoc IReceiptManagerV1
+    function authorizeReceiptTransfer2(
         address,
         address // solhint-disable-next-line no-empty-blocks
     ) external view virtual {
@@ -531,7 +531,7 @@ abstract contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        sReceipt.ownerMint(msg.sender, receiver, id, shares, receiptInformation);
+        sReceipt.managerMint(msg.sender, receiver, id, shares, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -647,7 +647,7 @@ abstract contract ReceiptVault is
         _burn(owner, shares);
 
         // ERC1155 burn.
-        sReceipt.ownerBurn(msg.sender, owner, id, shares, receiptInformation);
+        sReceipt.managerBurn(msg.sender, owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets, receiver, owner, shares, id);

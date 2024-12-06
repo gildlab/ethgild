@@ -11,7 +11,7 @@ import {
     ZeroAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "src/interface/IReceiptV1.sol";
+import {IReceiptV2} from "src/interface/IReceiptV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
@@ -134,7 +134,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             }
         }
         // Create an instance of the Receipt contract
-        IReceiptV1 receipt = IReceiptV1(receiptAddress);
+        IReceiptV2 receipt = IReceiptV2(receiptAddress);
 
         // Check that the receipt address is not zero
         assert(receiptAddress != address(0));

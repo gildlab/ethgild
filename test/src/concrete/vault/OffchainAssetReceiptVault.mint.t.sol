@@ -7,7 +7,7 @@ import {OffchainAssetReceiptVault, CertificationExpired} from "src/concrete/vaul
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
-import {IReceiptV1} from "src/interface/IReceiptV1.sol";
+import {IReceiptV2} from "src/interface/IReceiptV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
@@ -368,7 +368,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, shares, shares, 1, fuzzedReceiptInformation);
         vm.expectEmit(false, false, false, true);
-        emit IReceiptV1.ReceiptInformation(bob, 1, fuzzedReceiptInformation);
+        emit IReceiptV2.ReceiptInformation(bob, 1, fuzzedReceiptInformation);
 
         vault.mint(shares, alice, minShareRatio, fuzzedReceiptInformation);
 

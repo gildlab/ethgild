@@ -8,7 +8,7 @@ import {
     FutureReferenceBlock,
     CertificationExpired
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV1} from "src/interface/IReceiptV1.sol";
+import {IReceiptV2} from "src/interface/IReceiptV2.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
