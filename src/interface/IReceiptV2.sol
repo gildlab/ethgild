@@ -7,6 +7,13 @@ import {IERC1155Upgradeable as IERC1155} from
 import {IERC5313Upgradeable as IERC5313} from
     "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC5313Upgradeable.sol";
 
+/// @title ReceiptConfigV1
+/// Configuration required to initialize an `IReceiptV2` contract.
+/// @param receiptManager The address of the `IReceiptManagerV1` contract that
+/// has the authority to mint, burn and transfer receipts.
+/// @param receiptOwner The address of the `IERC5313` owner that has the
+/// authority to sign offchain messages that may be required by centralised
+/// entities, but has no onchain privileges.
 struct ReceiptConfigV1 {
     address receiptManager;
     address receiptOwner;
