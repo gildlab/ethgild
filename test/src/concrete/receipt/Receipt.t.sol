@@ -125,8 +125,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.managerBurn(receipt, alice, id, burnAmount, fuzzedReceiptInformation);
     }
 
-    /// Test OwnerTransferFrom more than balance
-    function testOwnerTransferFromMoreThanBalance(
+    /// Test managerTransferFrom more than balance
+    function testManagerTransferFromMoreThanBalance(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 id,
@@ -162,8 +162,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.managerTransferFrom(receipt, alice, bob, id, transferAmount, fuzzedReceiptInformation);
     }
 
-    /// Test receipt OwnerTransferFrom function reverts while UnauthorizedTransfer
-    function testUnauthorizedTransferOwnerTransferFrom(
+    /// Test receipt ManagerTransferFrom function reverts while UnauthorizedTransfer
+    function testUnauthorizedTransferManagerTransferFrom(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 id,

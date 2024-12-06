@@ -18,11 +18,12 @@ contract ReceiptFactoryTest is Test {
         receiptImplementation = new ReceiptContract();
     }
 
-    /// Creates a new ~ReceiptContract~ clone with the specified manager.
+    /// Creates a new `ReceiptContract` clone with the specified manager.
     /// @param manager The address to set as the manager of the new ReceiptContract
-    /// @return The address of the newly created ~ReceiptContract~ clone
+    /// @return The address of the newly created `ReceiptContract` clone
     function createReceipt(address manager) internal returns (ReceiptContract) {
-        // Clone ReceiptContract using the factory and initialize it with the owner
+        // Clone ReceiptContract using the factory and initialize it with the
+        // owner and manager.
         address clone = iFactory.clone(
             address(receiptImplementation), abi.encode(ReceiptConfigV1({receiptManager: manager, receiptOwner: OWNER}))
         );
