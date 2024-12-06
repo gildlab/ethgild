@@ -32,6 +32,9 @@ string constant RECEIPT_NAME = "Receipt";
 /// receipt information to be emitted and mints/burns according to ownership and
 /// owner authorization.
 contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
+    /// The manager of the `Receipt` contract.
+    /// Set during `initialize` and cannot be changed.
+    /// Intended to be a `ReceiptVault` contract.
     IReceiptManagerV1 internal sManager;
 
     /// Disables initializers so that the clonable implementation cannot be
@@ -40,6 +43,7 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
         _disableInitializers();
     }
 
+    /// Throws if the caller is not the manager of the `Receipt` contract.
     modifier onlyManager() {
         if (msg.sender != address(sManager)) {
             revert OnlyManager();
@@ -49,6 +53,7 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
 
     /// Initializes the `Receipt` so that it is usable as a clonable
     /// implementation in `ReceiptFactory`.
+    /// Compatible with `ICloneableV2`.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
         __Ownable_init();
         __ERC1155_init(string.concat(DATA_URI_BASE64_PREFIX, RECEIPT_METADATA_DATA_URI));
