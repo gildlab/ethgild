@@ -88,7 +88,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer(bob, bob);
+        vault.authorizeReceiptTransfer2(bob, bob);
         receipt.safeTransferFrom(bob, bob, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(bob, 1), balance);
 
@@ -140,7 +140,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer(bob, john);
+        vault.authorizeReceiptTransfer2(bob, john);
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), balance);
 
@@ -192,7 +192,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer(bob, john);
+        vault.authorizeReceiptTransfer2(bob, john);
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), balance);
 

@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
-import {IReceiptV2} from "../../interface/IReceiptV2.sol";
+import {IReceiptV2, IERC5313} from "../../interface/IReceiptV2.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
@@ -52,16 +52,6 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
         _;
     }
 
-    /// @inheritdoc IReceiptV2
-    function name() external pure virtual returns (string memory) {
-        return RECEIPT_NAME;
-    }
-
-    /// @inheritdoc IReceiptV2
-    function symbol() external pure virtual returns (string memory) {
-        return RECEIPT_SYMBOL;
-    }
-
     /// Initializes the `Receipt` so that it is usable as a clonable
     /// implementation in `ReceiptFactory`.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
@@ -75,10 +65,25 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    // /// @inheritdoc IReceiptV2
-    // function owner() public view virtual override(IReceiptV2, Ownable) returns (address) {
-    //     return Ownable.owner();
-    // }
+    /// @inheritdoc IReceiptV2
+    function name() external pure virtual returns (string memory) {
+        return RECEIPT_NAME;
+    }
+
+    /// @inheritdoc IReceiptV2
+    function symbol() external pure virtual returns (string memory) {
+        return RECEIPT_SYMBOL;
+    }
+
+    /// @inheritdoc IReceiptV2
+    function manager() external view virtual returns (address) {
+        return address(sManager);
+    }
+
+    /// @inheritdoc IERC5313
+    function owner() public view virtual override(IERC5313, Ownable) returns (address) {
+        return Ownable.owner();
+    }
 
     /// @inheritdoc IReceiptV2
     function managerMint(address sender, address account, uint256 id, uint256 amount, bytes memory data)

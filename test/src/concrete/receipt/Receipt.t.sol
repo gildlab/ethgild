@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {IReceiptManagerV1} from "src/interface/IReceiptManagerV1.sol";
-import {Receipt as ReceiptContract} from "src/concrete/Receipt.sol";
+import {Receipt as ReceiptContract, ReceiptConfigV1} from "src/concrete/receipt/Receipt.sol";
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
@@ -13,14 +13,14 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     function testInitialize() public {
         TestReceiptManager testManager = new TestReceiptManager();
-        TestReceipt receipt = createReceipt(address(testManager));
+        ReceiptContract receipt = createReceipt(address(testManager));
         assertEq(receipt.owner(), address(testManager));
     }
 
     // Test receipt sets owner
     function testReceiptOwnerIsSet(uint256 fuzzedKeyAlice) external {
         TestReceiptManager testManager = new TestReceiptManager();
-        TestReceipt receipt = createReceipt(address(testManager));
+        ReceiptContract receipt = createReceipt(address(testManager));
 
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
@@ -39,7 +39,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         amount = bound(amount, 1, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -68,7 +68,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         vm.assume(fuzzedReceiptInformation.length > 0);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
 
         TestReceiptManager testManager = new TestReceiptManager();
 
@@ -110,7 +110,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
         vm.startPrank(alice);
 
@@ -149,7 +149,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -187,7 +187,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -224,7 +224,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -256,7 +256,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         amount = bound(amount, 1, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -295,7 +295,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         amountTwo = bound(amountTwo, 1, type(uint256).max);
         vm.assume(amountOne != amountTwo);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -334,7 +334,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
 
         vm.startPrank(alice);
         // Alice approves operator
@@ -357,7 +357,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         amount = bound(amount, 1, type(uint256).max);
 
-        TestReceipt receipt = createReceipt(alice);
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);
@@ -418,8 +418,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256[] memory tokenIds = new uint256[](2);
         tokenIds[0] = tokenId1;
         tokenIds[1] = tokenId2;
-        // Create a new receipt and receipt owner
-        TestReceipt receipt = createReceipt(alice);
+        // Create a new receipt
+        ReceiptContract receipt = createReceipt(alice);
         TestReceiptManager testManager = new TestReceiptManager();
 
         vm.startPrank(alice);

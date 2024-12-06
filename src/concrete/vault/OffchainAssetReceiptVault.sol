@@ -332,7 +332,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
-    function authorizeReceiptTransfer(address from_, address to_) external view virtual override {
+    function authorizeReceiptTransfer2(address from_, address to_) external view virtual override {
         enforceValidTransfer(erc1155Tier, erc1155MinimumTier, erc1155TierContext, from_, to_);
     }
 
