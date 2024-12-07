@@ -17,7 +17,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
+        // Generate unique addresses.
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
@@ -26,17 +26,17 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Warp the block timestamp to a non-zero value
+        // Warp the block timestamp to a non-zero value.
         vm.warp(warpTimestamp);
 
-        // Prank as Bob for the transaction
+        // Prank as Bob for the transaction.
         vm.startPrank(bob);
 
-        // Assuming that the certification is expired
+        // Assuming that the certification is expired.
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, 0, warpTimestamp));
 
-        // Attempt to authorize receipt transfer, should revert
-        vault.authorizeReceiptTransfer(bob, alice);
+        // Attempt to authorize receipt transfer, should revert.
+        vault.authorizeReceiptTransfer2(bob, alice);
 
         vm.stopPrank();
     }
@@ -83,7 +83,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, timestamp, nextTimestamp));
 
         // Attempt to authorize receipt transfer, should revert
-        vault.authorizeReceiptTransfer(bob, alice);
+        vault.authorizeReceiptTransfer2(bob, alice);
 
         vm.stopPrank();
     }
@@ -125,9 +125,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         // Call the certify function
         vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
         // Authorize should succeed
-        vault.authorizeReceiptTransfer(bob, alice);
+        vault.authorizeReceiptTransfer2(bob, alice);
 
         vm.stopPrank();
     }
@@ -151,8 +151,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.startPrank(bob);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
-        vault.authorizeReceiptTransfer(bob, alice);
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
+        vault.authorizeReceiptTransfer2(bob, alice);
     }
 
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a handler role
@@ -175,8 +175,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.startPrank(bob);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
-        vault.authorizeReceiptTransfer(bob, alice);
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
+        vault.authorizeReceiptTransfer2(bob, alice);
     }
 
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
@@ -198,7 +198,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.startPrank(bob);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer, (bob, alice)));
-        vault.authorizeReceiptTransfer(bob, alice);
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
+        vault.authorizeReceiptTransfer2(bob, alice);
     }
 }

@@ -66,6 +66,7 @@ contract Deploy is Script {
                     priceOracle: twoPriceOracle,
                     vaultConfig: VaultConfig({
                         asset: address(SFLR_CONTRACT),
+                        receiptOwner: vm.envAddress("RECEIPT_VAULT_RECEIPT_OWNER"),
                         name: vm.envString("RECEIPT_VAULT_NAME"),
                         symbol: vm.envString("RECEIPT_VAULT_SYMBOL")
                     })

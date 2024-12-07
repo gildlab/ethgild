@@ -153,7 +153,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
             //Expect the revert with the exact revert reason
             vm.expectRevert();
 
-            vault.authorizeReceiptTransfer(bob, alice);
+            vault.authorizeReceiptTransfer2(bob, alice);
         }
         vm.stopPrank();
     }
@@ -211,7 +211,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
             );
 
             vm.expectRevert();
-            vault.authorizeReceiptTransfer(bob, alice);
+            vault.authorizeReceiptTransfer2(bob, alice);
         }
         vm.stopPrank();
     }
@@ -389,7 +389,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
                 abi.encode(10)
             );
 
-            vault.authorizeReceiptTransfer(bob, alice);
+            vault.authorizeReceiptTransfer2(bob, alice);
             ReceiptContract receipt = getReceipt(logs);
 
             receipt.safeTransferFrom(bob, alice, 1, 10, bytes(""));
