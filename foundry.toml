@@ -16,3 +16,6 @@ remappings = [
     "chainlink/=lib/rain.chainlink/lib/chainlink/contracts/src/",
     "rain.math.fixedpoint/=lib/rain.math.fixedpoint/src/",
 ]
+
+bytecode_hash = "none"
+cbor_metadata = false
