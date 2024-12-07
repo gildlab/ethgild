@@ -19,7 +19,7 @@ import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOra
 contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
-    /// Checks that balance owner balance changes after wirthdraw
+    /// Checks that balance owner balance changes after withdraw.
     function checkBalanceChange(
         ERC20PriceOracleReceiptVault vault,
         address receiver,

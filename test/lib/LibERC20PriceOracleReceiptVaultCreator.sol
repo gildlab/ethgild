@@ -17,12 +17,13 @@ library LibERC20PriceOracleReceiptVaultCreator {
         ERC20PriceOracleReceiptVault implementation,
         IPriceOracleV2 priceOracle,
         address asset,
+        address receiptOwner,
         string memory name,
         string memory symbol
     ) internal returns (ERC20PriceOracleReceiptVault) {
         ERC20PriceOracleVaultConfig memory erc20PriceOracleVault = ERC20PriceOracleVaultConfig({
             priceOracle: priceOracle,
-            vaultConfig: VaultConfig({asset: asset, name: name, symbol: symbol})
+            vaultConfig: VaultConfig({asset: asset, receiptOwner: receiptOwner, name: name, symbol: symbol})
         });
 
         // Use the factory to create the child contract

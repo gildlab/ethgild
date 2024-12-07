@@ -16,6 +16,8 @@ import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 contract OffchainAssetReceiptVaultTest is Test {
     event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
 
+    address constant OWNER = address(0x1234567890123456789012345678901234567890);
+
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable receiptImplementation;
@@ -32,7 +34,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         internal
         returns (OffchainAssetReceiptVault)
     {
-        return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, admin, name, symbol);
+        return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, admin, OWNER, name, symbol);
     }
 
     function getReceipt(Vm.Log[] memory logs) internal pure returns (ReceiptContract) {

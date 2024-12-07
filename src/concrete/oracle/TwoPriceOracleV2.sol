@@ -7,6 +7,7 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {PriceOracleV2, IPriceOracleV2} from "../../abstract/PriceOracleV2.sol";
+import {ErrTwoPriceOracleV2SameQuoteBase} from "../../error/ErrTwoPriceOracleV2.sol";
 
 /// Construction config for `TwoPriceOracle`.
 /// @param base The base price of the merged pair, will be the numerator.
@@ -37,9 +38,21 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
 
     /// @param config Config required to construct.
     constructor(TwoPriceOracleConfigV2 memory config) {
+        if (config.base == config.quote) {
+            revert ErrTwoPriceOracleV2SameQuoteBase(address(config.base));
+        }
+
         base = IPriceOracleV2(config.base);
         quote = IPriceOracleV2(config.quote);
         emit Construction(msg.sender, config);
+
+        // Dry run the price to flush out any trivial issues with the oracles
+        // that cause errors, such as a zero address or corrupted oracle.
+        // This is not a perfect test, as an arbitrary contract MAY return a
+        // value for `price` that is not valid according to the `IPriceOracleV2`
+        // interface, but it should flush out most basic configuration mistakes.
+        uint256 dryRunPrice = _price();
+        (dryRunPrice);
     }
 
     /// Calculates the price as `base / quote` using fixed point 18 decimal math.

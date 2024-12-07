@@ -42,7 +42,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "ERC20PriceOracleReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                        "ERC20PriceOracleReceiptVaultInitialized(address,(address,(address,(address,address,string,string))))"
                     )
             ) {
                 // Decode the event data

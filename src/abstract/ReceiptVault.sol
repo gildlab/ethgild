@@ -13,8 +13,8 @@ import {SafeERC20Upgradeable as SafeERC20} from
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV1} from "../interface/IReceiptVaultV1.sol";
-import {IReceiptV1} from "../interface/IReceiptV1.sol";
-import {IReceiptOwnerV1} from "../interface/IReceiptOwnerV1.sol";
+import {IReceiptV2, ReceiptConfigV1} from "../interface/IReceiptV2.sol";
+import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -22,31 +22,16 @@ import {
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
-
-/// Thrown when an ID can't be deposited or withdrawn.
-/// @param id The invalid ID.
-error InvalidId(uint256 id);
-
-/// Thrown when the share ratio does not meet the minimum share ratio.
-error MinShareRatio(uint256 minShareRatio, uint256 shareRatio);
-
-/// Thrown when depositing 0 asset amount.
-error ZeroAssetsAmount();
-
-/// Thrown when minting 0 shares amount.
-error ZeroSharesAmount();
-
-/// Thrown when receiver of minted shares is address zero.
-error ZeroReceiver();
-
-/// Thrown when owner of shares withdrawn is address zero.
-error ZeroOwner();
-
-/// Thrown when depositing assets under ID zero.
-error ZeroID();
-
-/// Thrown when the receipt vault does not own the receipt.
-error WrongOwner(address vault, address receipt);
+import {
+    InvalidId,
+    ZeroReceiver,
+    MinShareRatio,
+    ZeroAssetsAmount,
+    ZeroOwner,
+    ZeroSharesAmount,
+    WrongOwner,
+    WrongManager
+} from "../error/ErrReceiptVault.sol";
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
@@ -61,7 +46,7 @@ enum ShareAction {
 /// by the factory.
 struct ReceiptVaultConstructionConfig {
     ICloneableFactoryV2 factory;
-    IReceiptV1 receiptImplementation;
+    IReceiptV2 receiptImplementation;
 }
 
 /// All config required to initialize `ReceiptVault` except the receipt address.
@@ -73,6 +58,7 @@ struct ReceiptVaultConstructionConfig {
 /// @param symbol As per ERC20.
 struct VaultConfig {
     address asset;
+    address receiptOwner;
     string name;
     string symbol;
 }
@@ -123,7 +109,7 @@ struct ReceiptVaultConfig {
 /// each other in parallel, allowing trust to be "policed" at the liquidity and
 /// free market layer.
 abstract contract ReceiptVault is
-    IReceiptOwnerV1,
+    IReceiptManagerV1,
     Multicall,
     ReentrancyGuard,
     ERC20Snapshot,
@@ -134,13 +120,13 @@ abstract contract ReceiptVault is
     using SafeERC20 for IERC20;
 
     ICloneableFactoryV2 internal immutable iFactory;
-    IReceiptV1 internal immutable iReceiptImplementation;
+    IReceiptV2 internal immutable iReceiptImplementation;
 
     /// Underlying ERC4626 asset.
     IERC20 internal sAsset;
     /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
     /// mints and enforcing integrity of subsequent burns.
-    IReceiptV1 internal sReceipt;
+    IReceiptV2 internal sReceipt;
 
     /// `ReceiptVault` is intended to be cloned and initialized by a
     /// `ReceiptVaultFactory` so is an implementation contract that can't itself
@@ -172,14 +158,23 @@ abstract contract ReceiptVault is
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
-        IReceiptV1 receipt = IReceiptV1(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+        IReceiptV2 receipt = IReceiptV2(
+            iFactory.clone(
+                address(iReceiptImplementation),
+                abi.encode(ReceiptConfigV1({receiptManager: address(this), receiptOwner: config.receiptOwner}))
+            )
+        );
         sReceipt = receipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
         // from the factory ourselves just above.
         address receiptOwner = receipt.owner();
-        if (receiptOwner != address(this)) {
-            revert WrongOwner(address(this), receiptOwner);
+        if (receiptOwner != config.receiptOwner) {
+            revert WrongOwner(config.receiptOwner, receiptOwner);
+        }
+        address receiptManager = receipt.manager();
+        if (receiptManager != address(this)) {
+            revert WrongManager(address(this), receiptManager);
         }
     }
 
@@ -283,8 +278,8 @@ abstract contract ReceiptVault is
         emit ReceiptVaultInformation(msg.sender, vaultInformation);
     }
 
-    /// @inheritdoc IReceiptOwnerV1
-    function authorizeReceiptTransfer(
+    /// @inheritdoc IReceiptManagerV1
+    function authorizeReceiptTransfer2(
         address,
         address // solhint-disable-next-line no-empty-blocks
     ) external view virtual {
@@ -531,7 +526,7 @@ abstract contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        sReceipt.ownerMint(msg.sender, receiver, id, shares, receiptInformation);
+        sReceipt.managerMint(msg.sender, receiver, id, shares, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -647,7 +642,7 @@ abstract contract ReceiptVault is
         _burn(owner, shares);
 
         // ERC1155 burn.
-        sReceipt.ownerBurn(msg.sender, owner, id, shares, receiptInformation);
+        sReceipt.managerBurn(msg.sender, owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets, receiver, owner, shares, id);

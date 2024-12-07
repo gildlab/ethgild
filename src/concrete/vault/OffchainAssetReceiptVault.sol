@@ -13,7 +13,7 @@ import {
 } from "../../abstract/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
-import {IReceiptV1} from "../../interface/IReceiptV1.sol";
+import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 
@@ -332,7 +332,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
-    function authorizeReceiptTransfer(address from_, address to_) external view virtual override {
+    function authorizeReceiptTransfer2(address from_, address to_) external view virtual override {
         enforceValidTransfer(erc1155Tier, erc1155MinimumTier, erc1155TierContext, from_, to_);
     }
 
@@ -706,11 +706,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             address(erc1155Tier) == address(0)
                 || block.timestamp < erc1155Tier.reportTimeForTier(confiscatee, erc1155MinimumTier, erc1155TierContext)
         ) {
-            IReceiptV1 receipt = sReceipt;
+            IReceiptV2 receipt = sReceipt;
             confiscatedReceiptAmount = receipt.balanceOf(confiscatee, id);
             if (confiscatedReceiptAmount > 0) {
                 emit ConfiscateReceipt(msg.sender, confiscatee, id, confiscatedReceiptAmount, data);
-                receipt.ownerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
+                receipt.managerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
             }
         }
         return confiscatedReceiptAmount;
