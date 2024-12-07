@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount} from "src/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {OffchainAssetReceiptVaultTest, Vm, ReceiptContract} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -624,6 +624,80 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         checkBalanceChange(vault, bob, bob, 3, thirdRedeemAmount, data);
 
         // Stop the prank
+        vm.stopPrank();
+    }
+
+    /// Test withdraw with erc20 approval
+    function testOffchainAssetWithdrawWithERC20Approval(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        uint256 amount,
+        uint256 minShareRatio,
+        uint256 redeemSharesAmount
+    ) external {
+        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        minShareRatio = bound(minShareRatio, 0, 1e18);
+
+        vm.assume(alice != bob);
+        amount = bound(amount, 1, type(uint128).max);
+
+        vm.recordLogs();
+        OffchainAssetReceiptVault vault = createVault(alice, "Alice", "Alice");
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        ReceiptContract receipt = getReceipt(logs);
+
+        vm.startPrank(alice);
+
+        uint256 expectedShares = amount.fixedPointMul(minShareRatio, Math.Rounding.Down);
+        vm.assume(expectedShares > 0);
+
+        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(vault.WITHDRAWER(), alice);
+        vault.grantRole(vault.WITHDRAWER(), bob);
+
+        uint256 totalShares = vault.deposit(amount, alice, minShareRatio, bytes(""));
+
+        redeemSharesAmount = bound(redeemSharesAmount, 1, totalShares);
+
+        uint256 aliceBalanceBeforeTransfer = vault.balanceOf(alice);
+        assertEqUint(aliceBalanceBeforeTransfer, totalShares);
+
+        uint256 assetsAmount = vault.previewRedeem(redeemSharesAmount, minShareRatio);
+        vm.assume(assetsAmount > 0);
+        vm.stopPrank();
+
+        // Bob has no allowance so he cannot withdraw.
+        vm.startPrank(bob);
+        vm.expectRevert("ERC20: insufficient allowance");
+        vault.redeem(redeemSharesAmount, bob, alice, minShareRatio, bytes(""));
+        vm.stopPrank();
+
+        // Alice approves Bob to withdraw her shares.
+        vm.startPrank(alice);
+        vault.approve(bob, redeemSharesAmount);
+        vm.stopPrank();
+
+        // Check allowance before withdrawal
+        assertEq(vault.allowance(alice, bob), redeemSharesAmount);
+
+        // Bob still cannot withdraw because he has not been assigned as a
+        // receipt operator.
+        vm.startPrank(bob);
+
+        vm.expectRevert("ERC1155: caller is not token owner or approved");
+        vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
+        vm.stopPrank();
+
+        // Alice makes Bob an operator.
+        vm.startPrank(alice);
+        receipt.setApprovalForAll(bob, true);
+        vm.stopPrank();
+
+        // Bob can now withdraw.
+        vm.startPrank(bob);
+        vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
         vm.stopPrank();
     }
 }
