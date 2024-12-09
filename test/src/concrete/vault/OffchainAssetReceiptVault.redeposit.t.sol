@@ -16,7 +16,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 contract RedepositTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
-    /// Checks that balance owner balance changes after wirthdraw
+    /// Checks that balance owner balance changes after withdraw
     function checkBalanceChange(
         OffchainAssetReceiptVault vault,
         address receiver,

@@ -29,7 +29,6 @@ import {
     ZeroAssetsAmount,
     ZeroOwner,
     ZeroSharesAmount,
-    WrongOwner,
     WrongManager
 } from "../error/ErrReceiptVault.sol";
 

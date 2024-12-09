@@ -21,7 +21,7 @@ contract ReceiptFactoryTest is Test {
     /// @return The address of the newly created `ReceiptContract` clone
     function createReceipt(address manager) internal returns (ReceiptContract) {
         // Clone ReceiptContract using the factory and initialize it with the
-        // owner and manager.
+        // manager.
         address clone = iFactory.clone(address(receiptImplementation), abi.encode(manager));
         // Return the clone cast to ReceiptContract type
         return ReceiptContract(clone);
