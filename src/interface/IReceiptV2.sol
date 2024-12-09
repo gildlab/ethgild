@@ -4,20 +4,6 @@ pragma solidity =0.8.25;
 
 import {IERC1155Upgradeable as IERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/IERC1155Upgradeable.sol";
-import {IERC5313Upgradeable as IERC5313} from
-    "openzeppelin-contracts-upgradeable/contracts/interfaces/IERC5313Upgradeable.sol";
-
-/// @title ReceiptConfigV1
-/// Configuration required to initialize an `IReceiptV2` contract.
-/// @param receiptManager The address of the `IReceiptManagerV1` contract that
-/// has the authority to mint, burn and transfer receipts.
-/// @param receiptOwner The address of the `IERC5313` owner that has the
-/// authority to sign offchain messages that may be required by centralised
-/// entities, but has no onchain privileges.
-struct ReceiptConfigV1 {
-    address receiptManager;
-    address receiptOwner;
-}
 
 /// @title IReceiptV2
 /// @notice IReceiptV2 is an extension to IERC1155 that requires implementers to
@@ -42,21 +28,7 @@ struct ReceiptConfigV1 {
 ///
 /// The manager is effectively required to be a smart contract by nature, and
 /// expected to be the `ReceiptVault` contract.
-///
-/// SEPARATE to the manager is an ERC5313 owner
-/// https://eips.ethereum.org/EIPS/eip-5313
-///
-/// The owner has NO ONCHAIN PRIVILEDGES and is only responsible for offchain
-/// actions that may be forced by centralised entities. For example an NFT
-/// marketplace might place administrative functions on their website for the
-/// NFT behind a signature check from the owner's EOA. These websites typically
-/// force the function to be called `owner` on the contract, even if the end
-/// result is purely an optional cosmetic feature of their marketplace.
-///
-/// In summary:
-/// - onchain dangerous logic is handled by the _manager_ smart contract
-/// - offchain cosmetic logic is handled by the _owner_ signer.
-interface IReceiptV2 is IERC1155, IERC5313 {
+interface IReceiptV2 is IERC1155 {
     /// Emitted when new information is provided for a receipt.
     /// @param sender `msg.sender` emitting the information for the receipt.
     /// @param id Receipt the information is for.

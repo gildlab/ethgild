@@ -16,9 +16,8 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
-    function testZeroAdmin(address receiptOwner, string memory assetName, string memory assetSymbol) external {
-        VaultConfig memory vaultConfig =
-            VaultConfig({asset: address(0), receiptOwner: receiptOwner, name: assetName, symbol: assetSymbol});
+    function testZeroAdmin(string memory assetName, string memory assetSymbol) external {
+        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
         iFactory.clone(
@@ -28,18 +27,13 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that asset is address zero
-    function testNonZeroAsset(
-        uint256 fuzzedKeyAlice,
-        address receiptOwner,
-        address asset,
-        string memory assetName,
-        string memory assetSymbol
-    ) external {
+    function testNonZeroAsset(uint256 fuzzedKeyAlice, address asset, string memory assetName, string memory assetSymbol)
+        external
+    {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         vm.assume(asset != address(0));
-        VaultConfig memory vaultConfig =
-            VaultConfig({asset: asset, receiptOwner: receiptOwner, name: assetName, symbol: assetSymbol});
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         iFactory.clone(
@@ -48,19 +42,13 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that offchainAssetReceiptVault constructs well
-    function testConstruction(
-        uint256 fuzzedKeyAlice,
-        address receiptOwner,
-        string memory assetName,
-        string memory assetSymbol
-    ) external {
+    function testConstruction(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         address asset = address(0);
 
-        VaultConfig memory vaultConfig =
-            VaultConfig({asset: asset, receiptOwner: receiptOwner, name: assetName, symbol: assetSymbol});
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
 
         // Simulate transaction from alice
         vm.prank(alice);
@@ -84,7 +72,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,address,string,string))))"
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
                     )
             ) {
                 // Decode the event data
@@ -108,17 +96,13 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that vault is the manager of its receipt
-    function testVaultIsReceiptManager(
-        uint256 fuzzedKeyAlice,
-        address owner,
-        string memory assetName,
-        string memory assetSymbol
-    ) external {
+    function testVaultIsReceiptManager(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
-        VaultConfig memory vaultConfig =
-            VaultConfig({asset: address(0), receiptOwner: owner, name: assetName, symbol: assetSymbol});
+        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         OffchainAssetVaultConfig memory offchainAssetVaultConfig =
             OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
 
@@ -138,7 +122,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,address,string,string))))"
+                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
                     )
             ) {
                 // Decode the event data

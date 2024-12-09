@@ -9,7 +9,7 @@ import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
-    /// Checks that balance owner balance changes after wirthdraw
+    /// Checks that balance owner balance changes after withdraw
     function checkBalanceChange(
         OffchainAssetReceiptVault vault,
         address receiver,

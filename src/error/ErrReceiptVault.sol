@@ -26,11 +26,6 @@ error ZeroOwner();
 /// Thrown when depositing assets under ID zero.
 error ZeroID();
 
-/// Thrown when the receipt has the wrong owner on initialization.
-/// @param expectedOwner The expected owner.
-/// @param actualOwner The actual owner.
-error WrongOwner(address expectedOwner, address actualOwner);
-
 /// Thrown when the receipt vault does not manage the receipt.
 /// @param expectedManager The expected manager.
 /// @param actualManager The actual manager.

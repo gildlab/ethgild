@@ -54,13 +54,13 @@ error UnauthorizedRecipientTier(address to, uint256 reportTime);
 error CertificationExpired(address from, address to, uint256 certifiedUntil, uint256 timestamp);
 
 /// All data required to configure an offchain asset vault except the receipt.
-/// Typically the factory should build a receipt contract and transfer ownership
+/// Typically the factory should build a receipt contract and set management
 /// to the vault atomically during initialization so there is no opportunity for
 /// an attacker to corrupt the initialzation process.
 /// @param admin as per `OffchainAssetReceiptVaultConfig`.
 /// @param vaultConfig MUST be used by the factory to build a
-/// `ReceiptVaultConfig` once the receipt address is known and ownership has been
-/// transferred to the vault contract (before initialization).
+/// `ReceiptVaultConfig` once the receipt address is known and management has
+/// been set to the vault contract.
 struct OffchainAssetVaultConfig {
     address admin;
     VaultConfig vaultConfig;

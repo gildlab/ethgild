@@ -37,11 +37,6 @@ on:
         required: false
         type: string
 
-      receipt-vault-owner:
-        description: 'Owner of the deployed receipt vault.'
-        required: false
-        type: string
-
       receipt-vault-name:
         description: 'Name of the share token for the deployed receipt vault.'
         required: false
@@ -86,7 +81,6 @@ jobs:
         env:
           DEPLOYMENT_SUITE: ${{ inputs.suite }}
           RECEIPT_VAULT_ASSET: ${{ inputs.receipt-vault-asset || '' }}
-          RECEIPT_VAULT_RECEIPT_OWNER: ${{ inputs.receipt-vault-owner || '' }}
           RECEIPT_VAULT_NAME: ${{ inputs.receipt-vault-name || '' }}
           RECEIPT_VAULT_SYMBOL: ${{ inputs.receipt-vault-symbol || '' }}
           OWNER_ADDRESS: ${{ inputs.owner || '' }}
