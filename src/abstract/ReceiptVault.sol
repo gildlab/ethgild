@@ -13,7 +13,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV1} from "../interface/IReceiptVaultV1.sol";
-import {IReceiptV2, ReceiptConfigV1} from "../interface/IReceiptV2.sol";
+import {IReceiptV2} from "../interface/IReceiptV2.sol";
 import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -58,7 +58,6 @@ struct ReceiptVaultConstructionConfig {
 /// @param symbol As per ERC20.
 struct VaultConfig {
     address asset;
-    address receiptOwner;
     string name;
     string symbol;
 }
@@ -158,20 +157,11 @@ abstract contract ReceiptVault is
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
-        IReceiptV2 receipt = IReceiptV2(
-            iFactory.clone(
-                address(iReceiptImplementation),
-                abi.encode(ReceiptConfigV1({receiptManager: address(this), receiptOwner: config.receiptOwner}))
-            )
-        );
+        IReceiptV2 receipt = IReceiptV2(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
         sReceipt = receipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
         // from the factory ourselves just above.
-        address receiptOwner = receipt.owner();
-        if (receiptOwner != config.receiptOwner) {
-            revert WrongOwner(config.receiptOwner, receiptOwner);
-        }
         address receiptManager = receipt.manager();
         if (receiptManager != address(this)) {
             revert WrongManager(address(this), receiptManager);

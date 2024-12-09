@@ -15,7 +15,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function testMint(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        address receiptOwner,
         string memory assetName,
         string memory assetSymbol,
         uint256 assets,
@@ -28,9 +27,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        OffchainAssetReceiptVault vault = LibOffchainAssetVaultCreator.createVault(
-            iFactory, iImplementation, alice, receiptOwner, assetName, assetSymbol
-        );
+        OffchainAssetReceiptVault vault =
+            LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, alice, assetName, assetSymbol);
 
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);

@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {IReceiptManagerV1} from "src/interface/IReceiptManagerV1.sol";
-import {Receipt as ReceiptContract, ReceiptConfigV1} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
@@ -16,23 +16,6 @@ contract ReceiptTest is ReceiptFactoryTest {
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt = createReceipt(address(testManager));
         assertEq(receipt.manager(), address(testManager));
-        assertEq(receipt.owner(), OWNER);
-    }
-
-    // Test receipt sets owner
-    function testReceiptOwnerIsSet(uint256 fuzzedKeyAlice) external {
-        TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
-
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        // Make testManager call setOwner to change to alice
-        vm.startPrank(OWNER);
-        receipt.transferOwnership(alice);
-
-        address owner = receipt.owner();
-        assertEq(owner, alice);
-        vm.stopPrank();
     }
 
     /// Check that alice can't mint herself directly on the receipt.

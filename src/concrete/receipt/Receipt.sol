@@ -5,11 +5,10 @@ pragma solidity =0.8.25;
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
-import {IReceiptV2, IERC5313, ReceiptConfigV1} from "../../interface/IReceiptV2.sol";
+import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
-import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
@@ -31,7 +30,7 @@ string constant RECEIPT_NAME = "Receipt";
 /// @notice The `IReceiptV2` for a `ReceiptVault`. Standard implementation allows
 /// receipt information to be emitted and mints/burns according to manager
 /// authorization.
-contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
+contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
@@ -55,12 +54,10 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
     /// implementation in `ReceiptFactory`.
     /// Compatible with `ICloneableV2`.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
-        __Ownable_init();
         __ERC1155_init(string.concat(DATA_URI_BASE64_PREFIX, RECEIPT_METADATA_DATA_URI));
 
-        ReceiptConfigV1 memory config = abi.decode(data, (ReceiptConfigV1));
-        _transferOwnership(config.receiptOwner);
-        sManager = IReceiptManagerV1(config.receiptManager);
+        address receiptManager = abi.decode(data, (address));
+        sManager = IReceiptManagerV1(receiptManager);
 
         return ICLONEABLE_V2_SUCCESS;
     }
@@ -78,11 +75,6 @@ contract Receipt is IReceiptV2, Ownable, ERC1155, ICloneableV2 {
     /// @inheritdoc IReceiptV2
     function manager() external view virtual returns (address) {
         return address(sManager);
-    }
-
-    /// @inheritdoc IERC5313
-    function owner() public view virtual override(IERC5313, Ownable) returns (address) {
-        return Ownable.owner();
     }
 
     /// @inheritdoc IReceiptV2

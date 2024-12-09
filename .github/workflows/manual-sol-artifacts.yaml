@@ -37,11 +37,6 @@ on:
         required: false
         type: string
 
-      receipt-vault-owner:
-        description: 'Owner of the deployed receipt vault.'
-        required: false
-        type: string
-
       receipt-vault-name:
         description: 'Name of the share token for the deployed receipt vault.'
         required: false
@@ -89,7 +84,6 @@ jobs:
           RECEIPT_VAULT_RECEIPT_OWNER: ${{ inputs.receipt-vault-owner || '' }}
           RECEIPT_VAULT_NAME: ${{ inputs.receipt-vault-name || '' }}
           RECEIPT_VAULT_SYMBOL: ${{ inputs.receipt-vault-symbol || '' }}
-          OWNER_ADDRESS: ${{ inputs.owner || '' }}
           CLONE_FACTORY : ${{ vars[env.clone_factory_name] || '' }}
           SCEPTRE_STAKED_FLR_ADDRESS: ${{ vars.SCEPTRE_STAKED_FLR_ADDRESS || '' }}
           ERC20_PRICE_ORACLE_VAULT_IMPLEMENTATION: ${{ vars[env.erc20_price_oracle_vault_implementation_name] || '' }}
