@@ -6,13 +6,13 @@ import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
 import {TestReceiptManager} from "test/concrete/TestReceiptManager.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {Base64} from "solady/utils/Base64.sol";
+import {Receipt, DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
+import {LibFixedPointDecimalFormat} from "rain.math.fixedpoint/lib/format/LibFixedPointDecimalFormat.sol";
 import {
-    Receipt,
-    RECEIPT_METADATA_DATA_URI,
-    DATA_URI_BASE64_PREFIX,
-    RECEIPT_NAME,
-    RECEIPT_SYMBOL
-} from "src/concrete/receipt/Receipt.sol";
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstants.sol";
 
 contract ReceiptMetadataTest is ReceiptFactoryTest {
     struct Metadata {
@@ -22,6 +22,8 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
     }
 
     function testReceiptURI(uint256 id) external {
+        vm.assume(id != 0);
+
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt = createReceipt(address(testManager));
@@ -37,15 +39,29 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
             uri := add(uri, 29)
             mstore(uri, sub(uriLength, 29))
         }
-        assertEq(uri, RECEIPT_METADATA_DATA_URI);
 
         string memory uriDecoded = string(Base64.decode(uri));
         bytes memory uriJsonData = vm.parseJson(uriDecoded);
 
         Metadata memory metadataJson = abi.decode(uriJsonData, (Metadata));
-        assertEq(metadataJson.description, "A receipt for a ReceiptVault.");
+
+        string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+        );
+        assertEq(
+            metadataJson.description,
+            string.concat(
+                "1 of these receipts can be burned alongside 1 TRM to redeem ", idInvFormatted, " of TRMAsset."
+            )
+        );
+
         assertEq(metadataJson.decimals, 18);
-        assertEq(metadataJson.name, RECEIPT_NAME);
+        assertEq(
+            metadataJson.name,
+            string.concat(
+                "Receipt for lock at ", LibFixedPointDecimalFormat.fixedPointToDecimalString(id), " USD per TRMAsset."
+            )
+        );
     }
 
     function testReceiptName() external {
@@ -53,7 +69,7 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt = createReceipt(address(testManager));
 
-        assertEq(receipt.name(), RECEIPT_NAME);
+        assertEq(receipt.name(), "TRM Receipt");
     }
 
     function testReceiptSymbol() external {
@@ -61,6 +77,6 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt = createReceipt(address(testManager));
 
-        assertEq(receipt.symbol(), RECEIPT_SYMBOL);
+        assertEq(receipt.symbol(), "TRM RCPT");
     }
 }
