@@ -13,6 +13,70 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstants.sol";
+import {ZeroReceiptId} from "src/error/ErrReceipt.sol";
+import {LibConformString} from "rain.string/lib/mut/LibConformString.sol";
+import {CMASK_QUOTATION_MARK, CMASK_PRINTABLE, CMASK_BACKSLASH} from "rain.string/lib/parse/LibParseCMask.sol";
+
+/// This contract is used to test the metadata of the `Receipt` contract.
+/// As all the overridden functions are internal, we need to create a new
+/// contract that inherits from `Receipt` and exposes these functions; we can't
+/// just mock `Receipt`.
+contract MutableMetadataReceipt is Receipt {
+    string internal sVaultShareSymbol;
+    string internal sVaultAssetSymbol;
+    string internal sReceiptSVGURI;
+    string internal sReferenceAssetSymbol;
+    string internal sRedeemURL;
+    string internal sBrandName;
+
+    function setVaultShareSymbol(string memory vaultShareSymbol) external {
+        sVaultShareSymbol = vaultShareSymbol;
+    }
+
+    function setVaultAssetSymbol(string memory vaultAssetSymbol) external {
+        sVaultAssetSymbol = vaultAssetSymbol;
+    }
+
+    function setReceiptSVGURI(string memory receiptSVGURI) external {
+        sReceiptSVGURI = receiptSVGURI;
+    }
+
+    function setReferenceAssetSymbol(string memory referenceAssetSymbol) external {
+        sReferenceAssetSymbol = referenceAssetSymbol;
+    }
+
+    function setRedeemURL(string memory redeemURL) external {
+        sRedeemURL = redeemURL;
+    }
+
+    function setBrandName(string memory brandName) external {
+        sBrandName = brandName;
+    }
+
+    function _vaultShareSymbol() internal view override returns (string memory) {
+        return sVaultShareSymbol;
+    }
+
+    function _vaultAssetSymbol() internal view override returns (string memory) {
+        return sVaultAssetSymbol;
+    }
+
+    function _receiptSVGURI() internal view override returns (string memory) {
+        return sReceiptSVGURI;
+    }
+
+    function _referenceAssetSymbol() internal view override returns (string memory) {
+        return sReferenceAssetSymbol;
+    }
+
+    function _redeemURL() internal view override returns (string memory) {
+        return sRedeemURL;
+    }
+
+    function _brandName() internal view override returns (string memory) {
+        return sBrandName;
+    }
+}
 
 contract ReceiptMetadataTest is ReceiptFactoryTest {
     struct Metadata {
@@ -21,15 +85,7 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         string name;
     }
 
-    function testReceiptURI(uint256 id) external {
-        vm.assume(id != 0);
-
-        // Deploy the Receipt contract
-        TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
-
-        string memory uri = receipt.uri(id);
-
+    function decodeMetadataURI(string memory uri) private pure returns (Metadata memory) {
         uint256 uriLength = bytes(uri).length;
         assembly ("memory-safe") {
             mstore(uri, 29)
@@ -44,6 +100,28 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         bytes memory uriJsonData = vm.parseJson(uriDecoded);
 
         Metadata memory metadataJson = abi.decode(uriJsonData, (Metadata));
+        return metadataJson;
+    }
+
+    function testReceiptURIZeroError() external {
+        // Deploy the Receipt contract
+        TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
+
+        vm.expectRevert(ZeroReceiptId.selector);
+        receipt.uri(0);
+    }
+
+    function testReceiptURI(uint256 id) external {
+        vm.assume(id != 0);
+
+        // Deploy the Receipt contract
+        TestReceiptManager testManager = new TestReceiptManager();
+        ReceiptContract receipt = createReceipt(address(testManager));
+
+        string memory uri = receipt.uri(id);
+
+        Metadata memory metadataJson = decodeMetadataURI(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
             LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
@@ -78,5 +156,72 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         ReceiptContract receipt = createReceipt(address(testManager));
 
         assertEq(receipt.symbol(), "TRM RCPT");
+    }
+
+    function testOverriddenMetadata(
+        uint256 id,
+        string memory vaultShareSymbol,
+        string memory vaultAssetSymbol,
+        string memory redeemURL,
+        string memory brandName,
+        string memory referenceAssetSymbol
+    ) external {
+        vm.assume(id != 0);
+        MutableMetadataReceipt receipt = new MutableMetadataReceipt();
+
+        {
+            uint256 mask = CMASK_PRINTABLE & ~(CMASK_QUOTATION_MARK | CMASK_BACKSLASH);
+
+            LibConformString.conformStringToMask(vaultShareSymbol, mask, 0x100);
+            LibConformString.conformStringToMask(vaultAssetSymbol, mask, 0x100);
+            LibConformString.conformStringToMask(redeemURL, mask, 0x100);
+            LibConformString.conformStringToMask(brandName, mask, 0x100);
+            LibConformString.conformStringToMask(referenceAssetSymbol, mask, 0x100);
+
+            receipt.setVaultShareSymbol(vaultShareSymbol);
+            receipt.setVaultAssetSymbol(vaultAssetSymbol);
+            receipt.setRedeemURL(redeemURL);
+            receipt.setBrandName(brandName);
+            receipt.setReferenceAssetSymbol(referenceAssetSymbol);
+        }
+
+        string memory uri = receipt.uri(id);
+        Metadata memory metadata = decodeMetadataURI(uri);
+
+        string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+        );
+
+        string memory redeemURLPhrase = bytes(redeemURL).length > 0 ? string.concat(" Redeem at ", redeemURL, ".") : "";
+        string memory brandNamePhrase = bytes(brandName).length > 0 ? string.concat(brandName, " ") : "";
+
+        assertEq(metadata.decimals, 18);
+        assertEq(
+            metadata.description,
+            string.concat(
+                "1 of these receipts can be burned alongside 1 ",
+                vaultShareSymbol,
+                " to redeem ",
+                idInvFormatted,
+                " of ",
+                vaultAssetSymbol,
+                ".",
+                redeemURLPhrase
+            )
+        );
+        assertEq(
+            metadata.name,
+            string.concat(
+                "Receipt for ",
+                brandNamePhrase,
+                "lock at ",
+                LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
+                " ",
+                referenceAssetSymbol,
+                " per ",
+                vaultAssetSymbol,
+                "."
+            )
+        );
     }
 }
