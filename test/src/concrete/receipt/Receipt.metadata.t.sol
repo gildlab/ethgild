@@ -85,6 +85,13 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         string name;
     }
 
+    struct MetadataWithImage {
+        uint8 decimals;
+        string description;
+        string image;
+        string name;
+    }
+
     function decodeMetadataURI(string memory uri) private pure returns (Metadata memory) {
         uint256 uriLength = bytes(uri).length;
         assembly ("memory-safe") {
@@ -100,6 +107,24 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
         bytes memory uriJsonData = vm.parseJson(uriDecoded);
 
         Metadata memory metadataJson = abi.decode(uriJsonData, (Metadata));
+        return metadataJson;
+    }
+
+    function decodeMetadataURIWithImage(string memory uri) private pure returns (MetadataWithImage memory) {
+        uint256 uriLength = bytes(uri).length;
+        assembly ("memory-safe") {
+            mstore(uri, 29)
+        }
+        assertEq(uri, DATA_URI_BASE64_PREFIX);
+        assembly ("memory-safe") {
+            uri := add(uri, 29)
+            mstore(uri, sub(uriLength, 29))
+        }
+
+        string memory uriDecoded = string(Base64.decode(uri));
+        bytes memory uriJsonData = vm.parseJson(uriDecoded);
+
+        MetadataWithImage memory metadataJson = abi.decode(uriJsonData, (MetadataWithImage));
         return metadataJson;
     }
 
@@ -223,5 +248,84 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
                 "."
             )
         );
+    }
+
+    function testOverriddenMetadataWithImage(
+        uint256 id,
+        string memory vaultShareSymbol,
+        string memory vaultAssetSymbol,
+        string memory redeemURL,
+        string memory brandName,
+        string memory referenceAssetSymbol,
+        string memory receiptSVGURI
+    ) external {
+        vm.assume(bytes(receiptSVGURI).length > 0);
+        vm.assume(id != 0);
+        MutableMetadataReceipt receipt = new MutableMetadataReceipt();
+
+        {
+            uint256 mask = CMASK_PRINTABLE & ~(CMASK_QUOTATION_MARK | CMASK_BACKSLASH);
+
+            LibConformString.conformStringToMask(vaultShareSymbol, mask, 0x100);
+            LibConformString.conformStringToMask(vaultAssetSymbol, mask, 0x100);
+            LibConformString.conformStringToMask(redeemURL, mask, 0x100);
+            LibConformString.conformStringToMask(brandName, mask, 0x100);
+            LibConformString.conformStringToMask(referenceAssetSymbol, mask, 0x100);
+            LibConformString.conformStringToMask(receiptSVGURI, mask, 0x100);
+
+            receipt.setVaultShareSymbol(vaultShareSymbol);
+            receipt.setVaultAssetSymbol(vaultAssetSymbol);
+            receipt.setRedeemURL(redeemURL);
+            receipt.setBrandName(brandName);
+            receipt.setReferenceAssetSymbol(referenceAssetSymbol);
+            receipt.setReceiptSVGURI(receiptSVGURI);
+        }
+
+        string memory uri = receipt.uri(id);
+        MetadataWithImage memory metadata = decodeMetadataURIWithImage(uri);
+
+        string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+        );
+
+        assertEq(metadata.decimals, 18);
+
+        {
+            string memory redeemURLPhrase =
+                bytes(redeemURL).length > 0 ? string.concat(" Redeem at ", redeemURL, ".") : "";
+            assertEq(
+                metadata.description,
+                string.concat(
+                    "1 of these receipts can be burned alongside 1 ",
+                    vaultShareSymbol,
+                    " to redeem ",
+                    idInvFormatted,
+                    " of ",
+                    vaultAssetSymbol,
+                    ".",
+                    redeemURLPhrase
+                )
+            );
+        }
+
+        {
+            string memory brandNamePhrase = bytes(brandName).length > 0 ? string.concat(brandName, " ") : "";
+            assertEq(
+                metadata.name,
+                string.concat(
+                    "Receipt for ",
+                    brandNamePhrase,
+                    "lock at ",
+                    LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
+                    " ",
+                    referenceAssetSymbol,
+                    " per ",
+                    vaultAssetSymbol,
+                    "."
+                )
+            );
+        }
+
+        assertEq(metadata.image, receiptSVGURI);
     }
 }
