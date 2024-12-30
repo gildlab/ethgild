@@ -70,6 +70,8 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// implementation in `ReceiptFactory`.
     /// Compatible with `ICloneableV2`.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
+        // `uri` is overridden in this contract so we can just initialize
+        // `ERC1155` with an empty string.
         __ERC1155_init("");
 
         address receiptManager = abi.decode(data, (address));
@@ -166,26 +168,44 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         _safeTransferFrom(from, to, id, amount, data);
     }
 
+    /// Provides the symbol of the `ReceiptVault` ERC20 share token that manages
+    /// this `Receipt`. Can be overridden if the manager is not going to be
+    /// a `ReceiptVault`.
     function _vaultShareSymbol() internal view virtual returns (string memory) {
         return IERC20Metadata(payable(address(sManager))).symbol();
     }
 
+    /// Provides the symbol of the ERC20 asset token that the `ReceiptVault`
+    /// managing this `Receipt` is accepting for mints. Can be overridden if the
+    /// manager is not going to be a `ReceiptVault`.
     function _vaultAssetSymbol() internal view virtual returns (string memory) {
         return IERC20Metadata(IReceiptVaultV1(payable(address(sManager))).asset()).symbol();
     }
 
+    /// Provides the SVG URI for the receipt. Can be overridden to provide a
+    /// custom SVG URI. Default is an empty string, which will not include an
+    /// image in the metadata json.
     function _receiptSVGURI() internal view virtual returns (string memory) {
         return DEFAULT_SVG_URI;
     }
 
+    /// Provides the symbol of the reference asset that mint amounts are valued
+    /// in. Can be overridden to provide a custom reference asset symbol. Default
+    /// is "USD".
     function _referenceAssetSymbol() internal view virtual returns (string memory) {
         return DEFAULT_REFERENCE_ASSET_SYMBOL;
     }
 
+    /// Provides the URL for redeeming receipts. Can be overridden to provide a
+    /// custom redeem URL. Default is an empty string, which will not include a
+    /// redeem URL in the metadata json.
     function _redeemURL() internal view virtual returns (string memory) {
         return DEFAULT_REDEEM_URL;
     }
 
+    /// Provides the brand name for the receipt. Can be overridden to provide a
+    /// custom brand name. Default is an empty string, which will not include a
+    /// brand name in the metadata json.
     function _brandName() internal view virtual returns (string memory) {
         return DEFAULT_BRAND_NAME;
     }
