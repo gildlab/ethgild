@@ -78,7 +78,7 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
     }
 }
 
-contract ReceiptMetadataTest is ReceiptFactoryTest {
+contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
     struct Metadata {
         uint8 decimals;
         string description;
