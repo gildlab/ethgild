@@ -4,9 +4,9 @@ pragma solidity =0.8.25;
 
 import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
 import {TestReceiptManager} from "test/concrete/TestReceiptManager.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {ERC20PriceOracleReceipt} from "src/concrete/receipt/ERC20PriceOracleReceipt.sol";
 import {Base64} from "solady/utils/Base64.sol";
-import {Receipt, DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
+import {DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
 import {LibFixedPointDecimalFormat} from "rain.math.fixedpoint/lib/format/LibFixedPointDecimalFormat.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -21,7 +21,7 @@ import {CMASK_QUOTATION_MARK, CMASK_PRINTABLE, CMASK_BACKSLASH} from "rain.strin
 /// As all the overridden functions are internal, we need to create a new
 /// contract that inherits from `Receipt` and exposes these functions; we can't
 /// just mock `Receipt`.
-contract MutableMetadataReceipt is Receipt {
+contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
     string internal sVaultShareSymbol;
     string internal sVaultAssetSymbol;
     string internal sReceiptSVGURI;
@@ -131,7 +131,9 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
     function testReceiptURIZeroError() external {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
+            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+        );
 
         vm.expectRevert(ZeroReceiptId.selector);
         receipt.uri(0);
@@ -142,7 +144,9 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
 
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
+            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+        );
 
         string memory uri = receipt.uri(id);
 
@@ -170,7 +174,9 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
     function testReceiptName() external {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
+            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+        );
 
         assertEq(receipt.name(), "TRM Receipt");
     }
@@ -178,7 +184,9 @@ contract ReceiptMetadataTest is ReceiptFactoryTest {
     function testReceiptSymbol() external {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
+            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+        );
 
         assertEq(receipt.symbol(), "TRM RCPT");
     }
