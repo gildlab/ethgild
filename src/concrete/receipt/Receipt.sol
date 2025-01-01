@@ -13,15 +13,10 @@ import {ERC1155Upgradeable as ERC1155} from
 import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
-
-/// @dev The URI for the metadata of the `Receipt` contract.
-/// Decodes to a simple generic receipt metadata object.
-/// `{"name":"Receipt","decimals":18,"description":"A receipt for a ReceiptVault."}`
-string constant RECEIPT_METADATA_DATA_URI =
-    "eyJuYW1lIjoiUmVjZWlwdCIsImRlY2ltYWxzIjoxOCwiZGVzY3JpcHRpb24iOiJBIHJlY2VpcHQgZm9yIGEgUmVjZWlwdFZhdWx0LiJ9";
 
 /// @dev The name of a `Receipt` is "<vault share symbol> Receipt".
 string constant RECEIPT_NAME_SUFFIX = " Receipt";
@@ -69,11 +64,24 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
 
     /// @inheritdoc ERC1155
     function uri(uint256) public view virtual override returns (string memory) {
-        return string.concat(DATA_URI_BASE64_PREFIX, RECEIPT_METADATA_DATA_URI);
+        bytes memory json = bytes(
+            string.concat(
+                "{\"decimals\":18,\"description\":\"1 of these receipts can be burned alongside 1 ",
+                _vaultShareSymbol(),
+                " to redeem ",
+                _vaultAssetSymbol(),
+                " from the vault.\",",
+                "\"name\":\"",
+                name(),
+                "\"}"
+            )
+        );
+
+        return string.concat(DATA_URI_BASE64_PREFIX, Base64.encode(json));
     }
 
     /// @inheritdoc IReceiptV2
-    function name() external view virtual returns (string memory) {
+    function name() public view virtual returns (string memory) {
         return string.concat(_vaultShareSymbol(), RECEIPT_NAME_SUFFIX);
     }
 

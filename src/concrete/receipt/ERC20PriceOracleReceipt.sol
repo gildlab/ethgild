@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Receipt, DATA_URI_BASE64_PREFIX} from "./Receipt.sol";
-import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
+import {Receipt, DATA_URI_BASE64_PREFIX, Base64} from "./Receipt.sol";
 import {LibFixedPointDecimalFormat} from "rain.math.fixedpoint/lib/format/LibFixedPointDecimalFormat.sol";
 import {ZeroReceiptId} from "../../error/ErrReceipt.sol";
 import {

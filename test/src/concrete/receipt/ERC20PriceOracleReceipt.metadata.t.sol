@@ -5,8 +5,6 @@ pragma solidity =0.8.25;
 import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
 import {TestReceiptManager} from "test/concrete/TestReceiptManager.sol";
 import {ERC20PriceOracleReceipt} from "src/concrete/receipt/ERC20PriceOracleReceipt.sol";
-import {Base64} from "solady/utils/Base64.sol";
-import {DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
 import {LibFixedPointDecimalFormat} from "rain.math.fixedpoint/lib/format/LibFixedPointDecimalFormat.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -79,55 +77,6 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
 }
 
 contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
-    struct Metadata {
-        uint8 decimals;
-        string description;
-        string name;
-    }
-
-    struct MetadataWithImage {
-        uint8 decimals;
-        string description;
-        string image;
-        string name;
-    }
-
-    function decodeMetadataURI(string memory uri) private pure returns (Metadata memory) {
-        uint256 uriLength = bytes(uri).length;
-        assembly ("memory-safe") {
-            mstore(uri, 29)
-        }
-        assertEq(uri, DATA_URI_BASE64_PREFIX);
-        assembly ("memory-safe") {
-            uri := add(uri, 29)
-            mstore(uri, sub(uriLength, 29))
-        }
-
-        string memory uriDecoded = string(Base64.decode(uri));
-        bytes memory uriJsonData = vm.parseJson(uriDecoded);
-
-        Metadata memory metadataJson = abi.decode(uriJsonData, (Metadata));
-        return metadataJson;
-    }
-
-    function decodeMetadataURIWithImage(string memory uri) private pure returns (MetadataWithImage memory) {
-        uint256 uriLength = bytes(uri).length;
-        assembly ("memory-safe") {
-            mstore(uri, 29)
-        }
-        assertEq(uri, DATA_URI_BASE64_PREFIX);
-        assembly ("memory-safe") {
-            uri := add(uri, 29)
-            mstore(uri, sub(uriLength, 29))
-        }
-
-        string memory uriDecoded = string(Base64.decode(uri));
-        bytes memory uriJsonData = vm.parseJson(uriDecoded);
-
-        MetadataWithImage memory metadataJson = abi.decode(uriJsonData, (MetadataWithImage));
-        return metadataJson;
-    }
-
     function testReceiptURIZeroError() external {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
