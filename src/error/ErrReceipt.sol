@@ -4,3 +4,6 @@ pragma solidity ^0.8.25;
 
 /// Thrown when the manager is not the caller.
 error OnlyManager();
+
+/// Thrown when the receipt ID is zero.
+error ZeroReceiptId();

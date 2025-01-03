@@ -10,15 +10,32 @@ import {IReceiptManagerV1} from "src/interface/IReceiptManagerV1.sol";
 /// @param to The transfer attemped to this address.
 error UnauthorizedTransfer(address from, address to);
 
+contract TestReceiptManagerAsset {
+    function symbol() external pure returns (string memory) {
+        return "TRMAsset";
+    }
+
+    function name() external pure returns (string memory) {
+        return "TestReceiptManagerAsset";
+    }
+}
+
 /// @title TestReceiptManager
 /// @notice TEST contract that can be the manager of an `IReceiptV2` and forward
 /// function calls to the manager restricted functions on the receipt. Completely
 /// insecure, intended for use only by the test harness to drive tests.
 contract TestReceiptManager is IReceiptManagerV1 {
+    /// The address of the test asset.
+    address internal iAsset;
+
     /// The address that is authorized to send transfers.
     address internal sFrom;
     /// The address that is authorized to receive transfers.
     address internal sTo;
+
+    constructor() {
+        iAsset = address(new TestReceiptManagerAsset());
+    }
 
     /// Anon can set the from address.
     /// @param from The new `from` address.
@@ -85,5 +102,17 @@ contract TestReceiptManager is IReceiptManagerV1 {
         bytes memory data
     ) external {
         receipt.managerTransferFrom(from, to, id, amount, data);
+    }
+
+    function name() external pure returns (string memory) {
+        return "TestReceiptManager";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "TRM";
+    }
+
+    function asset() external view returns (address) {
+        return iAsset;
     }
 }

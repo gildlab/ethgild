@@ -6,25 +6,23 @@ import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/IClone
 
 import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
+import {IReceiptVaultV1} from "../../interface/IReceiptVaultV1.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
+import {IERC20MetadataUpgradeable as IERC20Metadata} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
 
-/// @dev The URI for the metadata of the `Receipt` contract.
-/// Decodes to a simple generic receipt metadata object.
-/// `{"name":"Receipt","decimals":18,"description":"A receipt for a ReceiptVault."}`
-string constant RECEIPT_METADATA_DATA_URI =
-    "eyJuYW1lIjoiUmVjZWlwdCIsImRlY2ltYWxzIjoxOCwiZGVzY3JpcHRpb24iOiJBIHJlY2VpcHQgZm9yIGEgUmVjZWlwdFZhdWx0LiJ9";
+/// @dev The name of a `Receipt` is "<vault share symbol> Receipt".
+string constant RECEIPT_NAME_SUFFIX = " Receipt";
 
-/// @dev The symbol for the `Receipt` contract.
-string constant RECEIPT_SYMBOL = "RECEIPT";
-
-/// @dev The name for the `Receipt` contract.
-string constant RECEIPT_NAME = "Receipt";
+/// @dev The symbol of a `Receipt` is "<vault share symbol> RCPT".
+string constant RECEIPT_SYMBOL_SUFFIX = " RCPT";
 
 /// @title Receipt
 /// @notice The `IReceiptV2` for a `ReceiptVault`. Standard implementation allows
@@ -54,7 +52,9 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// implementation in `ReceiptFactory`.
     /// Compatible with `ICloneableV2`.
     function initialize(bytes memory data) external override initializer returns (bytes32) {
-        __ERC1155_init(string.concat(DATA_URI_BASE64_PREFIX, RECEIPT_METADATA_DATA_URI));
+        // `uri` is overridden in this contract so we can just initialize
+        // `ERC1155` with an empty string.
+        __ERC1155_init("");
 
         address receiptManager = abi.decode(data, (address));
         sManager = IReceiptManagerV1(receiptManager);
@@ -62,14 +62,46 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    /// @inheritdoc IReceiptV2
-    function name() external pure virtual returns (string memory) {
-        return RECEIPT_NAME;
+    /// @inheritdoc ERC1155
+    function uri(uint256) public view virtual override returns (string memory) {
+        bytes memory json = bytes(
+            string.concat(
+                "{\"decimals\":18,\"description\":\"1 of these receipts can be burned alongside 1 ",
+                _vaultShareSymbol(),
+                " to redeem ",
+                _vaultAssetSymbol(),
+                " from the vault.\",",
+                "\"name\":\"",
+                name(),
+                "\"}"
+            )
+        );
+
+        return string.concat(DATA_URI_BASE64_PREFIX, Base64.encode(json));
     }
 
     /// @inheritdoc IReceiptV2
-    function symbol() external pure virtual returns (string memory) {
-        return RECEIPT_SYMBOL;
+    function name() public view virtual returns (string memory) {
+        return string.concat(_vaultShareSymbol(), RECEIPT_NAME_SUFFIX);
+    }
+
+    /// @inheritdoc IReceiptV2
+    function symbol() external view virtual returns (string memory) {
+        return string.concat(_vaultShareSymbol(), RECEIPT_SYMBOL_SUFFIX);
+    }
+
+    /// Provides the symbol of the `ReceiptVault` ERC20 share token that manages
+    /// this `Receipt`. Can be overridden if the manager is not going to be
+    /// a `ReceiptVault`.
+    function _vaultShareSymbol() internal view virtual returns (string memory) {
+        return IERC20Metadata(payable(address(sManager))).symbol();
+    }
+
+    /// Provides the symbol of the ERC20 asset token that the `ReceiptVault`
+    /// managing this `Receipt` is accepting for mints. Can be overridden if the
+    /// manager is not going to be a `ReceiptVault`.
+    function _vaultAssetSymbol() internal view virtual returns (string memory) {
+        return IERC20Metadata(IReceiptVaultV1(payable(address(sManager))).asset()).symbol();
     }
 
     /// @inheritdoc IReceiptV2

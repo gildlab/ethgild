@@ -14,7 +14,8 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     function testInitialize() public {
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
         assertEq(receipt.manager(), address(testManager));
     }
 
@@ -27,7 +28,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -42,7 +44,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -65,7 +68,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -85,7 +89,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         vm.assume(fuzzedReceiptInformation.length > 0);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -124,7 +129,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         id = bound(id, 0, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -161,7 +167,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         id = bound(id, 0, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -196,7 +203,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         id = bound(id, 0, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -227,7 +235,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -252,7 +261,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         id = bound(id, 0, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -281,7 +291,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -317,7 +328,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         vm.assume(amountOne != amountTwo);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -352,7 +364,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
-        ReceiptContract receipt = createReceipt(alice);
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(alice))));
 
         vm.startPrank(alice);
         // Alice approves operator
@@ -376,7 +389,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
@@ -435,7 +449,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         tokenIds[1] = tokenId2;
         // Create a new receipt
         TestReceiptManager testManager = new TestReceiptManager();
-        ReceiptContract receipt = createReceipt(address(testManager));
+        ReceiptContract receipt =
+            ReceiptContract(iFactory.clone(address(iReceiptImplementation), abi.encode(address(testManager))));
 
         vm.startPrank(alice);
 
