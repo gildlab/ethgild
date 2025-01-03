@@ -153,8 +153,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         sManager.authorizeReceiptTransfer2(from, to);
     }
 
-    /// Emits `ReceiptInformation` if there is any data after checking with the
-    /// receipt manager for authorization.
+    /// Emits `ReceiptInformation` if there is any data.
     /// @param account The account that is emitting receipt information.
     /// @param id The id of the receipt this information is for.
     /// @param data The data being emitted as information for the receipt.

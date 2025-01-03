@@ -251,9 +251,10 @@ abstract contract ReceiptVault is
         returns (uint256)
     {
         uint256 id = _nextId();
-        uint256 shareRatio = _shareRatio(msg.sender, receiver, id, ShareAction.Mint);
 
-        uint256 assets = _calculateMint(shares, shareRatio, mintMinShareRatio);
+        uint256 assets =
+            _calculateMint(shares, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), mintMinShareRatio);
+
         _deposit(assets, receiver, shares, id, receiptInformation);
         Address.sendValue(payable(msg.sender), address(this).balance);
         return assets;
@@ -616,8 +617,6 @@ abstract contract ReceiptVault is
         // > MUST support a withdraw flow where the shares are burned from owner
         // > directly where owner is msg.sender or msg.sender has ERC-20
         // > approval over the shares of owner.
-        // Note that we do NOT require the caller has allowance over the receipt
-        // in order to burn the shares to withdraw assets.
         if (owner != msg.sender) {
             _spendAllowance(owner, msg.sender, shares);
 
