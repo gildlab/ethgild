@@ -141,7 +141,7 @@ abstract contract ReceiptVault is
     /// Deposits are payable so this allows refunds.
     receive() external payable {}
 
-    /// Initialize the `ReceiptVault` and .
+    /// Initialize the `ReceiptVault`.
     /// @param config All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase
     // slither-disable-next-line naming-convention
