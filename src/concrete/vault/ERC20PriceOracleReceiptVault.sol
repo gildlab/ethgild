@@ -113,6 +113,14 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         return ICLONEABLE_V2_SUCCESS;
     }
 
+    /// Not strictly necessary as the receipt address is emitted during
+    /// initialization but this is a convenience getter for the receipt address.
+    /// It isn't in the `ReceiptVault` implementation because we need to keep the
+    /// base contract code size down.
+    function receipt() external view returns (address) {
+        return address(sReceipt);
+    }
+
     /// The ID is the current oracle price always, even if this ID has already
     /// been issued for some other receipt, it will simply result in multiple
     /// holders of receipts with amounts of the same ID.

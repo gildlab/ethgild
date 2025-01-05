@@ -35,6 +35,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         address msgSender = address(0);
         IPriceOracleV2 priceOracle = IPriceOracleV2(payable(0));
         address assetAddress = address(0);
+        address receiptAddress = address(0);
         string memory name = "";
         string memory symbol = "";
         bool eventFound = false; // Flag to indicate whether the event log was found
@@ -53,6 +54,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
                 name = config.receiptVaultConfig.vaultConfig.name;
                 symbol = config.receiptVaultConfig.vaultConfig.symbol;
                 assetAddress = address(config.receiptVaultConfig.vaultConfig.asset);
+                receiptAddress = address(config.receiptVaultConfig.receipt);
                 eventFound = true; // Set the flag to true since event log was found
                 break;
             }
@@ -65,6 +67,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(name)));
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(symbol)));
+        assertEq(receiptAddress, vault.receipt());
     }
 
     /// Test creating several different vaults
