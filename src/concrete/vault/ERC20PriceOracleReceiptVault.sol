@@ -93,7 +93,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
 
     /// Initialization of the underlying receipt vault and price oracle.
-    function initialize(bytes memory data) external override initializer returns (bytes32) {
+    function initialize(bytes memory data) external virtual override initializer returns (bytes32) {
         ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
         priceOracle = IPriceOracleV2(config.priceOracle);
 
@@ -111,14 +111,6 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         );
 
         return ICLONEABLE_V2_SUCCESS;
-    }
-
-    /// Not strictly necessary as the receipt address is emitted during
-    /// initialization but this is a convenience getter for the receipt address.
-    /// It isn't in the `ReceiptVault` implementation because we need to keep the
-    /// base contract code size down.
-    function receipt() external view returns (address) {
-        return address(sReceipt);
     }
 
     /// The ID is the current oracle price always, even if this ID has already

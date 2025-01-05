@@ -6,7 +6,7 @@ import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/Receip
 import {OffchainAssetReceiptVault, CertificationExpired} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {

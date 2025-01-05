@@ -6,7 +6,7 @@ import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/IClone
 
 import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
-import {IReceiptVaultV1} from "../../interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV2} from "../../interface/IReceiptVaultV2.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
@@ -101,7 +101,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// managing this `Receipt` is accepting for mints. Can be overridden if the
     /// manager is not going to be a `ReceiptVault`.
     function _vaultAssetSymbol() internal view virtual returns (string memory) {
-        return IERC20Metadata(IReceiptVaultV1(payable(address(sManager))).asset()).symbol();
+        return IERC20Metadata(IReceiptVaultV2(payable(address(sManager))).asset()).symbol();
     }
 
     /// @inheritdoc IReceiptV2

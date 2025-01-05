@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount} from "src/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm, ReceiptContract} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
-import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
