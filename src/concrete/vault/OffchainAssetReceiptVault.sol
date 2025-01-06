@@ -207,12 +207,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// Rolename for ERC1155 tierer admins.
     bytes32 public constant ERC1155TIERER_ADMIN = keccak256("ERC1155TIERER_ADMIN");
 
-    /// Rolename for ERC20 snapshotter.
-    /// ERC20 snapshotter role is required to snapshot shares.
-    bytes32 public constant ERC20SNAPSHOTTER = keccak256("ERC20SNAPSHOTTER");
-    /// Rolename for ERC20 snapshotter admins.
-    bytes32 public constant ERC20SNAPSHOTTER_ADMIN = keccak256("ERC20SNAPSHOTTER_ADMIN");
-
     /// Rolename for ERC20 tierer.
     /// ERC20 tierer role is required to modify the tier contract for shares.
     bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
@@ -297,9 +291,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _setRoleAdmin(ERC1155TIERER, ERC1155TIERER_ADMIN);
         _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
 
-        _setRoleAdmin(ERC20SNAPSHOTTER, ERC20SNAPSHOTTER_ADMIN);
-        _setRoleAdmin(ERC20SNAPSHOTTER_ADMIN, ERC20SNAPSHOTTER_ADMIN);
-
         _setRoleAdmin(ERC20TIERER, ERC20TIERER_ADMIN);
         _setRoleAdmin(ERC20TIERER_ADMIN, ERC20TIERER_ADMIN);
 
@@ -314,7 +305,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _grantRole(CONFISCATOR_ADMIN, config.admin);
         _grantRole(DEPOSITOR_ADMIN, config.admin);
         _grantRole(ERC1155TIERER_ADMIN, config.admin);
-        _grantRole(ERC20SNAPSHOTTER_ADMIN, config.admin);
         _grantRole(ERC20TIERER_ADMIN, config.admin);
         _grantRole(HANDLER_ADMIN, config.admin);
         _grantRole(WITHDRAWER_ADMIN, config.admin);
@@ -323,7 +313,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             msg.sender,
             OffchainAssetReceiptVaultConfig({
                 admin: config.admin,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(sReceipt), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
             })
         );
 
@@ -422,15 +412,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
         _deposit(assets_, receiver_, shares_, id_, receiptInformation_);
         return shares_;
-    }
-
-    /// Exposes `ERC20Snapshot` from Open Zeppelin behind a role restricted call.
-    /// @param data_ Associated data relevant to the snapshot.
-    /// @return The snapshot ID as per Open Zeppelin.
-    function snapshot(bytes memory data_) external onlyRole(ERC20SNAPSHOTTER) returns (uint256) {
-        uint256 id_ = _snapshot();
-        emit SnapshotWithData(msg.sender, id_, data_);
-        return id_;
     }
 
     /// `ERC20TIERER` Role restricted setter for all internal state that drives
@@ -706,11 +687,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             address(erc1155Tier) == address(0)
                 || block.timestamp < erc1155Tier.reportTimeForTier(confiscatee, erc1155MinimumTier, erc1155TierContext)
         ) {
-            IReceiptV2 receipt = sReceipt;
-            confiscatedReceiptAmount = receipt.balanceOf(confiscatee, id);
+            confiscatedReceiptAmount = receipt().balanceOf(confiscatee, id);
             if (confiscatedReceiptAmount > 0) {
                 emit ConfiscateReceipt(msg.sender, confiscatee, id, confiscatedReceiptAmount, data);
-                receipt.managerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
+                receipt().managerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
             }
         }
         return confiscatedReceiptAmount;

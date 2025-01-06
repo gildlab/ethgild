@@ -29,7 +29,6 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         bytes32 handlerAdmin = vault.HANDLER_ADMIN();
         bytes32 erc20TiererAdmin = vault.ERC20TIERER_ADMIN();
         bytes32 erc1155TiererAdmin = vault.ERC1155TIERER_ADMIN();
-        bytes32 erc20SnapshotterAdmin = vault.ERC20SNAPSHOTTER_ADMIN();
         bytes32 confiscatorAdmin = vault.CONFISCATOR_ADMIN();
 
         assertTrue(vault.hasRole(depositorAdmin, alice));
@@ -38,7 +37,6 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         assertTrue(vault.hasRole(handlerAdmin, alice));
         assertTrue(vault.hasRole(erc20TiererAdmin, alice));
         assertTrue(vault.hasRole(erc1155TiererAdmin, alice));
-        assertTrue(vault.hasRole(erc20SnapshotterAdmin, alice));
         assertTrue(vault.hasRole(confiscatorAdmin, alice));
     }
 
@@ -139,33 +137,6 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         // Set Tier
         vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
-    }
-
-    /// Test to checks snapshott without role
-    function testSnapshotWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        bytes memory data
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(vault.ERC20SNAPSHOTTER())
-            )
-        );
-        vm.expectRevert(bytes(errorMessage));
-        // Snapshot
-        vault.snapshot(data);
     }
 
     /// Test to checks Certify without role

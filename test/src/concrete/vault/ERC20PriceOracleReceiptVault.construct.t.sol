@@ -67,7 +67,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(name)));
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(symbol)));
-        assertEq(receiptAddress, vault.receipt());
+        assertEq(receiptAddress, address(vault.receipt()));
     }
 
     /// Test creating several different vaults

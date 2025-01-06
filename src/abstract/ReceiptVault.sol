@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ERC20SnapshotUpgradeable as ERC20Snapshot} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/ERC20SnapshotUpgradeable.sol";
+import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 import {ReentrancyGuardUpgradeable as ReentrancyGuard} from
     "openzeppelin-contracts-upgradeable/contracts/security/ReentrancyGuardUpgradeable.sol";
 import {IERC20Upgradeable as IERC20} from
@@ -12,8 +11,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
-import {IReceiptVaultV1} from "../interface/IReceiptVaultV1.sol";
-import {IReceiptV2} from "../interface/IReceiptV2.sol";
+import {IReceiptVaultV2, IReceiptVaultV1, IReceiptV2} from "../interface/IReceiptVaultV2.sol";
 import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -110,8 +108,8 @@ abstract contract ReceiptVault is
     IReceiptManagerV1,
     Multicall,
     ReentrancyGuard,
-    ERC20Snapshot,
-    IReceiptVaultV1,
+    ERC20,
+    IReceiptVaultV2,
     ICloneableV2
 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -142,7 +140,7 @@ abstract contract ReceiptVault is
     /// Deposits are payable so this allows refunds.
     receive() external payable {}
 
-    /// Initialize the `ReceiptVault` and .
+    /// Initialize the `ReceiptVault`.
     /// @param config All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase
     // slither-disable-next-line naming-convention
@@ -150,21 +148,26 @@ abstract contract ReceiptVault is
         __Multicall_init();
         __ReentrancyGuard_init();
         __ERC20_init(config.name, config.symbol);
-        __ERC20Snapshot_init();
         sAsset = IERC20(config.asset);
 
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
-        IReceiptV2 receipt = IReceiptV2(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
-        sReceipt = receipt;
+        IReceiptV2 managedReceipt =
+            IReceiptV2(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+        sReceipt = managedReceipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
         // from the factory ourselves just above.
-        address receiptManager = receipt.manager();
+        address receiptManager = managedReceipt.manager();
         if (receiptManager != address(this)) {
             revert WrongManager(address(this), receiptManager);
         }
+    }
+
+    /// @inheritdoc IReceiptVaultV2
+    function receipt() public view virtual returns (IReceiptV2) {
+        return sReceipt;
     }
 
     /// The spec demands this function ignores per-user concerns. It seems to
@@ -516,7 +519,7 @@ abstract contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        sReceipt.managerMint(msg.sender, receiver, id, shares, receiptInformation);
+        receipt().managerMint(msg.sender, receiver, id, shares, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -544,7 +547,7 @@ abstract contract ReceiptVault is
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
         return _calculateRedeem(
-            sReceipt.balanceOf(owner, id),
+            receipt().balanceOf(owner, id),
             // Assume the owner is hypothetically withdrawing for themselves.
             _shareRatio(owner, owner, id, ShareAction.Burn)
         );
@@ -623,14 +626,14 @@ abstract contract ReceiptVault is
             // We additionally require that the sender is an operator of the
             // receipt in order to burn the owner's shares.
             // Same error message as Open Zeppelin ERC1155 implementation.
-            require(sReceipt.isApprovedForAll(owner, msg.sender), "ERC1155: caller is not token owner or approved");
+            require(receipt().isApprovedForAll(owner, msg.sender), "ERC1155: caller is not token owner or approved");
         }
 
         // ERC20 burn.
         _burn(owner, shares);
 
         // ERC1155 burn.
-        sReceipt.managerBurn(msg.sender, owner, id, shares, receiptInformation);
+        receipt().managerBurn(msg.sender, owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets, receiver, owner, shares, id);
@@ -638,7 +641,7 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV1
     function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
-        return sReceipt.balanceOf(owner, id);
+        return receipt().balanceOf(owner, id);
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -657,13 +660,26 @@ abstract contract ReceiptVault is
         return assets;
     }
 
-    /// @inheritdoc ERC20Snapshot
+    /// @inheritdoc ERC20
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._beforeTokenTransfer(from, to, amount);
     }
 
-    function _afterWithdraw(uint256 assets, address receiver, address, uint256, uint256) internal virtual {
+    /// Hook that can be overridden/extended to add additional checks and
+    /// effects to the `withdraw` function. This hook is called after the shares
+    /// have been burned and the receipt has been burned. The default behaviour
+    /// is to transfer the assets to the receiver.
+    /// @param assets Amount of assets being withdrawn.
+    /// @param receiver Receiver of the withdrawn assets.
+    /// @param owner Owner of the shares being burned.
+    /// @param shares Amount of shares being burned.
+    /// @param id ID of the receipt being burned.
+    function _afterWithdraw(uint256 assets, address receiver, address owner, uint256 shares, uint256 id)
+        internal
+        virtual
+    {
         // Default is to send assets after burning shares.
         IERC20(asset()).safeTransfer(receiver, assets);
+        (owner, shares, id);
     }
 }

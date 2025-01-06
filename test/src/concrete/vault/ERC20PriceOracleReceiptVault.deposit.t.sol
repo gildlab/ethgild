@@ -12,7 +12,7 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {IReceiptVaultV1} from "src/interface/IReceiptVaultV1.sol";
+import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";

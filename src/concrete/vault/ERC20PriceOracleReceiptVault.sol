@@ -93,32 +93,24 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
 
     /// Initialization of the underlying receipt vault and price oracle.
-    function initialize(bytes memory data) external override initializer returns (bytes32) {
+    function initialize(bytes memory data) external virtual override initializer returns (bytes32) {
         ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
         priceOracle = IPriceOracleV2(config.priceOracle);
 
         __ReceiptVault_init(config.vaultConfig);
 
-        // Slither false positive due to needing sReceipt to be set so that the
+        // Slither false positive due to needing receipt to be set so that the
         // event can be emitted with the correct data.
         // slither-disable-next-line reentrancy-events
         emit ERC20PriceOracleReceiptVaultInitialized(
             msg.sender,
             ERC20PriceOracleReceiptVaultConfig({
                 priceOracle: config.priceOracle,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(sReceipt), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
             })
         );
 
         return ICLONEABLE_V2_SUCCESS;
-    }
-
-    /// Not strictly necessary as the receipt address is emitted during
-    /// initialization but this is a convenience getter for the receipt address.
-    /// It isn't in the `ReceiptVault` implementation because we need to keep the
-    /// base contract code size down.
-    function receipt() external view returns (address) {
-        return address(sReceipt);
     }
 
     /// The ID is the current oracle price always, even if this ID has already
