@@ -11,8 +11,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
-import {IReceiptVaultV2, IReceiptVaultV1} from "../interface/IReceiptVaultV2.sol";
-import {IReceiptV2} from "../interface/IReceiptV2.sol";
+import {IReceiptVaultV2, IReceiptVaultV1, IReceiptV2} from "../interface/IReceiptVaultV2.sol";
 import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -167,7 +166,7 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV2
-    function receipt() external view returns (IReceiptV2) {
+    function receipt() public view virtual returns (IReceiptV2) {
         return sReceipt;
     }
 
@@ -520,7 +519,7 @@ abstract contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        sReceipt.managerMint(msg.sender, receiver, id, shares, receiptInformation);
+        receipt().managerMint(msg.sender, receiver, id, shares, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -548,7 +547,7 @@ abstract contract ReceiptVault is
         // latter requires knowing the assets being withdrawn, which is what we
         // are attempting to reverse engineer from the owner's receipt balance.
         return _calculateRedeem(
-            sReceipt.balanceOf(owner, id),
+            receipt().balanceOf(owner, id),
             // Assume the owner is hypothetically withdrawing for themselves.
             _shareRatio(owner, owner, id, ShareAction.Burn)
         );
@@ -627,14 +626,14 @@ abstract contract ReceiptVault is
             // We additionally require that the sender is an operator of the
             // receipt in order to burn the owner's shares.
             // Same error message as Open Zeppelin ERC1155 implementation.
-            require(sReceipt.isApprovedForAll(owner, msg.sender), "ERC1155: caller is not token owner or approved");
+            require(receipt().isApprovedForAll(owner, msg.sender), "ERC1155: caller is not token owner or approved");
         }
 
         // ERC20 burn.
         _burn(owner, shares);
 
         // ERC1155 burn.
-        sReceipt.managerBurn(msg.sender, owner, id, shares, receiptInformation);
+        receipt().managerBurn(msg.sender, owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets, receiver, owner, shares, id);
@@ -642,7 +641,7 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV1
     function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
-        return sReceipt.balanceOf(owner, id);
+        return receipt().balanceOf(owner, id);
     }
 
     /// @inheritdoc IReceiptVaultV1

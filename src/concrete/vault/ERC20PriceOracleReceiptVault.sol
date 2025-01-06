@@ -99,14 +99,14 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
 
         __ReceiptVault_init(config.vaultConfig);
 
-        // Slither false positive due to needing sReceipt to be set so that the
+        // Slither false positive due to needing receipt to be set so that the
         // event can be emitted with the correct data.
         // slither-disable-next-line reentrancy-events
         emit ERC20PriceOracleReceiptVaultInitialized(
             msg.sender,
             ERC20PriceOracleReceiptVaultConfig({
                 priceOracle: config.priceOracle,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(sReceipt), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
             })
         );
 

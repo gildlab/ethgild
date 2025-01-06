@@ -313,7 +313,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             msg.sender,
             OffchainAssetReceiptVaultConfig({
                 admin: config.admin,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(sReceipt), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
             })
         );
 
@@ -687,11 +687,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
             address(erc1155Tier) == address(0)
                 || block.timestamp < erc1155Tier.reportTimeForTier(confiscatee, erc1155MinimumTier, erc1155TierContext)
         ) {
-            IReceiptV2 receipt = sReceipt;
-            confiscatedReceiptAmount = receipt.balanceOf(confiscatee, id);
+            confiscatedReceiptAmount = receipt().balanceOf(confiscatee, id);
             if (confiscatedReceiptAmount > 0) {
                 emit ConfiscateReceipt(msg.sender, confiscatee, id, confiscatedReceiptAmount, data);
-                receipt.managerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
+                receipt().managerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
             }
         }
         return confiscatedReceiptAmount;
