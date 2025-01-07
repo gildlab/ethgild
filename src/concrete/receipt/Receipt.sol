@@ -51,7 +51,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// Initializes the `Receipt` so that it is usable as a clonable
     /// implementation in `ReceiptFactory`.
     /// Compatible with `ICloneableV2`.
-    function initialize(bytes memory data) public override initializer returns (bytes32) {
+    function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
         // `uri` is overridden in this contract so we can just initialize
         // `ERC1155` with an empty string.
         __ERC1155_init("");
