@@ -93,7 +93,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
 
     /// Initialization of the underlying receipt vault and price oracle.
-    function initialize(bytes memory data) external virtual override initializer returns (bytes32) {
+    function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
         ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
         priceOracle = IPriceOracleV2(config.priceOracle);
 
