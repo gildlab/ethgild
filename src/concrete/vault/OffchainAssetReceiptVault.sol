@@ -261,7 +261,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// this as appropriate according to standard Open Zeppelin access control
     /// logic.
     /// @param data All config required to initialize abi encoded.
-    function initialize(bytes memory data) external override initializer returns (bytes32) {
+    function initialize(bytes memory data) public override initializer returns (bytes32) {
         OffchainAssetVaultConfig memory config = abi.decode(data, (OffchainAssetVaultConfig));
 
         __ReceiptVault_init(config.vaultConfig);
