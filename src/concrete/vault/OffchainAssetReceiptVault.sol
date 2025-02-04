@@ -23,7 +23,7 @@ error NonZeroAsset();
 /// Thrown when the admin is address zero.
 error ZeroAdmin();
 
-/// Thrown when a certification reference a block number in the future that
+/// Thrown when a certification references a block number in the future that
 /// cannot possibly have been seen yet.
 /// @param account The certifier that attempted the certify.
 /// @param referenceBlockNumber The future block number.
