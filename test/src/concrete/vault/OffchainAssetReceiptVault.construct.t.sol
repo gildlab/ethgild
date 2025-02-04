@@ -22,7 +22,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
         iFactory.clone(
             address(iImplementation),
-            abi.encode(OffchainAssetVaultConfig({admin: address(0), vaultConfig: vaultConfig}))
+            abi.encode(OffchainAssetVaultConfig({initialAdmin: address(0), vaultConfig: vaultConfig}))
         );
     }
 
@@ -37,7 +37,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         iFactory.clone(
-            address(iImplementation), abi.encode(OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig}))
+            address(iImplementation),
+            abi.encode(OffchainAssetVaultConfig({initialAdmin: alice, vaultConfig: vaultConfig}))
         );
     }
 
@@ -53,7 +54,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         // Simulate transaction from alice
         vm.prank(alice);
         OffchainAssetVaultConfig memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+            OffchainAssetVaultConfig({initialAdmin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
@@ -79,7 +80,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
                 (address sender, OffchainAssetReceiptVaultConfig memory config) =
                     abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
                 msgSender = sender;
-                admin = config.admin;
+                admin = config.initialAdmin;
                 eventFound = true; // Set the flag to true since event log was found
                 break;
             }
@@ -104,7 +105,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
         OffchainAssetVaultConfig memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfig({admin: alice, vaultConfig: vaultConfig});
+            OffchainAssetVaultConfig({initialAdmin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
