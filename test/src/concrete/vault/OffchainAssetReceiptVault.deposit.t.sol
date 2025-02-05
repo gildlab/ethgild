@@ -278,7 +278,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, receiptInformation);
+        vault.certify(timestamp, false, receiptInformation);
 
         // Set nextTimestamp as timestamp
         vm.warp(nextTimestamp);

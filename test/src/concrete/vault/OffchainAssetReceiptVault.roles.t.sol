@@ -167,7 +167,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(bytes(errorMessage));
 
         // Call the certify function
-        vault.certify(certifyUntil, block.number, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         vm.stopPrank();
     }

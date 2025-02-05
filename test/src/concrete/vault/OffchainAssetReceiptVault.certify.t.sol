@@ -5,7 +5,6 @@ pragma solidity =0.8.25;
 import {
     OffchainAssetReceiptVault,
     ZeroCertifyUntil,
-    FutureReferenceBlock,
     CertificationExpired
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IReceiptV2} from "src/interface/IReceiptV2.sol";
@@ -15,7 +14,7 @@ import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.so
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract CertifyTest is OffchainAssetReceiptVaultTest {
-    event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
+    event Certify(address sender, uint256 certifyUntil, bool forceUntil, bytes data);
 
     /// Test certify event
     function testCertify(
@@ -24,7 +23,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         bytes memory data,
         uint256 blockNumber,
         bool forceUntil
@@ -34,7 +32,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         vm.roll(blockNumber);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
@@ -50,10 +47,10 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, referenceBlockNumber, forceUntil, data);
+        emit Certify(bob, certifyUntil, forceUntil, data);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         vm.stopPrank();
     }
@@ -62,7 +59,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
     function testCertifyRevertOnZeroCertifyUntil(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
-        uint256 referenceBlockNumber,
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
@@ -74,7 +70,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         vm.roll(blockNumber);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
 
         uint256 certifyUntil = 0;
 
@@ -93,49 +88,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector, bob));
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
-
-        vm.stopPrank();
-    }
-
-    /// Test certify reverts on future reference
-    function testCertifyRevertOnFutureReferenceBlock(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 certifyUntil,
-        bytes memory data,
-        uint256 fuzzedFutureBlockNumber,
-        uint256 blockNumber,
-        bool forceUntil
-    ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-
-        blockNumber = bound(block.number, 0, type(uint256).max);
-        vm.roll(blockNumber);
-        fuzzedFutureBlockNumber = bound(fuzzedFutureBlockNumber, blockNumber + 1, type(uint256).max - 1);
-
-        certifyUntil = bound(certifyUntil, 1, blockNumber);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        // Grant CERTIFIER role to bob
-        vault.grantRole(vault.CERTIFIER(), bob);
-
-        // Prank as Bob for the transaction
-        vm.startPrank(bob);
-
-        // Expect the Certify event
-        vm.expectRevert(abi.encodeWithSelector(FutureReferenceBlock.selector, bob, fuzzedFutureBlockNumber));
-
-        // Call the certify function
-        vault.certify(certifyUntil, fuzzedFutureBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         vm.stopPrank();
     }
@@ -151,7 +104,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 forceCertifyUntil,
-        uint256 referenceBlockNumber
+        uint256 blockNumber
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -162,9 +115,9 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max);
 
         vm.assume(forceCertifyUntil != timestamp);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, type(uint256).max);
+        blockNumber = bound(blockNumber, 0, type(uint256).max);
 
-        vm.roll(referenceBlockNumber);
+        vm.roll(blockNumber);
 
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max / 2);
@@ -183,10 +136,10 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.warp(timestamp);
 
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, timestamp, referenceBlockNumber, false, data);
+        emit Certify(bob, timestamp, false, data);
 
         // Certify system till the current timestamp
-        vault.certify(timestamp, referenceBlockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
@@ -195,10 +148,10 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.warp(forceCertifyUntil);
 
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, forceCertifyUntil, referenceBlockNumber, true, data);
+        emit Certify(bob, forceCertifyUntil, true, data);
 
         // Certify system till the current timestamp
-        vault.certify(forceCertifyUntil, referenceBlockNumber, true, data);
+        vault.certify(forceCertifyUntil, true, data);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 2, data);
@@ -218,8 +171,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         bytes memory data,
         uint256 certifyUntil,
         uint256 forceCertifyUntil,
-        uint256 futureTime,
-        uint256 referenceBlockNumber
+        uint256 futureTime
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -230,7 +182,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         forceCertifyUntil = bound(forceCertifyUntil, 1, type(uint32).max);
 
         futureTime = bound(futureTime, forceCertifyUntil + 1, type(uint256).max);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
 
@@ -246,7 +197,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Certify system till the current timestamp
-        vault.certify(certifyUntil, referenceBlockNumber, false, data);
+        vault.certify(certifyUntil, false, data);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
@@ -254,10 +205,10 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, forceCertifyUntil, referenceBlockNumber, true, data);
+        emit Certify(bob, forceCertifyUntil, true, data);
 
         // Certify with forceUntil true
-        vault.certify(forceCertifyUntil, referenceBlockNumber, true, data);
+        vault.certify(forceCertifyUntil, true, data);
         vm.warp(futureTime);
 
         // Expect revert because the certification is expired
@@ -281,7 +232,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         bytes memory data,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         uint256 blockNumber,
         bool forceUntil
     ) external {
@@ -297,7 +247,6 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(alice != bob);
@@ -312,7 +261,7 @@ contract CertifyTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob for the transaction
         vm.startPrank(bob);
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);

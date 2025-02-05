@@ -108,7 +108,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         uint8 fuzzedMinTier,
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         address tierAddress,
         bool forceUntil
     ) external {
@@ -116,7 +115,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(tierAddress != address(0));
@@ -138,7 +136,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, fuzzedData);
+        vault.certify(certifyUntil, forceUntil, fuzzedData);
 
         vault.setERC1155Tier(tierAddress, fuzzedMinTier, fuzzedContext, fuzzedData);
 
@@ -167,7 +165,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         uint8 fuzzedMinTier,
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         uint256 timestamp,
         address tierAddress,
         bool forceUntil
@@ -176,7 +173,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
         timestamp = bound(timestamp, 1, certifyUntil);
         vm.assume(tierAddress != address(0));
@@ -199,7 +195,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, fuzzedData);
+        vault.certify(certifyUntil, forceUntil, fuzzedData);
 
         vault.setERC1155Tier(tierAddress, fuzzedMinTier, fuzzedContext, fuzzedData);
 
@@ -234,7 +230,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        // referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
         transferAmount = bound(transferAmount, 1, type(uint256).max);
 
@@ -256,7 +251,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob
         vm.startPrank(bob);
 
-        vault.certify(certifyUntil, block.number, forceUntil, fuzzedData);
+        vault.certify(certifyUntil, forceUntil, fuzzedData);
 
         // Set the tier for token movement restriction
         vault.setERC20Tier(tier, fuzzedMinTier, fuzzedContext, fuzzedData);
@@ -292,7 +287,6 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-        // referenceBlockNumber = bound(referenceBlockNumber, 0, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
         transferAmount = bound(transferAmount, 1, type(uint256).max);
 
@@ -314,7 +308,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob
         vm.startPrank(bob);
 
-        vault.certify(certifyUntil, block.number, forceUntil, fuzzedData);
+        vault.certify(certifyUntil, forceUntil, fuzzedData);
 
         // Set the tier for token movement restriction
         vault.setERC1155Tier(tier, fuzzedMinTier, fuzzedContext, fuzzedData);
@@ -341,14 +335,12 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         uint8 fuzzedMinTier,
         uint256[] memory fuzzedContext,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         address tierAddress,
         bool forceUntil
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         vm.assume(tierAddress != address(0));
@@ -372,7 +364,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Bob
         vm.startPrank(bob);
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
+        vault.certify(certifyUntil, forceUntil, bytes(""));
 
         vm.warp(certifyUntil);
 

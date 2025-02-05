@@ -23,12 +23,6 @@ error NonZeroAsset();
 /// Thrown when the admin is address zero.
 error ZeroAdmin();
 
-/// Thrown when a certification references a block number in the future that
-/// cannot possibly have been seen yet.
-/// @param sender The certifier that attempted the certify.
-/// @param referenceBlockNumber The future block number.
-error FutureReferenceBlock(address sender, uint256 referenceBlockNumber);
-
 /// Thrown when a 0 certification time is attempted.
 /// @param sender The certifier that attempted the certify.
 error ZeroCertifyUntil(address sender);
@@ -131,12 +125,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param certifyUntil The time the system is newly certified until.
     /// Normally this will be a future time but certifiers MAY set it to a time
     /// in the past which will immediately freeze all transfers.
-    /// @param referenceBlockNumber The block number that the auditor referenced
-    /// to justify the certification.
     /// @param forceUntil Whether the certifier forced the certification time.
     /// @param data The certifier MAY provide additional supporting data such
     /// as an auditor's report/comments etc.
-    event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
+    event Certify(address sender, uint256 certifyUntil, bool forceUntil, bytes data);
 
     /// Shares have been confiscated from a user who is not currently meeting
     /// the ERC20 tier contract minimum requirements.
@@ -451,32 +443,30 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// The certifier is STRONGLY RECOMMENDED to submit a summary report of the
     /// process and findings used to justify the modified `certifiedUntil` time.
     ///
-    /// The certifier MUST provide the block number containing the information
-    /// they used to perform the certification. It is entirely possible that
-    /// new mints/burns and receipt information becomes available after the
-    /// certification process begins, so the certifier MUST specify the block
-    /// in which they snapshotted the evidence used for the audit. This block
-    /// cannot be in the future relative to the moment of certification because
-    /// that would imply the audit is based on snapshotting data that doesn't
-    /// exist yet.
+    /// The certifier is STRONGLY RECOMMENDED to provide an unambiguous reference
+    /// to the information used to inform their certification decision. This
+    /// can be provided in the `data` field, and the onchain contracts are
+    /// unopinionated as to what encoding convention is used, but it is
+    /// important that end users can easily access and understand it somehow.
+    /// This reference information is a SNAPSHOT of data and so if the onchain
+    /// state moves relative to this snapshot (e.g. vault owner mints additional
+    /// tokens while auditor is driving home from the gold vault), the auditor
+    /// can't accidentally certify data that doesn't match what they reviewed
+    /// in the real world. A good example of this would be a block number or a
+    /// transaction hash from the blockchain this contract is deployed to, from
+    /// which an offchain indexer such as a subgraph can compile all the mints,
+    /// burns, additional data, etc. It is also STRONGLY RECOMMENDED that a self
+    /// describing data format is used so that clients can interpret whether the
+    /// reference is a block number, a transaction hash, a URL, etc.
     ///
     /// The certifier is STRONGLY RECOMMENDED to ONLY use publicly available
-    /// documents directly referenced by `ReceiptInformation` events to make
-    /// their decision. The certifier MUST specify if, when and why private data
-    /// was used to inform their certification decision. This is critical for
-    /// share (ERC20) holders who inform themselves on the quality of their
-    /// tokens not only by the overall audit outcome, but by the integrity of the
-    /// sum of its parts in the form of receipt and associated visible
-    /// information.
-    ///
-    /// The certifier SHOULD NOT provide a certification time that predates the
-    /// timestamp of the reference block, although this is NOT enforced onchain.
-    /// This would imply that the system was certified until a time before the
-    /// data that informed the certification even existed.
-    /// The reason this is NOT enforced onchain is that the certification time is
-    /// a timestamp and the reference block number is a block number, these two
-    /// time keeping systems are NOT directly interchangeable so it's impossible
-    /// to enforce this invariant onchain.
+    /// documents e.g. those directly referenced by `ReceiptInformation` events
+    /// to make their decision. The certifier SHOULD specify if, when and why
+    /// private data was used to inform their certification decision. This is
+    /// important for share (ERC20) holders who inform themselves on the quality
+    /// of their tokens not only by the overall audit outcome, but by the
+    /// integrity of the sum of its parts in the form of receipt and associated
+    /// visible information.
     ///
     /// Note that redundant certifications MAY be submitted. Regardless of the
     /// `forceUntil` flag the transaction WILL NOT REVERT and the `Certify`
@@ -487,21 +477,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// in parallel if it helps maintain trust in the overall system.
     ///
     /// @param certifyUntil The new `certifiedUntil` time.
-    /// @param referenceBlockNumber The highest block number that the certifier
-    /// has seen at the moment they decided to certify the system.
     /// @param forceUntil Whether to force the new certification time even if it
     /// is in the past relative to the existing certification time.
-    /// @param data Arbitrary data justifying the certification. MAY reference
-    /// data available offchain e.g. on IPFS.
-    function certify(uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes calldata data)
-        external
-        onlyRole(CERTIFIER)
-    {
+    /// @param data Arbitrary data justifying the certification. SHOULD reference
+    /// data available offchain e.g. indexed data from this blockchain, IPFS,
+    /// etc.
+    function certify(uint256 certifyUntil, bool forceUntil, bytes calldata data) external onlyRole(CERTIFIER) {
         if (certifyUntil == 0) {
             revert ZeroCertifyUntil(msg.sender);
-        }
-        if (referenceBlockNumber > block.number) {
-            revert FutureReferenceBlock(msg.sender, referenceBlockNumber);
         }
         // A certifier can set `forceUntil` to true to force a _decrease_ in
         // the `certifiedUntil` time, which is unusual but MAY need to be done
@@ -509,7 +492,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         if (forceUntil || certifyUntil > sCertifiedUntil) {
             sCertifiedUntil = uint32(certifyUntil);
         }
-        emit Certify(msg.sender, certifyUntil, referenceBlockNumber, forceUntil, data);
+        emit Certify(msg.sender, certifyUntil, forceUntil, data);
     }
 
     /// Reverts if some transfer is disallowed. Handles both share and receipt

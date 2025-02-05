@@ -7,7 +7,7 @@ import {OffchainAssetReceiptVault, CertificationExpired} from "src/concrete/vaul
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAssetReceiptVaultTest {
-    event Certify(address sender, uint256 certifyUntil, uint256 referenceBlockNumber, bool forceUntil, bytes data);
+    event Certify(address sender, uint256 certifyUntil, bool forceUntil, bytes data);
 
     ///Test AuthorizeReceiptTransfer reverts if system not certified
     function testAuthorizeReceiptTransferRevert(
@@ -74,7 +74,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         // Set nextTimestamp as timestamp
         vm.warp(nextTimestamp);
@@ -95,7 +95,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         bytes memory data,
         uint256 blockNumber,
         bool forceUntil
@@ -106,7 +105,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         blockNumber = bound(blockNumber, 0, type(uint32).max);
         vm.roll(blockNumber);
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
@@ -120,10 +118,10 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, referenceBlockNumber, forceUntil, data);
+        emit Certify(bob, certifyUntil, forceUntil, data);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
         // Authorize should succeed
