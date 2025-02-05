@@ -11,12 +11,12 @@ library LibOffchainAssetVaultCreator {
     function createVault(
         ICloneableFactoryV2 factory,
         OffchainAssetReceiptVault implementation,
-        address admin,
+        address initialAdmin,
         string memory name,
         string memory symbol
     ) internal returns (OffchainAssetReceiptVault) {
         OffchainAssetVaultConfig memory offchainAssetVaultConfig = OffchainAssetVaultConfig({
-            admin: admin,
+            initialAdmin: initialAdmin,
             vaultConfig: VaultConfig({asset: address(0), name: name, symbol: symbol})
         });
 
