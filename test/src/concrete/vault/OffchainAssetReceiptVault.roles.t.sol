@@ -6,13 +6,27 @@ import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetRece
 import {VaultConfig, MinShareRatio} from "src/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetVaultConfig,
-    OffchainAssetReceiptVaultConfig
+    OffchainAssetVaultConfigV2,
+    OffchainAssetReceiptVaultConfigV2,
+    DEPOSITOR_ADMIN,
+    WITHDRAWER_ADMIN,
+    HANDLER_ADMIN,
+    ERC20TIERER_ADMIN,
+    ERC1155TIERER_ADMIN,
+    CONFISCATOR_ADMIN,
+    ERC20TIERER,
+    ERC1155TIERER,
+    CERTIFIER,
+    CONFISCATOR
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "../../../concrete/TestErc20.sol";
 import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {
+    OffchainAssetReceiptVaultAuthorizorV1,
+    CERTIFIER_ADMIN
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
@@ -23,21 +37,13 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        bytes32 depositorAdmin = vault.DEPOSITOR_ADMIN();
-        bytes32 withdrawerAdmin = vault.WITHDRAWER_ADMIN();
-        bytes32 certifierAdmin = vault.CERTIFIER_ADMIN();
-        bytes32 handlerAdmin = vault.HANDLER_ADMIN();
-        bytes32 erc20TiererAdmin = vault.ERC20TIERER_ADMIN();
-        bytes32 erc1155TiererAdmin = vault.ERC1155TIERER_ADMIN();
-        bytes32 confiscatorAdmin = vault.CONFISCATOR_ADMIN();
-
-        assertTrue(vault.hasRole(depositorAdmin, alice));
-        assertTrue(vault.hasRole(withdrawerAdmin, alice));
-        assertTrue(vault.hasRole(certifierAdmin, alice));
-        assertTrue(vault.hasRole(handlerAdmin, alice));
-        assertTrue(vault.hasRole(erc20TiererAdmin, alice));
-        assertTrue(vault.hasRole(erc1155TiererAdmin, alice));
-        assertTrue(vault.hasRole(confiscatorAdmin, alice));
+        assertTrue(vault.hasRole(DEPOSITOR_ADMIN, alice));
+        assertTrue(vault.hasRole(WITHDRAWER_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CERTIFIER_ADMIN, alice));
+        assertTrue(vault.hasRole(HANDLER_ADMIN, alice));
+        assertTrue(vault.hasRole(ERC20TIERER_ADMIN, alice));
+        assertTrue(vault.hasRole(ERC1155TIERER_ADMIN, alice));
+        assertTrue(vault.hasRole(CONFISCATOR_ADMIN, alice));
     }
 
     /// Test to checks deposit without depositor role
@@ -94,7 +100,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(alice),
                 " is missing role ",
-                vm.toString(vault.ERC20TIERER())
+                vm.toString(ERC20TIERER)
             )
         );
 
@@ -130,7 +136,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(alice),
                 " is missing role ",
-                vm.toString(vault.ERC1155TIERER())
+                vm.toString(ERC1155TIERER)
             )
         );
         vm.expectRevert(bytes(errorMessage));
@@ -161,7 +167,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(alice),
                 " is missing role ",
-                vm.toString(vault.CERTIFIER())
+                vm.toString(CERTIFIER)
             )
         );
         vm.expectRevert(bytes(errorMessage));
@@ -191,7 +197,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
                 "AccessControl: account ",
                 StringsUpgradeable.toHexString(alice),
                 " is missing role ",
-                vm.toString(vault.CONFISCATOR())
+                vm.toString(CONFISCATOR)
             )
         );
         vm.expectRevert(bytes(errorMessage));

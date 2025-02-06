@@ -6,7 +6,11 @@ import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 import {
     UnauthorizedSenderTier,
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfig
+    OffchainAssetReceiptVaultConfigV2,
+    ERC20TIERER,
+    ERC1155TIERER,
+    CERTIFIER,
+    DEPOSITOR
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
@@ -41,7 +45,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Grant the necessary role
-        vault.grantRole(vault.ERC20TIERER(), bob);
+        vault.grantRole(ERC20TIERER, bob);
         vm.stopPrank();
 
         // Prank as Bob
@@ -82,7 +86,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Grant the necessary role
-        vault.grantRole(vault.ERC1155TIERER(), bob);
+        vault.grantRole(ERC1155TIERER, bob);
         vm.stopPrank();
 
         // Prank as Bob
@@ -127,8 +131,8 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.CERTIFIER(), bob);
-        vault.grantRole(vault.ERC1155TIERER(), bob);
+        vault.grantRole(CERTIFIER, bob);
+        vault.grantRole(ERC1155TIERER, bob);
 
         vm.stopPrank();
 
@@ -185,8 +189,8 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.CERTIFIER(), bob);
-        vault.grantRole(vault.ERC1155TIERER(), bob);
+        vault.grantRole(CERTIFIER, bob);
+        vault.grantRole(ERC1155TIERER, bob);
 
         vm.stopPrank();
 
@@ -243,9 +247,9 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Grant the necessary role
-        vault.grantRole(vault.ERC20TIERER(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        vault.grantRole(ERC20TIERER, bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(CERTIFIER, bob);
         vm.stopPrank();
 
         // Prank as Bob
@@ -300,9 +304,9 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Grant the necessary role
-        vault.grantRole(vault.ERC1155TIERER(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        vault.grantRole(ERC1155TIERER, bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(CERTIFIER, bob);
         vm.stopPrank();
 
         // Prank as Bob
@@ -355,9 +359,9 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.CERTIFIER(), bob);
-        vault.grantRole(vault.ERC20TIERER(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(CERTIFIER, bob);
+        vault.grantRole(ERC20TIERER, bob);
+        vault.grantRole(DEPOSITOR, bob);
 
         vm.stopPrank();
 
