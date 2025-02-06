@@ -437,14 +437,12 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         bool forceUntil
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
@@ -466,7 +464,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Certify
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         // Call the deposit function
         vault.deposit(assets, alice, minShareRatio, data);
@@ -525,14 +523,12 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         bool forceUntil
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
@@ -550,7 +546,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(vault.CERTIFIER(), alice);
 
         // Certify
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         // Alice deposits to herself
         vault.deposit(assets, alice, minShareRatio, data);

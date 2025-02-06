@@ -19,9 +19,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         uint256 fuzzedKeyJohn,
         uint256 balance,
-        uint256 referenceBlockNumber,
         uint256 certifyUntil
-    ) internal view returns (address alice, address bob, address john, uint256, uint256, uint256) {
+    ) internal pure returns (address alice, address bob, address john, uint256, uint256) {
         // Ensure the fuzzed key is within the valid range for secp256k
         alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
         bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
@@ -30,10 +29,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.assume(bob != john);
 
         balance = bound(balance, 1, type(uint256).max); // Bound from one to avoid ZeroAssets
-        referenceBlockNumber = bound(referenceBlockNumber, 1, block.number);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max - 1); // substruct 1 for next bound
 
-        return (alice, bob, john, balance, referenceBlockNumber, certifyUntil);
+        return (alice, bob, john, balance, certifyUntil);
     }
 
     function setUpVault(address alice, string memory assetName, string memory assetSymbol)
@@ -52,7 +50,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        uint256 referenceBlockNumber,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
@@ -60,8 +57,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     ) external {
         address alice;
         address bob;
-        (alice, bob,, balance, referenceBlockNumber, certifyUntil) =
-            setUpAddressesAndBounds(fuzzedKeyAlice, fuzzedKeyBob, 0, balance, referenceBlockNumber, certifyUntil);
+        (alice, bob,, balance, certifyUntil) =
+            setUpAddressesAndBounds(fuzzedKeyAlice, fuzzedKeyBob, 0, balance, certifyUntil);
 
         // Need setting future timestamp so system gets unsertified but transfer is possible
         // due to a handler role
@@ -79,7 +76,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
+        vault.certify(certifyUntil, forceUntil, bytes(""));
 
         vault.deposit(balance, bob, 1, bytes(""));
 
@@ -101,7 +98,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         uint256 fuzzedKeyJohn,
         string memory assetName,
-        uint256 referenceBlockNumber,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
@@ -110,9 +106,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         address alice;
         address bob;
         address john;
-        (alice, bob, john, balance, referenceBlockNumber, certifyUntil) = setUpAddressesAndBounds(
-            fuzzedKeyAlice, fuzzedKeyBob, fuzzedKeyJohn, balance, referenceBlockNumber, certifyUntil
-        );
+        (alice, bob, john, balance, certifyUntil) =
+            setUpAddressesAndBounds(fuzzedKeyAlice, fuzzedKeyBob, fuzzedKeyJohn, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
@@ -130,7 +125,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
+        vault.certify(certifyUntil, forceUntil, bytes(""));
 
         // Cannot fuzz assets value due to variable limits
         vault.deposit(balance, bob, 1, bytes(""));
@@ -153,7 +148,6 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         uint256 fuzzedKeyJohn,
         string memory assetName,
-        uint256 referenceBlockNumber,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
@@ -162,9 +156,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         address alice;
         address bob;
         address john;
-        (alice, bob, john, balance, referenceBlockNumber, certifyUntil) = setUpAddressesAndBounds(
-            fuzzedKeyAlice, fuzzedKeyBob, fuzzedKeyJohn, balance, referenceBlockNumber, certifyUntil
-        );
+        (alice, bob, john, balance, certifyUntil) =
+            setUpAddressesAndBounds(fuzzedKeyAlice, fuzzedKeyBob, fuzzedKeyJohn, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
@@ -182,7 +175,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(vault.DEPOSITOR(), alice);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, bytes(""));
+        vault.certify(certifyUntil, forceUntil, bytes(""));
 
         // Cannot fuzz assets value due to variable limits
         vault.deposit(balance, bob, 1, bytes(""));

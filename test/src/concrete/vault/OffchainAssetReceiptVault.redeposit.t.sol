@@ -77,7 +77,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vault.deposit(assets, bob, minShareRatio, data);
 
@@ -122,7 +122,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vault.deposit(assets, bob, minShareRatio, data);
 
@@ -174,7 +174,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
@@ -270,7 +270,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vault.deposit(assets, alice, minShareRatio, data);
 
@@ -320,7 +320,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, alice, assets, assets, 1, data);
@@ -373,7 +373,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system till the current timestamp
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vault.deposit(depositAmount, bob, minShareRatio, data);
         vault.deposit(anotherDepositAmount, bob, minShareRatio, data);
@@ -429,7 +429,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
         // Certify system
-        vault.certify(timestamp, blockNumber, false, data);
+        vault.certify(timestamp, false, data);
 
         vault.deposit(depositAmount, bob, minShareRatio, data);
         vault.deposit(anotherDepositAmount, bob, minShareRatio, data);

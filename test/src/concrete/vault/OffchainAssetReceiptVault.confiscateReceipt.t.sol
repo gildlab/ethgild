@@ -87,7 +87,6 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         bytes memory data,
         uint256 certifyUntil,
-        uint256 referenceBlockNumber,
         uint256 blockNumber,
         bool forceUntil
     ) external {
@@ -99,7 +98,6 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
 
-        referenceBlockNumber = bound(referenceBlockNumber, 0, blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
         // Assume that assets is less than uint256 max
@@ -120,7 +118,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the certify function
-        vault.certify(certifyUntil, referenceBlockNumber, forceUntil, data);
+        vault.certify(certifyUntil, forceUntil, data);
 
         vault.deposit(assets, alice, minShareRatio, data);
 
