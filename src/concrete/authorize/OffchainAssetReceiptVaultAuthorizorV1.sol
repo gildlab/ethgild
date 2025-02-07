@@ -17,10 +17,15 @@ bytes32 constant CERTIFIER = keccak256("CERTIFIER");
 /// @dev Rolename for certifier admins.
 bytes32 constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
 
+/// @dev Configuration for the OffchainAssetReceiptVaultAuthorizorV1.
+/// @param initialAdmin The initial admin of the contract.
 struct OffchainAssetReceiptVaultAuthorizorV1Config {
     address initialAdmin;
 }
 
+/// @title OffchainAssetReceiptVaultAuthorizorV1
+/// Implements the IAuthorizeV1 interface and provides a simple role based
+/// access control for the OffchainAssetReceiptVault.
 contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, AccessControl {
     constructor() {
         _disableInitializers();
@@ -49,6 +54,10 @@ contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, Ac
         return ICLONEABLE_V2_SUCCESS;
     }
 
+    /// Permissions are treated as roles in this implementation. This makes the
+    /// implementation roughly equivalent overall to the `onlyRole` modifier in
+    /// OpenZeppelin's AccessControl.
+    /// @inheritdoc IAuthorizeV1
     function authorize(address user, bytes32 permission, bytes calldata data) external view override {
         if (hasRole(permission, user)) {
             return;
