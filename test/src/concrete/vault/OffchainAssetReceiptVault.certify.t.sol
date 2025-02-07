@@ -18,7 +18,7 @@ import {
     CERTIFIER
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
-contract CertifyTest is OffchainAssetReceiptVaultTest {
+contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     event Certify(address sender, uint256 certifyUntil, bool forceUntil, bytes data);
 
     /// Test certify event
