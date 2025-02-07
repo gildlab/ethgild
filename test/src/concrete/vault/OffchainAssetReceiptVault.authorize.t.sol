@@ -5,9 +5,8 @@ pragma solidity =0.8.25;
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {
-    OffchainAssetReceiptVault
-} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVault, IAuthorizeV1} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {LibExtrospectERC1167Proxy} from "rain.extrospection/lib/LibExtrospectERC1167Proxy.sol";
 
 contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest {
     /// Test that authorize contract is as initialized.
@@ -19,10 +18,43 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
     ) external {
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-            (bob);
+        (bob);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         address authorizor = address(vault.authorizor());
+        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
+        assertTrue(isProxy);
+        assertEq(implementation, address(iAuthorizorImplementation));
+    }
+
+    /// Test that the owner can change the authorizor.
+    function testChangeAuthorizor(
+        uint256 fuzzedKeyAlice,
+        uint256 fuzzedKeyBob,
+        string memory assetName,
+        string memory assetSymbol,
+        address newAuthorizor
+    ) external {
+        (address alice, address bob) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
+        address authorizor = address(vault.authorizor());
+        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
+        assertTrue(isProxy);
+        assertEq(implementation, address(iAuthorizorImplementation));
+
+        vm.prank(alice);
+        vault.setAuthorizor(IAuthorizeV1(newAuthorizor));
+
+        authorizor = address(vault.authorizor());
+        assertEq(authorizor, newAuthorizor);
+
+        // Bob cannot set the authorizor.
+        vm.prank(bob);
+        vm.expectRevert("Ownable: caller is not the owner");
+        vault.setAuthorizor(IAuthorizeV1(newAuthorizor));
     }
 }
