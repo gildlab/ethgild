@@ -19,7 +19,7 @@ contract OffchainAssetReceiptVaultTest is Test {
 
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
-    OffchainAssetReceiptVaultAuthorizorV1 internal immutable iAuthorizor;
+    OffchainAssetReceiptVaultAuthorizorV1 internal immutable iAuthorizorImplementation;
     ReceiptContract internal immutable receiptImplementation;
 
     constructor() {
@@ -28,14 +28,16 @@ contract OffchainAssetReceiptVaultTest is Test {
         iImplementation = new OffchainAssetReceiptVault(
             ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: receiptImplementation})
         );
-        iAuthorizor = new OffchainAssetReceiptVaultAuthorizorV1();
+        iAuthorizorImplementation = new OffchainAssetReceiptVaultAuthorizorV1();
     }
 
     function createVault(address admin, string memory name, string memory symbol)
         internal
         returns (OffchainAssetReceiptVault)
     {
-        return LibOffchainAssetVaultCreator.createVault(iFactory, iImplementation, iAuthorizor, admin, name, symbol);
+        return LibOffchainAssetVaultCreator.createVault(
+            iFactory, iImplementation, iAuthorizorImplementation, admin, name, symbol
+        );
     }
 
     function getReceipt(Vm.Log[] memory logs) internal pure returns (ReceiptContract) {

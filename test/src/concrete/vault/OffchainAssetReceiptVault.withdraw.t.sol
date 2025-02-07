@@ -12,6 +12,7 @@ import {
 import {OffchainAssetReceiptVaultTest, Vm, ReceiptContract} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
 import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Checks that balance owner balance changes after withdraw
@@ -459,7 +460,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
 
         vault.grantRole(DEPOSITOR, bob);
         vault.grantRole(WITHDRAWER, bob);
-        vault.grantRole(CERTIFIER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -544,7 +545,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vault.grantRole(DEPOSITOR, bob);
         vault.grantRole(DEPOSITOR, alice);
         vault.grantRole(WITHDRAWER, bob);
-        vault.grantRole(CERTIFIER, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
 
         // Certify
         vault.certify(certifyUntil, forceUntil, data);

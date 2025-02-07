@@ -16,6 +16,7 @@ import {OffchainAssetReceiptVaultTest, Vm} from "../../../abstract/OffchainAsset
 import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract TiersTest is OffchainAssetReceiptVaultTest {
     event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
@@ -131,7 +132,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(CERTIFIER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
         vault.grantRole(ERC1155TIERER, bob);
 
         vm.stopPrank();
@@ -189,7 +190,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(CERTIFIER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
         vault.grantRole(ERC1155TIERER, bob);
 
         vm.stopPrank();
@@ -249,7 +250,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Grant the necessary role
         vault.grantRole(ERC20TIERER, bob);
         vault.grantRole(DEPOSITOR, bob);
-        vault.grantRole(CERTIFIER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
         vm.stopPrank();
 
         // Prank as Bob
@@ -306,7 +307,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Grant the necessary role
         vault.grantRole(ERC1155TIERER, bob);
         vault.grantRole(DEPOSITOR, bob);
-        vault.grantRole(CERTIFIER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
         vm.stopPrank();
 
         // Prank as Bob
@@ -359,7 +360,7 @@ contract TiersTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(CERTIFIER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
         vault.grantRole(ERC20TIERER, bob);
         vault.grantRole(DEPOSITOR, bob);
 

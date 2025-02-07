@@ -16,8 +16,8 @@ import {
     CONFISCATOR_ADMIN,
     ERC20TIERER,
     ERC1155TIERER,
-    CERTIFIER,
-    CONFISCATOR
+    CONFISCATOR,
+    CertifyStateChange
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "../../../concrete/TestErc20.sol";
@@ -25,7 +25,9 @@ import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
     OffchainAssetReceiptVaultAuthorizorV1,
-    CERTIFIER_ADMIN
+    CERTIFIER_ADMIN,
+    CERTIFIER,
+    Unauthorized
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
@@ -153,6 +155,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         bytes memory data
     ) external {
+        vm.assume(certifyUntil > 0);
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
@@ -162,15 +165,22 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         bool forceUntil = false;
 
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(CERTIFIER)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                CERTIFIER,
+                abi.encode(
+                    CertifyStateChange({
+                        oldCertifiedUntil: 0,
+                        newCertifiedUntil: certifyUntil,
+                        userCertifyUntil: certifyUntil,
+                        forceUntil: forceUntil,
+                        data: data
+                    })
+                )
             )
         );
-        vm.expectRevert(bytes(errorMessage));
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
