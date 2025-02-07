@@ -13,6 +13,7 @@ import {
 } from "../../abstract/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
@@ -158,7 +159,7 @@ bytes32 constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     using Math for uint256;
 
     /// Contract has initialized.
@@ -268,6 +269,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
 
         sAuthorizor = IAuthorizeV1(config.authorizor);
 
+        _transferOwnership(config.initialAdmin);
+
         // Define all admin roles. Note that admins can admin each other which
         // is a double edged sword. ANY admin can forcibly take over the entire
         // role by removing all other admins.
@@ -309,8 +312,16 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         return ICLONEABLE_V2_SUCCESS;
     }
 
+    /// Returns the current authorizor contract.
     function authorizor() external view returns (IAuthorizeV1) {
         return sAuthorizor;
+    }
+
+    /// Sets the authorizor contract. This is a critical operation and should be
+    /// done with extreme care by the owner.
+    /// @param newAuthorizor The new authorizor contract.
+    function setAuthorizor(IAuthorizeV1 newAuthorizor) external onlyOwner {
+        sAuthorizor = newAuthorizor;
     }
 
     /// Apply standard transfer restrictions to receipt transfers.
