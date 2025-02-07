@@ -6,9 +6,9 @@ import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetVaultConfig,
-    OffchainAssetReceiptVaultConfig,
-    ZeroAdmin,
+    OffchainAssetVaultConfigV2,
+    OffchainAssetReceiptVaultConfigV2,
+    ZeroInitialAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IReceiptV2} from "src/interface/IReceiptV2.sol";
@@ -16,13 +16,19 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
-    function testZeroAdmin(string memory assetName, string memory assetSymbol) external {
+    function testZeroInitialAdmin(string memory assetName, string memory assetSymbol) external {
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
 
-        vm.expectRevert(abi.encodeWithSelector(ZeroAdmin.selector));
+        vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
         iFactory.clone(
             address(iImplementation),
-            abi.encode(OffchainAssetVaultConfig({initialAdmin: address(0), vaultConfig: vaultConfig}))
+            abi.encode(
+                OffchainAssetVaultConfigV2({
+                    initialAdmin: address(0),
+                    authorizor: iAuthorizorImplementation,
+                    vaultConfig: vaultConfig
+                })
+            )
         );
     }
 
@@ -38,7 +44,13 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         iFactory.clone(
             address(iImplementation),
-            abi.encode(OffchainAssetVaultConfig({initialAdmin: alice, vaultConfig: vaultConfig}))
+            abi.encode(
+                OffchainAssetVaultConfigV2({
+                    initialAdmin: alice,
+                    authorizor: iAuthorizorImplementation,
+                    vaultConfig: vaultConfig
+                })
+            )
         );
     }
 
@@ -53,8 +65,11 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         // Simulate transaction from alice
         vm.prank(alice);
-        OffchainAssetVaultConfig memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfig({initialAdmin: alice, vaultConfig: vaultConfig});
+        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
+            initialAdmin: alice,
+            authorizor: iAuthorizorImplementation,
+            vaultConfig: vaultConfig
+        });
 
         // Start recording logs
         vm.recordLogs();
@@ -73,12 +88,12 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                        "OffchainAssetReceiptVaultInitializedV2(address,(address,address,(address,(address,string,string))))"
                     )
             ) {
                 // Decode the event data
-                (address sender, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                (address sender, OffchainAssetReceiptVaultConfigV2 memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));
                 msgSender = sender;
                 admin = config.initialAdmin;
                 eventFound = true; // Set the flag to true since event log was found
@@ -104,8 +119,11 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
-        OffchainAssetVaultConfig memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfig({initialAdmin: alice, vaultConfig: vaultConfig});
+        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
+            initialAdmin: alice,
+            authorizor: iAuthorizorImplementation,
+            vaultConfig: vaultConfig
+        });
 
         // Start recording logs
         vm.recordLogs();
@@ -123,12 +141,12 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitialized(address,(address,(address,(address,string,string))))"
+                        "OffchainAssetReceiptVaultInitializedV2(address,(address,address,(address,(address,string,string))))"
                     )
             ) {
                 // Decode the event data
-                (address sender, OffchainAssetReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfig));
+                (address sender, OffchainAssetReceiptVaultConfigV2 memory config) =
+                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));
                 receiptAddress = config.receiptVaultConfig.receipt;
                 msgSender = sender;
                 break;

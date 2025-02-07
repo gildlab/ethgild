@@ -4,11 +4,17 @@ pragma solidity =0.8.25;
 
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfig
+    OffchainAssetReceiptVaultConfigV2,
+    CONFISCATOR,
+    DEPOSITOR
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {
+    OffchainAssetReceiptVaultAuthorizorV1,
+    CERTIFIER
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
@@ -64,8 +70,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(vault.CONFISCATOR(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
+        vault.grantRole(CONFISCATOR, bob);
+        vault.grantRole(DEPOSITOR, bob);
 
         // Prank as Bob for tranactions
         vm.startPrank(bob);
@@ -107,9 +113,9 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
-        vault.grantRole(vault.CONFISCATOR(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        vault.grantRole(CONFISCATOR, bob);
+        vault.grantRole(DEPOSITOR, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
 
         // Prank as Bob for transactions
         vm.startPrank(bob);

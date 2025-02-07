@@ -13,15 +13,16 @@ import {
 } from "../../abstract/ReceiptVault.sol";
 import {AccessControlUpgradeable as AccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
+import {IAuthorizeV1} from "../../interface/IAuthorizeV1.sol";
+
+import {CERTIFIER, ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
-
-/// Thrown when the admin is address zero.
-error ZeroAdmin();
 
 /// Thrown when a 0 certification time is attempted.
 /// @param sender The certifier that attempted the certify.
@@ -52,11 +53,13 @@ error CertificationExpired(address from, address to, uint256 certifiedUntil, uin
 /// to the vault atomically during initialization so there is no opportunity for
 /// an attacker to corrupt the initialzation process.
 /// @param initialAdmin as per `OffchainAssetReceiptVaultConfig`.
+/// @param authorizor as per `OffchainAssetReceiptVaultConfig`.
 /// @param vaultConfig MUST be used by the factory to build a
 /// `ReceiptVaultConfig` once the receipt address is known and management has
 /// been set to the vault contract.
-struct OffchainAssetVaultConfig {
+struct OffchainAssetVaultConfigV2 {
     address initialAdmin;
+    IAuthorizeV1 authorizor;
     VaultConfig vaultConfig;
 }
 
@@ -66,11 +69,69 @@ struct OffchainAssetVaultConfig {
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and everything else).
+/// @param authorizor The authorizor contract that will be used to authorize
+/// sensitive operations.
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
-struct OffchainAssetReceiptVaultConfig {
+struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
+    IAuthorizeV1 authorizor;
     ReceiptVaultConfig receiptVaultConfig;
 }
+
+/// Represents a change in the certification state of the system.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the change.
+/// @param oldCertifiedUntil The previous certification time.
+/// @param newCertifiedUntil The new certification time. May be the same as the
+/// old certification time according to the logic of `certify`.
+/// @param userCertifyUntil The certification time that the certifier attempted
+/// to set.
+/// @param forceUntil Whether the certifier forced the certification time.
+/// @param data Arbitrary data justifying the certification as provided by the
+/// certifier.
+struct CertifyStateChange {
+    uint256 oldCertifiedUntil;
+    uint256 newCertifiedUntil;
+    uint256 userCertifyUntil;
+    bool forceUntil;
+    bytes data;
+}
+
+/// @dev Rolename for confiscator.
+/// Confiscator role is required to confiscate shares and/or receipts.
+bytes32 constant CONFISCATOR = keccak256("CONFISCATOR");
+/// @dev Rolename for confiscator admins.
+bytes32 constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
+
+/// @dev Rolename for depositors.
+/// Depositor role is required to mint new shares and receipts.
+bytes32 constant DEPOSITOR = keccak256("DEPOSITOR");
+/// @dev Rolename for depositor admins.
+bytes32 constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
+
+/// @dev Rolename for ERC1155 tierer.
+/// ERC1155 tierer role is required to modify the tier contract for receipts.
+bytes32 constant ERC1155TIERER = keccak256("ERC1155TIERER");
+/// @dev Rolename for ERC1155 tierer admins.
+bytes32 constant ERC1155TIERER_ADMIN = keccak256("ERC1155TIERER_ADMIN");
+
+/// @dev Rolename for ERC20 tierer.
+/// ERC20 tierer role is required to modify the tier contract for shares.
+bytes32 constant ERC20TIERER = keccak256("ERC20TIERER");
+/// @dev Rolename for ERC20 tierer admins.
+bytes32 constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+
+/// @dev Rolename for handlers.
+/// Handler role is required to accept tokens during system freeze.
+bytes32 constant HANDLER = keccak256("HANDLER");
+/// @dev Rolename for handler admins.
+bytes32 constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+
+/// @dev Rolename for withdrawers.
+/// Withdrawer role is required to burn shares and receipts.
+bytes32 constant WITHDRAWER = keccak256("WITHDRAWER");
+/// @dev Rolename for withdrawer admins.
+bytes32 constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
 
 /// @title OffchainAssetReceiptVault
 /// @notice Enables issuers of offchain assets to create a token that they can
@@ -112,13 +173,13 @@ struct OffchainAssetReceiptVaultConfig {
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     using Math for uint256;
 
     /// Contract has initialized.
     /// @param sender The `msg.sender` constructing the contract.
     /// @param config All initialization config.
-    event OffchainAssetReceiptVaultInitialized(address sender, OffchainAssetReceiptVaultConfig config);
+    event OffchainAssetReceiptVaultInitializedV2(address sender, OffchainAssetReceiptVaultConfigV2 config);
 
     /// A new certification time has been set.
     /// @param sender The certifier setting the new time.
@@ -167,47 +228,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param data Associated data for the change in tier config.
     event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
 
-    /// Rolename for certifiers.
-    /// Certifier role is required to extend the `certifiedUntil` time.
-    bytes32 public constant CERTIFIER = keccak256("CERTIFIER");
-    /// Rolename for certifier admins.
-    bytes32 public constant CERTIFIER_ADMIN = keccak256("CERTIFIER_ADMIN");
-
-    /// Rolename for confiscator.
-    /// Confiscator role is required to confiscate shares and/or receipts.
-    bytes32 public constant CONFISCATOR = keccak256("CONFISCATOR");
-    /// Rolename for confiscator admins.
-    bytes32 public constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
-
-    /// Rolename for depositors.
-    /// Depositor role is required to mint new shares and receipts.
-    bytes32 public constant DEPOSITOR = keccak256("DEPOSITOR");
-    /// Rolename for depositor admins.
-    bytes32 public constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
-
-    /// Rolename for ERC1155 tierer.
-    /// ERC1155 tierer role is required to modify the tier contract for receipts.
-    bytes32 public constant ERC1155TIERER = keccak256("ERC1155TIERER");
-    /// Rolename for ERC1155 tierer admins.
-    bytes32 public constant ERC1155TIERER_ADMIN = keccak256("ERC1155TIERER_ADMIN");
-
-    /// Rolename for ERC20 tierer.
-    /// ERC20 tierer role is required to modify the tier contract for shares.
-    bytes32 public constant ERC20TIERER = keccak256("ERC20TIERER");
-    /// Rolename for ERC20 tierer admins.
-    bytes32 public constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
-
-    /// Rolename for handlers.
-    /// Handler role is required to accept tokens during system freeze.
-    bytes32 public constant HANDLER = keccak256("HANDLER");
-    /// Rolename for handler admins.
-    bytes32 public constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
-
-    /// Rolename for withdrawers.
-    /// Withdrawer role is required to burn shares and receipts.
-    bytes32 public constant WITHDRAWER = keccak256("WITHDRAWER");
-    /// Rolename for withdrawer admins.
-    bytes32 public constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
+    IAuthorizeV1 sAuthorizor;
 
     /// The largest issued id. The next id issued will be larger than this.
     uint256 private sHighwaterId;
@@ -215,7 +236,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// The system is certified until this timestamp. If this is in the past then
     /// general transfers of shares and receipts will fail until the system can
     /// be certified to a future time.
-    uint32 private sCertifiedUntil;
+    uint256 internal sCertifiedUntil;
 
     /// The minimum tier required for an address to receive shares.
     uint8 private sErc20MinimumTier;
@@ -246,7 +267,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// logic.
     /// @param data All config required to initialize abi encoded.
     function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
-        OffchainAssetVaultConfig memory config = abi.decode(data, (OffchainAssetVaultConfig));
+        OffchainAssetVaultConfigV2 memory config = abi.decode(data, (OffchainAssetVaultConfigV2));
 
         __ReceiptVault_init(config.vaultConfig);
         __AccessControl_init();
@@ -257,15 +278,16 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         }
         // The config admin MUST be set.
         if (config.initialAdmin == address(0)) {
-            revert ZeroAdmin();
+            revert ZeroInitialAdmin();
         }
+
+        sAuthorizor = IAuthorizeV1(config.authorizor);
+
+        _transferOwnership(config.initialAdmin);
 
         // Define all admin roles. Note that admins can admin each other which
         // is a double edged sword. ANY admin can forcibly take over the entire
         // role by removing all other admins.
-        _setRoleAdmin(CERTIFIER, CERTIFIER_ADMIN);
-        _setRoleAdmin(CERTIFIER_ADMIN, CERTIFIER_ADMIN);
-
         _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
         _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
 
@@ -285,7 +307,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
 
         // Grant every admin role to the configured initial admin.
-        _grantRole(CERTIFIER_ADMIN, config.initialAdmin);
         _grantRole(CONFISCATOR_ADMIN, config.initialAdmin);
         _grantRole(DEPOSITOR_ADMIN, config.initialAdmin);
         _grantRole(ERC1155TIERER_ADMIN, config.initialAdmin);
@@ -293,15 +314,28 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
         _grantRole(HANDLER_ADMIN, config.initialAdmin);
         _grantRole(WITHDRAWER_ADMIN, config.initialAdmin);
 
-        emit OffchainAssetReceiptVaultInitialized(
+        emit OffchainAssetReceiptVaultInitializedV2(
             msg.sender,
-            OffchainAssetReceiptVaultConfig({
+            OffchainAssetReceiptVaultConfigV2({
                 initialAdmin: config.initialAdmin,
+                authorizor: config.authorizor,
                 receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
             })
         );
 
         return ICLONEABLE_V2_SUCCESS;
+    }
+
+    /// Returns the current authorizor contract.
+    function authorizor() external view returns (IAuthorizeV1) {
+        return sAuthorizor;
+    }
+
+    /// Sets the authorizor contract. This is a critical operation and should be
+    /// done with extreme care by the owner.
+    /// @param newAuthorizor The new authorizor contract.
+    function setAuthorizor(IAuthorizeV1 newAuthorizor) external onlyOwner {
+        sAuthorizor = newAuthorizor;
     }
 
     /// Apply standard transfer restrictions to receipt transfers.
@@ -482,17 +516,28 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl {
     /// @param data Arbitrary data justifying the certification. SHOULD reference
     /// data available offchain e.g. indexed data from this blockchain, IPFS,
     /// etc.
-    function certify(uint256 certifyUntil, bool forceUntil, bytes calldata data) external onlyRole(CERTIFIER) {
+    function certify(uint256 certifyUntil, bool forceUntil, bytes calldata data) external {
         if (certifyUntil == 0) {
             revert ZeroCertifyUntil(msg.sender);
         }
+        CertifyStateChange memory certifyStateChange = CertifyStateChange({
+            oldCertifiedUntil: sCertifiedUntil,
+            newCertifiedUntil: sCertifiedUntil,
+            userCertifyUntil: certifyUntil,
+            forceUntil: forceUntil,
+            data: data
+        });
+
         // A certifier can set `forceUntil` to true to force a _decrease_ in
         // the `certifiedUntil` time, which is unusual but MAY need to be done
         // in the case of rectifying a prior mistake.
         if (forceUntil || certifyUntil > sCertifiedUntil) {
-            sCertifiedUntil = uint32(certifyUntil);
+            sCertifiedUntil = certifyUntil;
+            certifyStateChange.newCertifiedUntil = sCertifiedUntil;
         }
         emit Certify(msg.sender, certifyUntil, forceUntil, data);
+
+        sAuthorizor.authorize(msg.sender, CERTIFIER, abi.encode(certifyStateChange));
     }
 
     /// Reverts if some transfer is disallowed. Handles both share and receipt
