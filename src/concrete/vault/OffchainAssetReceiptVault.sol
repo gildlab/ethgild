@@ -78,6 +78,17 @@ struct OffchainAssetReceiptVaultConfigV2 {
     ReceiptVaultConfig receiptVaultConfig;
 }
 
+/// Represents a change in the certification state of the system.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the change.
+/// @param oldCertifiedUntil The previous certification time.
+/// @param newCertifiedUntil The new certification time. May be the same as the
+/// old certification time according to the logic of `certify`.
+/// @param userCertifyUntil The certification time that the certifier attempted
+/// to set.
+/// @param forceUntil Whether the certifier forced the certification time.
+/// @param data Arbitrary data justifying the certification as provided by the
+/// certifier.
 struct CertifyStateChange {
     uint256 oldCertifiedUntil;
     uint256 newCertifiedUntil;
