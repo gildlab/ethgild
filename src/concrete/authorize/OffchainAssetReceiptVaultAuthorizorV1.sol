@@ -57,6 +57,7 @@ contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, Ac
     /// Permissions are treated as roles in this implementation. This makes the
     /// implementation roughly equivalent overall to the `onlyRole` modifier in
     /// OpenZeppelin's AccessControl.
+    /// As this is implemented as `view` we don't need to enforce the caller.
     /// @inheritdoc IAuthorizeV1
     function authorize(address user, bytes32 permission, bytes calldata data) external view override {
         if (hasRole(permission, user)) {
