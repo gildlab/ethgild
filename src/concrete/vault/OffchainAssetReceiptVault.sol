@@ -53,6 +53,7 @@ error CertificationExpired(address from, address to, uint256 certifiedUntil, uin
 /// to the vault atomically during initialization so there is no opportunity for
 /// an attacker to corrupt the initialzation process.
 /// @param initialAdmin as per `OffchainAssetReceiptVaultConfig`.
+/// @param authorizor as per `OffchainAssetReceiptVaultConfig`.
 /// @param vaultConfig MUST be used by the factory to build a
 /// `ReceiptVaultConfig` once the receipt address is known and management has
 /// been set to the vault contract.
@@ -68,6 +69,8 @@ struct OffchainAssetVaultConfigV2 {
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and everything else).
+/// @param authorizor The authorizor contract that will be used to authorize
+/// sensitive operations.
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
