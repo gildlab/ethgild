@@ -2,13 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {OffchainAssetReceiptVault, HANDLER, DEPOSITOR} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVault, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {
     OffchainAssetReceiptVaultAuthorizorV1,
-    CERTIFIER
+    FREEZE_HANDLER
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
@@ -75,9 +75,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
-        vault.grantRole(HANDLER, bob);
-        vault.grantRole(DEPOSITOR, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        vault.grantRole(FREEZE_HANDLER, bob);
+        vault.grantRole(DEPOSIT, alice);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));
@@ -124,9 +124,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
-        vault.grantRole(HANDLER, bob);
-        vault.grantRole(DEPOSITOR, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        vault.grantRole(FREEZE_HANDLER, bob);
+        vault.grantRole(DEPOSIT, alice);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));
@@ -174,9 +174,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
-        vault.grantRole(HANDLER, john);
-        vault.grantRole(DEPOSITOR, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        vault.grantRole(FREEZE_HANDLER, john);
+        vault.grantRole(DEPOSIT, alice);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));

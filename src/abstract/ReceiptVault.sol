@@ -12,7 +12,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV2, IReceiptVaultV1, IReceiptV2} from "../interface/IReceiptVaultV2.sol";
-import {IReceiptManagerV1} from "../interface/IReceiptManagerV1.sol";
+import {IReceiptManagerV2} from "../interface/IReceiptManagerV2.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -105,7 +105,7 @@ struct ReceiptVaultConfig {
 /// each other in parallel, allowing trust to be "policed" at the liquidity and
 /// free market layer.
 abstract contract ReceiptVault is
-    IReceiptManagerV1,
+    IReceiptManagerV2,
     Multicall,
     ReentrancyGuard,
     ERC20,
@@ -271,12 +271,14 @@ abstract contract ReceiptVault is
         emit ReceiptVaultInformation(msg.sender, vaultInformation);
     }
 
-    /// @inheritdoc IReceiptManagerV1
-    function authorizeReceiptTransfer2(
-        address,
-        address // solhint-disable-next-line no-empty-blocks
-    ) external view virtual {
+    /// @inheritdoc IReceiptManagerV2
+    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
+        external
+        view
+        virtual
+    {
         // Authorize all receipt transfers by default.
+        (from, to, ids, amounts);
     }
 
     /// Standard check to enforce the minimum share ratio. If the share ratio is
@@ -394,31 +396,37 @@ abstract contract ReceiptVault is
     /// Share ratios are always number of shares per unit of assets in both mint
     /// and burn scenarios, and are 18 decimal fixed point numbers.
     ///
-    /// !param owner The owner of assets deposited on deposit and owner of
+    /// @param owner The owner of assets deposited on deposit and owner of
     /// shares burned on withdraw.
-    /// !param receiver The receiver of new shares minted on deposit and of
+    /// @param receiver The receiver of new shares minted on deposit and of
     /// withdrawn assets on withdraw.
     /// @param id The receipt ID being minted/burned in tandem with the shares.
+    /// @param amount The amount of assets or shares being minted or burned.
     /// @param shareAction Encodes whether shares are being minted or burned
     /// (hypothetically or actually) for this ratio calculation.
     /// @return
-    function _shareRatio(
-        address, // owner
-        address, // receiver
-        uint256 id,
-        ShareAction shareAction
-    ) internal view virtual returns (uint256) {
-        return _shareRatioUserAgnostic(id, shareAction);
+    function _shareRatio(address owner, address receiver, uint256 id, uint256 amount, ShareAction shareAction)
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        (owner, receiver);
+        return _shareRatioUserAgnostic(id, amount, shareAction);
     }
 
     /// Some functions in ERC4626 mandate the share ratio ignore the user.
     /// Otherwise identical to `_shareRatio`.
-    /// !param id As per `_shareRatio`.
-    /// !param shareAction As per `_shareRatio`.
-    function _shareRatioUserAgnostic(
-        uint256, // id
-        ShareAction // shareAction
-    ) internal view virtual returns (uint256) {
+    /// @param id As per `_shareRatio`.
+    /// @param amount As per `_shareRatio`.
+    /// @param shareAction As per `_shareRatio`.
+    function _shareRatioUserAgnostic(uint256 id, uint256 amount, ShareAction shareAction)
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        (id, amount, shareAction);
         // Default is 1:1 shares to assets.
         return 1e18;
     }

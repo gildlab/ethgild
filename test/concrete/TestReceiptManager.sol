@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {IReceiptV2} from "src/interface/IReceiptV2.sol";
-import {IReceiptManagerV1} from "src/interface/IReceiptManagerV1.sol";
+import {IReceiptManagerV2} from "src/interface/IReceiptManagerV2.sol";
 
 /// Thrown when a transfer is not authorized.
 /// @param from The transfer attempted from this address.
@@ -24,7 +24,7 @@ contract TestReceiptManagerAsset {
 /// @notice TEST contract that can be the manager of an `IReceiptV2` and forward
 /// function calls to the manager restricted functions on the receipt. Completely
 /// insecure, intended for use only by the test harness to drive tests.
-contract TestReceiptManager is IReceiptManagerV1 {
+contract TestReceiptManager is IReceiptManagerV2 {
     /// The address of the test asset.
     address internal iAsset;
 
@@ -50,8 +50,12 @@ contract TestReceiptManager is IReceiptManagerV1 {
     }
 
     /// Only transfers between `from` and `to` are authorized.
-    /// @inheritdoc IReceiptManagerV1
-    function authorizeReceiptTransfer2(address from, address to) external view {
+    /// @inheritdoc IReceiptManagerV2
+    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
+        external
+        view
+    {
+        (ids, amounts);
         if (from != sFrom) {
             revert UnauthorizedTransfer(from, to);
         }

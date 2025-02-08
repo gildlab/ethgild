@@ -19,34 +19,15 @@ import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contra
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 import {IAuthorizeV1} from "../../interface/IAuthorizeV1.sol";
 
-import {CERTIFIER, ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
 
 /// Thrown when a 0 certification time is attempted.
-/// @param sender The certifier that attempted the certify.
-error ZeroCertifyUntil(address sender);
+error ZeroCertifyUntil();
 
-/// Thrown when the `from` of a token transfer does not have the minimum tier.
-/// @param from The token was transferred from this account.
-/// @param reportTime The from account had this time in the tier report.
-error UnauthorizedSenderTier(address from, uint256 reportTime);
-
-/// Thrown when the `to` of a token transfer does not have the minimum tier.
-/// @param to The token was transferred to this account.
-/// @param reportTime The to account had this time in the tier report.
-error UnauthorizedRecipientTier(address to, uint256 reportTime);
-
-/// Thrown when a transfer is attempted by an unpriviledged account during system
-/// freeze due to certification lapse.
-/// @param from The account the transfer is from.
-/// @param to The account the transfer is to.
-/// @param certifiedUntil The (lapsed) certification time justifying the system
-/// freeze.
-/// @param timestamp Block timestamp of the transaction that is outside
-/// certification.
-error CertificationExpired(address from, address to, uint256 certifiedUntil, uint256 timestamp);
+error ZeroConfiscateAmount();
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and set management
@@ -97,41 +78,72 @@ struct CertifyStateChange {
     bytes data;
 }
 
-/// @dev Rolename for confiscator.
-/// Confiscator role is required to confiscate shares and/or receipts.
-bytes32 constant CONFISCATOR = keccak256("CONFISCATOR");
-/// @dev Rolename for confiscator admins.
-bytes32 constant CONFISCATOR_ADMIN = keccak256("CONFISCATOR_ADMIN");
+struct ConfiscateReceiptStateChange {
+    address confiscatee;
+    uint256 id;
+    uint256 targetAmount;
+    uint256 actualAmount;
+    bytes data;
+}
 
-/// @dev Rolename for depositors.
-/// Depositor role is required to mint new shares and receipts.
-bytes32 constant DEPOSITOR = keccak256("DEPOSITOR");
-/// @dev Rolename for depositor admins.
-bytes32 constant DEPOSITOR_ADMIN = keccak256("DEPOSITOR_ADMIN");
+struct ConfiscateSharesStateChange {
+    address confiscatee;
+    uint256 targetAmount;
+    uint256 actualAmount;
+    bytes data;
+}
 
-/// @dev Rolename for ERC1155 tierer.
-/// ERC1155 tierer role is required to modify the tier contract for receipts.
-bytes32 constant ERC1155TIERER = keccak256("ERC1155TIERER");
-/// @dev Rolename for ERC1155 tierer admins.
-bytes32 constant ERC1155TIERER_ADMIN = keccak256("ERC1155TIERER_ADMIN");
+struct TransferSharesStateChange {
+    address from;
+    address to;
+    uint256 amount;
+    bool isCertificationExpired;
+}
 
-/// @dev Rolename for ERC20 tierer.
-/// ERC20 tierer role is required to modify the tier contract for shares.
-bytes32 constant ERC20TIERER = keccak256("ERC20TIERER");
-/// @dev Rolename for ERC20 tierer admins.
-bytes32 constant ERC20TIERER_ADMIN = keccak256("ERC20TIERER_ADMIN");
+struct TransferReceiptStateChange {
+    address from;
+    address to;
+    uint256[] ids;
+    uint256[] amounts;
+    bool isCertificationExpired;
+}
 
-/// @dev Rolename for handlers.
-/// Handler role is required to accept tokens during system freeze.
-bytes32 constant HANDLER = keccak256("HANDLER");
-/// @dev Rolename for handler admins.
-bytes32 constant HANDLER_ADMIN = keccak256("HANDLER_ADMIN");
+struct DepositStateChange {
+    address owner;
+    address receiver;
+    uint256 id;
+    uint256 amount;
+    uint256 ratio;
+}
 
-/// @dev Rolename for withdrawers.
-/// Withdrawer role is required to burn shares and receipts.
-bytes32 constant WITHDRAWER = keccak256("WITHDRAWER");
-/// @dev Rolename for withdrawer admins.
-bytes32 constant WITHDRAWER_ADMIN = keccak256("WITHDRAWER_ADMIN");
+struct WithdrawStateChange {
+    address owner;
+    address receiver;
+    uint256 id;
+    uint256 amount;
+    uint256 ratio;
+}
+
+/// @dev Permission for certification.
+bytes32 constant CERTIFY = keccak256("CERTIFY");
+
+/// @dev Permission for confiscating shares.
+bytes32 constant CONFISCATE_SHARES = keccak256("CONFISCATE_SHARES");
+
+/// @dev Permission for confiscating receipts.
+bytes32 constant CONFISCATE_RECEIPT = keccak256("CONFISCATE_RECEIPT");
+
+/// @dev Permission for transferring tokens.
+bytes32 constant TRANSFER_SHARES = keccak256("TRANSFER_SHARES");
+
+/// @dev Permission for transferring receipts
+bytes32 constant TRANSFER_RECEIPT = keccak256("TRANSFER_RECEIPT");
+
+/// @dev Permission for depositing tokens.
+bytes32 constant DEPOSIT = keccak256("DEPOSIT");
+
+/// @dev Permission for withdrawing tokens.
+bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 
 /// @title OffchainAssetReceiptVault
 /// @notice Enables issuers of offchain assets to create a token that they can
@@ -208,26 +220,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     /// @param justification The contextual data justifying the confiscation.
     event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
 
-    /// A new ERC20 tier contract has been set.
-    /// @param sender `msg.sender` who set the new tier contract.
-    /// @param tier New tier contract used for all ERC20 transfers and
-    /// confiscations.
-    /// @param minimumTier Minimum tier that a user must hold to be eligible
-    /// to send/receive/hold shares and be immune to share confiscations.
-    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
-    /// @param data Associated data for the change in tier config.
-    event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
-
-    /// A new ERC1155 tier contract has been set.
-    /// @param sender `msg.sender` who set the new tier contract.
-    /// @param tier New tier contract used for all ERC1155 transfers and
-    /// confiscations.
-    /// @param minimumTier Minimum tier that a user must hold to be eligible
-    /// to send/receive/hold receipts and be immune to receipt confiscations.
-    /// @param context OPTIONAL additional context to pass to ITierV2 calls.
-    /// @param data Associated data for the change in tier config.
-    event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
-
     IAuthorizeV1 sAuthorizor;
 
     /// The largest issued id. The next id issued will be larger than this.
@@ -237,27 +229,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     /// general transfers of shares and receipts will fail until the system can
     /// be certified to a future time.
     uint256 internal sCertifiedUntil;
-
-    /// The minimum tier required for an address to receive shares.
-    uint8 private sErc20MinimumTier;
-    /// The minimum tier required for an address to receive receipts.
-    uint8 private sErc1155MinimumTier;
-
-    /// The `ITierV2` contract that defines the current tier of each address for
-    /// the purpose of receiving shares.
-    ITierV2 private sErc20Tier;
-    /// The `ITierV2` contract that defines the current tier of each address for
-    /// the purpose of receiving receipts.
-    ITierV2 private sErc1155Tier;
-
-    /// Optional context to provide to the `ITierV2` contract when calculating
-    /// any addresses' tier for the purpose of receiving shares. Global to all
-    /// addresses.
-    uint256[] private sErc20TierContext;
-    /// Optional context to provide to the `ITierV2` contract when calculating
-    /// any addresses' tier for the purpose of receiving receipts. Global to all
-    /// addresses.
-    uint256[] private sErc1155TierContext;
 
     constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
 
@@ -285,35 +256,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
 
         _transferOwnership(config.initialAdmin);
 
-        // Define all admin roles. Note that admins can admin each other which
-        // is a double edged sword. ANY admin can forcibly take over the entire
-        // role by removing all other admins.
-        _setRoleAdmin(CONFISCATOR, CONFISCATOR_ADMIN);
-        _setRoleAdmin(CONFISCATOR_ADMIN, CONFISCATOR_ADMIN);
-
-        _setRoleAdmin(DEPOSITOR, DEPOSITOR_ADMIN);
-        _setRoleAdmin(DEPOSITOR_ADMIN, DEPOSITOR_ADMIN);
-
-        _setRoleAdmin(ERC1155TIERER, ERC1155TIERER_ADMIN);
-        _setRoleAdmin(ERC1155TIERER_ADMIN, ERC1155TIERER_ADMIN);
-
-        _setRoleAdmin(ERC20TIERER, ERC20TIERER_ADMIN);
-        _setRoleAdmin(ERC20TIERER_ADMIN, ERC20TIERER_ADMIN);
-
-        _setRoleAdmin(HANDLER, HANDLER_ADMIN);
-        _setRoleAdmin(HANDLER_ADMIN, HANDLER_ADMIN);
-
-        _setRoleAdmin(WITHDRAWER, WITHDRAWER_ADMIN);
-        _setRoleAdmin(WITHDRAWER_ADMIN, WITHDRAWER_ADMIN);
-
-        // Grant every admin role to the configured initial admin.
-        _grantRole(CONFISCATOR_ADMIN, config.initialAdmin);
-        _grantRole(DEPOSITOR_ADMIN, config.initialAdmin);
-        _grantRole(ERC1155TIERER_ADMIN, config.initialAdmin);
-        _grantRole(ERC20TIERER_ADMIN, config.initialAdmin);
-        _grantRole(HANDLER_ADMIN, config.initialAdmin);
-        _grantRole(WITHDRAWER_ADMIN, config.initialAdmin);
-
         emit OffchainAssetReceiptVaultInitializedV2(
             msg.sender,
             OffchainAssetReceiptVaultConfigV2({
@@ -340,8 +282,25 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
 
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
-    function authorizeReceiptTransfer2(address from, address to) external view virtual override {
-        enforceValidTransfer(sErc1155Tier, sErc1155MinimumTier, sErc1155TierContext, from, to);
+    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
+        external
+        view
+        virtual
+        override
+    {
+        sAuthorizor.authorize(
+            msg.sender,
+            TRANSFER_RECEIPT,
+            abi.encode(
+                TransferReceiptStateChange({
+                    from: from,
+                    to: to,
+                    ids: ids,
+                    amounts: amounts,
+                    isCertificationExpired: isCertificationExpired()
+                })
+            )
+        );
     }
 
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
@@ -370,17 +329,43 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     }
 
     /// @inheritdoc ReceiptVault
-    function _shareRatio(address owner, address, uint256 id, ShareAction shareAction)
+    function _shareRatio(address owner, address receiver, uint256 id, uint256 amount, ShareAction shareAction)
         internal
         view
         virtual
         override
         returns (uint256)
     {
+        uint256 ratio = _shareRatioUserAgnostic(id, amount, shareAction);
+
         if (shareAction == ShareAction.Mint) {
-            return hasRole(DEPOSITOR, owner) ? _shareRatioUserAgnostic(id, shareAction) : 0;
+            try (
+                sAuthorizor.authorize(
+                    owner,
+                    DEPOSIT,
+                    abi.encode(
+                        DepositStateChange({owner: owner, receiver: receiver, id: id, amount: amount, ratio: ratio})
+                    )
+                )
+            ) {
+                return ratio;
+            } catch {
+                return 0;
+            }
         } else {
-            return hasRole(WITHDRAWER, owner) ? _shareRatioUserAgnostic(id, shareAction) : 0;
+            try (
+                sAuthorizor.authorize(
+                    owner,
+                    WITHDRAW,
+                    abi.encode(
+                        WithdrawStateChange({owner: owner, receiver: receiver, id: id, amount: amount, ratio: ratio})
+                    )
+                )
+            ) {
+                return ratio;
+            } catch {
+                return 0;
+            }
         }
     }
 
@@ -430,40 +415,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
 
         _deposit(assets, receiver, shares, id, receiptInformation);
         return shares;
-    }
-
-    /// `ERC20TIERER` Role restricted setter for all internal state that drives
-    /// the erc20 tier restriction logic on transfers.
-    /// @param tier `ITier` contract to check when receiving shares. MAY be
-    /// `address(0)` to disable report checking.
-    /// @param minimumTier The minimum tier to be held according to `tier`.
-    /// @param context Global context to be forwarded with tier checks.
-    /// @param data Associated data relevant to the change in tier contract.
-    function setERC20Tier(address tier, uint8 minimumTier, uint256[] calldata context, bytes memory data)
-        external
-        onlyRole(ERC20TIERER)
-    {
-        sErc20Tier = ITierV2(tier);
-        sErc20MinimumTier = minimumTier;
-        sErc20TierContext = context;
-        emit SetERC20Tier(msg.sender, tier, minimumTier, context, data);
-    }
-
-    /// `ERC1155TIERER` Role restricted setter for all internal state that drives
-    /// the erc1155 tier restriction logic on transfers.
-    /// @param tier `ITier` contract to check when receiving receipts. MAY be
-    /// `0` to disable report checking.
-    /// @param minimumTier The minimum tier to be held according to `tier`.
-    /// @param context Global context to be forwarded with tier checks.
-    /// @param data Associated data relevant to the change in tier contract.
-    function setERC1155Tier(address tier, uint8 minimumTier, uint256[] calldata context, bytes memory data)
-        external
-        onlyRole(ERC1155TIERER)
-    {
-        sErc1155Tier = ITierV2(tier);
-        sErc1155MinimumTier = minimumTier;
-        sErc1155TierContext = context;
-        emit SetERC1155Tier(msg.sender, tier, minimumTier, context, data);
     }
 
     /// Certifiers MAY EXTEND OR REDUCE the `certifiedUntil` time. If there are
@@ -537,97 +488,29 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
         }
         emit Certify(msg.sender, certifyUntil, forceUntil, data);
 
-        sAuthorizor.authorize(msg.sender, CERTIFIER, abi.encode(certifyStateChange));
+        sAuthorizor.authorize(msg.sender, CERTIFY, abi.encode(certifyStateChange));
     }
 
-    /// Reverts if some transfer is disallowed. Handles both share and receipt
-    /// transfers. Standard logic reverts any transfer that is EITHER to or from
-    /// an address that does not have the required tier OR the system is no
-    /// longer certified therefore ALL unpriviledged transfers MUST revert.
-    ///
-    /// Certain exemptions to transfer restrictions apply:
-    /// - If a tier contract is not set OR the minimum tier is 0 then tier
-    ///   restrictions are ignored.
-    /// - Any handler role MAY SEND AND RECEIVE TOKENS AT ALL TIMES BETWEEN
-    ///   THEMSELVES AND ANYONE ELSE. Tier and certification restrictions are
-    ///   ignored for both sender and receiver when either is a handler. Handlers
-    ///   exist to _repair_ certification issues, so MUST be able to transfer
-    ///   unhindered.
-    /// - `address(0)` is treated as a handler for the purposes of any minting
-    ///   and burning that may be required to repair certification blockers.
-    /// - Transfers TO a confiscator are treated as handler-like at all times,
-    ///   but transfers FROM confiscators are treated as unpriviledged. This is
-    ///   to allow potential legal requirements on confiscation during system
-    ///   freeze, without assigning unnecessary priviledges to confiscators.
-    ///
-    /// @param tier The tier contract to check reports against.
-    /// MAY be `address(0)`.
-    /// @param minimumTier The minimum tier to check `from` and `to` against.
-    /// @param tierContext Additional context to pass to `tier` for the report.
-    /// @param from The token is being transferred from this account.
-    /// @param to The token is being transferred to this account.
-    function enforceValidTransfer(
-        ITierV2 tier,
-        uint256 minimumTier,
-        uint256[] memory tierContext,
-        address from,
-        address to
-    ) internal view {
-        // Handlers can ALWAYS send and receive funds.
-        // Handlers bypass BOTH the timestamp on certification AND tier based
-        // restriction.
-        if (hasRole(HANDLER, from) || hasRole(HANDLER, to)) {
-            return;
-        }
-
-        // Minting and burning is always allowed for the respective roles if they
-        // interact directly with the shares/receipt. Minting and burning is ALSO
-        // valid after the certification expires as it is likely the only way to
-        // repair the system and bring it back to a certifiable state.
-        if ((from == address(0) && hasRole(DEPOSITOR, to)) || (to == address(0) && hasRole(WITHDRAWER, from))) {
-            return;
-        }
-
-        // Confiscation is always allowed as it likely represents some kind of
-        // regulatory/legal requirement. It may also be required to satisfy
-        // certification requirements.
-        if (hasRole(CONFISCATOR, to)) {
-            return;
-        }
-
-        // Everyone else can only transfer while the certification is valid.
-        // Note: The current implementation does not explicitly handle block.timestamp being 0 (January 1, 1970).
-        // We do not support blockchains that lack timestamps.
-        //solhint-disable-next-line not-rely-on-time
-        if (block.timestamp > sCertifiedUntil) {
-            revert CertificationExpired(from, to, sCertifiedUntil, block.timestamp);
-        }
-
-        // If there is a tier contract we enforce it.
-        if (address(tier) != address(0) && minimumTier > 0) {
-            if (from != address(0)) {
-                // The sender must have a valid tier.
-                uint256 fromReportTime = tier.reportTimeForTier(from, minimumTier, tierContext);
-                if (block.timestamp < fromReportTime) {
-                    revert UnauthorizedSenderTier(from, fromReportTime);
-                }
-            }
-
-            if (to != address(0)) {
-                // The recipient must have a valid tier.
-                uint256 toReportTime = tier.reportTimeForTier(to, minimumTier, tierContext);
-                if (block.timestamp < toReportTime) {
-                    revert UnauthorizedRecipientTier(to, toReportTime);
-                }
-            }
-        }
+    function isCertificationExpired() internal view returns (bool) {
+        return block.timestamp > sCertifiedUntil;
     }
 
     /// Apply standard transfer restrictions to share transfers.
     /// @inheritdoc ReceiptVault
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
-        enforceValidTransfer(sErc20Tier, sErc20MinimumTier, sErc20TierContext, from, to);
         super._beforeTokenTransfer(from, to, amount);
+        sAuthorizor.authorize(
+            msg.sender,
+            TRANSFER_SHARES,
+            abi.encode(
+                TransferSharesStateChange({
+                    from: from,
+                    to: to,
+                    amount: amount,
+                    isCertificationExpired: isCertificationExpired()
+                })
+            )
+        );
     }
 
     /// Confiscators can confiscate ERC20 vault shares from `confiscatee`.
@@ -657,27 +540,40 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     /// and loose with user assets is the ONLY way to discourage such behaviour.
     ///
     /// @param confiscatee The address that shares are being confiscated from.
+    /// @param targetAmount The amount of shares to confiscate. The actual amount
+    /// will be capped at the current balance of the confiscatee.
     /// @param data The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of shares confiscated.
-    function confiscateShares(address confiscatee, bytes memory data)
+    function confiscateShares(address confiscatee, uint256 targetAmount, bytes memory data)
         external
         nonReentrant
-        onlyRole(CONFISCATOR)
         returns (uint256)
     {
-        uint256 confiscatedShares = 0;
-        if (
-            address(sErc20Tier) == address(0)
-                || block.timestamp < sErc20Tier.reportTimeForTier(confiscatee, sErc20MinimumTier, sErc20TierContext)
-        ) {
-            confiscatedShares = balanceOf(confiscatee);
-            if (confiscatedShares > 0) {
-                emit ConfiscateShares(msg.sender, confiscatee, confiscatedShares, data);
-                _transfer(confiscatee, msg.sender, confiscatedShares);
-            }
+        if (targetAmount == 0) {
+            revert ZeroConfiscateAmount();
         }
-        return confiscatedShares;
+
+        uint256 actualAmount = balanceOf(confiscatee).min(targetAmount);
+        if (actualAmount > 0) {
+            emit ConfiscateShares(msg.sender, confiscatee, actualAmount, data);
+            _transfer(confiscatee, msg.sender, actualAmount);
+        }
+
+        sAuthorizor.authorize(
+            msg.sender,
+            CONFISCATE_SHARES,
+            abi.encode(
+                ConfiscateSharesStateChange({
+                    confiscatee: confiscatee,
+                    targetAmount: targetAmount,
+                    actualAmount: actualAmount,
+                    data: data
+                })
+            )
+        );
+
+        return actualAmount;
     }
 
     /// Confiscators can confiscate ERC1155 vault receipts from `confiscatee`.
@@ -695,26 +591,40 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     ///
     /// @param confiscatee The address that receipts are being confiscated from.
     /// @param id The ID of the receipt to confiscate.
+    /// @param targetAmount The amount of the receipt to confiscate. The actual
+    /// amount will be capped at the current balance of the confiscatee.
     /// @param data The associated justification of the confiscation, and/or
     /// other relevant data.
     /// @return The amount of receipt confiscated.
-    function confiscateReceipt(address confiscatee, uint256 id, bytes memory data)
+    function confiscateReceipt(address confiscatee, uint256 id, uint256 targetAmount, bytes memory data)
         external
         nonReentrant
-        onlyRole(CONFISCATOR)
         returns (uint256)
     {
-        uint256 confiscatedReceiptAmount = 0;
-        if (
-            address(sErc1155Tier) == address(0)
-                || block.timestamp < sErc1155Tier.reportTimeForTier(confiscatee, sErc1155MinimumTier, sErc1155TierContext)
-        ) {
-            confiscatedReceiptAmount = receipt().balanceOf(confiscatee, id);
-            if (confiscatedReceiptAmount > 0) {
-                emit ConfiscateReceipt(msg.sender, confiscatee, id, confiscatedReceiptAmount, data);
-                receipt().managerTransferFrom(confiscatee, msg.sender, id, confiscatedReceiptAmount, "");
-            }
+        if (targetAmount == 0) {
+            revert ZeroConfiscateAmount();
         }
-        return confiscatedReceiptAmount;
+
+        uint256 actualAmount = receipt().balanceOf(confiscatee, id).min(targetAmount);
+        if (actualAmount > 0) {
+            emit ConfiscateReceipt(msg.sender, confiscatee, id, actualAmount, data);
+            receipt().managerTransferFrom(confiscatee, msg.sender, id, actualAmount, "");
+        }
+
+        sAuthorizor.authorize(
+            msg.sender,
+            CONFISCATE_RECEIPT,
+            abi.encode(
+                ConfiscateReceiptStateChange({
+                    confiscatee: confiscatee,
+                    id: id,
+                    targetAmount: targetAmount,
+                    actualAmount: actualAmount,
+                    data: data
+                })
+            )
+        );
+
+        return actualAmount;
     }
 }

@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
-import {IReceiptManagerV1} from "../../interface/IReceiptManagerV1.sol";
+import {IReceiptManagerV2} from "../../interface/IReceiptManagerV2.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {IReceiptVaultV2} from "../../interface/IReceiptVaultV2.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
@@ -32,7 +32,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
-    IReceiptManagerV1 internal sManager;
+    IReceiptManagerV2 internal sManager;
 
     /// Disables initializers so that the clonable implementation cannot be
     /// initialized and used directly outside a factory deployment.
@@ -57,7 +57,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         __ERC1155_init("");
 
         address receiptManager = abi.decode(data, (address));
-        sManager = IReceiptManagerV1(receiptManager);
+        sManager = IReceiptManagerV2(receiptManager);
 
         return ICLONEABLE_V2_SUCCESS;
     }
@@ -150,7 +150,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        sManager.authorizeReceiptTransfer2(from, to);
+        sManager.authorizeReceiptTransfer3(from, to, ids, amounts);
     }
 
     /// Emits `ReceiptInformation` if there is any data.
