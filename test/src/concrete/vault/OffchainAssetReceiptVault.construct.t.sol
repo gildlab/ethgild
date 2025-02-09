@@ -22,13 +22,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
         iFactory.clone(
             address(iImplementation),
-            abi.encode(
-                OffchainAssetVaultConfigV2({
-                    initialAdmin: address(0),
-                    authorizor: iAuthorizorImplementation,
-                    vaultConfig: vaultConfig
-                })
-            )
+            abi.encode(OffchainAssetVaultConfigV2({initialAdmin: address(0), vaultConfig: vaultConfig}))
         );
     }
 
@@ -44,13 +38,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         iFactory.clone(
             address(iImplementation),
-            abi.encode(
-                OffchainAssetVaultConfigV2({
-                    initialAdmin: alice,
-                    authorizor: iAuthorizorImplementation,
-                    vaultConfig: vaultConfig
-                })
-            )
+            abi.encode(OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig}))
         );
     }
 
@@ -65,11 +53,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         // Simulate transaction from alice
         vm.prank(alice);
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
-            initialAdmin: alice,
-            authorizor: iAuthorizorImplementation,
-            vaultConfig: vaultConfig
-        });
+        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig =
+            OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
@@ -119,11 +104,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
 
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
-            initialAdmin: alice,
-            authorizor: iAuthorizorImplementation,
-            vaultConfig: vaultConfig
-        });
+        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig =
+            OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();

@@ -274,7 +274,6 @@ abstract contract ReceiptVault is
     /// @inheritdoc IReceiptManagerV2
     function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
         external
-        view
         virtual
     {
         // Authorize all receipt transfers by default.

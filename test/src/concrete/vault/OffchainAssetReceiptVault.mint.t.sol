@@ -32,7 +32,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
 
         OffchainAssetReceiptVault vault = LibOffchainAssetVaultCreator.createVault(
-            iFactory, iImplementation, iAuthorizorImplementation, alice, assetName, assetSymbol
+            vm, iFactory, iImplementation, iAuthorizorImplementation, alice, assetName, assetSymbol
         );
 
         // Assume that assets is less uint256 max

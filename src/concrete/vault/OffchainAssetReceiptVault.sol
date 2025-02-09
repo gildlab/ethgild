@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
+import {UnmanagedReceiptTransfer} from "../../interface/IReceiptManagerV2.sol";
 import {
     ReceiptVaultConfig,
     VaultConfig,
@@ -17,7 +18,7 @@ import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
-import {IAuthorizeV1} from "../../interface/IAuthorizeV1.sol";
+import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 
 import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
@@ -40,7 +41,6 @@ error ZeroConfiscateAmount();
 /// been set to the vault contract.
 struct OffchainAssetVaultConfigV2 {
     address initialAdmin;
-    IAuthorizeV1 authorizor;
     VaultConfig vaultConfig;
 }
 
@@ -55,7 +55,6 @@ struct OffchainAssetVaultConfigV2 {
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
-    IAuthorizeV1 authorizor;
     ReceiptVaultConfig receiptVaultConfig;
 }
 
@@ -185,7 +184,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
+contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1, Ownable {
     using Math for uint256;
 
     /// Contract has initialized.
@@ -252,7 +251,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
             revert ZeroInitialAdmin();
         }
 
-        sAuthorizor = IAuthorizeV1(config.authorizor);
+        sAuthorizor = IAuthorizeV1(address(this));
 
         _transferOwnership(config.initialAdmin);
 
@@ -260,7 +259,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
             msg.sender,
             OffchainAssetReceiptVaultConfigV2({
                 initialAdmin: config.initialAdmin,
-                authorizor: config.authorizor,
                 receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
             })
         );
@@ -271,6 +269,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     /// Returns the current authorizor contract.
     function authorizor() external view returns (IAuthorizeV1) {
         return sAuthorizor;
+    }
+
+    /// The vault initializes with the authorizor as itself. Every permission
+    /// reverts unconditionally, so the owner MUST set the real authorizor before
+    /// any operations can be performed.
+    /// @inheritdoc IAuthorizeV1
+    function authorize(address user, bytes32 permission, bytes memory data) external view virtual override {
+        (user, permission, data);
+        revert Unauthorized(user, permission, data);
     }
 
     /// Sets the authorizor contract. This is a critical operation and should be
@@ -284,10 +291,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     /// @inheritdoc ReceiptVault
     function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
         external
-        view
         virtual
         override
     {
+        if (msg.sender != address(receipt())) {
+            revert UnmanagedReceiptTransfer();
+        }
+
         sAuthorizor.authorize(
             msg.sender,
             TRANSFER_RECEIPT,
