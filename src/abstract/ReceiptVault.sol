@@ -401,32 +401,25 @@ abstract contract ReceiptVault is
     /// @param receiver The receiver of new shares minted on deposit and of
     /// withdrawn assets on withdraw.
     /// @param id The receipt ID being minted/burned in tandem with the shares.
-    /// @param amount The amount of assets or shares being minted or burned.
     /// @param shareAction Encodes whether shares are being minted or burned
     /// (hypothetically or actually) for this ratio calculation.
     /// @return
-    function _shareRatio(address owner, address receiver, uint256 id, uint256 amount, ShareAction shareAction)
+    function _shareRatio(address owner, address receiver, uint256 id, ShareAction shareAction)
         internal
         view
         virtual
         returns (uint256)
     {
         (owner, receiver);
-        return _shareRatioUserAgnostic(id, amount, shareAction);
+        return _shareRatioUserAgnostic(id, shareAction);
     }
 
     /// Some functions in ERC4626 mandate the share ratio ignore the user.
     /// Otherwise identical to `_shareRatio`.
     /// @param id As per `_shareRatio`.
-    /// @param amount As per `_shareRatio`.
     /// @param shareAction As per `_shareRatio`.
-    function _shareRatioUserAgnostic(uint256 id, uint256 amount, ShareAction shareAction)
-        internal
-        view
-        virtual
-        returns (uint256)
-    {
-        (id, amount, shareAction);
+    function _shareRatioUserAgnostic(uint256 id, ShareAction shareAction) internal view virtual returns (uint256) {
+        (id, shareAction);
         // Default is 1:1 shares to assets.
         return 1e18;
     }

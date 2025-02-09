@@ -119,6 +119,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
+        uint256 targetAmount,
         bytes memory data
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -139,7 +140,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(bytes(errorMessage));
 
         // Call the confiscateShares function
-        vault.confiscateShares(alice, data);
+        vault.confiscateShares(alice, targetAmount, data);
 
         vm.stopPrank();
     }
@@ -149,6 +150,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
+        uint256 targetAmount,
         bytes memory data
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -169,7 +171,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.expectRevert(bytes(errorMessage));
 
         // Call the confiscateShares function
-        vault.confiscateShares(alice, data);
+        vault.confiscateShares(alice, targetAmount, data);
 
         vm.stopPrank();
     }

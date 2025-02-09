@@ -135,13 +135,14 @@ contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, Ac
             address to;
             bool isCertificationExpired;
             if (permission == TRANSFER_SHARES) {
-                TransferSharesStateChange memory transferSharesStateChange = abi.decode(data, TransferSharesStateChange);
+                TransferSharesStateChange memory transferSharesStateChange =
+                    abi.decode(data, (TransferSharesStateChange));
                 from = transferSharesStateChange.from;
                 to = transferSharesStateChange.to;
                 isCertificationExpired = transferSharesStateChange.isCertificationExpired;
             } else {
                 TransferReceiptStateChange memory transferReceiptStateChange =
-                    abi.decode(data, TransferReceiptStateChange);
+                    abi.decode(data, (TransferReceiptStateChange));
                 from = transferReceiptStateChange.from;
                 to = transferReceiptStateChange.to;
                 isCertificationExpired = transferReceiptStateChange.isCertificationExpired;

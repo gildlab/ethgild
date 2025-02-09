@@ -140,14 +140,14 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The ID-less share ratio is the current oracle price, which will be the
     /// ID in the case of a real deposit.
     /// @inheritdoc ReceiptVault
-    function _shareRatioUserAgnostic(uint256 id, uint256 amount, ShareAction shareAction)
+    function _shareRatioUserAgnostic(uint256 id, ShareAction shareAction)
         internal
         view
         virtual
         override
         returns (uint256)
     {
-        (amount, shareAction);
+        (shareAction);
         return id;
     }
 }

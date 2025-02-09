@@ -15,22 +15,28 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
-    event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
+    event ConfiscateShares(
+        address sender, address confiscatee, uint256 targetAmount, uint256 confiscated, bytes justification
+    );
 
     /// Checks that confiscateShares balances don't change or do change as expected
-    function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
-        internal
-    {
+    function checkConfiscateShares(
+        OffchainAssetReceiptVault vault,
+        address alice,
+        address bob,
+        uint256 targetAmount,
+        bytes memory data
+    ) internal {
         uint256 initialBalanceAlice = vault.balanceOf(alice);
         uint256 initialBalanceBob = vault.balanceOf(bob);
         bool expectNoChange = initialBalanceAlice == 0;
 
         if (!expectNoChange) {
             vm.expectEmit(false, false, false, true);
-            emit ConfiscateShares(bob, alice, initialBalanceAlice, data);
+            emit ConfiscateShares(bob, alice, targetAmount, initialBalanceAlice, data);
         }
 
-        vault.confiscateShares(alice, data);
+        vault.confiscateShares(alice, targetAmount, data);
 
         uint256 balanceAfterAlice = vault.balanceOf(alice);
         uint256 balanceAfterBob = vault.balanceOf(bob);
@@ -51,6 +57,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         bytes memory data,
         uint256 balance,
+        uint256 targetAmount,
         uint256 minShareRatio
     ) external {
         // Generate unique addresses
@@ -77,7 +84,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         // Deposit to increase bob's balance
         vault.deposit(balance, bob, minShareRatio, data);
 
-        checkConfiscateShares(vault, alice, bob, data);
+        checkConfiscateShares(vault, alice, bob, targetAmount, data);
 
         vm.stopPrank();
     }
@@ -93,7 +100,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         bytes memory data,
         uint256 certifyUntil,
         uint256 blockNumber,
-        bool forceUntil
+        bool forceUntil,
+        uint256 targetAmount
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Generate unique addresses
@@ -126,7 +134,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        checkConfiscateShares(vault, alice, bob, data);
+        checkConfiscateShares(vault, alice, bob, targetAmount, data);
         vm.stopPrank();
     }
 }

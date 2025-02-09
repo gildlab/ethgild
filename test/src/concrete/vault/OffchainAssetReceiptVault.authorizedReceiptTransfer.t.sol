@@ -22,7 +22,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256 fuzzedKeyBob,
         uint256 warpTimestamp,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         // Generate unique addresses.
         (address alice, address bob) =
@@ -43,7 +45,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, 0, warpTimestamp));
 
         // Attempt to authorize receipt transfer, should revert.
-        vault.authorizeReceiptTransfer2(bob, alice);
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
 
         vm.stopPrank();
     }
@@ -57,7 +59,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256 timestamp,
         uint256 nextTimestamp,
         uint256 blockNumber,
-        bytes memory data
+        bytes memory data,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -90,7 +94,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, timestamp, nextTimestamp));
 
         // Attempt to authorize receipt transfer, should revert
-        vault.authorizeReceiptTransfer2(bob, alice);
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
 
         vm.stopPrank();
     }
@@ -104,7 +108,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256 certifyUntil,
         bytes memory data,
         uint256 blockNumber,
-        bool forceUntil
+        bool forceUntil,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -130,9 +136,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
         // Authorize should succeed
-        vault.authorizeReceiptTransfer2(bob, alice);
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
 
         vm.stopPrank();
     }
@@ -142,7 +148,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -156,8 +164,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.startPrank(bob);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
-        vault.authorizeReceiptTransfer2(bob, alice);
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a handler role
@@ -165,7 +173,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -180,8 +190,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.startPrank(bob);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
-        vault.authorizeReceiptTransfer2(bob, alice);
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
@@ -189,7 +199,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -203,7 +215,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         vm.startPrank(bob);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer2, (bob, alice)));
-        vault.authorizeReceiptTransfer2(bob, alice);
+        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 }

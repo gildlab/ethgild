@@ -328,47 +328,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
         return totalSupply();
     }
 
-    /// @inheritdoc ReceiptVault
-    function _shareRatio(address owner, address receiver, uint256 id, uint256 amount, ShareAction shareAction)
-        internal
-        view
-        virtual
-        override
-        returns (uint256)
-    {
-        uint256 ratio = _shareRatioUserAgnostic(id, amount, shareAction);
-
-        if (shareAction == ShareAction.Mint) {
-            try (
-                sAuthorizor.authorize(
-                    owner,
-                    DEPOSIT,
-                    abi.encode(
-                        DepositStateChange({owner: owner, receiver: receiver, id: id, amount: amount, ratio: ratio})
-                    )
-                )
-            ) {
-                return ratio;
-            } catch {
-                return 0;
-            }
-        } else {
-            try (
-                sAuthorizor.authorize(
-                    owner,
-                    WITHDRAW,
-                    abi.encode(
-                        WithdrawStateChange({owner: owner, receiver: receiver, id: id, amount: amount, ratio: ratio})
-                    )
-                )
-            ) {
-                return ratio;
-            } catch {
-                return 0;
-            }
-        }
-    }
-
     /// IDs for offchain assets are merely autoincremented. If the minter wants
     /// to track some external ID system as a foreign key they can emit this in
     /// the associated receipt information.
@@ -469,7 +428,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, Ownable {
     /// etc.
     function certify(uint256 certifyUntil, bool forceUntil, bytes calldata data) external {
         if (certifyUntil == 0) {
-            revert ZeroCertifyUntil(msg.sender);
+            revert ZeroCertifyUntil();
         }
         CertifyStateChange memory certifyStateChange = CertifyStateChange({
             oldCertifiedUntil: sCertifiedUntil,

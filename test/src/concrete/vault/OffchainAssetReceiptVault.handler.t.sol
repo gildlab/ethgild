@@ -57,7 +57,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
-        uint256 balance
+        uint256 balance,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         address alice;
         address bob;
@@ -89,7 +91,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer2(bob, bob);
+        vault.authorizeReceiptTransfer3(bob, bob, ids, amounts);
         receipt.safeTransferFrom(bob, bob, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(bob, 1), balance);
 
@@ -105,7 +107,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
-        uint256 balance
+        uint256 balance,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         address alice;
         address bob;
@@ -139,7 +143,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer2(bob, john);
+        vault.authorizeReceiptTransfer3(bob, john, ids, amounts);
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), balance);
 
@@ -155,7 +159,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
-        uint256 balance
+        uint256 balance,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         address alice;
         address bob;
@@ -189,7 +195,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer2(bob, john);
+        vault.authorizeReceiptTransfer3(bob, john, ids, amounts);
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), balance);
 
