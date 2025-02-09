@@ -19,6 +19,8 @@ import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
+import {IERC165Upgradeable as IERC165} from
+    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
 
 import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
@@ -28,7 +30,11 @@ error NonZeroAsset();
 /// Thrown when a 0 certification time is attempted.
 error ZeroCertifyUntil();
 
+/// Thrown when a 0 confiscation amount is attempted.
 error ZeroConfiscateAmount();
+
+/// Thrown when the authorizor is incompatible according to `IERC165` when set.
+error IncompatibleAuthorizor();
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and set management
@@ -111,16 +117,16 @@ struct DepositStateChange {
     address owner;
     address receiver;
     uint256 id;
-    uint256 amount;
-    uint256 ratio;
+    uint256 assetsDeposited;
+    uint256 sharesMinted;
 }
 
 struct WithdrawStateChange {
     address owner;
     address receiver;
     uint256 id;
-    uint256 amount;
-    uint256 ratio;
+    uint256 assetsWithdrawn;
+    uint256 sharesBurned;
 }
 
 /// @dev Permission for certification.
@@ -284,6 +290,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// done with extreme care by the owner.
     /// @param newAuthorizor The new authorizor contract.
     function setAuthorizor(IAuthorizeV1 newAuthorizor) external onlyOwner {
+        if (!IERC165(address(newAuthorizor)).supportsInterface(type(IAuthorizeV1).interfaceId)) {
+            revert IncompatibleAuthorizor();
+        }
         sAuthorizor = newAuthorizor;
     }
 
@@ -316,19 +325,44 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// Highwater needs to witness the incoming id.
     /// @inheritdoc ReceiptVault
-    function _beforeDeposit(uint256, address, uint256, uint256 id) internal virtual override {
+    function _beforeDeposit(uint256 assets, address receiver, uint256 shares, uint256 id) internal virtual override {
         sHighwaterId = sHighwaterId.max(id);
+        sAuthorizor.authorize(
+            msg.sender,
+            DEPOSIT,
+            abi.encode(
+                DepositStateChange({
+                    owner: msg.sender,
+                    receiver: receiver,
+                    id: id,
+                    assetsDeposited: assets,
+                    sharesMinted: shares
+                })
+            )
+        );
     }
 
     /// DO NOT call super `_afterWithdraw` as there are no assets to move.
     /// @inheritdoc ReceiptVault
-    function _afterWithdraw(
-        uint256,
-        address,
-        address,
-        uint256,
-        uint256 //solhint-disable-next-line no-empty-blocks
-    ) internal view virtual override {}
+    function _afterWithdraw(uint256 assets, address receiver, address owner, uint256 shares, uint256 id)
+        internal
+        virtual
+        override
+    {
+        sAuthorizor.authorize(
+            msg.sender,
+            WITHDRAW,
+            abi.encode(
+                WithdrawStateChange({
+                    owner: owner,
+                    receiver: receiver,
+                    id: id,
+                    assetsWithdrawn: assets,
+                    sharesBurned: shares
+                })
+            )
+        );
+    }
 
     /// Shares total supply is 1:1 with offchain assets.
     /// Assets aren't real so only way to report this is to return the total

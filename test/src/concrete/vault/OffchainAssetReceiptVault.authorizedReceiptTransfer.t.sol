@@ -160,7 +160,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
 
         vm.startPrank(bob);
 
@@ -186,7 +186,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         // Prank as Alice to set role
         vm.startPrank(alice);
 
-        vault.grantRole(FREEZE_HANDLER, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, alice);
 
         vm.startPrank(bob);
 
@@ -211,7 +211,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(CONFISCATE_RECEIPT, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, alice);
 
         vm.startPrank(bob);
 

@@ -18,6 +18,8 @@ import {
     TransferSharesStateChange,
     TransferReceiptStateChange
 } from "../vault/OffchainAssetReceiptVault.sol";
+import {IERC165Upgradeable as IERC165} from
+    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
 
 /// Thrown when the admin is address zero.
 error ZeroInitialAdmin();
@@ -114,6 +116,12 @@ contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, Ac
         return ICLONEABLE_V2_SUCCESS;
     }
 
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IAuthorizeV1).interfaceId || interfaceId == type(ICloneableV2).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     /// Permissions are treated as roles in this implementation. This makes the
     /// implementation roughly equivalent overall to the `onlyRole` modifier in
     /// OpenZeppelin's AccessControl.
@@ -160,31 +168,33 @@ contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, Ac
                 isCertificationExpired = transferReceiptStateChange.isCertificationExpired;
             }
 
-            // Handlers can ALWAYS send and receive funds.
-            // Handlers bypass BOTH the timestamp on certification AND tier based
-            // restriction.
-            if (hasRole(FREEZE_HANDLER, from) || hasRole(FREEZE_HANDLER, to)) {
-                return;
-            }
-
-            // Minting and burning is always allowed for the respective roles if they
-            // interact directly with the shares/receipt. Minting and burning is ALSO
-            // valid after the certification expires as it is likely the only way to
-            // repair the system and bring it back to a certifiable state.
-            if ((from == address(0) && hasRole(DEPOSIT, to)) || (to == address(0) && hasRole(WITHDRAW, from))) {
-                return;
-            }
-
-            // Confiscation is always allowed as it likely represents some kind of
-            // regulatory/legal requirement. It may also be required to satisfy
-            // certification requirements.
-            if (hasRole(CONFISCATE_SHARES, to) || hasRole(CONFISCATE_RECEIPT, to)) {
-                return;
-            }
-
             // Everyone else can only transfer while the certification is valid.
             if (isCertificationExpired) {
+                // Handlers can ALWAYS send and receive funds.
+                // Handlers bypass BOTH the timestamp on certification AND tier based
+                // restriction.
+                if (hasRole(FREEZE_HANDLER, from) || hasRole(FREEZE_HANDLER, to)) {
+                    return;
+                }
+
+                // Minting and burning is always allowed for the respective roles if they
+                // interact directly with the shares/receipt. Minting and burning is ALSO
+                // valid after the certification expires as it is likely the only way to
+                // repair the system and bring it back to a certifiable state.
+                if ((from == address(0) && hasRole(DEPOSIT, to)) || (to == address(0) && hasRole(WITHDRAW, from))) {
+                    return;
+                }
+
+                // Confiscation is always allowed as it likely represents some kind of
+                // regulatory/legal requirement. It may also be required to satisfy
+                // certification requirements.
+                if (hasRole(CONFISCATE_SHARES, to) || hasRole(CONFISCATE_RECEIPT, to)) {
+                    return;
+                }
+
                 revert CertificationExpired(from, to);
+            } else {
+                return;
             }
         } else if (hasRole(permission, user)) {
             return;
