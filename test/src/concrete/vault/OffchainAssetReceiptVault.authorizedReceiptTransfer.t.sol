@@ -38,11 +38,11 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         // Warp the block timestamp to a non-zero value.
         vm.warp(warpTimestamp);
 
-        // Prank as Bob for the transaction.
-        vm.startPrank(bob);
+        // Prank as receipt for the authorization.
+        vm.startPrank(address(vault.receipt()));
 
         // Assuming that the certification is expired.
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, 0, warpTimestamp));
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice));
 
         // Attempt to authorize receipt transfer, should revert.
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
@@ -90,8 +90,10 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         // Set nextTimestamp as timestamp
         vm.warp(nextTimestamp);
 
+        vm.startPrank(address(vault.receipt()));
+
         // Expect revert because the certification is expired
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice, timestamp, nextTimestamp));
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice));
 
         // Attempt to authorize receipt transfer, should revert
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
@@ -136,7 +138,9 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
+        // Prank the receipt for the authorization
+        vm.startPrank(address(vault.receipt()));
+
         // Authorize should succeed
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
 
@@ -162,9 +166,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         vm.startPrank(alice);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
 
-        vm.startPrank(bob);
+        vm.startPrank(address(vault.receipt()));
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 
@@ -188,9 +191,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, alice);
 
-        vm.startPrank(bob);
+        vm.startPrank(address(vault.receipt()));
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 
@@ -213,9 +215,8 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         vm.startPrank(alice);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, alice);
 
-        vm.startPrank(bob);
+        vm.startPrank(address(vault.receipt()));
 
-        vm.expectCall(address(vault), abi.encodeCall(vault.authorizeReceiptTransfer3, (bob, alice, ids, amounts)));
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 }

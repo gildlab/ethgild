@@ -90,7 +90,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Expect to revert
-        vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector, bob));
+        vm.expectRevert(abi.encodeWithSelector(ZeroCertifyUntil.selector));
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
@@ -217,9 +217,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         vm.warp(futureTime);
 
         // Expect revert because the certification is expired
-        vm.expectRevert(
-            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, forceCertifyUntil, futureTime)
-        );
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
 
         // Attempt to deposit, should revert
         vault.deposit(assets, alice, minShareRatio, data);

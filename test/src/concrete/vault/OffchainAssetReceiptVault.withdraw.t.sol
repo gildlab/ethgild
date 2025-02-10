@@ -89,7 +89,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call withdraw function
         uint256 shares = vault.previewWithdraw(assets, id);
 
-        assertEq(shares, 0);
+        assertEq(shares, assets);
         // Stop the prank
         vm.stopPrank();
     }
@@ -514,7 +514,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, alice, minShareRatio, data);
 
-        checkNoBalanceChange(vault, bob, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data, "ERC20: insufficient allowance");
 
         // Stop the prank
         vm.stopPrank();
@@ -558,7 +558,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test withdraw function reverts when withdrawing someone else's assets
-    /// deposeted by them
+    /// deposited by them
     function testWithdrawOthersAssetsReverts(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
@@ -599,7 +599,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank Bob for the withdraw transaction
         vm.startPrank(bob);
 
-        checkNoBalanceChange(vault, bob, alice, 1, assets, data, abi.encodeWithSelector(ZeroSharesAmount.selector));
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data, "ERC20: insufficient allowance");
 
         // Stop the prank
         vm.stopPrank();

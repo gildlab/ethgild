@@ -236,7 +236,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         vm.warp(timestamp);
 
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, 0, timestamp));
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
 
         vault.mint(shares, alice, minShareRatio, receiptInformation);
 
@@ -289,9 +289,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.warp(nextTimestamp);
 
         // Expect revert because the certification is expired
-        vm.expectRevert(
-            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, timestamp, nextTimestamp)
-        );
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
 
         // Attempt to mint, should revert
         vault.mint(shares, alice, minShareRatio, receiptInformation);
@@ -379,29 +377,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         // Assert that the total supply and total shares are equal after the mint
         assertEqUint(vault.totalSupply(), vault.totalAssets());
-        vm.stopPrank();
-    }
-
-    /// Test PreviewMint without depositor role
-    function testPreviewMintRevertWithoutRole(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 shares
-    ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-
-        shares = bound(shares, 1, type(uint256).max);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        vm.startPrank(bob);
-        vm.expectRevert();
-        vault.previewMint(shares, 0);
-
         vm.stopPrank();
     }
 

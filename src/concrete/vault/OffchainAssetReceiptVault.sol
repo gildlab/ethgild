@@ -214,7 +214,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// @param confiscatee The user who had their shares confiscated.
     /// @param confiscated The amount of shares that were confiscated.
     /// @param justification The contextual data justifying the confiscation.
-    event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
+    event ConfiscateShares(
+        address sender, address confiscatee, uint256 targetAmount, uint256 confiscated, bytes justification
+    );
 
     /// A receipt has been confiscated from a user who is not currently meeting
     /// the ERC1155 tier contract minimum requirements.
@@ -223,7 +225,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// @param id The receipt ID that was confiscated.
     /// @param confiscated The amount of the receipt that was confiscated.
     /// @param justification The contextual data justifying the confiscation.
-    event ConfiscateReceipt(address sender, address confiscatee, uint256 id, uint256 confiscated, bytes justification);
+    event ConfiscateReceipt(
+        address sender, address confiscatee, uint256 id, uint256 targetAmount, uint256 confiscated, bytes justification
+    );
 
     IAuthorizeV1 sAuthorizor;
 
@@ -559,7 +563,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
 
         uint256 actualAmount = balanceOf(confiscatee).min(targetAmount);
         if (actualAmount > 0) {
-            emit ConfiscateShares(msg.sender, confiscatee, actualAmount, data);
+            emit ConfiscateShares(msg.sender, confiscatee, targetAmount, actualAmount, data);
             _transfer(confiscatee, msg.sender, actualAmount);
         }
 
@@ -610,7 +614,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
 
         uint256 actualAmount = receipt().balanceOf(confiscatee, id).min(targetAmount);
         if (actualAmount > 0) {
-            emit ConfiscateReceipt(msg.sender, confiscatee, id, actualAmount, data);
+            emit ConfiscateReceipt(msg.sender, confiscatee, id, targetAmount, actualAmount, data);
             receipt().managerTransferFrom(confiscatee, msg.sender, id, actualAmount, "");
         }
 

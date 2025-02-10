@@ -187,9 +187,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vm.warp(futureTimestamp);
 
         // Expect revert because the certification is expired
-        vm.expectRevert(
-            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, timestamp, futureTimestamp)
-        );
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
 
         // Attempt to deposit, should revert
         vault.redeposit(assets, alice, 1, data);

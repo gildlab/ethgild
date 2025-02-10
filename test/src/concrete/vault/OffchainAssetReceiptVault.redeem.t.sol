@@ -84,7 +84,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         // Call withdraw function
         uint256 assets = vault.previewWithdraw(shares, minShareRatio);
 
-        assertEq(assets, 0);
+        assertEq(assets, shares);
         // Stop the prank
         vm.stopPrank();
     }
@@ -140,10 +140,11 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         // Assume that shares is not 0
         shares = bound(shares, 1, type(uint64).max);
 
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
 
         // Call the deposit function

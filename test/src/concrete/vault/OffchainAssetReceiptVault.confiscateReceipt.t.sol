@@ -13,8 +13,11 @@ import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetRece
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 
 contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
+    using Math for uint256;
+
     event ConfiscateReceipt(
         address sender, address confiscatee, uint256 id, uint256 targetAmount, uint256 confiscated, bytes justification
     );
@@ -32,13 +35,14 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         uint256 initialBalanceAlice = receipt.balanceOf(alice, id);
         uint256 initialBalanceBob = receipt.balanceOf(bob, id);
         bool expectNoChange = initialBalanceAlice == 0;
+        uint256 expectedChange = targetAmount.min(initialBalanceAlice);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
 
         if (!expectNoChange) {
             vm.expectEmit(false, false, false, true);
-            emit ConfiscateReceipt(bob, alice, id, targetAmount, initialBalanceAlice, data);
+            emit ConfiscateReceipt(bob, alice, id, targetAmount, expectedChange, data);
         }
 
         vault.confiscateReceipt(alice, id, targetAmount, data);
@@ -48,7 +52,8 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         bool balancesChanged = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
         if (!expectNoChange) {
-            balancesChanged = balanceAfterAlice == 0 && balanceAfterBob == initialBalanceBob + initialBalanceAlice;
+            balancesChanged = balanceAfterAlice == initialBalanceAlice - expectedChange
+                && balanceAfterBob == initialBalanceBob + expectedChange;
         }
 
         assertTrue(balancesChanged, expectNoChange ? "Balances should not change" : "Balances should change");
@@ -66,6 +71,8 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         uint256 id,
         uint256 targetAmount
     ) external {
+        vm.assume(targetAmount > 0);
+
         // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
@@ -87,7 +94,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test to checks ConfiscateReceipt
-    function testConfiscateReceipt(
+    function testConfiscateReceiptBasic(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 minShareRatio,
@@ -99,6 +106,8 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         bool forceUntil,
         uint256 targetAmount
     ) external {
+        vm.assume(targetAmount > 0);
+
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Generate unique addresses
         (address alice, address bob) =
