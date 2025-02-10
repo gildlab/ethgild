@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {InvalidId, ZeroAssetsAmount} from "src/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
-import {OffchainAssetReceiptVault, CertificationExpired} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVault, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -12,6 +12,10 @@ import {
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {
+    OffchainAssetReceiptVaultAuthorizorV1,
+    CertificationExpired
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract RedepositTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -69,8 +73,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -114,8 +118,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -165,8 +169,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -183,9 +187,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         vm.warp(futureTimestamp);
 
         // Expect revert because the certification is expired
-        vm.expectRevert(
-            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice, timestamp, futureTimestamp)
-        );
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
 
         // Attempt to deposit, should revert
         vault.redeposit(assets, alice, 1, data);
@@ -216,8 +218,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vault.grantRole(vault.DEPOSITOR(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -262,8 +264,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -311,8 +313,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -365,8 +367,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -421,8 +423,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
