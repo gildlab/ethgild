@@ -2,7 +2,16 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
+import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
+import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {
+    LibFixedPointDecimalArithmeticOpenZeppelin,
+    Math
+} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+
 contract ERC20PriceOracleReceiptVaultPreviewDepositTest is ERC20PriceOracleReceiptVaultTest {
+    using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
+
     /// Test PreviewDeposit returns correct shares
     function testPreviewDepositReturnedShares(
         string memory assetName,
@@ -26,4 +35,8 @@ contract ERC20PriceOracleReceiptVaultPreviewDepositTest is ERC20PriceOracleRecei
 
         vm.stopPrank();
     }
+
+    receive() external payable {}
+
+    fallback() external payable {}
 }

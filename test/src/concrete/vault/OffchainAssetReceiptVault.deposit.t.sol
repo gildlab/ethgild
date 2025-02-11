@@ -342,34 +342,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    /// Test PreviewDeposit returns correct shares
-    function testPreviewDepositReturnedShares(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 assets
-    ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // Prank as Alice to set role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-        uint256 shares = vault.previewDeposit(assets, 0);
-
-        assertEqUint(shares, assets);
-
-        vm.stopPrank();
-    }
-
     /// Test deposit without depositor role
     function testDepositWithoutDepositorRole(
         uint256 fuzzedKeyAlice,
