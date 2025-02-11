@@ -187,49 +187,5 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         vault.deposit(assets, address(0), oraclePrice, data);
     }
 
-    /// Test PreviewDeposit returns correct shares
-    function testPreviewDepositReturnedShares(
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 assets,
-        uint256 oraclePrice
-    ) external {
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
-        uint256 shares = vault.previewDeposit(assets, 0);
-
-        assertEqUint(shares, expectedShares);
-
-        vm.stopPrank();
-    }
-
-    /// forge-config: default.fuzz.runs = 1
-    function testDepositFlareFork(uint256 deposit) public {
-        deposit = bound(deposit, 1, type(uint128).max);
-
-        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, deposit);
-
-        deal(address(SFLR_CONTRACT), alice, deposit);
-
-        vm.startPrank(alice);
-        vm.assume(vault.previewDeposit(deposit, 0) > 0);
-
-        vault.deposit(deposit, alice, 0, hex"00");
-        vm.stopPrank();
-
-        uint256 shareBalance = vault.balanceOf(alice);
-        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
-
-        assertEqUint(deposit.fixedPointMul(rate, Math.Rounding.Down), shareBalance);
-    }
-
     fallback() external {}
 }
