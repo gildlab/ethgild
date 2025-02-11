@@ -65,6 +65,81 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assertEqUint(receipt.balanceOf(alice, oraclePrice), expectedShares);
     }
 
+    /// Test multiple deposits under the different oracle prices.
+    function testMultipleDeposits(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        uint256 assets,
+        uint256 oraclePrice1,
+        uint256 oraclePrice2
+    ) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, fuzzedKeyAlice);
+
+        oraclePrice1 = bound(oraclePrice1, 0.01e18, 100e18);
+        oraclePrice2 = bound(oraclePrice2, 0.01e18, 100e18);
+        setVaultOraclePrice(oraclePrice1);
+
+        vm.startPrank(alice);
+
+        vm.recordLogs();
+        ERC20PriceOracleReceiptVault vault;
+        {
+            vault = createVault(iVaultOracle, assetName, assetName);
+
+            // Ensure Alice has enough balance and allowance
+            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
+
+            assets = bound(assets, 1, type(uint128).max);
+            vm.assume(assets.fixedPointMul(oraclePrice1, Math.Rounding.Down) > 0);
+
+            vm.mockCall(
+                address(iAsset),
+                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
+                abi.encode(true)
+            );
+        }
+
+        ReceiptContract receipt = getReceipt();
+        uint256 expectedShares1 = assets.fixedPointMul(oraclePrice1, Math.Rounding.Down);
+        vm.expectEmit(false, false, false, true);
+        emit IReceiptVaultV1.Deposit(alice, alice, assets, expectedShares1, oraclePrice1, bytes(""));
+
+        vault.deposit(assets, alice, oraclePrice1, bytes(""));
+
+        // Assert that the total supply is equal to expectedShares1
+        assertEqUint(vault.totalSupply(), expectedShares1);
+        // Check alice's share balance
+        assertEqUint(vault.balanceOf(alice), expectedShares1);
+        // Check alice's receipt balance
+        assertEqUint(receipt.balanceOf(alice, oraclePrice1), expectedShares1);
+
+        // Deposit again with different oracle price
+        setVaultOraclePrice(oraclePrice2);
+
+        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
+
+        assets = bound(assets, 1, type(uint128).max);
+        vm.assume(assets.fixedPointMul(oraclePrice2, Math.Rounding.Down) > 0);
+
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
+            abi.encode(true)
+        );
+
+        uint256 expectedShares2 = assets.fixedPointMul(oraclePrice2, Math.Rounding.Down);
+        vm.expectEmit(false, false, false, true);
+        emit IReceiptVaultV1.Deposit(alice, alice, assets, expectedShares2, oraclePrice2, bytes(""));
+        vault.deposit(assets, alice, oraclePrice2, bytes(""));
+        // Assert that the total supply is equal to expectedShares1 + expectedShares2
+        assertEqUint(vault.totalSupply(), expectedShares1 + expectedShares2);
+        // Check alice's share balance
+        assertEqUint(vault.balanceOf(alice), expectedShares1 + expectedShares2);
+        // Check alice's receipt balance
+        assertEqUint(receipt.balanceOf(alice, oraclePrice1), expectedShares1);
+        assertEqUint(receipt.balanceOf(alice, oraclePrice2), expectedShares2);
+    }
+
     /// Test deposit to someone else
     function testDepositSomeoneElse(
         uint256 fuzzedKeyAlice,

@@ -5,9 +5,7 @@ pragma solidity =0.8.25;
 import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVault, DEPOSIT} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {
-    OffchainAssetReceiptVaultAuthorizorV1
-} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math

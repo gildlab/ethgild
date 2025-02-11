@@ -146,7 +146,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test to check deposit reverts with ZeroAssetsAmount
-    function testZeroAssetsAmount(
+    function testDepositWithZeroAssets(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
