@@ -13,11 +13,11 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constracted
-    function testCheckConstructionEvent(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
+    function testConstructionEvent(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, fuzzedKeyAlice);
 
         IPriceOracleV2 vaultPriceOracle =
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
@@ -32,12 +32,10 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
 
         // Note: To use vm.expectEmit receipt address is needed to be known.
         // Find the OffchainAssetReceiptVaultInitialized event log
-        address msgSender = address(0);
-        IPriceOracleV2 priceOracle = IPriceOracleV2(payable(0));
-        address assetAddress = address(0);
-        address receiptAddress = address(0);
-        string memory name = "";
-        string memory symbol = "";
+        address msgSender;
+
+        ERC20PriceOracleReceiptVaultConfig memory config;
+
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
             if (
@@ -47,14 +45,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
                     )
             ) {
                 // Decode the event data
-                (address sender, ERC20PriceOracleReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
-                msgSender = sender;
-                priceOracle = config.priceOracle;
-                name = config.receiptVaultConfig.vaultConfig.name;
-                symbol = config.receiptVaultConfig.vaultConfig.symbol;
-                assetAddress = address(config.receiptVaultConfig.vaultConfig.asset);
-                receiptAddress = address(config.receiptVaultConfig.receipt);
+                (msgSender, config) = abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
                 eventFound = true; // Set the flag to true since event log was found
                 break;
             }
@@ -63,11 +54,24 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
 
         assertEq(msgSender, address(iFactory));
-        assertEq(address(priceOracle), address(vaultPriceOracle));
         assert(address(vault) != address(0));
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(name)));
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(symbol)));
-        assertEq(receiptAddress, address(vault.receipt()));
+
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.name)));
+        assertEq(config.receiptVaultConfig.vaultConfig.name, assetName);
+
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.symbol)));
+        assertEq(config.receiptVaultConfig.vaultConfig.symbol, assetSymbol);
+
+        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), address(iAsset));
+
+        assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
+        assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));
+
+        assertEq(address(config.priceOracle), address(vaultPriceOracle));
+        assertTrue(address(vault) != address(0));
+
+        // Check the receipt manager is the vault.
+        assertEq(address(vault), vault.receipt().manager());
     }
 
     /// Test creating several different vaults

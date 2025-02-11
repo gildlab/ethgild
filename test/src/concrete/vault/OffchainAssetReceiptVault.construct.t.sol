@@ -30,7 +30,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     function testNonZeroAsset(uint256 fuzzedKeyAlice, address asset, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, fuzzedKeyAlice);
 
         vm.assume(asset != address(0));
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
@@ -43,9 +43,11 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that offchainAssetReceiptVault constructs well
-    function testConstruction(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
+    function testConstructionEvent(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
+        external
+    {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, fuzzedKeyAlice);
 
         address asset = address(0);
 
@@ -66,8 +68,9 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         // Find the OffchainAssetReceiptVaultInitialized event log
-        address msgSender = address(0);
-        address admin = address(0);
+        address msgSender;
+
+        OffchainAssetReceiptVaultConfigV2 memory config;
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
             if (
@@ -77,10 +80,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
                     )
             ) {
                 // Decode the event data
-                (address sender, OffchainAssetReceiptVaultConfigV2 memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));
-                msgSender = sender;
-                admin = config.initialAdmin;
+                (msgSender, config) = abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));
                 eventFound = true; // Set the flag to true since event log was found
                 break;
             }
@@ -90,61 +90,22 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
 
         assertEq(msgSender, address(iFactory));
-        assertEq(admin, alice);
+        assertEq(config.initialAdmin, alice);
         assert(address(vault) != address(0));
+
+        assertEq(config.receiptVaultConfig.vaultConfig.name, assetName);
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
+
+        assertEq(config.receiptVaultConfig.vaultConfig.symbol, assetSymbol);
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
-    }
 
-    /// Test that vault is the manager of its receipt
-    function testVaultIsReceiptManager(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), asset);
 
-        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig});
+        assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
+        assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));
 
-        // Start recording logs
-        vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(
-            payable(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)))
-        );
-
-        // Get the logs
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-
-        // Find the OffchainAssetReceiptVaultInitialized event log
-        address receiptAddress = address(0);
-        address msgSender = address(0);
-        for (uint256 i = 0; i < logs.length; i++) {
-            if (
-                logs[i].topics[0]
-                    == keccak256(
-                        "OffchainAssetReceiptVaultInitializedV2(address,(address,(address,(address,string,string))))"
-                    )
-            ) {
-                // Decode the event data
-                (address sender, OffchainAssetReceiptVaultConfigV2 memory config) =
-                    abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));
-                receiptAddress = config.receiptVaultConfig.receipt;
-                msgSender = sender;
-                break;
-            }
-        }
-        // Create an instance of the Receipt contract
-        IReceiptV2 receipt = IReceiptV2(receiptAddress);
-
-        // Check that the receipt address is not zero
-        assert(receiptAddress != address(0));
-        // Check sender
-        assertEq(msgSender, address(iFactory));
-
-        // Interact with the receipt contract
-        address manager = receipt.manager();
-        assertEq(manager, address(vault));
+        // Check the receipt manager is the vault.
+        assertEq(address(vault), vault.receipt().manager());
     }
 
     /// Test creating several different vaults
