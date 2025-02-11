@@ -53,6 +53,12 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         // Assert that the total supply and total assets are equal after the deposit
         assertEqUint(vault.totalSupply(), vault.totalAssets());
+
+        // Check bob's share balance.
+        assertEqUint(vault.balanceOf(bob), assets);
+
+        // Check bob's receipt balance.
+        assertEqUint(vault.receipt().balanceOf(bob, 1), assets);
     }
 
     /// Test multiple deposits increment the ID
@@ -107,7 +113,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test to check deposit reverts with MinShareRatio
-    function testMinShareRatio(
+    function testDepositMinShareRatio(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
@@ -171,7 +177,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    function testZeroReceiver(
+    function testDepositWithZeroReceiver(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
