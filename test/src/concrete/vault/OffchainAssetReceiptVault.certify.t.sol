@@ -19,8 +19,6 @@ import {
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
-    event Certify(address sender, uint256 certifyUntil, bool forceUntil, bytes data);
-
     /// Test certify event
     function testCertify(
         uint256 fuzzedKeyAlice,
@@ -52,7 +50,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, forceUntil, data);
+        emit OffchainAssetReceiptVault.Certify(bob, certifyUntil, forceUntil, data);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
@@ -141,7 +139,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         vm.warp(timestamp);
 
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, timestamp, false, data);
+        emit OffchainAssetReceiptVault.Certify(bob, timestamp, false, data);
 
         // Certify system till the current timestamp
         vault.certify(timestamp, false, data);
@@ -153,7 +151,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         vm.warp(forceCertifyUntil);
 
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, forceCertifyUntil, true, data);
+        emit OffchainAssetReceiptVault.Certify(bob, forceCertifyUntil, true, data);
 
         // Certify system till the current timestamp
         vault.certify(forceCertifyUntil, true, data);
@@ -210,7 +208,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, forceCertifyUntil, true, data);
+        emit OffchainAssetReceiptVault.Certify(bob, forceCertifyUntil, true, data);
 
         // Certify with forceUntil true
         vault.certify(forceCertifyUntil, true, data);

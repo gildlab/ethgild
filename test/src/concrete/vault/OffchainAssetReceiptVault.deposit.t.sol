@@ -15,7 +15,7 @@ import {
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit function
-    function testDeposit(
+    function testDepositBasic(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         uint256 assets,

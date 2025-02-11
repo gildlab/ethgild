@@ -3,15 +3,13 @@
 pragma solidity =0.8.25;
 
 import {IReceiptManagerV2} from "src/interface/IReceiptManagerV2.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract, IReceiptV2} from "src/concrete/receipt/Receipt.sol";
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
 import {OnlyManager} from "src/error/ErrReceipt.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
-    event ReceiptInformation(address sender, uint256 id, bytes information);
-
     function testInitialize() public {
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt =
@@ -106,7 +104,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Set up the event expectation for ReceiptInformation
         vm.expectEmit(false, false, false, true);
-        emit ReceiptInformation(alice, id, fuzzedReceiptInformation);
+        emit IReceiptV2.ReceiptInformation(alice, id, fuzzedReceiptInformation);
 
         testManager.managerBurn(receipt, alice, id, receiptBalance, fuzzedReceiptInformation);
 

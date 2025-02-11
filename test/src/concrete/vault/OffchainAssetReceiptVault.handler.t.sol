@@ -12,12 +12,6 @@ import {
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
-    event SetERC20Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
-    event SetERC1155Tier(address sender, address tier, uint256 minimumTier, uint256[] context, bytes data);
-    event DepositWithReceipt(
-        address sender, address owner, uint256 assets, uint256 shares, uint256 id, bytes receiptInformation
-    );
-
     function setUpAddressesAndBounds(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,

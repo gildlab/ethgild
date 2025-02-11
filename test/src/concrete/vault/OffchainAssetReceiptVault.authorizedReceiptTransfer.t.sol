@@ -14,8 +14,6 @@ import {
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAssetReceiptVaultTest {
-    event Certify(address sender, uint256 certifyUntil, bool forceUntil, bytes data);
-
     ///Test AuthorizeReceiptTransfer reverts if system not certified
     function testAuthorizeReceiptTransferRevert(
         uint256 fuzzedKeyAlice,
@@ -133,7 +131,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
 
         // Expect the Certify event
         vm.expectEmit(false, false, false, true);
-        emit Certify(bob, certifyUntil, forceUntil, data);
+        emit OffchainAssetReceiptVault.Certify(bob, certifyUntil, forceUntil, data);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);

@@ -15,8 +15,6 @@ import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
-    event OffchainAssetReceiptVaultInitializedV2(address sender, OffchainAssetReceiptVaultConfigV2 config);
-
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
     OffchainAssetReceiptVaultAuthorizorV1 internal immutable iAuthorizorImplementation;
@@ -45,7 +43,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         address receiptAddress = address(0);
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == OffchainAssetReceiptVaultInitializedV2.selector) {
+            if (logs[i].topics[0] == OffchainAssetReceiptVault.OffchainAssetReceiptVaultInitializedV2.selector) {
                 // Decode the event data
                 (, OffchainAssetReceiptVaultConfigV2 memory config) =
                     abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));

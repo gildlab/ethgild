@@ -33,7 +33,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         vm.startPrank(alice);
 
-        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
         vm.recordLogs();
         ERC20PriceOracleReceiptVault vault;
         {

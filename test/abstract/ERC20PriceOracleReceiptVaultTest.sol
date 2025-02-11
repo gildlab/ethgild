@@ -17,8 +17,6 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
-    event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
-
     ICloneableFactoryV2 internal immutable iFactory;
     ERC20PriceOracleReceiptVault internal immutable iImplementation;
     ReceiptContract internal immutable iReceiptImplementation;
@@ -59,7 +57,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         address receiptAddress = address(0);
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == ERC20PriceOracleReceiptVaultInitialized.selector) {
+            if (logs[i].topics[0] == ERC20PriceOracleReceiptVault.ERC20PriceOracleReceiptVaultInitialized.selector) {
                 // Decode the event data
                 (, ERC20PriceOracleReceiptVaultConfig memory config) =
                     abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));

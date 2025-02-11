@@ -18,10 +18,6 @@ import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contra
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     using Math for uint256;
 
-    event ConfiscateShares(
-        address sender, address confiscatee, uint256 targetAmount, uint256 confiscated, bytes justification
-    );
-
     /// Checks that confiscateShares balances don't change or do change as expected
     function checkConfiscateShares(
         OffchainAssetReceiptVault vault,
@@ -37,7 +33,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         uint256 expectedChange = initialBalanceAlice.min(targetAmount);
         if (!expectNoChange) {
             vm.expectEmit(false, false, false, true);
-            emit ConfiscateShares(bob, alice, targetAmount, expectedChange, data);
+            emit OffchainAssetReceiptVault.ConfiscateShares(bob, alice, targetAmount, expectedChange, data);
         }
 
         vault.confiscateShares(alice, targetAmount, data);
