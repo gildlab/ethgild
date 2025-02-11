@@ -16,7 +16,7 @@ import {
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test mint function
-    function testMint(
+    function testMintBasic(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
