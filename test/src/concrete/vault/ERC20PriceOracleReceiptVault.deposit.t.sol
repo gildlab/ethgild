@@ -135,9 +135,14 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assertEqUint(vault.totalSupply(), expectedShares1 + expectedShares2);
         // Check alice's share balance
         assertEqUint(vault.balanceOf(alice), expectedShares1 + expectedShares2);
+
         // Check alice's receipt balance
-        assertEqUint(receipt.balanceOf(alice, oraclePrice1), expectedShares1);
-        assertEqUint(receipt.balanceOf(alice, oraclePrice2), expectedShares2);
+        if (oraclePrice1 == oraclePrice2) {
+            assertEqUint(receipt.balanceOf(alice, oraclePrice1), expectedShares1 + expectedShares2);
+        } else {
+            assertEqUint(receipt.balanceOf(alice, oraclePrice1), expectedShares1);
+            assertEqUint(receipt.balanceOf(alice, oraclePrice2), expectedShares2);
+        }
     }
 
     /// Test deposit to someone else

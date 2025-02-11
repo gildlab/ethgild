@@ -130,9 +130,13 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         // Check balance
         assertEqUint(vault.balanceOf(alice), shares1 + shares2);
 
-        // Check alice's receipt balance
-        assertEqUint(receipt.balanceOf(alice, oraclePrice1), shares1);
-        assertEqUint(receipt.balanceOf(alice, oraclePrice2), shares2);
+        // // Check alice's receipt balance
+        if (oraclePrice1 == oraclePrice2) {
+            assertEqUint(receipt.balanceOf(alice, oraclePrice1), shares1 + shares2);
+        } else {
+            assertEqUint(receipt.balanceOf(alice, oraclePrice1), shares1);
+            assertEqUint(receipt.balanceOf(alice, oraclePrice2), shares2);
+        }
     }
 
     /// Test mint to someone else
