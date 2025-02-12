@@ -21,11 +21,14 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
-        uint256 assets,
+        uint256 shares,
         bytes memory receiptInformation,
         uint256 minShareRatio
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
+
+        shares = bound(shares, 1, type(uint256).max);
+        uint256 assets = shares;
 
         // Generate unique addresses
         (address alice, address bob) =
@@ -34,9 +37,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = LibOffchainAssetVaultCreator.createVault(
             vm, iFactory, iImplementation, iAuthorizorImplementation, alice, assetName, assetSymbol
         );
-
-        // Assume that assets is less uint256 max
-        assets = bound(assets, 1, type(uint256).max);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
@@ -49,10 +49,12 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         vm.expectEmit(true, true, true, true);
         emit IReceiptVaultV1.Deposit(bob, bob, assets, assets, 1, receiptInformation);
 
-        vault.mint(assets, bob, minShareRatio, receiptInformation);
+        uint256 actualAssets = vault.mint(shares, bob, minShareRatio, receiptInformation);
 
         // Assert that the total supply and total assets are equal after the mint
         assertEqUint(vault.totalSupply(), vault.totalAssets());
+
+        assertEqUint(actualAssets, assets);
 
         vm.stopPrank();
     }
@@ -91,25 +93,28 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         emit IReceiptVaultV1.Deposit(bob, bob, shares, shares, 1, fuzzedReceiptInformation);
 
         // Call the mint function that should emit the event
-        vault.mint(shares, bob, minShareRatio, fuzzedReceiptInformation);
+        uint256 actualAssets1 = vault.mint(shares, bob, minShareRatio, fuzzedReceiptInformation);
 
         assertEqUint(vault.totalSupply(), vault.totalAssets());
+        assertEqUint(actualAssets1, shares);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.Deposit(bob, bob, sharesSecondMint, sharesSecondMint, 2, fuzzedReceiptInformation);
 
         // Call the mint function that should emit the event
-        vault.mint(sharesSecondMint, bob, minShareRatio, fuzzedReceiptInformation);
+        uint256 actualAssets2 = vault.mint(sharesSecondMint, bob, minShareRatio, fuzzedReceiptInformation);
 
         // Stop the prank
         vm.stopPrank();
+
+        assertEqUint(actualAssets2, sharesSecondMint);
 
         // Assert that the total supply and total assets are equal after the mint
         assertEqUint(vault.totalSupply(), vault.totalAssets());
     }
 
     /// Test to check mint reverts with MinShareRatio
-    function testMinShareRatio(
+    function testMintWithMinShareRatio(
         uint256 fuzzedKeyAlice,
         uint256 fuzzedKeyBob,
         string memory assetName,
