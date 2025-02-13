@@ -12,7 +12,7 @@ import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
-    /// Test ERC20PriceOracleReceiptVault is constracted
+    /// Test ERC20PriceOracleReceiptVault is constructed
     function testConstructionEvent(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
         external
     {

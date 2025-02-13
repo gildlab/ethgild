@@ -187,5 +187,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         );
     }
 
+    receive() external payable {}
+
     fallback() external {}
 }
