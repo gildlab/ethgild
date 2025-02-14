@@ -129,6 +129,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+        assertEq(address(vault.receipt().manager()), address(vault));
+        assertEq(vault.owner(), alice);
 
         // Simulate transaction from alice
         vm.prank(bob);
@@ -138,5 +140,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         assert(address(vaultTwo) != address(0));
         assertEq(keccak256(bytes(vaultTwo.name())), keccak256(bytes(assetNameTwo)));
         assertEq(keccak256(bytes(vaultTwo.symbol())), keccak256(bytes(assetSymbolTwo)));
+        assertEq(address(vaultTwo.receipt().manager()), address(vaultTwo));
+        assertEq(vaultTwo.owner(), bob);
     }
 }

@@ -107,7 +107,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
                         receiver: bob,
                         id: 1,
                         assetsDeposited: aliceAssets,
-                        sharesMinted: aliceAssets
+                        sharesMinted: aliceAssets,
+                        data: receiptInformation
                     })
                 )
             )

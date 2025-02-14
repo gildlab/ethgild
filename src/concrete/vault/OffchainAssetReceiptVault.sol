@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {UnmanagedReceiptTransfer} from "../../interface/IReceiptManagerV2.sol";
 import {
     ReceiptVaultConfig,
     VaultConfig,
@@ -12,8 +11,6 @@ import {
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfig
 } from "../../abstract/ReceiptVault.sol";
-import {AccessControlUpgradeable as AccessControl} from
-    "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
@@ -119,6 +116,7 @@ struct DepositStateChange {
     uint256 id;
     uint256 assetsDeposited;
     uint256 sharesMinted;
+    bytes data;
 }
 
 struct WithdrawStateChange {
@@ -127,6 +125,7 @@ struct WithdrawStateChange {
     uint256 id;
     uint256 assetsWithdrawn;
     uint256 sharesBurned;
+    bytes data;
 }
 
 /// @dev Permission for certification.
@@ -190,7 +189,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1, Ownable {
+contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     using Math for uint256;
 
     /// Contract has initialized.
@@ -232,7 +231,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     IAuthorizeV1 sAuthorizor;
 
     /// The largest issued id. The next id issued will be larger than this.
-    uint256 private sHighwaterId;
+    uint256 internal sHighwaterId;
 
     /// The system is certified until this timestamp. If this is in the past then
     /// general transfers of shares and receipts will fail until the system can
@@ -250,7 +249,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         OffchainAssetVaultConfigV2 memory config = abi.decode(data, (OffchainAssetVaultConfigV2));
 
         __ReceiptVault_init(config.vaultConfig);
-        __AccessControl_init();
 
         // There is no asset, the asset is offchain.
         if (config.vaultConfig.asset != address(0)) {
@@ -274,6 +272,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         );
 
         return ICLONEABLE_V2_SUCCESS;
+    }
+
+    /// Returns the current highwater id.
+    function highwaterId() external view returns (uint256) {
+        return sHighwaterId;
     }
 
     /// Returns the current authorizor contract.
@@ -303,14 +306,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
     function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        external
+        public
         virtual
         override
     {
-        if (msg.sender != address(receipt())) {
-            revert UnmanagedReceiptTransfer();
-        }
-
+        super.authorizeReceiptTransfer3(from, to, ids, amounts);
         sAuthorizor.authorize(
             msg.sender,
             TRANSFER_RECEIPT,
@@ -329,7 +329,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// Highwater needs to witness the incoming id.
     /// @inheritdoc ReceiptVault
-    function _beforeDeposit(uint256 assets, address receiver, uint256 shares, uint256 id) internal virtual override {
+    function _beforeDeposit(
+        uint256 assets,
+        address receiver,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual override {
         sHighwaterId = sHighwaterId.max(id);
         sAuthorizor.authorize(
             msg.sender,
@@ -340,7 +346,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
                     receiver: receiver,
                     id: id,
                     assetsDeposited: assets,
-                    sharesMinted: shares
+                    sharesMinted: shares,
+                    data: receiptInformation
                 })
             )
         );
@@ -348,11 +355,14 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
 
     /// DO NOT call super `_afterWithdraw` as there are no assets to move.
     /// @inheritdoc ReceiptVault
-    function _afterWithdraw(uint256 assets, address receiver, address owner, uint256 shares, uint256 id)
-        internal
-        virtual
-        override
-    {
+    function _afterWithdraw(
+        uint256 assets,
+        address receiver,
+        address owner,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual override {
         sAuthorizor.authorize(
             msg.sender,
             WITHDRAW,
@@ -362,7 +372,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
                     receiver: receiver,
                     id: id,
                     assetsWithdrawn: assets,
-                    sharesBurned: shares
+                    sharesBurned: shares,
+                    data: receiptInformation
                 })
             )
         );

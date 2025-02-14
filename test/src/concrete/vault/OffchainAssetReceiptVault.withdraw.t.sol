@@ -177,7 +177,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
                     receiver: alice,
                     id: id,
                     assetsWithdrawn: assets,
-                    sharesBurned: assets
+                    sharesBurned: assets,
+                    data: data
                 })
             );
         }

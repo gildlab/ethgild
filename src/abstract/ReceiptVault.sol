@@ -29,6 +29,7 @@ import {
     ZeroSharesAmount,
     WrongManager
 } from "../error/ErrReceiptVault.sol";
+import {UnmanagedReceiptTransfer} from "../interface/IReceiptManagerV2.sol";
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
@@ -270,10 +271,12 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptManagerV2
     function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        external
+        public
         virtual
     {
-        // Authorize all receipt transfers by default.
+        if (msg.sender != address(receipt())) {
+            revert UnmanagedReceiptTransfer();
+        }
         (from, to, ids, amounts);
     }
 
@@ -506,7 +509,7 @@ abstract contract ReceiptVault is
         }
 
         emit IReceiptVaultV1.Deposit(msg.sender, receiver, assets, shares, id, receiptInformation);
-        _beforeDeposit(assets, receiver, shares, id);
+        _beforeDeposit(assets, receiver, shares, id, receiptInformation);
 
         // erc20 mint.
         // Slither flags this as reentrant but this function has `nonReentrant`
@@ -530,12 +533,14 @@ abstract contract ReceiptVault is
     /// !param id Recipt ID that will be minted for this deposit.
     function _beforeDeposit(
         uint256 assets,
-        address, // receiver
-        uint256, // shares
-        uint256 // id
+        address receiver,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
     ) internal virtual {
         // Default behaviour is to move assets before minting shares.
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets);
+        (receiver, shares, id, receiptInformation);
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -633,7 +638,7 @@ abstract contract ReceiptVault is
         receipt().managerBurn(msg.sender, owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
-        _afterWithdraw(assets, receiver, owner, shares, id);
+        _afterWithdraw(assets, receiver, owner, shares, id, receiptInformation);
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -671,12 +676,17 @@ abstract contract ReceiptVault is
     /// @param owner Owner of the shares being burned.
     /// @param shares Amount of shares being burned.
     /// @param id ID of the receipt being burned.
-    function _afterWithdraw(uint256 assets, address receiver, address owner, uint256 shares, uint256 id)
-        internal
-        virtual
-    {
+    /// @param receiptInformation New receipt information for the withdraw.
+    function _afterWithdraw(
+        uint256 assets,
+        address receiver,
+        address owner,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual {
         // Default is to send assets after burning shares.
         IERC20(asset()).safeTransfer(receiver, assets);
-        (owner, shares, id);
+        (owner, shares, id, receiptInformation);
     }
 }
