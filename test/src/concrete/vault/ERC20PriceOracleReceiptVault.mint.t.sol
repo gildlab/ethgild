@@ -57,6 +57,11 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         } else {
             vm.expectEmit(true, true, true, true);
             emit IReceiptVaultV1.Deposit(owner, receiver, expectedAssets, shares, oraclePrice, receiptInformation);
+            if (receiptInformation.length > 0) {
+                vm.expectEmit(false, false, false, true);
+                emit IReceiptV2.ReceiptInformation(owner, oraclePrice, receiptInformation);
+            }
+
             vm.expectCall(
                 address(iAsset),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, owner, address(vault), expectedAssets)

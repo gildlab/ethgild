@@ -3,7 +3,13 @@
 pragma solidity =0.8.25;
 
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVault, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    OffchainAssetReceiptVault,
+    DEPOSIT,
+    CERTIFY,
+    DepositStateChange,
+    Unauthorized
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
@@ -15,6 +21,50 @@ import {
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
+    function checkMint(
+        OffchainAssetReceiptVault vault,
+        address minter,
+        address receiver,
+        uint256 shares,
+        uint256 minShareRatio,
+        bytes memory receiptInformation,
+        bytes memory err
+    ) internal {
+        uint256 expectedAssets = shares;
+        uint256 expectedId = vault.highwaterId() + 1;
+
+        // Prank as Alice to grant role
+        vm.startPrank(vault.owner());
+
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, minter);
+
+        vm.stopPrank();
+
+        // Prank as Bob for transaction
+        vm.startPrank(minter);
+
+        if (err.length > 0) {
+            vm.expectRevert(err);
+            expectedAssets = 0;
+        } else {
+            vm.expectEmit(false, false, false, true);
+            emit IReceiptVaultV1.Deposit(minter, receiver, expectedAssets, shares, expectedId, receiptInformation);
+            if (receiptInformation.length > 0) {
+                vm.expectEmit(false, false, false, true);
+                emit IReceiptV2.ReceiptInformation(minter, expectedId, receiptInformation);
+            }
+        }
+
+        uint256 actualAssets = vault.mint(shares, receiver, minShareRatio, receiptInformation);
+
+        // Assert that the total supply and total assets are equal after the mint
+        assertEqUint(vault.totalSupply(), vault.totalAssets());
+
+        assertEqUint(actualAssets, expectedAssets);
+
+        vm.stopPrank();
+    }
+
     /// Test mint function
     function testMintBasic(
         uint256 aliceSeed,
@@ -28,7 +78,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
         shares = bound(shares, 1, type(uint256).max);
-        uint256 assets = shares;
 
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
@@ -36,25 +85,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
             vm, iFactory, iImplementation, iAuthorizorImplementation, alice, assetName, assetSymbol
         );
 
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        vm.expectEmit(true, true, true, true);
-        emit IReceiptVaultV1.Deposit(bob, bob, assets, assets, 1, receiptInformation);
-
-        uint256 actualAssets = vault.mint(shares, bob, minShareRatio, receiptInformation);
-
-        // Assert that the total supply and total assets are equal after the mint
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-
-        assertEqUint(actualAssets, assets);
-
-        vm.stopPrank();
+        checkMint(vault, bob, bob, shares, minShareRatio, receiptInformation, "");
     }
 
     /// Test multiple mint increments the ID
@@ -77,36 +108,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transactions
-        vm.startPrank(bob);
-
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptVaultV1.Deposit(bob, bob, shares, shares, 1, receiptInformation);
-
-        // Call the mint function that should emit the event
-        uint256 actualAssets1 = vault.mint(shares, bob, minShareRatio, receiptInformation);
-
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-        assertEqUint(actualAssets1, shares);
-
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptVaultV1.Deposit(bob, bob, sharesSecondMint, sharesSecondMint, 2, receiptInformation);
-
-        // Call the mint function that should emit the event
-        uint256 actualAssets2 = vault.mint(sharesSecondMint, bob, minShareRatio, receiptInformation);
-
-        // Stop the prank
-        vm.stopPrank();
-
-        assertEqUint(actualAssets2, sharesSecondMint);
-
-        // Assert that the total supply and total assets are equal after the mint
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
+        checkMint(vault, bob, bob, shares, minShareRatio, receiptInformation, "");
+        checkMint(vault, bob, bob, sharesSecondMint, minShareRatio, receiptInformation, "");
     }
 
     /// Test to check mint reverts with MinShareRatio
@@ -126,18 +129,15 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to set role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transactions
-        vm.startPrank(bob);
-
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, minShareRatio, 1e18));
-        vault.mint(shares, bob, minShareRatio, receiptInformation);
-
-        vm.stopPrank();
+        checkMint(
+            vault,
+            bob,
+            bob,
+            shares,
+            minShareRatio,
+            receiptInformation,
+            abi.encodeWithSelector(MinShareRatio.selector, minShareRatio, 1e18)
+        );
     }
 
     /// Test to check mint reverts with ZeroAssetsAmount
@@ -154,18 +154,9 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transactions
-        vm.startPrank(bob);
-
-        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
-        vault.mint(0, bob, minShareRatio, receiptInformation);
-
-        vm.stopPrank();
+        checkMint(
+            vault, bob, bob, 0, minShareRatio, receiptInformation, abi.encodeWithSelector(ZeroAssetsAmount.selector)
+        );
     }
 
     function testZeroReceiver(
@@ -185,18 +176,15 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to set role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        vm.expectRevert(abi.encodeWithSelector(ZeroReceiver.selector));
-        vault.mint(shares, address(0), minShareRatio, receiptInformation);
-
-        vm.stopPrank();
+        checkMint(
+            vault,
+            bob,
+            address(0),
+            shares,
+            minShareRatio,
+            receiptInformation,
+            abi.encodeWithSelector(ZeroReceiver.selector)
+        );
     }
 
     /// Test mint to someone else reverts if system not certified
@@ -220,20 +208,17 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to set role
-        vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as bob for transaction
-        vm.startPrank(bob);
-
         vm.warp(timestamp);
 
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
-
-        vault.mint(shares, alice, minShareRatio, receiptInformation);
-
-        vm.stopPrank();
+        checkMint(
+            vault,
+            bob,
+            alice,
+            shares,
+            minShareRatio,
+            receiptInformation,
+            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice)
+        );
     }
 
     /// Test mint to someone else reverts if system certification expired
@@ -263,29 +248,24 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
-        vm.stopPrank();
-
-        // Prank as Bob for the transaction
-        vm.startPrank(bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
 
         vm.warp(timestamp);
-        // Certify system till the current timestamp
         vault.certify(timestamp, false, receiptInformation);
 
-        // Set nextTimestamp as timestamp
         vm.warp(nextTimestamp);
-
-        // Expect revert because the certification is expired
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), alice));
-
-        // Attempt to mint, should revert
-        vault.mint(shares, alice, minShareRatio, receiptInformation);
-
         vm.stopPrank();
+
+        checkMint(
+            vault,
+            bob,
+            alice,
+            shares,
+            minShareRatio,
+            receiptInformation,
+            abi.encodeWithSelector(CertificationExpired.selector, address(0), alice)
+        );
     }
 
     /// Test mint to someone else with DEPOSITOR role
@@ -307,64 +287,11 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice to grant roles
         vm.startPrank(alice);
-
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptVaultV1.Deposit(bob, alice, shares, shares, 1, receiptInformation);
-
-        vault.mint(shares, alice, minShareRatio, receiptInformation);
-
-        // Assert that the total supply and total shares are equal after the mint
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
         vm.stopPrank();
-    }
 
-    /// Test ReceiptInformation event
-    function testReceiptInformationEvent(
-        uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 bobSeed,
-        uint256 shares,
-        uint256 minShareRatio,
-        bytes memory receiptInformation
-    ) external {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-        vm.assume(receiptInformation.length > 0);
-
-        minShareRatio = bound(minShareRatio, 0, 1e18);
-
-        // Assume that shares is less uint256 max
-        shares = bound(shares, 1, type(uint256).max);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // Prank as Alice to grant roles
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptVaultV1.Deposit(bob, alice, shares, shares, 1, receiptInformation);
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptV2.ReceiptInformation(bob, 1, receiptInformation);
-
-        vault.mint(shares, alice, minShareRatio, receiptInformation);
-
-        // Assert that the total supply and total shares are equal after the mint
-        assertEqUint(vault.totalSupply(), vault.totalAssets());
-        vm.stopPrank();
+        checkMint(vault, bob, alice, shares, minShareRatio, receiptInformation, "");
     }
 
     /// Test mint without depositor role
@@ -375,52 +302,94 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio,
         bytes memory receiptInformation,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256 timestamp
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-        // Assume that shares is less uint256 max
+        timestamp = bound(timestamp, 1, type(uint32).max);
         shares = bound(shares, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Bob for the transaction
-        vm.startPrank(bob);
-
-        vm.expectRevert();
-        // Call the mint function that should emit the event
-        vault.mint(shares, alice, minShareRatio, receiptInformation);
-
-        // Stop the prank
+        vm.startPrank(alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
         vm.stopPrank();
+
+        vm.startPrank(bob);
+        vm.warp(timestamp);
+        vault.certify(timestamp, false, receiptInformation);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                bob,
+                DEPOSIT,
+                abi.encode(
+                    DepositStateChange({
+                        owner: bob,
+                        receiver: bob,
+                        id: 1,
+                        assetsDeposited: shares,
+                        sharesMinted: shares,
+                        data: receiptInformation
+                    })
+                )
+            )
+        );
+        uint256 actualAssets = vault.mint(shares, bob, minShareRatio, receiptInformation);
+        assertEqUint(actualAssets, 0);
     }
 
     /// Test mint without depositor role for admin
     function testMintWithoutDepositorRoleForAdmin(
         uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 shares,
         uint256 minShareRatio,
         bytes memory receiptInformation,
         string memory assetName,
-        string memory assetSymbol
+        string memory assetSymbol,
+        uint256 timestamp
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
+        timestamp = bound(timestamp, 1, type(uint32).max);
+        shares = bound(shares, 1, type(uint256).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        // Prank as Alice for the transaction
         vm.startPrank(alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        vm.stopPrank();
 
-        // Assume that shares is less uint256 max
-        shares = bound(shares, 1, type(uint256).max);
+        vm.startPrank(bob);
+        vm.warp(timestamp);
+        vault.certify(timestamp, false, receiptInformation);
 
-        vm.expectRevert();
-        // Call the mint function that should emit the event
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                DEPOSIT,
+                abi.encode(
+                    DepositStateChange({
+                        owner: alice,
+                        receiver: alice,
+                        id: 1,
+                        assetsDeposited: shares,
+                        sharesMinted: shares,
+                        data: receiptInformation
+                    })
+                )
+            )
+        );
         vault.mint(shares, alice, minShareRatio, receiptInformation);
 
-        // Stop the prank
         vm.stopPrank();
     }
 }

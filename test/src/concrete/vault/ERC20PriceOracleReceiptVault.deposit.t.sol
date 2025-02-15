@@ -17,6 +17,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import "forge-std/StdCheats.sol";
+import {IReceiptV2} from "src/interface/IReceiptV2.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -58,6 +59,10 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         } else {
             vm.expectEmit(false, false, false, true);
             emit IReceiptVaultV1.Deposit(owner, receiver, assets, expectedShares, oraclePrice, receiptInformation);
+            if (receiptInformation.length > 0) {
+                vm.expectEmit(false, false, false, true);
+                emit IReceiptV2.ReceiptInformation(owner, oraclePrice, receiptInformation);
+            }
         }
 
         uint256 actualShares = vault.deposit(assets, receiver, minShareRatio, receiptInformation);

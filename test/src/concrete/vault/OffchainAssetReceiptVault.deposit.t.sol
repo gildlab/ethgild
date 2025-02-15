@@ -18,6 +18,7 @@ import {
     OffchainAssetReceiptVaultAuthorizorV1,
     CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {IReceiptV2} from "src/interface/IReceiptV2.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function checkDeposit(
@@ -51,6 +52,10 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         } else {
             vm.expectEmit(false, false, false, true);
             emit IReceiptVaultV1.Deposit(depositor, receiver, assets, expectedShares, nextId, receiptInformation);
+            if (receiptInformation.length > 0) {
+                vm.expectEmit(false, false, false, true);
+                emit IReceiptV2.ReceiptInformation(depositor, nextId, receiptInformation);
+            }
         }
 
         vault.deposit(assets, receiver, minShareRatio, receiptInformation);
@@ -352,7 +357,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
                 )
             )
         );
-        vault.deposit(assets, bob, minShareRatio, receiptInformation);
+        uint256 actualShares = vault.deposit(assets, bob, minShareRatio, receiptInformation);
+        assertEqUint(actualShares, 0);
     }
 
     /// Test deposit without depositor role for admin
