@@ -53,7 +53,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks ConfiscateShares does not change balances on zero balance
     function testConfiscateSharesOnZeroBalance(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
@@ -63,8 +63,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -94,7 +93,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     /// Test to check ConfiscateShares
     function testConfiscateSharesBasic(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 minShareRatio,
         uint256 assets,
         string memory assetName,
@@ -108,8 +107,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         vm.assume(targetAmount > 0);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);

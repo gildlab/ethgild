@@ -75,7 +75,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         uint256 id
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
@@ -97,13 +97,12 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test PreviewWithdraw returns correct shares
     function testPreviewWithdraw(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
@@ -134,7 +133,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -199,15 +198,14 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw function emits WithdrawWithReceipt event
     function testWithdraw(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -235,7 +233,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test Withdraw function while withdrawing some part of the assets deposited
     function testWithdrawSomePartOfAssetsDeposited(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 withdrawAmmount,
         uint256 minShareRatio,
@@ -243,8 +241,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -276,7 +273,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw reverts when withdrawing more than balance
     function testWithdrawMoreThanBalance(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 assetsToWithdraw,
         uint256 minShareRatio,
@@ -285,8 +282,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         id = bound(id, 1, type(uint256).max);
@@ -317,7 +313,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw reverts on ZeroAssetsAmount
     function testWithdrawZeroAssetsAmount(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         uint256 id,
@@ -325,8 +321,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -356,7 +351,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw reverts on ZeroReceiver
     function testWithdrawZeroReceiver(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         uint256 id,
@@ -364,8 +359,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -394,7 +388,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw reverts on ZeroOwner
     function testWithdrawZeroOwner(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         uint256 id,
@@ -402,8 +396,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -433,15 +426,14 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw reverts on InvalidId when id is 0
     function testWithdrawInvalidId(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -470,7 +462,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test withdraw function reverts when withdrawing someone else's assets
     function testWithdrawOfSomeoneElse(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
@@ -479,8 +471,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         bool forceUntil
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
@@ -515,15 +506,14 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test someone can withdraw their own assets and set a different recipient
     function testWithdrawToSomeoneElse(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -552,7 +542,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// deposited by them
     function testWithdrawOthersAssetsReverts(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
@@ -561,8 +551,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         bool forceUntil
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
@@ -598,7 +587,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test Withdraw over several different IDs
     function testWithdrawOverSeveralIds(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 thirdDepositAmount,
@@ -609,8 +598,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         bytes memory data,
         string memory assetName
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -659,14 +647,14 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Test alice attempting to burn bob's ID
     function testOffchainAssetWithdrawAliceBurnBob(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 aliceMinShareRatio,
         uint256 bobMinShareRatio,
         uint256 aliceDeposit,
         uint256 bobDeposit
     ) external {
         address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobSeed % (SECP256K1_ORDER - 1)) + 1);
         aliceMinShareRatio = bound(aliceMinShareRatio, 0, 1e18);
         bobMinShareRatio = bound(bobMinShareRatio, 0, 1e18);
         aliceDeposit = bound(aliceDeposit, 1, type(uint128).max);

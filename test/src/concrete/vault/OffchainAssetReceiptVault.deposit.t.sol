@@ -67,15 +67,14 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit function
     function testDepositBasic(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         minShareRatio = bound(minShareRatio, 0, 1e18);
         checkDeposit(vault, alice, bob, bob, assets, minShareRatio, receiptInformation, "");
@@ -84,7 +83,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test multiple deposits increment the ID
     function testMultipleDeposit(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 assetsSecondDeposit,
         uint256 minShareRatio,
@@ -93,8 +92,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         // Bound assets
         assets = bound(assets, 1, type(uint256).max / 2);
@@ -109,7 +107,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test to check deposit reverts with MinShareRatio
     function testDepositMinShareRatio(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 assets,
@@ -118,8 +116,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     ) external {
         minShareRatio = bound(minShareRatio, 1e18 + 1, type(uint256).max);
 
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         assets = bound(assets, 1, type(uint256).max);
 
@@ -140,15 +137,14 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test to check deposit reverts with ZeroAssetsAmount
     function testDepositWithZeroAssets(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         bytes memory receiptInformation,
         uint256 minShareRatio
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         uint256 assets = 0;
 
@@ -168,7 +164,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
     function testDepositWithZeroReceiver(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 assets,
@@ -176,8 +172,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         assets = bound(assets, 1, type(uint256).max);
 
@@ -200,14 +195,13 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 aliceSeed,
         string memory assetName,
         string memory assetSymbol,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
         uint256 timestamp
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -235,7 +229,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 aliceSeed,
         string memory assetName,
         string memory assetSymbol,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
@@ -243,8 +237,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 nextTimestamp,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
@@ -290,13 +283,12 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 aliceSeed,
         string memory assetName,
         string memory assetSymbol,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -318,7 +310,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit without depositor role
     function testDepositWithoutDepositorRole(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
@@ -327,8 +319,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
         timestamp = bound(timestamp, 1, type(uint32).max);
 
         // Assume that assets is less uint256 max
@@ -367,7 +358,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit without depositor role for admin
     function testDepositWithoutDepositorRoleForAdmin(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
@@ -375,8 +366,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         uint256 timestamp
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 

@@ -17,15 +17,14 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
     ///Test AuthorizeReceiptTransfer reverts if system not certified
     function testAuthorizeReceiptTransferRevert(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 warpTimestamp,
         string memory assetName,
         string memory assetSymbol,
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         // Bound warpTimestamp from 1 to avoid potential issues with timestamp 0.
         warpTimestamp = bound(warpTimestamp, 1, type(uint32).max);
@@ -50,7 +49,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
     /// Test AuthorizeReceiptTransfer reverts if system certification is expired
     function testAuthorizeReceiptTransferRevertExpiredCertification(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 timestamp,
@@ -60,8 +59,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         // Bound timestamp from 1 to avoid potential issues with timestamp 0.
         timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
@@ -100,7 +98,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
     /// Test AuthorizeReceiptTransfer when system certified
     function testAuthorizeReceiptTransfer(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
@@ -110,8 +108,7 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         blockNumber = bound(blockNumber, 0, type(uint32).max);
         vm.roll(blockNumber);
@@ -145,14 +142,13 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
     /// Test AuthorizeReceiptTransfer does not revert without certification if FROM has a handler role
     function testAuthorizeReceiptTransferForHandlerFrom(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -168,14 +164,13 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a handler role
     function testAuthorizeReceiptTransferForHandlerTo(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -192,14 +187,13 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
     function testAuthorizeReceiptTransferForConfiscatorTo(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

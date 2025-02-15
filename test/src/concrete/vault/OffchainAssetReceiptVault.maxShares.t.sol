@@ -9,7 +9,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 contract OffchainAssetReceiptVaultMaxSharesTest is OffchainAssetReceiptVaultTest {
     /// Test vault sets correct max Mint
     function testMaxShares(uint256 aliceSeed, string memory assetName) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
 

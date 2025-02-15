@@ -18,7 +18,7 @@ contract OffchainAssetReceiptVaultReceiptVaultInformationTest is OffchainAssetRe
     function testReceiptVaultInformation(uint256 aliceSeed, string memory assetName, bytes memory information)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
 

@@ -9,7 +9,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 contract ERC20PriceOracleReceiptVaultMaxDepositTest is ERC20PriceOracleReceiptVaultTest {
     /// Test vault sets correct max deposit
     function testMaxDeposit(uint256 aliceSeed, string memory assetName) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
         vm.startPrank(alice);
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);

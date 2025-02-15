@@ -15,7 +15,7 @@ contract OffchainAssetReceiptVaultConvertToAssetsTest is OffchainAssetReceiptVau
 
     /// Test convertToAssets
     function testConvertToAssets(uint256 aliceSeed, string memory assetName, uint256 shares, uint256 id) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         id = bound(id, 1, type(uint256).max);
         shares = bound(shares, 1, type(uint64).max);
@@ -33,13 +33,12 @@ contract OffchainAssetReceiptVaultConvertToAssetsTest is OffchainAssetReceiptVau
     /// Test convertToAssets shows no variations based on caller
     function testConvertToAssetsDifferentCaller(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         uint256 shares,
         uint256 id
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         id = bound(id, 1, type(uint256).max);
         shares = bound(shares, 1, type(uint64).max);

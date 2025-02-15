@@ -84,7 +84,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 oraclePrice,
         bytes memory data
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         assets = bound(assets, 1, type(uint128).max);
@@ -107,7 +107,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         bytes memory data1,
         bytes memory data2
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice1 = bound(oraclePrice1, 0.01e18, 100e18);
         minShareRatio1 = bound(minShareRatio1, 0, oraclePrice1);
@@ -141,15 +141,14 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// Test deposit to someone else
     function testDepositSomeoneElse(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice,
         uint256 minShareRatio,
         bytes memory data
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
@@ -179,8 +178,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
         checkDeposit(
             createVault(iVaultOracle, assetName, assetSymbol),
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed),
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
             oraclePrice,
             0,
             minShareRatio,
@@ -205,8 +204,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         checkDeposit(
             createVault(iVaultOracle, assetName, assetSymbol),
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed),
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
             oraclePrice,
             assets,
             minShareRatio,

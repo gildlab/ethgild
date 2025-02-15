@@ -15,7 +15,7 @@ contract OffchainAssetReceiptVaultConvertToSharesTest is OffchainAssetReceiptVau
 
     /// Test convertToShares
     function testConvertToShares(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 id) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         id = bound(id, 0, type(uint128).max);
         assets = bound(assets, 1, type(uint128).max);
@@ -33,13 +33,12 @@ contract OffchainAssetReceiptVaultConvertToSharesTest is OffchainAssetReceiptVau
     /// Test convertToShares
     function testConvertToSharesDifferentCaller(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         string memory assetName,
         uint256 assets,
         uint256 id
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         // Bound the ID to a range that could actually be a price.
         id = bound(id, 0.001e18, 100e18);

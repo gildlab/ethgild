@@ -46,7 +46,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit function
     function testReDeposit(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 assetsToRedeposit,
         bytes memory data,
@@ -56,8 +56,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -92,7 +91,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit function reverts when assets = 0
     function testReDepositRevertsWithZeroAssets(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         bytes memory data,
         string memory assetName,
@@ -101,8 +100,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -139,7 +137,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit to someone else reverts with certification expired
     function testReDepositToSomeoneElseReverts(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         bytes memory data,
         string memory assetName,
@@ -149,8 +147,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 futureTimestamp,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
@@ -196,14 +193,13 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     function testReDepositToSomeoneElse(
         uint256 aliceSeed,
         uint256 assets,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -233,7 +229,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit to someone else While system is certified
     function testReDepositToSomeoneElseWhileCertified(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         uint256 assetsToRedeposit,
         bytes memory data,
@@ -243,8 +239,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -279,7 +274,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redeposit reverts on nonexistent receipt id
     function testReDepositToNonExistentReceipt(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 assets,
         bytes memory data,
         string memory assetName,
@@ -289,8 +284,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 blockNumber,
         uint256 id
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -332,7 +326,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redepositing works after there are several IDs due to deposit
     function testReDepositOverSeveralIds(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 depositAmount,
         uint256 anotherDepositAmount,
         uint256 assetsToRedeposit,
@@ -343,8 +337,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -383,7 +376,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
     /// Test redepositing reverts past the top ID
     function testReDepositrevertsPastTopID(
         uint256 aliceSeed,
-        uint256 bobKey,
+        uint256 bobSeed,
         uint256 depositAmount,
         uint256 anotherDepositAmount,
         uint256 assetsToRedeposit,
@@ -394,8 +387,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 id,
         uint256 blockNumber
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);

@@ -3,39 +3,36 @@
 pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std/Test.sol";
+import {CommonBase} from "forge-std/Base.sol";
+
+contract Order is CommonBase {
+    function secp256k1Order() public pure returns (uint256) {
+        return SECP256K1_ORDER;
+    }
+}
 
 library LibUniqueAddressesGenerator {
-    function generateUniqueAddresses(Vm vm, uint256 SECP256K1_ORDER, uint256 seed) internal pure returns (address) {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        return vm.addr((seed % (SECP256K1_ORDER - 1)) + 1);
+    function generateUniqueAddresses(Vm vm, uint256 seed) internal returns (address) {
+        return vm.addr((seed % ((new Order()).secp256k1Order() - 1)) + 1);
     }
 
     // Generates two unique addresses from the provided seeds
-    function generateUniqueAddresses(Vm vm, uint256 SECP256K1_ORDER, uint256 aliceSeed, uint256 bobSeed)
-        internal
-        pure
-        returns (address, address)
-    {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
-        address bob = generateUniqueAddresses(vm, SECP256K1_ORDER, bobSeed);
+    function generateUniqueAddresses(Vm vm, uint256 aliceSeed, uint256 bobSeed) internal returns (address, address) {
+        address alice = generateUniqueAddresses(vm, aliceSeed);
+        address bob = generateUniqueAddresses(vm, bobSeed);
         vm.assume(alice != bob);
 
         return (alice, bob);
     }
 
     // Generates three unique addresses from the provided seeds
-    function generateUniqueAddresses(
-        Vm vm,
-        uint256 SECP256K1_ORDER,
-        uint256 aliceSeed,
-        uint256 bobSeed,
-        uint256 carolSeed
-    ) internal pure returns (address, address, address) {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
-        address bob = generateUniqueAddresses(vm, SECP256K1_ORDER, bobSeed);
-        address carol = generateUniqueAddresses(vm, SECP256K1_ORDER, carolSeed);
+    function generateUniqueAddresses(Vm vm, uint256 aliceSeed, uint256 bobSeed, uint256 carolSeed)
+        internal
+        returns (address, address, address)
+    {
+        address alice = generateUniqueAddresses(vm, aliceSeed);
+        address bob = generateUniqueAddresses(vm, bobSeed);
+        address carol = generateUniqueAddresses(vm, carolSeed);
         vm.assume(alice != bob);
         vm.assume(alice != carol);
         vm.assume(bob != carol);

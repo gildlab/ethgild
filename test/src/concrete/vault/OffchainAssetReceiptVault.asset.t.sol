@@ -9,7 +9,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 contract OffchainAssetReceiptVaultAssetTest is OffchainAssetReceiptVaultTest {
     /// Test vault asset
     function testVaultAsset(uint256 aliceSeed, string memory assetName) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
 
