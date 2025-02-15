@@ -16,14 +16,14 @@ contract OffchainAssetReceiptVaultPreviewDepositTest is OffchainAssetReceiptVaul
 
     /// Test PreviewDeposit returns correct shares
     function testPreviewDepositReturnedShares(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 assets
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

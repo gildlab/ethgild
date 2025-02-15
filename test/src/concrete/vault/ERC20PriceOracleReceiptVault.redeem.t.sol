@@ -79,13 +79,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function
     function testRedeemBasic(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -118,12 +118,12 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function reverts on zero shares
     function testRedeemRevertsOnZeroShares(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -155,13 +155,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function reverts on zero receiver
     function testRedeemRevertsOnZeroReceiver(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -203,13 +203,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function reverts on zero owner
     function testRedeemRevertsOnZeroOwner(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -250,10 +250,10 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     }
 
     /// Test PreviewRedeem returns correct assets
-    function testPreviewRedeem(uint256 aliceKey, string memory assetName, uint256 shares, uint256 oraclePrice)
+    function testPreviewRedeem(uint256 aliceSeed, string memory assetName, uint256 shares, uint256 oraclePrice)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -275,13 +275,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function with more than balance
     function testRedeemMoreThanBalance(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 sharesToRedeem,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -337,13 +337,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test redeem with erc20 approval
     function testRedeemWithERC20Approval(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 amount,
         uint256 oraclePrice,
         uint256 redeemSharesAmount
     ) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);

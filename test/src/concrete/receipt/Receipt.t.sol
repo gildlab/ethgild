@@ -18,8 +18,8 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Check that alice can't mint herself directly on the receipt.
-    function testManagerMintRevertAlice(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testManagerMintRevertAlice(uint256 aliceSeed, uint256 id, uint256 amount, bytes memory data) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -34,8 +34,8 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test receipt ManagerMint function
-    function testManagerMint(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testManagerMint(uint256 aliceSeed, uint256 id, uint256 amount, bytes memory data) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -56,8 +56,8 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Check that alice can't burn herself directly on the receipt.
-    function testManagerBurnRevertAlice(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testManagerBurnRevertAlice(uint256 aliceSeed, uint256 id, uint256 amount, bytes memory data) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -72,8 +72,8 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test receipt ManagerBurn function
-    function testManagerBurn(uint256 aliceKey, uint256 id, uint256 amount, bytes memory receiptInformation) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testManagerBurn(uint256 aliceSeed, uint256 id, uint256 amount, bytes memory receiptInformation) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
@@ -108,13 +108,13 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test ManagerBurn fails while not enough balance to burn
     function testManagerBurnNotEnoughBalance(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 id,
         uint256 amount,
         bytes memory receiptInformation,
         uint256 burnAmount
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         // Bound with uint256 max - 1 so dowsnot get overflow while bounding burnAmount
         amount = bound(amount, 1, type(uint256).max - 1);
@@ -143,7 +143,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test managerTransferFrom more than balance
     function testManagerTransferFromMoreThanBalance(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 id,
         uint256 amount,
@@ -151,7 +151,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 transferAmount
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         // Bound with uint256 max - 1 so dowsnot get overflow while bounding transferAmount
         amount = bound(amount, 1, type(uint256).max - 1);
@@ -180,14 +180,14 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test receipt ManagerTransferFrom function reverts while UnauthorizedTransfer
     function testUnauthorizedTransferManagerTransferFrom(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory receiptInformation
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
@@ -214,14 +214,14 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Alice can't transfer to herself using managerTransferFrom.
     function testManagerTransferFromSelf(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory receiptInformation
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt =
@@ -236,14 +236,14 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test receipt managerTransferFrom function
     function testTransferManagerTransferFrom(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory receiptInformation
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
@@ -272,8 +272,8 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test ERC1155 balanceOf function
-    function testBalanceOf(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testBalanceOf(uint256 aliceSeed, uint256 id, uint256 amount, bytes memory data) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -297,7 +297,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test ERC1155 balanceOfBatch function
     function testBalanceOfBatch(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 idOne,
         uint256 idTwo,
@@ -306,7 +306,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         bytes memory data
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
         vm.assume(alice != bob);
 
         amountOne = bound(amountOne, 1, type(uint256).max);
@@ -344,9 +344,9 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test ERC1155 setApprovalForAll And IsApprovedForAll function
-    function testSetApprovalForAllAndIsApprovedForAll(uint256 aliceKey, uint256 bobKey) public {
+    function testSetApprovalForAllAndIsApprovedForAll(uint256 aliceSeed, uint256 bobKey) public {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         vm.assume(alice != bob);
 
@@ -364,9 +364,9 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test ERC1155 safeTransferFrom function
-    function testSafeTransferFrom(uint256 aliceKey, uint256 bobKey, uint256 tokenId, uint256 amount) public {
+    function testSafeTransferFrom(uint256 aliceSeed, uint256 bobKey, uint256 tokenId, uint256 amount) public {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         vm.assume(alice != bob);
 
@@ -404,7 +404,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test ERC1155 safeBatchTransferFrom function
     function testSafeBatchTransferFrom(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 tokenId1,
         uint256 tokenId2,
@@ -412,7 +412,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 amount2
     ) public {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         vm.assume(alice != bob);
 

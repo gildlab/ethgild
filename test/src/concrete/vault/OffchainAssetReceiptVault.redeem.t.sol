@@ -65,13 +65,13 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test PreviewRedeem returns 0 shares if no withdrawer role
     function testPreviewRedeemReturnsZero(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 shares,
         string memory assetName,
         string memory assetSymbol,
         uint256 minShareRatio
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         // Assume that shares is not 0
         shares = bound(shares, 1, type(uint256).max);
@@ -91,7 +91,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test PreviewRedeem returns correct shares
     function testPreviewRedeem(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 shares,
         string memory assetName,
@@ -99,7 +99,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 1, 1e18); //Bound from 1 to avoid division by 0
         // Assume that shares is not 0
@@ -126,14 +126,14 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test withdraw function reverts without WITHDRAWER role
     function testRedeemRevertsWithoutRole(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 shares,
         uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
         string memory assetSymbol
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         minShareRatio = bound(minShareRatio, 1, 1e18);
         // Assume that shares is not 0
@@ -157,7 +157,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem function emits WithdrawWithReceipt event
     function testRedeem(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -166,7 +166,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -193,7 +193,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem function while redeeming some part of the assets deposited
     function testRedeemSomePartOfAssetsDeposited(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 redeemAmount,
@@ -203,7 +203,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -234,7 +234,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test withdraw reverts when withdrawing more than balance
     function testWithdrawMoreThanBalance(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 assetsToWithdraw,
@@ -245,7 +245,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         id = bound(id, 1, type(uint256).max);
@@ -275,7 +275,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeem reverts on ZeroAssetsAmount
     function testRedeemZeroAssetsAmount(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -284,7 +284,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -312,7 +312,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem reverts on ZeroReceiver
     function testRedeemZeroReceiver(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -321,7 +321,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -350,7 +350,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeem reverts on ZeroOwner
     function testRedeemZeroOwner(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -359,7 +359,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
@@ -386,7 +386,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeem reverts on InvalidId when id is 0
     function testRedeemInvalidId(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -395,7 +395,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -423,7 +423,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeem function reverts when redeeming someone else's assets
     function testRedeemOfSomeoneElse(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -434,7 +434,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         bool forceUntil
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
@@ -470,7 +470,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test someone can redeem their own assets and set a different recipient
     function testRedeemToSomeoneElse(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -479,7 +479,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
@@ -507,7 +507,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
     /// Test redeem function reverts when withdrawing someone else's assets
     /// deposeted by them
     function testRedeemOthersAssetsReverts(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
@@ -518,7 +518,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         bool forceUntil
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
 
@@ -553,7 +553,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem over several different IDs
     function testRedeemOverSeveralIds(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
@@ -566,7 +566,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -615,13 +615,13 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
     /// Test withdraw with erc20 approval
     function testOffchainAssetWithdrawWithERC20Approval(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 amount,
         uint256 minShareRatio,
         uint256 redeemSharesAmount
     ) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         minShareRatio = bound(minShareRatio, 0, 1e18);
 

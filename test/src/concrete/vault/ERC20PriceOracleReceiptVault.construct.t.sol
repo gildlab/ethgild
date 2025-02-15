@@ -13,8 +13,8 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constructed
-    function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testConstructionEvent(uint256 aliceSeed, string memory assetName, string memory assetSymbol) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         IPriceOracleV2 vaultPriceOracle =
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
@@ -73,7 +73,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
 
     /// Test creating several different vaults
     function testCreatingSeveralVaults(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
@@ -81,7 +81,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         string memory assetSymbolTwo
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         // Simulate transaction from alice
         vm.prank(alice);

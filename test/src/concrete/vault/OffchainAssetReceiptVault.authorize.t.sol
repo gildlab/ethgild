@@ -22,11 +22,11 @@ contract AlwaysAuthorize is IAuthorizeV1, IERC165 {
 
 contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest {
     /// Test that authorize contract is as initialized.
-    function testAuthorizeContract(uint256 aliceKey, uint256 bobKey, string memory assetName, string memory assetSymbol)
+    function testAuthorizeContract(uint256 aliceSeed, uint256 bobKey, string memory assetName, string memory assetSymbol)
         external
     {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
         (bob);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
@@ -38,11 +38,11 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
     }
 
     /// Test that the owner can change the authorizor.
-    function testChangeAuthorizor(uint256 aliceKey, uint256 bobKey, string memory assetName, string memory assetSymbol)
+    function testChangeAuthorizor(uint256 aliceSeed, uint256 bobKey, string memory assetName, string memory assetSymbol)
         external
     {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

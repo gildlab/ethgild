@@ -27,10 +27,10 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that asset is address zero
-    function testNonZeroAsset(uint256 aliceKey, address asset, string memory assetName, string memory assetSymbol)
+    function testNonZeroAsset(uint256 aliceSeed, address asset, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         vm.assume(asset != address(0));
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
@@ -43,8 +43,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that offchainAssetReceiptVault constructs well
-    function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testConstructionEvent(uint256 aliceSeed, string memory assetName, string memory assetSymbol) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         address asset = address(0);
 
@@ -107,7 +107,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
     /// Test creating several different vaults
     function testCreatingSeveralVaults(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
@@ -115,7 +115,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbolTwo
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         // Simulate transaction from alice
         vm.prank(alice);

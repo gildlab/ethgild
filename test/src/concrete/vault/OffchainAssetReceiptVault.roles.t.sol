@@ -39,8 +39,8 @@ import {
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
-    function testGrantAdminRoles(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+    function testGrantAdminRoles(uint256 aliceSeed, string memory assetName, string memory assetSymbol) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -71,7 +71,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks deposit without depositor role
     function testDepositWithoutDepositorRole(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
@@ -83,7 +83,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         // ShareRatio 1
         uint256 shareRatio = 1e18;
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -113,14 +113,14 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks Certify without role
     function testCertifyWithoutRole(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
         bytes memory data
     ) external {
         vm.assume(certifyUntil > 0);
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -154,7 +154,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks confiscate receipt without role
     function testConfiscateReceiptWithoutRole(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 id,
@@ -163,7 +163,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -195,7 +195,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks confiscate shares without role
     function testConfiscateSharesWithoutRole(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         string memory assetSymbol,
         uint256 targetAmount,
@@ -203,7 +203,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

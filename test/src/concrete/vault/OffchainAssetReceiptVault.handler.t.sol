@@ -14,14 +14,14 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function setUpAddressesAndBounds(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 carolKey,
         uint256 balance,
         uint256 certifyUntil
     ) internal pure returns (address, address, address, uint256, uint256) {
         (address alice, address bob, address carol) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey, carolKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey, carolKey);
 
         balance = bound(balance, 1, type(uint256).max); // Bound from one to avoid ZeroAssets
         certifyUntil = bound(certifyUntil, 1, type(uint32).max - 1); // substruct 1 for next bound
@@ -42,7 +42,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
     /// Test testReceiptTransfer to self with handler role
     function testReceiptTransferHandler(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         string memory assetName,
         uint256 certifyUntil,
@@ -54,7 +54,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     ) external {
         address alice;
         address bob;
-        (alice, bob,, balance, certifyUntil) = setUpAddressesAndBounds(aliceKey, bobKey, 0, balance, certifyUntil);
+        (alice, bob,, balance, certifyUntil) = setUpAddressesAndBounds(aliceSeed, bobKey, 0, balance, certifyUntil);
 
         // Need setting future timestamp so system gets unsertified but transfer is possible
         // due to a handler role
@@ -93,7 +93,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
     /// Test testReceiptTransfer with Owner being a handler
     function testReceiptTransferHandlerOwner(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 carolKey,
         string memory assetName,
@@ -108,7 +108,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         address bob;
         address john;
         (alice, bob, john, balance, certifyUntil) =
-            setUpAddressesAndBounds(aliceKey, bobKey, carolKey, balance, certifyUntil);
+            setUpAddressesAndBounds(aliceSeed, bobKey, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
@@ -148,7 +148,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
     /// Test testReceiptTransfer with Receiver being a handler
     function testReceiptTransferHandlerReceiver(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 carolKey,
         string memory assetName,
@@ -163,7 +163,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         address bob;
         address john;
         (alice, bob, john, balance, certifyUntil) =
-            setUpAddressesAndBounds(aliceKey, bobKey, carolKey, balance, certifyUntil);
+            setUpAddressesAndBounds(aliceSeed, bobKey, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role

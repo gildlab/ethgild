@@ -21,10 +21,10 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test ERC20 name symbol and decimals
-    function testERC20NameSymbolDecimals(uint256 aliceKey, string memory assetName, string memory assetSymbol)
+    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vm.startPrank(alice);
@@ -37,14 +37,14 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
 
     /// Test ERC20 totalSupply and balanceOf
     function testERC20TotalSupplyAndBalanceOf(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 minShareRatio,
         uint256 timestamp,
         bytes memory receiptInformation
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -70,7 +70,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
 
     // Test ERC20 transfer
     function testERC20Transfer(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 amount,
         uint256 minShareRatio,
@@ -78,7 +78,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         bytes memory receiptInformation
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         vm.assume(alice != bob);
@@ -109,9 +109,9 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
     }
 
     // Test ERC20 allowance and approve
-    function testERC20AllowanceAndApprove(uint256 aliceKey, uint256 bobKey, uint256 amount) external {
+    function testERC20AllowanceAndApprove(uint256 aliceSeed, uint256 bobKey, uint256 amount) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         vm.assume(alice != bob);
 
@@ -129,7 +129,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
 
     // Test ERC20 transferFrom()
     function testERC20TransferFrom(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 amount,
         uint256 transferFromAmount,
@@ -138,7 +138,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         bytes memory receiptInformation
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         minSharesRatio = bound(minSharesRatio, 0, 1e18);
         vm.assume(alice != bob);
@@ -176,11 +176,11 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
     }
 
     // Test ERC20 increaseAllowance
-    function testERC20IncreaseAllowance(uint256 aliceKey, uint256 bobKey, uint256 amount, uint256 increaseAmount)
+    function testERC20IncreaseAllowance(uint256 aliceSeed, uint256 bobKey, uint256 amount, uint256 increaseAmount)
         external
     {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
@@ -199,11 +199,11 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
     }
 
     // Test ERC20 decreaseAllowance
-    function testERC20DecreaseAllowance(uint256 aliceKey, uint256 bobKey, uint256 amount, uint256 decreaseAmount)
+    function testERC20DecreaseAllowance(uint256 aliceSeed, uint256 bobKey, uint256 amount, uint256 decreaseAmount)
         external
     {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed, bobKey);
 
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);

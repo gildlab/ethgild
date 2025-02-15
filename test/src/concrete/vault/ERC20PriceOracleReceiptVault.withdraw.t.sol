@@ -77,10 +77,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     }
 
     /// Test Withdraw function
-    function testWithdrawBasic(uint256 aliceKey, string memory assetName, uint256 assets, uint256 oraclePrice)
+    function testWithdrawBasic(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 oraclePrice)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -111,12 +111,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
     /// Test Withdraw function reverts on zero assets
     function testWithdrawRevertsOnZeroAssets(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -148,12 +148,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
     /// Test Withdraw function reverts on zero receiver
     function testWithdrawRevertsOnZeroReceiver(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.001e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -193,12 +193,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
     /// Test Withdraw function reverts on zero owner
     function testWithdrawRevertsOnZeroOwner(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -237,10 +237,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     }
 
     /// Test PreviewWithdraw returns correct shares
-    function testPreviewWithdraw(uint256 aliceKey, string memory assetName, uint256 assets, uint256 oraclePrice)
+    function testPreviewWithdraw(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 oraclePrice)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -263,14 +263,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
     /// Test alice attempting to burn bob's ID when the price is different.
     function testWithdrawAliceBurnBob(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 alicePrice,
         uint256 bobPrice,
         uint256 aliceDeposit,
         uint256 bobDeposit
     ) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         alicePrice = bound(alicePrice, 1e18, 100e18);
         bobPrice = bound(bobPrice, 1e18, 100e18);
@@ -398,13 +398,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
     /// Test Withdraw function with more than assets deposied
     function testWithdrawMoreThanAssets(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 assetsToWithdraw,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -461,13 +461,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
     /// Test oracle vault for multiple prices and historical redemptions.
     function testMultiplePricesAndHistoricalRedemptionsAndMint(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 priceOne,
         uint256 priceTwo,
         uint256 priceThree,
         uint256 aliceDeposit
     ) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         priceOne = bound(priceOne, 1e18, 100e18);
         priceTwo = bound(priceTwo, 1e18, 100e18);
         priceThree = bound(priceThree, 1e18, 100e18);

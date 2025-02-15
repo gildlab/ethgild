@@ -19,10 +19,10 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test ERC20 name symbol and decimals
-    function testERC20NameSymbolDecimals(uint256 aliceKey, string memory assetName, string memory assetSymbol)
+    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         IPriceOracleV2 vaultPriceOracle =
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
@@ -38,12 +38,12 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
     /// Test ERC20 totalSupply and balanceOf
     function testERC20TotalSupplyAndBalanceOf(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -74,8 +74,8 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     }
 
     // Test ERC20 transfer
-    function testERC20Transfer(uint256 aliceKey, uint256 bobKey, uint256 amount, uint256 oraclePrice) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testERC20Transfer(uint256 aliceSeed, uint256 bobKey, uint256 amount, uint256 oraclePrice) external {
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
@@ -109,8 +109,8 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     }
 
     // Test ERC20 allowance and approve
-    function testERC20AllowanceAndApprove(uint256 aliceKey, uint256 bobKey, uint256 amount) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testERC20AllowanceAndApprove(uint256 aliceSeed, uint256 bobKey, uint256 amount) external {
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
@@ -128,13 +128,13 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
     // Test ERC20 transferFrom()
     function testERC20TransferFrom(
-        uint256 aliceKey,
+        uint256 aliceSeed,
         uint256 bobKey,
         uint256 amount,
         uint256 transferFromAmount,
         uint256 oraclePrice
     ) external {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
@@ -173,10 +173,10 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     }
 
     // Test ERC20 increaseAllowance
-    function testERC20IncreaseAllowance(uint256 aliceKey, uint256 bobKey, uint256 amount, uint256 increaseAmount)
+    function testERC20IncreaseAllowance(uint256 aliceSeed, uint256 bobKey, uint256 amount, uint256 increaseAmount)
         external
     {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
@@ -195,10 +195,10 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     }
 
     // Test ERC20 decreaseAllowance
-    function testERC20DecreaseAllowance(uint256 aliceKey, uint256 bobKey, uint256 amount, uint256 decreaseAmount)
+    function testERC20DecreaseAllowance(uint256 aliceSeed, uint256 bobKey, uint256 amount, uint256 decreaseAmount)
         external
     {
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
