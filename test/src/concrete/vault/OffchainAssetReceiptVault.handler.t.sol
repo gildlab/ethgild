@@ -15,14 +15,14 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function setUpAddressesAndBounds(
         uint256 aliceKey,
         uint256 bobKey,
-        uint256 fuzzedKeyJohn,
+        uint256 carolKey,
         uint256 balance,
         uint256 certifyUntil
     ) internal pure returns (address alice, address bob, address john, uint256, uint256) {
         // Ensure the fuzzed key is within the valid range for secp256k
         alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
         bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
-        john = vm.addr((fuzzedKeyJohn % (SECP256K1_ORDER - 1)) + 1);
+        john = vm.addr((carolKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob && alice != john);
         vm.assume(bob != john);
 
@@ -99,7 +99,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function testReceiptTransferHandlerOwner(
         uint256 aliceKey,
         uint256 bobKey,
-        uint256 fuzzedKeyJohn,
+        uint256 carolKey,
         string memory assetName,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
@@ -112,7 +112,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         address bob;
         address john;
         (alice, bob, john, balance, certifyUntil) =
-            setUpAddressesAndBounds(aliceKey, bobKey, fuzzedKeyJohn, balance, certifyUntil);
+            setUpAddressesAndBounds(aliceKey, bobKey, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role
@@ -154,7 +154,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function testReceiptTransferHandlerReceiver(
         uint256 aliceKey,
         uint256 bobKey,
-        uint256 fuzzedKeyJohn,
+        uint256 carolKey,
         string memory assetName,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
@@ -167,7 +167,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         address bob;
         address john;
         (alice, bob, john, balance, certifyUntil) =
-            setUpAddressesAndBounds(aliceKey, bobKey, fuzzedKeyJohn, balance, certifyUntil);
+            setUpAddressesAndBounds(aliceKey, bobKey, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
         // due to a handler role

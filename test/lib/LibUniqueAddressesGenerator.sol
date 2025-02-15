@@ -5,9 +5,9 @@ pragma solidity ^0.8.25;
 import {Vm} from "forge-std/Test.sol";
 
 library LibUniqueAddressesGenerator {
-    function generateUniqueAddress(Vm vm, uint256 SECP256K1_ORDER, uint256 fuzzedKey) internal pure returns (address) {
+    function generateUniqueAddress(Vm vm, uint256 SECP256K1_ORDER, uint256 keySeed) internal pure returns (address) {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        return vm.addr((fuzzedKey % (SECP256K1_ORDER - 1)) + 1);
+        return vm.addr((keySeed % (SECP256K1_ORDER - 1)) + 1);
     }
 
     // Generates two unique addresses from the provided fuzzed keys
