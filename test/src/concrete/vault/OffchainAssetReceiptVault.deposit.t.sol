@@ -299,7 +299,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 bobKey,
         uint256 assets,
         uint256 minShareRatio,
-        bytes memory fuzzedReceiptInformation
+        bytes memory receiptInformation
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -319,7 +319,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         vm.stopPrank();
 
-        checkDeposit(vault, alice, alice, bob, assets, minShareRatio, fuzzedReceiptInformation, "");
+        checkDeposit(vault, alice, alice, bob, assets, minShareRatio, receiptInformation, "");
     }
 
     /// Test deposit without depositor role

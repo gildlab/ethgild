@@ -76,7 +76,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test receipt ManagerBurn function
-    function testManagerBurn(uint256 aliceKey, uint256 id, uint256 amount, bytes memory fuzzedReceiptInformation)
+    function testManagerBurn(uint256 aliceKey, uint256 id, uint256 amount, bytes memory receiptInformation)
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256
@@ -84,7 +84,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
-        vm.assume(fuzzedReceiptInformation.length > 0);
+        vm.assume(receiptInformation.length > 0);
 
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt =
@@ -96,7 +96,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setFrom(address(0));
         testManager.setTo(alice);
 
-        testManager.managerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        testManager.managerMint(receipt, alice, id, amount, receiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
 
         testManager.setFrom(alice);
@@ -104,9 +104,9 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Set up the event expectation for ReceiptInformation
         vm.expectEmit(false, false, false, true);
-        emit IReceiptV2.ReceiptInformation(alice, id, fuzzedReceiptInformation);
+        emit IReceiptV2.ReceiptInformation(alice, id, receiptInformation);
 
-        testManager.managerBurn(receipt, alice, id, receiptBalance, fuzzedReceiptInformation);
+        testManager.managerBurn(receipt, alice, id, receiptBalance, receiptInformation);
 
         // Check the balance of alice
         assertEq(receipt.balanceOf(alice, id), 0);
@@ -117,7 +117,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 aliceKey,
         uint256 id,
         uint256 amount,
-        bytes memory fuzzedReceiptInformation,
+        bytes memory receiptInformation,
         uint256 burnAmount
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
@@ -136,7 +136,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setFrom(address(0));
         testManager.setTo(alice);
 
-        testManager.managerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        testManager.managerMint(receipt, alice, id, amount, receiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
         burnAmount = bound(burnAmount, receiptBalance + 1, type(uint256).max);
 
@@ -144,7 +144,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setTo(address(0));
 
         vm.expectRevert();
-        testManager.managerBurn(receipt, alice, id, burnAmount, fuzzedReceiptInformation);
+        testManager.managerBurn(receipt, alice, id, burnAmount, receiptInformation);
     }
 
     /// Test managerTransferFrom more than balance
@@ -153,7 +153,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 bobKey,
         uint256 id,
         uint256 amount,
-        bytes memory fuzzedReceiptInformation,
+        bytes memory receiptInformation,
         uint256 transferAmount
     ) external {
         // Generate unique addresses
@@ -174,7 +174,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setFrom(address(0));
         testManager.setTo(alice);
 
-        testManager.managerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        testManager.managerMint(receipt, alice, id, amount, receiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
         transferAmount = bound(transferAmount, receiptBalance + 1, type(uint256).max);
 
@@ -182,7 +182,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setTo(bob);
 
         vm.expectRevert();
-        testManager.managerTransferFrom(receipt, alice, bob, id, transferAmount, fuzzedReceiptInformation);
+        testManager.managerTransferFrom(receipt, alice, bob, id, transferAmount, receiptInformation);
     }
 
     /// Test receipt ManagerTransferFrom function reverts while UnauthorizedTransfer
@@ -191,7 +191,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 bobKey,
         uint256 id,
         uint256 amount,
-        bytes memory fuzzedReceiptInformation
+        bytes memory receiptInformation
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -210,14 +210,14 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setFrom(address(0));
         testManager.setTo(alice);
 
-        testManager.managerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        testManager.managerMint(receipt, alice, id, amount, receiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
 
         testManager.setFrom(alice);
         testManager.setTo(address(0));
 
         vm.expectRevert(abi.encodeWithSelector(UnauthorizedTransfer.selector, alice, bob));
-        testManager.managerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
+        testManager.managerTransferFrom(receipt, alice, bob, id, receiptBalance, receiptInformation);
     }
 
     /// Alice can't transfer to herself using managerTransferFrom.
@@ -226,7 +226,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 bobKey,
         uint256 id,
         uint256 amount,
-        bytes memory fuzzedReceiptInformation
+        bytes memory receiptInformation
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
@@ -240,7 +240,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Alice can't transfer to herself.
         vm.expectRevert(abi.encodeWithSelector(OnlyManager.selector));
-        receipt.managerTransferFrom(bob, alice, id, amount, fuzzedReceiptInformation);
+        receipt.managerTransferFrom(bob, alice, id, amount, receiptInformation);
     }
 
     /// Test receipt managerTransferFrom function
@@ -249,7 +249,7 @@ contract ReceiptTest is ReceiptFactoryTest {
         uint256 bobKey,
         uint256 id,
         uint256 amount,
-        bytes memory fuzzedReceiptInformation
+        bytes memory receiptInformation
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
@@ -269,13 +269,13 @@ contract ReceiptTest is ReceiptFactoryTest {
         testManager.setTo(alice);
 
         vm.startPrank(alice);
-        testManager.managerMint(receipt, alice, id, amount, fuzzedReceiptInformation);
+        testManager.managerMint(receipt, alice, id, amount, receiptInformation);
         uint256 receiptBalance = receipt.balanceOf(alice, id);
 
         testManager.setFrom(alice);
         testManager.setTo(bob);
 
-        testManager.managerTransferFrom(receipt, alice, bob, id, receiptBalance, fuzzedReceiptInformation);
+        testManager.managerTransferFrom(receipt, alice, bob, id, receiptBalance, receiptInformation);
 
         assertEq(receipt.balanceOf(bob, id), receiptBalance);
         assertEq(receipt.balanceOf(alice, id), 0);
