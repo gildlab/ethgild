@@ -57,8 +57,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     ) external {
         address alice;
         address bob;
-        (alice, bob,, balance, certifyUntil) =
-            setUpAddressesAndBounds(aliceKey, bobKey, 0, balance, certifyUntil);
+        (alice, bob,, balance, certifyUntil) = setUpAddressesAndBounds(aliceKey, bobKey, 0, balance, certifyUntil);
 
         // Need setting future timestamp so system gets unsertified but transfer is possible
         // due to a handler role

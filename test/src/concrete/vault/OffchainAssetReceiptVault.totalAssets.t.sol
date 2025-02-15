@@ -6,12 +6,12 @@ import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptV
 import {OffchainAssetReceiptVault, DEPOSIT, WITHDRAW} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultTotalAssetsTest is OffchainAssetReceiptVaultTest {
     /// Test vault totalAssets
     function testTotalAssets(uint256 aliceKey, string memory assetName, uint256 assets) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         assets = bound(assets, 1, type(uint256).max);
 

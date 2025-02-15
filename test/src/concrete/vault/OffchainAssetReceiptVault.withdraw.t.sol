@@ -75,8 +75,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         uint256 id
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
         id = bound(id, 1, type(uint256).max);
@@ -135,8 +135,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);

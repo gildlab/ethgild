@@ -71,8 +71,8 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         uint256 minShareRatio
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         // Assume that shares is not 0
         shares = bound(shares, 1, type(uint256).max);
         minShareRatio = bound(minShareRatio, 1, 1e18); //Bound from 1 to avoid division by 0
@@ -134,8 +134,8 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         minShareRatio = bound(minShareRatio, 1, 1e18);
         // Assume that shares is not 0
         shares = bound(shares, 1, type(uint64).max);

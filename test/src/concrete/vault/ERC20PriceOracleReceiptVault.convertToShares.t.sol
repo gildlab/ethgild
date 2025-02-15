@@ -14,11 +14,8 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test convertToShares
-    function testConvertToShares(uint256 aliceKey, string memory assetName, uint256 assets, uint256 id)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testConvertToShares(uint256 aliceKey, string memory assetName, uint256 assets, uint256 id) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         id = bound(id, 0, type(uint128).max);
         assets = bound(assets, 1, type(uint128).max);

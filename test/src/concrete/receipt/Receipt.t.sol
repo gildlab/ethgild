@@ -18,11 +18,9 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Check that alice can't mint herself directly on the receipt.
-    function testManagerMintRevertAlice(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testManagerMintRevertAlice(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
@@ -37,8 +35,8 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test receipt ManagerMint function
     function testManagerMint(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
@@ -58,11 +56,9 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Check that alice can't burn herself directly on the receipt.
-    function testManagerBurnRevertAlice(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testManagerBurnRevertAlice(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         amount = bound(amount, 1, type(uint256).max);
 
         TestReceiptManager testManager = new TestReceiptManager();
@@ -76,11 +72,9 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test receipt ManagerBurn function
-    function testManagerBurn(uint256 aliceKey, uint256 id, uint256 amount, bytes memory receiptInformation)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testManagerBurn(uint256 aliceKey, uint256 id, uint256 amount, bytes memory receiptInformation) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
 
@@ -120,8 +114,8 @@ contract ReceiptTest is ReceiptFactoryTest {
         bytes memory receiptInformation,
         uint256 burnAmount
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+
         // Bound with uint256 max - 1 so dowsnot get overflow while bounding burnAmount
         amount = bound(amount, 1, type(uint256).max - 1);
         id = bound(id, 0, type(uint256).max);
@@ -283,8 +277,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
     /// Test ERC1155 balanceOf function
     function testBalanceOf(uint256 aliceKey, uint256 id, uint256 amount, bytes memory data) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -376,9 +369,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test ERC1155 safeTransferFrom function
-    function testSafeTransferFrom(uint256 aliceKey, uint256 bobKey, uint256 tokenId, uint256 amount)
-        public
-    {
+    function testSafeTransferFrom(uint256 aliceKey, uint256 bobKey, uint256 tokenId, uint256 amount) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
         address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);

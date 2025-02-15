@@ -43,10 +43,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that offchainAssetReceiptVault constructs well
-    function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256k1
+    function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         address asset = address(0);

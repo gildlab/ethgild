@@ -14,11 +14,8 @@ contract OffchainAssetReceiptVaultConvertToAssetsTest is OffchainAssetReceiptVau
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test convertToAssets
-    function testConvertToAssets(uint256 aliceKey, string memory assetName, uint256 shares, uint256 id)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
+    function testConvertToAssets(uint256 aliceKey, string memory assetName, uint256 shares, uint256 id) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         id = bound(id, 1, type(uint256).max);
         shares = bound(shares, 1, type(uint64).max);

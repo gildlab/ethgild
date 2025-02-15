@@ -40,9 +40,7 @@ import {
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
     function testGrantAdminRoles(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -126,9 +124,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         bytes memory data
     ) external {
         vm.assume(certifyUntil > 0);
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -171,9 +167,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -213,9 +207,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

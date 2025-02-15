@@ -13,10 +13,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constructed
-    function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
+    function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
 
         IPriceOracleV2 vaultPriceOracle =
