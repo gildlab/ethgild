@@ -18,7 +18,6 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -68,7 +67,6 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -120,7 +118,6 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -185,7 +182,6 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         string memory assetName
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

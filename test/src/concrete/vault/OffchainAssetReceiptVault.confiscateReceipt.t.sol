@@ -69,7 +69,6 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -105,7 +104,6 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         vm.assume(targetAmount > 0);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

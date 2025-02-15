@@ -30,7 +30,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         shares = bound(shares, 1, type(uint256).max);
         uint256 assets = shares;
 
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -71,7 +70,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -124,7 +122,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation
     ) external {
         minShareRatio = bound(minShareRatio, 1e18 + 1, type(uint256).max);
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -156,7 +153,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -187,7 +183,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -220,7 +215,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         bytes memory receiptInformation,
         uint256 timestamp
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -261,7 +255,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 nextTimestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -312,7 +305,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio,
         bytes memory receiptInformation
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -352,7 +344,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio,
         bytes memory receiptInformation
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
         vm.assume(receiptInformation.length > 0);
@@ -396,7 +387,6 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
         // Assume that shares is less uint256 max
@@ -424,7 +414,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 

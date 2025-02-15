@@ -24,7 +24,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
     function testERC20NameSymbolDecimals(uint256 aliceKey, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
         vm.startPrank(alice);
@@ -44,7 +44,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         uint256 timestamp,
         bytes memory receiptInformation
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 

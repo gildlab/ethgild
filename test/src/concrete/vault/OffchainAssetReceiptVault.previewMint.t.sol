@@ -22,7 +22,6 @@ contract OffchainAssetReceiptVaultPreviewMintTest is OffchainAssetReceiptVaultTe
         string memory assetSymbol,
         uint256 shares
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

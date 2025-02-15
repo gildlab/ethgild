@@ -10,6 +10,7 @@ import {
     OffchainAssetReceiptVaultAuthorizorV1,
     FREEZE_HANDLER
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function setUpAddressesAndBounds(
@@ -18,18 +19,14 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 carolKey,
         uint256 balance,
         uint256 certifyUntil
-    ) internal pure returns (address alice, address bob, address john, uint256, uint256) {
-        // Ensure the fuzzed key is within the valid range for secp256k
-        alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
-        john = vm.addr((carolKey % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob && alice != john);
-        vm.assume(bob != john);
+    ) internal pure returns (address, address, address, uint256, uint256) {
+        (address alice, address bob, address carol) =
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey, carolKey);
 
         balance = bound(balance, 1, type(uint256).max); // Bound from one to avoid ZeroAssets
         certifyUntil = bound(certifyUntil, 1, type(uint32).max - 1); // substruct 1 for next bound
 
-        return (alice, bob, john, balance, certifyUntil);
+        return (alice, bob, carol, balance, certifyUntil);
     }
 
     function setUpVault(address alice, string memory assetName, string memory assetSymbol)

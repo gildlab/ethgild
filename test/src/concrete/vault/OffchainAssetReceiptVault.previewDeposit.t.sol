@@ -22,7 +22,6 @@ contract OffchainAssetReceiptVaultPreviewDepositTest is OffchainAssetReceiptVaul
         string memory assetSymbol,
         uint256 assets
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

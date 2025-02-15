@@ -15,7 +15,7 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
 
     /// Test convertToAssets
     function testConvertToAssets(uint256 aliceKey, string memory assetName, uint256 shares, uint256 id) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         id = bound(id, 1, type(uint256).max);
         shares = bound(shares, 1, type(uint64).max);
@@ -38,7 +38,6 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
         uint256 shares,
         uint256 id
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

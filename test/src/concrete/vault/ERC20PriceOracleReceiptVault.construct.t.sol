@@ -14,7 +14,7 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is constructed
     function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         IPriceOracleV2 vaultPriceOracle =
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
@@ -80,7 +80,6 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         string memory assetNameTwo,
         string memory assetSymbolTwo
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

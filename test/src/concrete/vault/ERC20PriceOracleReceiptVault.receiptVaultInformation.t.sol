@@ -18,7 +18,7 @@ contract ERC20PriceOracleReceiptVaultReceiptVaultInformationTest is ERC20PriceOr
     function testReceiptVaultInformation(uint256 aliceKey, string memory assetName, bytes memory information)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         vm.startPrank(alice);
 

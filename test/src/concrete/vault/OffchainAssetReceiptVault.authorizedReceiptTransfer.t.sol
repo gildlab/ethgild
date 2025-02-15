@@ -24,7 +24,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        // Generate unique addresses.
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -61,7 +60,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -112,7 +110,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -154,7 +151,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -178,7 +174,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -203,7 +198,6 @@ contract OffchainAssetReceipetVaultAuthorizedReceiptTransferTest is OffchainAsse
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

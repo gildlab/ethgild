@@ -84,7 +84,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 oraclePrice,
         bytes memory data
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         assets = bound(assets, 1, type(uint128).max);
@@ -107,7 +107,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         bytes memory data1,
         bytes memory data2
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         oraclePrice1 = bound(oraclePrice1, 0.01e18, 100e18);
         minShareRatio1 = bound(minShareRatio1, 0, oraclePrice1);
@@ -148,7 +148,6 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         uint256 minShareRatio,
         bytes memory data
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -180,8 +179,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
         checkDeposit(
             createVault(iVaultOracle, assetName, assetSymbol),
-            LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey),
-            LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey),
             oraclePrice,
             0,
             minShareRatio,
@@ -206,8 +205,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
         checkDeposit(
             createVault(iVaultOracle, assetName, assetSymbol),
-            LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey),
-            LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey),
             oraclePrice,
             assets,
             minShareRatio,

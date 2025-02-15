@@ -22,7 +22,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     function testERC20NameSymbolDecimals(uint256 aliceKey, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         IPriceOracleV2 vaultPriceOracle =
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
@@ -43,7 +43,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);

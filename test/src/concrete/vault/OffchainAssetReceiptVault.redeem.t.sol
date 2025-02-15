@@ -71,7 +71,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         uint256 minShareRatio
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         // Assume that shares is not 0
         shares = bound(shares, 1, type(uint256).max);
@@ -98,7 +98,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetSymbol,
         uint256 minShareRatio
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -134,7 +133,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         minShareRatio = bound(minShareRatio, 1, 1e18);
         // Assume that shares is not 0
@@ -166,7 +165,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -204,7 +202,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -247,7 +244,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -287,7 +283,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -325,7 +320,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -364,7 +358,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
         minShareRatio = bound(minShareRatio, 0, 1e18);
@@ -401,7 +394,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -441,7 +433,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         bool forceUntil
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -487,7 +478,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -527,7 +517,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         bool forceUntil
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -576,7 +565,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         bytes memory data,
         string memory assetName
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

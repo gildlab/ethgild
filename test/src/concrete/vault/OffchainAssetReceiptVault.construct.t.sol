@@ -30,7 +30,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     function testNonZeroAsset(uint256 aliceKey, address asset, string memory assetName, string memory assetSymbol)
         external
     {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         vm.assume(asset != address(0));
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
@@ -44,7 +44,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
     /// Test that offchainAssetReceiptVault constructs well
     function testConstructionEvent(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey);
 
         address asset = address(0);
 
@@ -114,7 +114,6 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         string memory assetNameTwo,
         string memory assetSymbolTwo
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

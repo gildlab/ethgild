@@ -30,7 +30,6 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         uint256 blockNumber,
         bool forceUntil
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -68,7 +67,6 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         uint256 blockNumber,
         bool forceUntil
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -109,7 +107,6 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         uint256 forceCertifyUntil,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -176,7 +173,6 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
         uint256 forceCertifyUntil,
         uint256 futureTime
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -238,7 +234,6 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 

@@ -56,7 +56,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -102,7 +101,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -151,7 +149,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 futureTimestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -205,7 +202,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         string memory assetName,
         string memory assetSymbol
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -247,7 +243,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -294,7 +289,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 blockNumber,
         uint256 id
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -349,7 +343,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
@@ -401,7 +394,6 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 id,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
         (address alice, address bob) =
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
