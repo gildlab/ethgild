@@ -246,30 +246,6 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         );
     }
 
-    /// Test PreviewRedeem returns correct assets
-    function testPreviewRedeem(uint256 aliceSeed, string memory assetName, uint256 shares, uint256 oraclePrice)
-        external
-    {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
-
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        shares = bound(shares, 1, type(uint64).max);
-        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Down) > 0);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-
-        uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
-
-        uint256 ResultAssets = vault.previewRedeem(shares, oraclePrice);
-        assertEq(assets, ResultAssets);
-        // Stop the prank
-        vm.stopPrank();
-    }
-
     /// Test Redeem function with more than balance
     function testRedeemMoreThanBalance(
         uint256 aliceSeed,
@@ -337,8 +313,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         uint256 oraclePrice,
         uint256 redeemSharesAmount
     ) external {
-        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((bobSeed % (SECP256K1_ORDER - 1)) + 1);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
 

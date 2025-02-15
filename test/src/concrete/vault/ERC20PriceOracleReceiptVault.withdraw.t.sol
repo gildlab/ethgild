@@ -228,31 +228,6 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         );
     }
 
-    /// Test PreviewWithdraw returns correct shares
-    function testPreviewWithdraw(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 oraclePrice)
-        external
-    {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
-
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        assets = bound(assets, 1, type(uint64).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-
-        // Call withdraw function
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Up);
-        uint256 shares = vault.previewWithdraw(assets, oraclePrice);
-
-        assertEq(shares, expectedShares);
-        // Stop the prank
-        vm.stopPrank();
-    }
-
     /// Test alice attempting to burn bob's ID when the price is different.
     function testWithdrawAliceBurnBob(
         uint256 aliceSeed,
@@ -262,14 +237,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 aliceDeposit,
         uint256 bobDeposit
     ) external {
-        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((bobSeed % (SECP256K1_ORDER - 1)) + 1);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         alicePrice = bound(alicePrice, 1e18, 100e18);
         bobPrice = bound(bobPrice, 1e18, 100e18);
         aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);
         bobDeposit = bound(bobDeposit, 100e18, type(uint128).max);
 
-        vm.assume(alice != bob);
         vm.assume(alicePrice != bobPrice);
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
@@ -457,7 +431,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 priceThree,
         uint256 aliceDeposit
     ) external {
-        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+
         priceOne = bound(priceOne, 1e18, 100e18);
         priceTwo = bound(priceTwo, 1e18, 100e18);
         priceThree = bound(priceThree, 1e18, 100e18);

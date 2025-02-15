@@ -598,8 +598,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         uint256 aliceDeposit,
         uint256 bobDeposit
     ) external {
-        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((bobSeed % (SECP256K1_ORDER - 1)) + 1);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         aliceMinShareRatio = bound(aliceMinShareRatio, 0, 1e18);
         bobMinShareRatio = bound(bobMinShareRatio, 0, 1e18);
         aliceDeposit = bound(aliceDeposit, 1, type(uint128).max);

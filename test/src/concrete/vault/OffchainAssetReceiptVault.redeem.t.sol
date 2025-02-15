@@ -552,8 +552,8 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         uint256 minShareRatio,
         uint256 redeemSharesAmount
     ) external {
-        address alice = vm.addr((aliceSeed % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((bobSeed % (SECP256K1_ORDER - 1)) + 1);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
         vm.assume(alice != bob);
