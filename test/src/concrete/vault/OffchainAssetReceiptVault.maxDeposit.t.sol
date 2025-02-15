@@ -7,9 +7,9 @@ import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceipt
 
 contract OffchainAssetReceiptVaultMaxDepositTest is OffchainAssetReceiptVaultTest {
     /// Test vault sets correct max deposit
-    function testMaxDeposit(uint256 fuzzedKeyAlice, string memory assetName) external {
+    function testMaxDeposit(uint256 aliceKey, string memory assetName) external {
         // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
 

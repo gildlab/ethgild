@@ -7,9 +7,9 @@ import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleR
 
 contract ERC20PriceOracleReceiptVaultMaxSharesTest is ERC20PriceOracleReceiptVaultTest {
     /// Test vault sets correct max Mint
-    function testMaxShares(uint256 fuzzedKeyAlice, string memory assetName) external {
+    function testMaxShares(uint256 aliceKey, string memory assetName) external {
         // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
 
         vm.startPrank(alice);
 

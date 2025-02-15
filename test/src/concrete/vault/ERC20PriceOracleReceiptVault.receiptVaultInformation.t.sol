@@ -14,11 +14,11 @@ contract ERC20PriceOracleReceiptVaultReceiptVaultInformationTest is ERC20PriceOr
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test vault receiptVaultInformation
-    function testReceiptVaultInformation(uint256 fuzzedKeyAlice, string memory assetName, bytes memory information)
+    function testReceiptVaultInformation(uint256 aliceKey, string memory assetName, bytes memory information)
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
 
         vm.startPrank(alice);
 

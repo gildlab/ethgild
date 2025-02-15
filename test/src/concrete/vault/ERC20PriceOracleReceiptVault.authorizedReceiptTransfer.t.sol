@@ -11,7 +11,7 @@ contract ERC20PriceOracleReceipetVaultAuthorizedReceiptTransferTest is ERC20Pric
     /// Test AuthorizeReceiptTransfer reverts if the caller is not the managed
     /// receipt.
     function testAuthorizeReceiptTransferRevert(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         uint256 warpTimestamp,
         string memory assetName,
@@ -21,7 +21,7 @@ contract ERC20PriceOracleReceipetVaultAuthorizedReceiptTransferTest is ERC20Pric
     ) external {
         // Generate unique addresses.
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         // Bound warpTimestamp from 1 to avoid potential issues with timestamp 0.
         warpTimestamp = bound(warpTimestamp, 1, type(uint32).max);

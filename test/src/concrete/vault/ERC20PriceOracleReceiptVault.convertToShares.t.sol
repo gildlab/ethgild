@@ -14,11 +14,11 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test convertToShares
-    function testConvertToShares(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 id)
+    function testConvertToShares(uint256 aliceKey, string memory assetName, uint256 assets, uint256 id)
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
 
         id = bound(id, 0, type(uint128).max);
         assets = bound(assets, 1, type(uint128).max);
@@ -35,7 +35,7 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
 
     /// Test convertToShares
     function testConvertToSharesDifferentCaller(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         string memory assetName,
         uint256 assets,
@@ -43,7 +43,7 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         // Bound the ID to a range that could actually be a price.
         id = bound(id, 0.001e18, 100e18);

@@ -14,11 +14,11 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test convertToAssets
-    function testConvertToAssets(uint256 fuzzedKeyAlice, string memory assetName, uint256 shares, uint256 id)
+    function testConvertToAssets(uint256 aliceKey, string memory assetName, uint256 shares, uint256 id)
         external
     {
         // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
 
         id = bound(id, 1, type(uint256).max);
         shares = bound(shares, 1, type(uint64).max);
@@ -35,7 +35,7 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
 
     /// Test convertToAssets shows no variations based on caller
     function testConvertToAssetsDifferentCaller(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         string memory assetName,
         uint256 shares,
@@ -43,7 +43,7 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         id = bound(id, 1, type(uint256).max);
         shares = bound(shares, 1, type(uint64).max);

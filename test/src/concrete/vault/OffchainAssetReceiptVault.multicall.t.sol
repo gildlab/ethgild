@@ -10,7 +10,7 @@ import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/Offc
 contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Mint multicall
     function testMintMulticall(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         uint256 firstMintAmount,
         uint256 secondMintAmount,
@@ -20,7 +20,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstMintAmount is not 0
@@ -60,7 +60,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem multicall
     function testDepositMulticall(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
@@ -70,7 +70,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -110,7 +110,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem multicall
     function testRedeemMulticall(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
@@ -122,7 +122,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -175,7 +175,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
     /// Test Withdraw multicall
     function testWithdrawMulticall(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
@@ -187,7 +187,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0

@@ -39,10 +39,10 @@ import {
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
-    function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
+    function testGrantAdminRoles(uint256 aliceKey, string memory assetName, string memory assetSymbol) external {
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -73,7 +73,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks deposit without depositor role
     function testDepositWithoutDepositorRole(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         uint256 fuzzedKeyBob,
         string memory assetName,
         string memory assetSymbol,
@@ -85,11 +85,11 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         // ShareRatio 1
         uint256 shareRatio = 1e18;
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
         fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -119,7 +119,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks Certify without role
     function testCertifyWithoutRole(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
@@ -127,8 +127,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(certifyUntil > 0);
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -162,7 +162,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks confiscate receipt without role
     function testConfiscateReceiptWithoutRole(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 id,
@@ -172,8 +172,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.assume(targetAmount > 0);
 
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -205,7 +205,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks confiscate shares without role
     function testConfiscateSharesWithoutRole(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 targetAmount,
@@ -214,8 +214,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.assume(targetAmount > 0);
 
         // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(aliceKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
