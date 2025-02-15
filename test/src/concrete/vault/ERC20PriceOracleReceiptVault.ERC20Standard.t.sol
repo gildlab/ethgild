@@ -52,9 +52,6 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         {
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
             assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
@@ -63,6 +60,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
                 abi.encode(true)
             );
+            vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
         }
 
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -89,13 +87,12 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         vm.startPrank(alice);
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
 
-        // Mock balance and allowance for deposit
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
         uint256 bobInitialBalance = vault.balanceOf(bob);
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -146,12 +143,12 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
 
         vm.startPrank(alice);
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vm.assume(transferFromAmount < expectedShares);

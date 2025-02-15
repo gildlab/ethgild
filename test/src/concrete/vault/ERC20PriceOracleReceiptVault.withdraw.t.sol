@@ -94,14 +94,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         assets = bound(assets, 2, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 withdrawAssets =
@@ -127,9 +125,6 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
@@ -138,6 +133,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
@@ -167,14 +163,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 availableReceiptBalance = receipt.balanceOf(alice, oraclePrice);
@@ -209,9 +203,6 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
@@ -220,6 +211,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 availableReceiptBalance = receipt.balanceOf(alice, oraclePrice);
@@ -287,12 +279,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.startPrank(alice);
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(aliceDeposit));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, aliceDeposit),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, aliceDeposit));
 
         vault.deposit(aliceDeposit, alice, alicePrice, bytes(""));
         vm.stopPrank();
@@ -302,12 +294,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.startPrank(bob);
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, bob), abi.encode(bobDeposit));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit));
 
         uint256 bobExpectedSharesAfterActions;
         {
@@ -345,12 +337,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             setVaultOraclePrice(alicePrice);
 
             vm.startPrank(bob);
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, bob), abi.encode(bobDeposit));
             vm.mockCall(
                 address(iAsset),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
                 abi.encode(true)
             );
+            vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit));
 
             uint256 bobSharesDeposit1 = vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
             vm.stopPrank();
@@ -415,9 +407,6 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
         ReceiptContract receipt = getReceipt();
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         assets = bound(assets, 1, type(uint128).max - 1);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
@@ -426,6 +415,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
@@ -485,11 +475,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         setVaultOraclePrice(priceOne);
         vm.startPrank(alice);
 
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(aliceDeposit));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
             abi.encode(true)
+        );
+        vm.expectCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2)
         );
 
         vault.deposit(aliceDeposit / 2, alice, priceOne, bytes(""));
@@ -507,6 +500,10 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
             abi.encode(true)
+        );
+        vm.expectCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2)
         );
 
         vault.deposit(aliceDeposit / 2, alice, priceTwo, bytes(""));

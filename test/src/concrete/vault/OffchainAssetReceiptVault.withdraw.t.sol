@@ -36,10 +36,11 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         emit IReceiptVaultV1.Withdraw(owner, receiver, owner, assets, assets, id, data);
 
         // Call withdraw function
-        vault.withdraw(assets, receiver, owner, id, data);
+        uint256 shares = vault.withdraw(assets, receiver, owner, id, data);
 
         uint256 balanceAfterOwner = vault.balanceOf(owner);
         assertEq(balanceAfterOwner, initialBalanceOwner - assets);
+        assertEq(shares, assets);
     }
 
     /// Checks that balance owner balance does not change after wirthdraw revert
@@ -61,67 +62,11 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
             vm.expectRevert();
         }
         // Call withdraw function
-        vault.withdraw(assets, receiver, owner, id, data);
+        uint256 shares = vault.withdraw(assets, receiver, owner, id, data);
 
         uint256 balanceAfterOwner = vault.balanceOf(owner);
         assertEq(balanceAfterOwner, initialBalanceOwner);
-    }
-
-    /// Test PreviewWithdraw returns 0 shares if no withdrawer role
-    function testPreviewWithdrawReturnsZero(
-        uint256 aliceSeed,
-        uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 id
-    ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
-
-        // Assume that assets is not 0
-        assets = bound(assets, 1, type(uint256).max);
-        id = bound(id, 1, type(uint256).max);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        // Call withdraw function
-        uint256 shares = vault.previewWithdraw(assets, id);
-
-        assertEq(shares, assets);
-        // Stop the prank
-        vm.stopPrank();
-    }
-
-    /// Test PreviewWithdraw returns correct shares
-    function testPreviewWithdraw(
-        uint256 aliceSeed,
-        uint256 bobSeed,
-        uint256 assets,
-        string memory assetName,
-        string memory assetSymbol
-    ) external {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        // Assume that assets is not 0
-        assets = bound(assets, 1, type(uint256).max);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        // Call withdraw function
-        uint256 shares = vault.previewWithdraw(assets, 1);
-
-        assertEq(shares, assets);
-        // Stop the prank
-        vm.stopPrank();
+        assertEq(shares, 0);
     }
 
     /// Test withdraw function reverts without WITHDRAWER role

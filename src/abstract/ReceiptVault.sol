@@ -648,7 +648,7 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV1
     function previewRedeem(uint256 shares, uint256 id) external view virtual returns (uint256) {
-        return _calculateRedeem(shares, id);
+        return _calculateRedeem(shares, _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn));
     }
 
     /// @inheritdoc IReceiptVaultV1

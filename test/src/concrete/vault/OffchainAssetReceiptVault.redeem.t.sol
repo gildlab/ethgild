@@ -16,7 +16,7 @@ import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/Offc
 contract RedeemTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
-    /// Checks that balance owner balance changes after wirthdraw
+    /// Checks that owner balance changes after withdraw
     function checkBalanceChange(
         OffchainAssetReceiptVault vault,
         address receiver,
@@ -32,10 +32,11 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         emit IReceiptVaultV1.Withdraw(owner, receiver, owner, shares, shares, id, data);
 
         // Call redeem function
-        vault.redeem(shares, receiver, owner, id, data);
+        uint256 assets = vault.redeem(shares, receiver, owner, id, data);
 
         uint256 balanceAfterOwner = vault.balanceOf(owner);
         assertEq(balanceAfterOwner, initialBalanceOwner - shares);
+        assertEq(assets, shares);
     }
 
     /// Checks that balance owner balance does not change after wirthdraw revert
@@ -56,77 +57,18 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         } else {
             vm.expectRevert();
         }
-        // Call withdraw function
-        vault.redeem(shares, receiver, owner, id, data);
+        // Call redeem function
+        uint256 assets = vault.redeem(shares, receiver, owner, id, data);
 
         uint256 balanceAfterOwner = vault.balanceOf(owner);
         assertEq(balanceAfterOwner, initialBalanceOwner);
-    }
-
-    /// Test PreviewRedeem returns 0 shares if no withdrawer role
-    function testPreviewRedeemReturnsZero(
-        uint256 aliceSeed,
-        uint256 shares,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 minShareRatio
-    ) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
-
-        // Assume that shares is not 0
-        shares = bound(shares, 1, type(uint256).max);
-        minShareRatio = bound(minShareRatio, 1, 1e18); //Bound from 1 to avoid division by 0
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        // Call withdraw function
-        uint256 assets = vault.previewWithdraw(shares, minShareRatio);
-
-        assertEq(assets, shares);
-        // Stop the prank
-        vm.stopPrank();
-    }
-
-    /// Test PreviewRedeem returns correct shares
-    function testPreviewRedeem(
-        uint256 aliceSeed,
-        uint256 bobSeed,
-        uint256 shares,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 minShareRatio
-    ) external {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        minShareRatio = bound(minShareRatio, 1, 1e18); //Bound from 1 to avoid division by 0
-        // Assume that shares is not 0
-        shares = bound(shares, 1, type(uint64).max);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
-
-        // Prank as Bob for transaction
-        vm.startPrank(bob);
-
-        uint256 expectedAssets = shares.fixedPointDiv(minShareRatio, Math.Rounding.Down);
-
-        // Get assets
-        uint256 assets = vault.previewRedeem(shares, minShareRatio);
-
-        assertEq(assets, expectedAssets);
-        // Stop the prank
-        vm.stopPrank();
+        assertEq(assets, 0);
     }
 
     /// Test withdraw function reverts without WITHDRAWER role
     function testRedeemRevertsWithoutRole(
         uint256 aliceSeed,
-        uint256 shares,
+        uint256 assets,
         uint256 minShareRatio,
         bytes memory data,
         string memory assetName,
@@ -135,8 +77,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         minShareRatio = bound(minShareRatio, 1, 1e18);
-        // Assume that shares is not 0
-        shares = bound(shares, 1, type(uint64).max);
+        assets = bound(assets, 1, type(uint128).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
@@ -146,7 +87,8 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
 
         // Call the deposit function
-        vault.deposit(shares, alice, minShareRatio, data);
+        uint256 shares = vault.deposit(assets, alice, minShareRatio, data);
+        assertEq(assets, shares);
 
         checkNoBalanceChange(vault, alice, alice, minShareRatio, shares, data, bytes(""));
 
@@ -181,7 +123,8 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         // Call the deposit function
-        vault.deposit(assets, bob, minShareRatio, data);
+        uint256 shares = vault.deposit(assets, bob, minShareRatio, data);
+        assertEq(shares, assets);
 
         checkBalanceChange(vault, bob, bob, 1, assets, data);
 
@@ -623,9 +566,6 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
         vm.startPrank(alice);
 
-        uint256 expectedShares = amount.fixedPointMul(minShareRatio, Math.Rounding.Down);
-        vm.assume(expectedShares > 0);
-
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(WITHDRAW, alice);
@@ -638,14 +578,15 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         uint256 aliceBalanceBeforeTransfer = vault.balanceOf(alice);
         assertEqUint(aliceBalanceBeforeTransfer, totalShares);
 
-        uint256 assetsAmount = vault.previewRedeem(redeemSharesAmount, minShareRatio);
+        uint256 assetsAmount = vault.previewRedeem(redeemSharesAmount, 1);
         vm.assume(assetsAmount > 0);
         vm.stopPrank();
 
         // Bob has no allowance so he cannot withdraw.
         vm.startPrank(bob);
         vm.expectRevert("ERC20: insufficient allowance");
-        vault.redeem(redeemSharesAmount, bob, alice, minShareRatio, bytes(""));
+        uint256 assets = vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
+        assertEqUint(assets, 0);
         vm.stopPrank();
 
         // Alice approves Bob to withdraw her shares.
@@ -661,7 +602,8 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(bob);
 
         vm.expectRevert("ERC1155: caller is not token owner or approved");
-        vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
+        assets = vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
+        assertEqUint(assets, 0);
         vm.stopPrank();
 
         // Alice makes Bob an operator.
@@ -671,7 +613,9 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
         // Bob can now withdraw.
         vm.startPrank(bob);
-        vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
+        assets = vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
+        assertEqUint(assets, redeemSharesAmount);
+        assertEqUint(assets, assetsAmount);
         vm.stopPrank();
     }
 }
