@@ -141,7 +141,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// Test deposit to someone else
     function testDepositSomeoneElse(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         uint256 assets,
         uint256 oraclePrice,
@@ -150,7 +150,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         minShareRatio = bound(minShareRatio, 0, oraclePrice);

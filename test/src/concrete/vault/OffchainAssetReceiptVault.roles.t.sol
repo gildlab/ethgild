@@ -74,7 +74,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks deposit without depositor role
     function testDepositWithoutDepositorRole(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 aliceAssets,
@@ -86,10 +86,10 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         uint256 shareRatio = 1e18;
         // Ensure the fuzzed key is within the valid range for secp256k1
         aliceKey = bound(aliceKey, 1, SECP256K1_ORDER - 1);
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
+        bobKey = bound(bobKey, 1, SECP256K1_ORDER - 1);
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 

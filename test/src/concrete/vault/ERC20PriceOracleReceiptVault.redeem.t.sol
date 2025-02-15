@@ -343,13 +343,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     /// Test redeem with erc20 approval
     function testRedeemWithERC20Approval(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 amount,
         uint256 oraclePrice,
         uint256 redeemSharesAmount
     ) external {
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
 

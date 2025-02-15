@@ -268,14 +268,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     /// Test alice attempting to burn bob's ID when the price is different.
     function testWithdrawAliceBurnBob(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 alicePrice,
         uint256 bobPrice,
         uint256 aliceDeposit,
         uint256 bobDeposit
     ) external {
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         alicePrice = bound(alicePrice, 1e18, 100e18);
         bobPrice = bound(bobPrice, 1e18, 100e18);
         aliceDeposit = bound(aliceDeposit, 100e18, type(uint128).max);

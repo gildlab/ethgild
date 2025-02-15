@@ -22,7 +22,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     /// Test certify event
     function testCertify(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 certifyUntil,
@@ -32,7 +32,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         vm.roll(blockNumber);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
@@ -61,7 +61,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     /// Test certify reverts on zero certify until
     function testCertifyRevertOnZeroCertifyUntil(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         bytes memory data,
@@ -70,7 +70,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         vm.roll(blockNumber);
 
@@ -99,7 +99,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     /// Test certify with force until true
     function testCertifyWithForceUntilTrue(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 assets,
         bytes memory data,
         string memory assetName,
@@ -111,7 +111,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max); // Need to subtract 1 for the next bound
@@ -166,7 +166,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     /// Test certify with force until true revert deposit
     function testCertifyWithForceUntilTrueRevertDeposit(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 assets,
@@ -178,7 +178,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         certifyUntil = bound(certifyUntil, 1, type(uint32).max);
@@ -226,7 +226,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
     /// Test to checks vault certifiedUntil is definitely updated and vault gets certified
     function testVaultGetsCertified(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 minShareRatio,
         uint256 assets,
         string memory assetName,
@@ -240,7 +240,7 @@ contract OffchainAssetReceiptVaultCertifyTest is OffchainAssetReceiptVaultTest {
 
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);

@@ -143,7 +143,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
     /// Test mint to someone else
     function testMintSomeoneElse(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         uint256 shares,
@@ -152,7 +152,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
 

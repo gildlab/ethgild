@@ -11,7 +11,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Mint multicall
     function testMintMulticall(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 firstMintAmount,
         uint256 secondMintAmount,
         uint256 minShareRatio,
@@ -20,7 +20,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstMintAmount is not 0
@@ -61,7 +61,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Redeem multicall
     function testDepositMulticall(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 minShareRatio,
@@ -70,7 +70,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -111,7 +111,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Redeem multicall
     function testRedeemMulticall(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 firstRedeemAmount,
@@ -122,7 +122,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -176,7 +176,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Withdraw multicall
     function testWithdrawMulticall(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 firstRedeemAmount,
@@ -187,7 +187,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0

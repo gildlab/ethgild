@@ -111,7 +111,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test creating several different vaults
     function testCreatingSeveralVaults(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol,
         string memory assetNameTwo,
@@ -119,7 +119,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         // Simulate transaction from alice
         vm.prank(alice);

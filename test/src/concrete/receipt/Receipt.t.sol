@@ -150,7 +150,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     /// Test managerTransferFrom more than balance
     function testManagerTransferFromMoreThanBalance(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory fuzzedReceiptInformation,
@@ -158,7 +158,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         // Bound with uint256 max - 1 so dowsnot get overflow while bounding transferAmount
         amount = bound(amount, 1, type(uint256).max - 1);
@@ -188,14 +188,14 @@ contract ReceiptTest is ReceiptFactoryTest {
     /// Test receipt ManagerTransferFrom function reverts while UnauthorizedTransfer
     function testUnauthorizedTransferManagerTransferFrom(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory fuzzedReceiptInformation
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
@@ -223,14 +223,14 @@ contract ReceiptTest is ReceiptFactoryTest {
     /// Alice can't transfer to herself using managerTransferFrom.
     function testManagerTransferFromSelf(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory fuzzedReceiptInformation
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
 
         TestReceiptManager testManager = new TestReceiptManager();
         ReceiptContract receipt =
@@ -246,14 +246,14 @@ contract ReceiptTest is ReceiptFactoryTest {
     /// Test receipt managerTransferFrom function
     function testTransferManagerTransferFrom(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 id,
         uint256 amount,
         bytes memory fuzzedReceiptInformation
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         amount = bound(amount, 1, type(uint256).max);
         id = bound(id, 0, type(uint256).max);
@@ -309,7 +309,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     /// Test ERC1155 balanceOfBatch function
     function testBalanceOfBatch(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 idOne,
         uint256 idTwo,
         uint256 amountOne,
@@ -318,7 +318,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     ) external {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
         amountOne = bound(amountOne, 1, type(uint256).max);
@@ -356,10 +356,10 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test ERC1155 setApprovalForAll And IsApprovedForAll function
-    function testSetApprovalForAllAndIsApprovedForAll(uint256 aliceKey, uint256 fuzzedKeyBob) public {
+    function testSetApprovalForAllAndIsApprovedForAll(uint256 aliceKey, uint256 bobKey) public {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
         ReceiptContract receipt =
@@ -376,12 +376,12 @@ contract ReceiptTest is ReceiptFactoryTest {
     }
 
     /// Test ERC1155 safeTransferFrom function
-    function testSafeTransferFrom(uint256 aliceKey, uint256 fuzzedKeyBob, uint256 tokenId, uint256 amount)
+    function testSafeTransferFrom(uint256 aliceKey, uint256 bobKey, uint256 tokenId, uint256 amount)
         public
     {
         // Ensure the fuzzed key is within the valid range for secp256
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
         amount = bound(amount, 1, type(uint256).max);
@@ -419,7 +419,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     /// Test ERC1155 safeBatchTransferFrom function
     function testSafeBatchTransferFrom(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         uint256 tokenId1,
         uint256 tokenId2,
         uint256 amount1,
@@ -427,7 +427,7 @@ contract ReceiptTest is ReceiptFactoryTest {
     ) public {
         // Ensure the fuzzed keys are within the valid range for secp256k1
         address alice = vm.addr((aliceKey % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        address bob = vm.addr((bobKey % (SECP256K1_ORDER - 1)) + 1);
         vm.assume(alice != bob);
 
         vm.assume(tokenId1 != tokenId2);

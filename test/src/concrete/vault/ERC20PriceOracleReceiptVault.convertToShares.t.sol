@@ -36,14 +36,14 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
     /// Test convertToShares
     function testConvertToSharesDifferentCaller(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         uint256 assets,
         uint256 id
     ) external {
         // Generate unique addresses
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         // Bound the ID to a range that could actually be a price.
         id = bound(id, 0.001e18, 100e18);

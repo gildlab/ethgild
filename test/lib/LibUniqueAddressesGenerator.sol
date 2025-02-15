@@ -11,14 +11,14 @@ library LibUniqueAddressesGenerator {
     }
 
     // Generates two unique addresses from the provided fuzzed keys
-    function generateUniqueAddresses(Vm vm, uint256 SECP256K1_ORDER, uint256 aliceKey, uint256 fuzzedKeyBob)
+    function generateUniqueAddresses(Vm vm, uint256 SECP256K1_ORDER, uint256 aliceKey, uint256 bobKey)
         internal
         pure
         returns (address, address)
     {
         // Ensure the fuzzed key is within the valid range for secp256k1
         address alice = generateUniqueAddress(vm, SECP256K1_ORDER, aliceKey);
-        address bob = generateUniqueAddress(vm, SECP256K1_ORDER, fuzzedKeyBob);
+        address bob = generateUniqueAddress(vm, SECP256K1_ORDER, bobKey);
         vm.assume(alice != bob);
 
         return (alice, bob);

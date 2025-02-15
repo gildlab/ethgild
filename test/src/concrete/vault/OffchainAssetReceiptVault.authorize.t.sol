@@ -24,12 +24,12 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
     /// Test that authorize contract is as initialized.
     function testAuthorizeContract(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
         (bob);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
@@ -43,12 +43,12 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
     /// Test that the owner can change the authorizor.
     function testChangeAuthorizor(
         uint256 aliceKey,
-        uint256 fuzzedKeyBob,
+        uint256 bobKey,
         string memory assetName,
         string memory assetSymbol
     ) external {
         (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, fuzzedKeyBob);
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, aliceKey, bobKey);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
