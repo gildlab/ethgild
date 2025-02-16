@@ -8,10 +8,10 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract OffchainAssetReceiptVaultMaxDepositTest is OffchainAssetReceiptVaultTest {
     /// Test vault sets correct max deposit
-    function testMaxDeposit(uint256 aliceSeed, string memory assetName) external {
+    function testMaxDeposit(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
         uint256 maxDeposit = vault.maxDeposit(alice);

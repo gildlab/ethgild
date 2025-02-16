@@ -54,8 +54,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
     function testConfiscateSharesOnZeroBalance(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 balance,
         uint256 targetAmount,
@@ -72,7 +72,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -96,8 +96,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         uint256 bobSeed,
         uint256 minShareRatio,
         uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 certifyUntil,
         uint256 blockNumber,
@@ -116,7 +116,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set roles
         vm.startPrank(alice);

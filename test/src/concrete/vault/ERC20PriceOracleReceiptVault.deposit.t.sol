@@ -84,7 +84,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// Test deposit function
     function testDepositBasic(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice,
         bytes memory data
@@ -95,14 +96,15 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assets = bound(assets, 1, type(uint128).max);
 
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetName), alice, alice, oraclePrice, assets, 0, data, bytes("")
+            createVault(iVaultOracle, shareName, shareSymbol), alice, alice, oraclePrice, assets, 0, data, bytes("")
         );
     }
 
     /// Test multiple deposits under the different oracle prices.
     function testMultipleDeposits(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets1,
         uint256 assets2,
         uint256 oraclePrice1,
@@ -118,7 +120,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         minShareRatio1 = bound(minShareRatio1, 0, oraclePrice1);
         assets1 = bound(assets1, 1, type(uint128).max);
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetName),
+            createVault(iVaultOracle, shareName, shareSymbol),
             alice,
             alice,
             oraclePrice1,
@@ -132,7 +134,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         minShareRatio2 = bound(minShareRatio2, 0, oraclePrice2);
         assets2 = bound(assets2, 1, type(uint128).max);
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetName),
+            createVault(iVaultOracle, shareName, shareSymbol),
             alice,
             alice,
             oraclePrice2,
@@ -147,7 +149,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     function testDepositSomeoneElse(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice,
         uint256 minShareRatio,
@@ -160,7 +163,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assets = bound(assets, 1, type(uint128).max);
 
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetName),
+            createVault(iVaultOracle, shareName, shareSymbol),
             alice,
             bob,
             oraclePrice,
@@ -174,15 +177,15 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// Test deposit function with zero assets
     function testDepositWithZeroAssets(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 oraclePrice,
         uint256 minShareRatio
     ) external {
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetSymbol),
+            createVault(iVaultOracle, shareName, shareSymbol),
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
             oraclePrice,
@@ -196,8 +199,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
     /// Test to check deposit reverts with MinShareRatio
     function testDepositMinShareRatio(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 assets,
         uint256 oraclePrice,
@@ -208,7 +211,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assets = bound(assets, 1, type(uint128).max);
 
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetSymbol),
+            createVault(iVaultOracle, shareName, shareSymbol),
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
             LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
             oraclePrice,
@@ -221,8 +224,8 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
 
     /// Test deposit reverts with zero receiver
     function testDepositWithZeroReceiver(
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 assets,
         uint256 oraclePrice,
@@ -233,7 +236,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
         checkDeposit(
-            createVault(iVaultOracle, assetName, assetSymbol),
+            createVault(iVaultOracle, shareName, shareSymbol),
             ALICE,
             address(0),
             oraclePrice,

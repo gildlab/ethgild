@@ -29,12 +29,12 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         return (alice, bob, carol, balance, certifyUntil);
     }
 
-    function setUpVault(address alice, string memory assetName, string memory assetSymbol)
+    function setUpVault(address alice, string memory shareName, string memory shareSymbol)
         internal
         returns (OffchainAssetReceiptVault vault, ReceiptContract receipt)
     {
         vm.recordLogs();
-        vault = createVault(alice, assetName, assetSymbol);
+        vault = createVault(alice, shareName, shareSymbol);
         Vm.Log[] memory logs = vm.getRecordedLogs();
         receipt = getReceipt(logs);
         return (vault, receipt);
@@ -44,7 +44,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function testReceiptTransferHandler(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
@@ -62,7 +63,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
-        (vault, receipt) = setUpVault(alice, assetName, assetName);
+        (vault, receipt) = setUpVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -96,7 +97,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 aliceSeed,
         uint256 bobSeed,
         uint256 carolKey,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
@@ -116,7 +118,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
-        (vault, receipt) = setUpVault(alice, assetName, assetName);
+        (vault, receipt) = setUpVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -151,7 +153,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 aliceSeed,
         uint256 bobSeed,
         uint256 carolKey,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
@@ -171,7 +174,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
-        (vault, receipt) = setUpVault(alice, assetName, assetName);
+        (vault, receipt) = setUpVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);

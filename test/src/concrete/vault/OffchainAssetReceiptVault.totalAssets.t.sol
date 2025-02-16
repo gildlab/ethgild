@@ -10,12 +10,14 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract OffchainAssetReceiptVaultTotalAssetsTest is OffchainAssetReceiptVaultTest {
     /// Test vault totalAssets
-    function testTotalAssets(uint256 aliceSeed, string memory assetName, uint256 assets) external {
+    function testTotalAssets(uint256 aliceSeed, string memory shareName, string memory shareSymbol, uint256 assets)
+        external
+    {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);

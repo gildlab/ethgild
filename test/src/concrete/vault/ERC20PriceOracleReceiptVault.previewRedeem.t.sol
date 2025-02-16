@@ -14,9 +14,13 @@ contract ERC20PriceOracleReceiptVaultPreviewRedeemTest is ERC20PriceOracleReceip
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test PreviewRedeem returns correct assets
-    function testPreviewRedeem(uint256 aliceSeed, string memory assetName, uint256 shares, uint256 oraclePrice)
-        external
-    {
+    function testPreviewRedeem(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 shares,
+        uint256 oraclePrice
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
@@ -27,7 +31,7 @@ contract ERC20PriceOracleReceiptVaultPreviewRedeemTest is ERC20PriceOracleReceip
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
 

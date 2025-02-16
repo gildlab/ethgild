@@ -16,8 +16,8 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
-    function testZeroInitialAdmin(string memory assetName, string memory assetSymbol) external {
-        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: assetName, symbol: assetSymbol});
+    function testZeroInitialAdmin(string memory shareName, string memory shareSymbol) external {
+        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
         iFactory.clone(
@@ -27,13 +27,13 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that asset is address zero
-    function testNonZeroAsset(uint256 aliceSeed, address asset, string memory assetName, string memory assetSymbol)
+    function testNonZeroAsset(uint256 aliceSeed, address asset, string memory shareName, string memory shareSymbol)
         external
     {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         vm.assume(asset != address(0));
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         iFactory.clone(
@@ -43,12 +43,12 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     }
 
     /// Test that offchainAssetReceiptVault constructs well
-    function testConstructionEvent(uint256 aliceSeed, string memory assetName, string memory assetSymbol) external {
+    function testConstructionEvent(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         address asset = address(0);
 
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: assetName, symbol: assetSymbol});
+        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
 
         // Simulate transaction from alice
         vm.prank(alice);
@@ -90,11 +90,11 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         assertEq(config.initialAdmin, alice);
         assert(address(vault) != address(0));
 
-        assertEq(config.receiptVaultConfig.vaultConfig.name, assetName);
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
+        assertEq(config.receiptVaultConfig.vaultConfig.name, shareName);
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
 
-        assertEq(config.receiptVaultConfig.vaultConfig.symbol, assetSymbol);
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+        assertEq(config.receiptVaultConfig.vaultConfig.symbol, shareSymbol);
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(shareSymbol)));
 
         assertEq(address(config.receiptVaultConfig.vaultConfig.asset), asset);
 
@@ -109,32 +109,32 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     function testCreatingSeveralVaults(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
-        string memory assetNameTwo,
-        string memory assetSymbolTwo
+        string memory shareName,
+        string memory shareSymbol,
+        string memory shareNameTwo,
+        string memory shareSymbolTwo
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         // Simulate transaction from alice
         vm.prank(alice);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         assert(address(vault) != address(0));
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(shareSymbol)));
         assertEq(address(vault.receipt().manager()), address(vault));
         assertEq(vault.owner(), alice);
 
         // Simulate transaction from alice
         vm.prank(bob);
 
-        OffchainAssetReceiptVault vaultTwo = createVault(bob, assetNameTwo, assetSymbolTwo);
+        OffchainAssetReceiptVault vaultTwo = createVault(bob, shareNameTwo, shareSymbolTwo);
 
         assert(address(vaultTwo) != address(0));
-        assertEq(keccak256(bytes(vaultTwo.name())), keccak256(bytes(assetNameTwo)));
-        assertEq(keccak256(bytes(vaultTwo.symbol())), keccak256(bytes(assetSymbolTwo)));
+        assertEq(keccak256(bytes(vaultTwo.name())), keccak256(bytes(shareNameTwo)));
+        assertEq(keccak256(bytes(vaultTwo.symbol())), keccak256(bytes(shareSymbolTwo)));
         assertEq(address(vaultTwo.receipt().manager()), address(vaultTwo));
         assertEq(vaultTwo.owner(), bob);
     }

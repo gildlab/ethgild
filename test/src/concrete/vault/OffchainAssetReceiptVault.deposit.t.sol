@@ -76,11 +76,11 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName,
-        string memory assetSymbol
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         minShareRatio = bound(minShareRatio, 0, 1e18);
         checkDeposit(vault, alice, bob, bob, assets, minShareRatio, receiptInformation, "");
     }
@@ -93,8 +93,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 assetsSecondDeposit,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName,
-        string memory assetSymbol
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
@@ -103,7 +103,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         assets = bound(assets, 1, type(uint256).max / 2);
         assetsSecondDeposit = bound(assetsSecondDeposit, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         checkDeposit(vault, alice, bob, bob, assets, minShareRatio, receiptInformation, "");
         checkDeposit(vault, alice, bob, bob, assetsSecondDeposit, minShareRatio, receiptInformation, "");
@@ -113,8 +113,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function testDepositMinShareRatio(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation
@@ -125,7 +125,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         checkDeposit(
             vault,
@@ -143,8 +143,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function testDepositWithZeroAssets(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory receiptInformation,
         uint256 minShareRatio
     ) external {
@@ -153,7 +153,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         uint256 assets = 0;
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         checkDeposit(
             vault,
@@ -170,8 +170,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function testDepositWithZeroReceiver(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation
@@ -181,7 +181,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         checkDeposit(
             vault,
@@ -198,8 +198,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit to someone else reverts if system not certified
     function testDepositToSomeoneElseNotCertified(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
@@ -214,7 +214,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.warp(timestamp);
         checkDeposit(
@@ -232,8 +232,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit to someone else reverts if system certification expired
     function testDepositToSomeoneElseExpiredCertification(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
@@ -254,7 +254,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max - 1);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -286,8 +286,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     /// Test deposit to someone else with DEPOSITOR role
     function testDepositToSomeoneElseWithDepositorRole(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 bobSeed,
         uint256 assets,
         uint256 minShareRatio,
@@ -300,7 +300,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to grant roles
         vm.startPrank(alice);
@@ -319,8 +319,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 timestamp
     ) external {
         minShareRatio = bound(minShareRatio, 0, 1e18);
@@ -330,7 +330,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets is less uint256 max
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
@@ -368,8 +368,8 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         uint256 assets,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 timestamp
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
@@ -380,7 +380,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);

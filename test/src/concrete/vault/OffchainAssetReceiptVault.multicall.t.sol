@@ -16,7 +16,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 secondMintAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
@@ -27,7 +28,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         secondMintAmount = bound(secondMintAmount, 1, type(uint64).max);
         vm.assume(firstMintAmount != secondMintAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
@@ -64,7 +65,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 secondDepositAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
@@ -75,7 +77,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         secondDepositAmount = bound(secondDepositAmount, 1, type(uint64).max);
         vm.assume(firstDepositAmount != secondDepositAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
@@ -114,7 +116,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 secondRedeemAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
@@ -130,7 +133,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(firstRedeemAmount != secondRedeemAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
@@ -177,7 +180,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 secondRedeemAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
@@ -193,7 +197,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(firstRedeemAmount != secondRedeemAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 

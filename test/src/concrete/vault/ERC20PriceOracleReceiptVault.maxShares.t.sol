@@ -8,12 +8,12 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 
 contract ERC20PriceOracleReceiptVaultMaxSharesTest is ERC20PriceOracleReceiptVaultTest {
     /// Test vault sets correct max Mint
-    function testMaxShares(uint256 aliceSeed, string memory assetName) external {
+    function testMaxShares(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         uint256 maxMint = vault.maxMint(alice);
 

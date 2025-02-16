@@ -17,8 +17,8 @@ contract OffchainAssetReceiptVaultPreviewWithdrawTest is OffchainAssetReceiptVau
     function testPreviewWithdrawNoRole(
         uint256 aliceSeed,
         uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 id
     ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
@@ -27,7 +27,7 @@ contract OffchainAssetReceiptVaultPreviewWithdrawTest is OffchainAssetReceiptVau
         assets = bound(assets, 1, type(uint256).max);
         id = bound(id, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -44,8 +44,8 @@ contract OffchainAssetReceiptVaultPreviewWithdrawTest is OffchainAssetReceiptVau
         uint256 aliceSeed,
         uint256 bobSeed,
         uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 id
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
@@ -53,7 +53,7 @@ contract OffchainAssetReceiptVaultPreviewWithdrawTest is OffchainAssetReceiptVau
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant role
         vm.startPrank(alice);
 

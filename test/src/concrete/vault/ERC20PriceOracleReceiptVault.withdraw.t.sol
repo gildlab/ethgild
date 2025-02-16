@@ -77,9 +77,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     }
 
     /// Test Withdraw function
-    function testWithdrawBasic(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 oraclePrice)
-        external
-    {
+    function testWithdrawBasic(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 assets,
+        uint256 oraclePrice
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
@@ -88,7 +92,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 2, type(uint128).max);
@@ -110,7 +114,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     /// Test Withdraw function reverts on zero assets
     function testWithdrawRevertsOnZeroAssets(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
@@ -122,7 +127,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -145,7 +150,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     /// Test Withdraw function reverts on zero receiver
     function testWithdrawRevertsOnZeroReceiver(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
@@ -157,7 +163,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -188,7 +194,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     /// Test Withdraw function reverts on zero owner
     function testWithdrawRevertsOnZeroOwner(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
@@ -200,7 +207,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -365,7 +372,8 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
     /// Test Withdraw function with more than assets deposied
     function testWithdrawMoreThanAssets(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 assetsToWithdraw,
         uint256 oraclePrice
@@ -378,7 +386,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max - 1);

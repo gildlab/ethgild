@@ -14,7 +14,13 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test convertToShares
-    function testConvertToShares(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 id) external {
+    function testConvertToShares(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 assets,
+        uint256 id
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         id = bound(id, 0, type(uint128).max);
@@ -22,7 +28,7 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         uint256 expectedShares = assets.fixedPointMul(id, Math.Rounding.Down);
         uint256 resultShares = vault.convertToShares(assets, id);
@@ -34,7 +40,8 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
     function testConvertToSharesDifferentCaller(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 id
     ) external {
@@ -46,7 +53,7 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         uint256 resultSharesAlice = vault.convertToShares(assets, id);
         vm.stopPrank();

@@ -14,8 +14,8 @@ contract ERC20PriceOracleReceiptVaultPreviewMintTest is ERC20PriceOracleReceiptV
 
     /// Test PreviewMint returns correct assets
     function testPreviewMintReturnedAssets(
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 shares,
         uint256 oraclePrice
     ) external {
@@ -25,7 +25,7 @@ contract ERC20PriceOracleReceiptVaultPreviewMintTest is ERC20PriceOracleReceiptV
         shares = bound(shares, 1, type(uint64).max);
         vm.assume(shares.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Up);
 

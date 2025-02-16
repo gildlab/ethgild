@@ -82,7 +82,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     /// Test Redeem function
     function testRedeemBasic(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
@@ -95,7 +96,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -121,7 +122,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     /// Test Redeem function reverts on zero shares
     function testRedeemRevertsOnZeroShares(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
@@ -133,7 +135,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -158,7 +160,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     /// Test Redeem function reverts on zero receiver
     function testRedeemRevertsOnZeroReceiver(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
@@ -171,7 +174,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
 
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -204,7 +207,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     /// Test Redeem function reverts on zero owner
     function testRedeemRevertsOnZeroOwner(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
@@ -217,7 +221,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
@@ -249,7 +253,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
     /// Test Redeem function with more than balance
     function testRedeemMoreThanBalance(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 sharesToRedeem,
         uint256 oraclePrice
@@ -262,7 +267,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);

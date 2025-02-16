@@ -39,10 +39,10 @@ import {
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
-    function testGrantAdminRoles(uint256 aliceSeed, string memory assetName, string memory assetSymbol) external {
+    function testGrantAdminRoles(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(DEPOSIT_ADMIN, alice));
         assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(WITHDRAW_ADMIN, alice));
@@ -73,8 +73,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     function testDepositWithoutDepositorRole(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 aliceAssets,
         bytes memory receiptInformation
     ) external {
@@ -84,7 +84,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         uint256 shareRatio = 1e18;
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -113,15 +113,15 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Certify without role
     function testCertifyWithoutRole(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 certifyUntil,
         bytes memory data
     ) external {
         vm.assume(certifyUntil > 0);
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -154,8 +154,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks confiscate receipt without role
     function testConfiscateReceiptWithoutRole(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 id,
         uint256 targetAmount,
         bytes memory data
@@ -164,7 +164,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
@@ -195,8 +195,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks confiscate shares without role
     function testConfiscateSharesWithoutRole(
         uint256 aliceSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 targetAmount,
         bytes memory data
     ) external {
@@ -204,7 +204,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);

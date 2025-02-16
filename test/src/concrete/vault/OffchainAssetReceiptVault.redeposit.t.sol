@@ -50,8 +50,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 assets,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
@@ -67,7 +67,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         assets = bound(assets, 1, type(uint256).max / 2);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
@@ -94,8 +94,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 bobSeed,
         uint256 assets,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
@@ -110,7 +110,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Bound assets
         assets = bound(assets, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
@@ -140,8 +140,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 bobSeed,
         uint256 assets,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 futureTimestamp,
@@ -159,7 +159,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -196,8 +196,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 bobSeed,
         uint256 minShareRatio,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
@@ -206,7 +206,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -233,8 +233,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 assets,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
@@ -250,7 +250,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         assets = bound(assets, 1, type(uint256).max / 2);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
@@ -277,8 +277,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 bobSeed,
         uint256 assets,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber,
@@ -297,7 +297,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
@@ -331,8 +331,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 anotherDepositAmount,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
@@ -349,7 +349,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
@@ -381,7 +381,8 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         uint256 anotherDepositAmount,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 id,
@@ -403,7 +404,7 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 

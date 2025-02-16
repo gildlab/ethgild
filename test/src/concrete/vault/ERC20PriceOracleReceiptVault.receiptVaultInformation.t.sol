@@ -15,14 +15,17 @@ contract ERC20PriceOracleReceiptVaultReceiptVaultInformationTest is ERC20PriceOr
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test vault receiptVaultInformation
-    function testReceiptVaultInformation(uint256 aliceSeed, string memory assetName, bytes memory information)
-        external
-    {
+    function testReceiptVaultInformation(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        bytes memory information
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         vm.expectEmit(false, false, false, true);
         emit IReceiptVaultV1.ReceiptVaultInformation(alice, information);

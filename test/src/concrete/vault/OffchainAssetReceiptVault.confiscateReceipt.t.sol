@@ -61,8 +61,8 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
     function testConfiscateReceiptOnZeroBalance(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 id,
         uint256 targetAmount
@@ -75,7 +75,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         Vm.Log[] memory logs = vm.getRecordedLogs();
         ReceiptContract receipt = getReceipt(logs);
 
@@ -91,9 +91,9 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
     function testConfiscateReceiptBasic(
         uint256 aliceSeed,
         uint256 bobSeed,
-        uint256 minShareRatio,
         uint256 assets,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 certifyUntil,
         uint256 blockNumber,
@@ -102,7 +102,6 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
     ) external {
         vm.assume(targetAmount > 0);
 
-        minShareRatio = bound(minShareRatio, 0, 1e18);
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
@@ -115,7 +114,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         // Prank as Alice to set roles
@@ -130,7 +129,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
 
-        vault.deposit(assets, alice, minShareRatio, data);
+        vault.deposit(assets, alice, 0, data);
 
         checkConfiscateReceipt(vault, getReceipt(logs), alice, bob, 1, targetAmount, data);
         vm.stopPrank();

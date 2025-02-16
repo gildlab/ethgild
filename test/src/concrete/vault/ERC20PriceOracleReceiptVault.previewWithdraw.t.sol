@@ -14,9 +14,13 @@ contract ERC20PriceOracleReceiptVaultPreviewWithdrawTest is ERC20PriceOracleRece
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test PreviewWithdraw returns correct shares
-    function testPreviewWithdraw(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 oraclePrice)
-        external
-    {
+    function testPreviewWithdraw(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 assets,
+        uint256 oraclePrice
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
@@ -27,7 +31,7 @@ contract ERC20PriceOracleReceiptVaultPreviewWithdrawTest is ERC20PriceOracleRece
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         // Call withdraw function
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Up);

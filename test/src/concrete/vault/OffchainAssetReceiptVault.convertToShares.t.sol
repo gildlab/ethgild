@@ -14,13 +14,19 @@ contract OffchainAssetReceiptVaultConvertToSharesTest is OffchainAssetReceiptVau
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test convertToShares
-    function testConvertToShares(uint256 aliceSeed, string memory assetName, uint256 assets, uint256 id) external {
+    function testConvertToShares(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 assets,
+        uint256 id
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         id = bound(id, 0, type(uint128).max);
         assets = bound(assets, 1, type(uint128).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         uint256 expectedShares = assets;
 
@@ -34,7 +40,8 @@ contract OffchainAssetReceiptVaultConvertToSharesTest is OffchainAssetReceiptVau
     function testConvertToSharesDifferentCaller(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 id
     ) external {
@@ -44,7 +51,7 @@ contract OffchainAssetReceiptVaultConvertToSharesTest is OffchainAssetReceiptVau
         id = bound(id, 0.001e18, 100e18);
         assets = bound(assets, 1, type(uint128).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
         uint256 resultSharesAlice = vault.convertToShares(assets, id);

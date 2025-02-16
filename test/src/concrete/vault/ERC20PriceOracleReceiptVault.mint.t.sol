@@ -80,7 +80,8 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
 
     /// Test mint function
     function testMintBasic(
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 shares,
         uint256 oraclePrice,
         bytes memory receiptInformation
@@ -88,7 +89,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         (uint256 oraclePrice1, uint256 shares1) = bounds(oraclePrice, shares);
         uint256 minShareRatio1 = bound(oraclePrice, 0, oraclePrice1);
         checkMint(
-            createVault(iVaultOracle, assetName, assetName),
+            createVault(iVaultOracle, shareName, shareSymbol),
             ALICE,
             ALICE,
             oraclePrice1,
@@ -101,7 +102,8 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
 
     /// Test multiple mints under different oracle prices
     function testMultipleMints(
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 shares1,
         uint256 shares2,
         uint256 oraclePrice1,
@@ -109,7 +111,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         bytes memory receiptInformation1,
         bytes memory receiptInformation2
     ) external {
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         (uint256 oraclePrice1Bounded, uint256 shares1Bounded) = bounds(oraclePrice1, shares1);
         uint256 minShareRatio1 = bound(oraclePrice1, 0, oraclePrice1Bounded);
@@ -122,14 +124,14 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
 
     /// Test mint reverts with min share ratio
     function testMintWithMinShareRatio(
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 shares,
         uint256 minShareRatio,
         uint256 oraclePrice,
         bytes memory receiptInformation
     ) external {
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
         uint256 minShareRatioBounded = bound(minShareRatio, oraclePriceBounded + 1, type(uint256).max);
@@ -149,15 +151,15 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
     function testMintSomeoneElse(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 shares,
         uint256 oraclePrice,
         bytes memory receiptInformation
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
         uint256 minShareRatio = bound(oraclePrice, 0, oraclePriceBounded);
@@ -166,13 +168,13 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
 
     /// Test mint function with zero shares
     function testMintWithZeroShares(
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 oraclePrice,
         bytes memory receiptInformation
     ) external {
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         uint256 shares = 0;
 
         (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);

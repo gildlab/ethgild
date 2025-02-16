@@ -21,24 +21,25 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test ERC20 name symbol and decimals
-    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory assetName, string memory assetSymbol)
+    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory shareName, string memory shareSymbol)
         external
     {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         vm.startPrank(alice);
 
         assert(address(vault) != address(0));
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(shareSymbol)));
         assertEq(vault.decimals(), 18);
     }
 
     /// Test ERC20 totalSupply and balanceOf
     function testERC20TotalSupplyAndBalanceOf(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 minShareRatio,
         uint256 timestamp,
@@ -50,7 +51,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
 
         assets = bound(assets, 1, type(uint128).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         vm.startPrank(alice);
 
         OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);

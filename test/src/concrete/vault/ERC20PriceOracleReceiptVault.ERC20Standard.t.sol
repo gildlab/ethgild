@@ -19,7 +19,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test ERC20 name symbol and decimals
-    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory assetName, string memory assetSymbol)
+    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory shareName, string memory shareSymbol)
         external
     {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
@@ -28,18 +28,19 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultPriceOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(vaultPriceOracle, shareName, shareSymbol);
 
         assert(address(vault) != address(0));
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(shareSymbol)));
         assertEq(vault.decimals(), 18);
     }
 
     /// Test ERC20 totalSupply and balanceOf
     function testERC20TotalSupplyAndBalanceOf(
         uint256 aliceSeed,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
@@ -50,7 +51,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         {
             assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);

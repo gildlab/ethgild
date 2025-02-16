@@ -25,13 +25,13 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
     function testAuthorizeContract(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
         (bob);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         address authorizor = address(vault.authorizor());
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
@@ -43,12 +43,12 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
     function testChangeAuthorizor(
         uint256 aliceSeed,
         uint256 bobSeed,
-        string memory assetName,
-        string memory assetSymbol
+        string memory shareName,
+        string memory shareSymbol
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         address authorizor = address(vault.authorizor());
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);

@@ -15,12 +15,15 @@ contract OffchainAssetReceiptVaultReceiptVaultInformationTest is OffchainAssetRe
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test vault receiptVaultInformation
-    function testReceiptVaultInformation(uint256 aliceSeed, string memory assetName, bytes memory information)
-        external
-    {
+    function testReceiptVaultInformation(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        bytes memory information
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
 
