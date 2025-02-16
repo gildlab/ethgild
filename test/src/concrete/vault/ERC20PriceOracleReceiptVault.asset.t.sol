@@ -7,14 +7,8 @@ import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleR
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ERC20PriceOracleReceiptVaultAssetTest is ERC20PriceOracleReceiptVaultTest {
-    /// Test vault asset
-    function testVaultAsset(uint256 aliceSeed, string memory assetName) external {
-        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
-
-        vm.startPrank(alice);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-
+    function testVaultAsset(string memory shareName, string memory shareSymbol) external {
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         assertEq(vault.asset(), address(iAsset));
     }
 }

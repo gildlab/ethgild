@@ -166,6 +166,11 @@ abstract contract ReceiptVault is
         }
     }
 
+    /// @inheritdoc IReceiptVaultV1
+    function asset() public view virtual returns (address) {
+        return address(sAsset);
+    }
+
     /// @inheritdoc IReceiptVaultV2
     function receipt() public view virtual returns (IReceiptV2) {
         return sReceipt;
@@ -359,11 +364,6 @@ abstract contract ReceiptVault is
         // transfer to them for returning a certain amount of shares, it should
         // round down.
         return shares.fixedPointDiv(shareRatio, Math.Rounding.Down);
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function asset() public view virtual returns (address) {
-        return address(sAsset);
     }
 
     /// This is external NOT public. It is NOT allowed to revert BUT if we were

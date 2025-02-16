@@ -7,12 +7,9 @@ import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceipt
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultAssetTest is OffchainAssetReceiptVaultTest {
-    /// Test vault asset
-    function testVaultAsset(uint256 aliceSeed, string memory assetName) external {
+    function testVaultAsset(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
-
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         assertEq(vault.asset(), address(0));
     }
 }
