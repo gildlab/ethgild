@@ -182,11 +182,6 @@ abstract contract ReceiptVault is
         (from, to, ids, amounts);
     }
 
-    /// @inheritdoc IReceiptVaultV2
-    function receipt() public view virtual returns (IReceiptV2) {
-        return sReceipt;
-    }
-
     /// The spec demands this function ignores per-user concerns. It seems to
     /// imply minting but doesn't provide a sibling conversion for burning.
     /// > The amount of shares that the Vault would exchange for the amount of
@@ -196,6 +191,26 @@ abstract contract ReceiptVault is
         uint256 val = _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
         Address.sendValue(payable(msg.sender), address(this).balance);
         return val;
+    }
+
+    /// The spec demands that this function ignores per-user concerns. It seems
+    /// to imply burning but doesn't provide a sibling conversion for minting.
+    /// > The amount of assets that the Vault would exchange for the amount of
+    /// > shares provided
+    /// @inheritdoc IReceiptVaultV1
+    function convertToAssets(uint256 shares, uint256 id) external view virtual returns (uint256) {
+        return _calculateRedeem(
+            shares,
+            // Not clear what a good ID for a hypothetical context free burn
+            // should be. Next ID is technically nonsense but we don't have
+            // any other ID to prefer either.
+            _shareRatioUserAgnostic(id, ShareAction.Burn)
+        );
+    }
+
+    /// @inheritdoc IReceiptVaultV2
+    function receipt() public view virtual returns (IReceiptV2) {
+        return sReceipt;
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -441,21 +456,6 @@ abstract contract ReceiptVault is
     //slither-disable-next-line dead-code
     function _nextId() internal virtual returns (uint256) {
         return 1;
-    }
-
-    /// The spec demands that this function ignores per-user concerns. It seems
-    /// to imply burning but doesn't provide a sibling conversion for minting.
-    /// > The amount of assets that the Vault would exchange for the amount of
-    /// > shares provided
-    /// @inheritdoc IReceiptVaultV1
-    function convertToAssets(uint256 shares, uint256 id) external view virtual returns (uint256) {
-        return _calculateRedeem(
-            shares,
-            // Not clear what a good ID for a hypothetical context free burn
-            // should be. Next ID is technically nonsense but we don't have
-            // any other ID to prefer either.
-            _shareRatioUserAgnostic(id, ShareAction.Burn)
-        );
     }
 
     /// @inheritdoc IReceiptVaultV1

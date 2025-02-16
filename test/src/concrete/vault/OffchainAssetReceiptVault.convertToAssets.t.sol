@@ -24,13 +24,12 @@ contract OffchainAssetReceiptVaultConvertToAssetsTest is OffchainAssetReceiptVau
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         id = bound(id, 1, type(uint256).max);
-        shares = bound(shares, 1, type(uint64).max);
+        shares = bound(shares, 1, type(uint128).max);
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         uint256 expectedAssets = shares;
 
-        vm.startPrank(alice);
         uint256 resultAssets = vault.convertToAssets(shares, id);
 
         assertEqUint(expectedAssets, resultAssets);

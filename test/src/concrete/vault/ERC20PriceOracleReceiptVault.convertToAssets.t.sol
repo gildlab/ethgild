@@ -24,7 +24,7 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         id = bound(id, 1, type(uint256).max);
-        shares = bound(shares, 1, type(uint64).max);
+        shares = bound(shares, 1, type(uint128).max);
 
         vm.startPrank(alice);
 
@@ -52,6 +52,7 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
 
         vm.startPrank(alice);
 
+        uint256 expectedAssets = shares.fixedPointDiv(id, Math.Rounding.Down);
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
         uint256 resultAssetsAlice = vault.convertToAssets(shares, id);
@@ -62,5 +63,6 @@ contract ERC20PriceOracleReceiptVaultConvertToAssetsTest is ERC20PriceOracleRece
         uint256 resultAssetsBob = vault.convertToAssets(shares, id);
 
         assertEqUint(resultAssetsAlice, resultAssetsBob);
+        assertEqUint(expectedAssets, resultAssetsAlice);
     }
 }
