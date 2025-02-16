@@ -7,41 +7,38 @@ import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleR
 import {UnmanagedReceiptTransfer} from "src/interface/IReceiptManagerV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
-contract ERC20PriceOracleReceipetVaultAuthorizedReceiptTransferTest is ERC20PriceOracleReceiptVaultTest {
+contract ERC20PriceOracleReceipetVaultAuthorizeReceiptTransferTest is ERC20PriceOracleReceiptVaultTest {
     /// Test AuthorizeReceiptTransfer reverts if the caller is not the managed
     /// receipt.
-    function testAuthorizeReceiptTransferRevert(
+    function testAuthorizeReceiptTransferNotManaged(
         uint256 aliceSeed,
         uint256 bobSeed,
-        uint256 warpTimestamp,
-        string memory assetName,
-        string memory assetSymbol,
+        uint256 timestamp,
+        string memory shareName,
+        string memory shareSymbol,
         uint256[] memory ids,
         uint256[] memory amounts
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        // Bound warpTimestamp from 1 to avoid potential issues with timestamp 0.
-        warpTimestamp = bound(warpTimestamp, 1, type(uint32).max);
+        // Bound timestamp from 1 to avoid potential issues with timestamp 0.
+        timestamp = bound(timestamp, 1, type(uint32).max);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
-        // Warp the block timestamp to a non-zero value.
-        vm.warp(warpTimestamp);
-
-        // Prank as receipt for the authorization.
-        vm.startPrank(address(vault.receipt()));
+        vm.warp(timestamp);
 
         // Attempt to authorize receipt transfer, should NOT revert.
+        vm.prank(address(vault.receipt()));
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
 
-        vm.stopPrank();
-
-        vm.startPrank(alice);
-        // Attempt to authorize receipt transfer, should revert.
+        // Attempt to authorize receipt transfer as anyone else, should revert.
+        vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(UnmanagedReceiptTransfer.selector));
         vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
 
-        vm.stopPrank();
+        vm.prank(bob);
+        vm.expectRevert(abi.encodeWithSelector(UnmanagedReceiptTransfer.selector));
+        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
     }
 }

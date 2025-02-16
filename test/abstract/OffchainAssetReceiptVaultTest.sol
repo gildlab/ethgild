@@ -29,12 +29,12 @@ contract OffchainAssetReceiptVaultTest is Test {
         iAuthorizorImplementation = new OffchainAssetReceiptVaultAuthorizorV1();
     }
 
-    function createVault(address admin, string memory name, string memory symbol)
+    function createVault(address admin, string memory shareName, string memory shareSymbol)
         internal
         returns (OffchainAssetReceiptVault)
     {
         return LibOffchainAssetVaultCreator.createVault(
-            vm, iFactory, iImplementation, iAuthorizorImplementation, admin, name, symbol
+            vm, iFactory, iImplementation, iAuthorizorImplementation, admin, shareName, shareSymbol
         );
     }
 

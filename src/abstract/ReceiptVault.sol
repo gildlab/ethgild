@@ -171,6 +171,17 @@ abstract contract ReceiptVault is
         return address(sAsset);
     }
 
+    /// @inheritdoc IReceiptManagerV2
+    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
+        public
+        virtual
+    {
+        if (msg.sender != address(receipt())) {
+            revert UnmanagedReceiptTransfer();
+        }
+        (from, to, ids, amounts);
+    }
+
     /// @inheritdoc IReceiptVaultV2
     function receipt() public view virtual returns (IReceiptV2) {
         return sReceipt;
@@ -272,17 +283,6 @@ abstract contract ReceiptVault is
     /// @param vaultInformation The information to emit for this vault.
     function receiptVaultInformation(bytes memory vaultInformation) external virtual {
         emit ReceiptVaultInformation(msg.sender, vaultInformation);
-    }
-
-    /// @inheritdoc IReceiptManagerV2
-    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        public
-        virtual
-    {
-        if (msg.sender != address(receipt())) {
-            revert UnmanagedReceiptTransfer();
-        }
-        (from, to, ids, amounts);
     }
 
     /// Standard check to enforce the minimum share ratio. If the share ratio is
