@@ -29,7 +29,7 @@ contract OffchainAssetReceiptVaultMaxRedeemTest is OffchainAssetReceiptVaultTest
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
 
         uint256 maxWithdraw = vault.maxWithdraw(alice, 1);
 

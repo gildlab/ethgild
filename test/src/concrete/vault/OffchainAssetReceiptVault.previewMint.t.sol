@@ -29,7 +29,7 @@ contract OffchainAssetReceiptVaultPreviewMintTest is OffchainAssetReceiptVaultTe
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
         // Prank as Bob for the transactions
 
         vm.startPrank(bob);

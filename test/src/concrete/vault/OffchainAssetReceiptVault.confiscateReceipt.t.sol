@@ -82,7 +82,7 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, bob);
 
         checkConfiscateReceipt(vault, receipt, alice, bob, id, targetAmount, data);
     }
@@ -119,9 +119,9 @@ contract ConfiscateReceiptTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for transactions
         vm.startPrank(bob);

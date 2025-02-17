@@ -76,8 +76,8 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CONFISCATE_SHARES, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_SHARES, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         // Prank as Bob for tranactions
         vm.startPrank(bob);
@@ -120,9 +120,9 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CONFISCATE_SHARES, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_SHARES, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for transactions
         vm.startPrank(bob);

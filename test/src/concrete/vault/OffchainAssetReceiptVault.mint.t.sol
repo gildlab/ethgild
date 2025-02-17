@@ -36,7 +36,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant role
         vm.startPrank(vault.owner());
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, minter);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, minter);
 
         vm.stopPrank();
 
@@ -249,7 +249,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
 
         vm.warp(timestamp);
         vault.certify(timestamp, false, receiptInformation);
@@ -288,7 +288,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
         vm.stopPrank();
 
         checkMint(vault, bob, alice, shares, minShareRatio, receiptInformation, "");
@@ -313,7 +313,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         vm.startPrank(bob);
@@ -361,7 +361,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         vm.startPrank(bob);

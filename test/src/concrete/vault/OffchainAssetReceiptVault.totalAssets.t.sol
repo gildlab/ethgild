@@ -20,8 +20,8 @@ contract OffchainAssetReceiptVaultTotalAssetsTest is OffchainAssetReceiptVaultTe
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(WITHDRAW, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(WITHDRAW, alice);
 
         vm.mockCall(address(0), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), abi.encode(assets));
         vm.expectCall(address(0), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), 0);

@@ -17,7 +17,7 @@ library LibOffchainAssetVaultCreator {
         Vm vm,
         ICloneableFactoryV2 factory,
         OffchainAssetReceiptVault implementation,
-        OffchainAssetReceiptVaultAuthorizerV1 authorizorImplementation,
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation,
         address initialAdmin,
         string memory name,
         string memory symbol
@@ -32,9 +32,9 @@ library LibOffchainAssetVaultCreator {
             payable(factory.clone(address(implementation), abi.encode(offchainAssetVaultConfig)))
         );
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizor = OffchainAssetReceiptVaultAuthorizerV1(
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = OffchainAssetReceiptVaultAuthorizerV1(
             factory.clone(
-                address(authorizorImplementation),
+                address(authorizerImplementation),
                 abi.encode(
                     OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: address(vault)})
                 )
@@ -42,7 +42,7 @@ library LibOffchainAssetVaultCreator {
         );
 
         vm.prank(initialAdmin);
-        vault.setAuthorizer(authorizor);
+        vault.setAuthorizer(authorizer);
 
         return vault;
     }

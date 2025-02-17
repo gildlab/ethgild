@@ -37,7 +37,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         vm.startPrank(owner);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, depositor);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, depositor);
 
         vm.stopPrank();
 
@@ -258,7 +258,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -305,7 +305,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         vm.stopPrank();
 
@@ -333,7 +333,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         vm.startPrank(bob);
@@ -383,7 +383,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         vm.startPrank(bob);

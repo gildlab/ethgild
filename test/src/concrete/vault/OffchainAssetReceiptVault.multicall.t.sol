@@ -32,7 +32,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -81,7 +81,7 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -137,8 +137,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(WITHDRAW, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -201,8 +201,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(WITHDRAW, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);

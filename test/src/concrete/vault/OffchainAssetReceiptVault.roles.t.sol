@@ -44,28 +44,28 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(DEPOSIT_ADMIN, alice));
-        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(WITHDRAW_ADMIN, alice));
-        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CERTIFY_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(DEPOSIT_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(WITHDRAW_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CERTIFY_ADMIN, alice));
         assertTrue(
-            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER_ADMIN, alice)
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(FREEZE_HANDLER_ADMIN, alice)
         );
         assertTrue(
-            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT_ADMIN, alice)
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_RECEIPT_ADMIN, alice)
         );
         assertTrue(
-            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES_ADMIN, alice)
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_SHARES_ADMIN, alice)
         );
 
-        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(DEPOSIT, alice));
-        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(WITHDRAW, alice));
-        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CERTIFY, alice));
-        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(DEPOSIT, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(WITHDRAW, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CERTIFY, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(FREEZE_HANDLER, alice));
         assertTrue(
-            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT, alice)
+            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_RECEIPT, alice)
         );
         assertTrue(
-            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES, alice)
+            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_SHARES, alice)
         );
     }
 

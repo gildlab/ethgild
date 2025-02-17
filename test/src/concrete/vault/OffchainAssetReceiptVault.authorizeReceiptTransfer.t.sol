@@ -47,7 +47,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Certify the vault so the authorization can be successful.
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
         vault.certify(timestamp, false, "");
         vm.stopPrank();
 
@@ -92,7 +92,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -137,7 +137,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, bob);
 
         vm.startPrank(address(vault.receipt()));
 
@@ -147,7 +147,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         vm.startPrank(alice);
         // Grant handler role to alice.
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, alice);
 
         vm.startPrank(address(vault.receipt()));
 
@@ -175,7 +175,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, alice);
 
         vm.startPrank(address(vault.receipt()));
 

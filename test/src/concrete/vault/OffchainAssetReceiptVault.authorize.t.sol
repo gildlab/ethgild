@@ -33,13 +33,13 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        address authorizor = address(vault.authorizor());
-        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
+        address authorizer = address(vault.authorizer());
+        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
         assertEq(implementation, address(iAuthorizerImplementation));
     }
 
-    /// Test that the owner can change the authorizor.
+    /// Test that the owner can change the authorizer.
     function testChangeAuthorizer(
         uint256 aliceSeed,
         uint256 bobSeed,
@@ -50,8 +50,8 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        address authorizor = address(vault.authorizor());
-        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
+        address authorizer = address(vault.authorizer());
+        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
         assertEq(implementation, address(iAuthorizerImplementation));
 
@@ -60,12 +60,12 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         vm.prank(alice);
         vault.setAuthorizer(alwaysAuthorize);
 
-        authorizor = address(vault.authorizor());
-        assertEq(authorizor, address(alwaysAuthorize));
+        authorizer = address(vault.authorizer());
+        assertEq(authorizer, address(alwaysAuthorize));
 
         AlwaysAuthorize alwaysAuthorize2 = new AlwaysAuthorize();
 
-        // Bob cannot set the authorizor.
+        // Bob cannot set the authorizer.
         vm.prank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
         vault.setAuthorizer(alwaysAuthorize2);

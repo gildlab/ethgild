@@ -38,7 +38,6 @@ error IncompatibleAuthorizer();
 /// to the vault atomically during initialization so there is no opportunity for
 /// an attacker to corrupt the initialzation process.
 /// @param initialAdmin as per `OffchainAssetReceiptVaultConfig`.
-/// @param authorizor as per `OffchainAssetReceiptVaultConfig`.
 /// @param vaultConfig MUST be used by the factory to build a
 /// `ReceiptVaultConfig` once the receipt address is known and management has
 /// been set to the vault contract.
@@ -53,8 +52,6 @@ struct OffchainAssetVaultConfigV2 {
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and everything else).
-/// @param authorizor The authorizor contract that will be used to authorize
-/// sensitive operations.
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
@@ -279,13 +276,13 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         return sHighwaterId;
     }
 
-    /// Returns the current authorizor contract.
-    function authorizor() external view returns (IAuthorizeV1) {
+    /// Returns the current authorizer contract.
+    function authorizer() external view returns (IAuthorizeV1) {
         return sAuthorizer;
     }
 
-    /// The vault initializes with the authorizor as itself. Every permission
-    /// reverts unconditionally, so the owner MUST set the real authorizor before
+    /// The vault initializes with the authorizer as itself. Every permission
+    /// reverts unconditionally, so the owner MUST set the real authorizer before
     /// any operations can be performed.
     /// @inheritdoc IAuthorizeV1
     function authorize(address user, bytes32 permission, bytes memory data) external view virtual override {

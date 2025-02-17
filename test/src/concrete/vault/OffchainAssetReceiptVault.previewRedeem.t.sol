@@ -32,7 +32,7 @@ contract OffchainAssetReceiptVaultPreviewRedeemTest is OffchainAssetReceiptVault
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(WITHDRAW, bob);
 
         // Prank as Bob for transaction
         vm.startPrank(bob);

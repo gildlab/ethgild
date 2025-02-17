@@ -54,8 +54,8 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
 
         timestamp = bound(timestamp, 1, type(uint32).max);
         vm.warp(timestamp);
@@ -88,8 +88,8 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         OffchainAssetReceiptVault vault = createVault(alice, "Test Token", "TST");
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
 
         timestamp = bound(timestamp, 1, type(uint32).max);
         vm.warp(timestamp);
@@ -146,8 +146,8 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         OffchainAssetReceiptVault vault = createVault(alice, "Test Token", "TST");
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
 
         timestamp = bound(timestamp, 1, type(uint32).max);
         vm.warp(timestamp);
