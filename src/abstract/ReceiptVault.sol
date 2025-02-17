@@ -187,7 +187,7 @@ abstract contract ReceiptVault is
     /// > The amount of assets that the Vault would exchange for the amount of
     /// > shares provided
     /// @inheritdoc IReceiptVaultV1
-    function convertToAssets(uint256 shares, uint256 id) external view virtual returns (uint256) {
+    function convertToAssets(uint256 shares, uint256 id) public view virtual returns (uint256) {
         return _calculateRedeem(
             shares,
             // Not clear what a good ID for a hypothetical context free burn
@@ -202,7 +202,7 @@ abstract contract ReceiptVault is
     /// > The amount of shares that the Vault would exchange for the amount of
     /// > assets provided
     /// @inheritdoc IReceiptVaultV1
-    function convertToShares(uint256 assets, uint256 id) external payable returns (uint256) {
+    function convertToShares(uint256 assets, uint256 id) public payable virtual returns (uint256) {
         uint256 val = _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
         Address.sendValue(payable(msg.sender), address(this).balance);
         return val;
@@ -210,8 +210,9 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV1
     function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes memory receiptInformation)
-        external
+        public
         payable
+        virtual
         returns (uint256)
     {
         uint256 id = _nextId();
@@ -225,7 +226,7 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function maxDeposit(address receiver) external pure virtual returns (uint256 maxAssets) {
+    function maxDeposit(address receiver) public pure virtual returns (uint256 maxAssets) {
         (receiver, maxAssets);
         // The spec states to return this if there is no deposit limit.
         // Technically a deposit this large would almost certainly overflow
@@ -238,18 +239,30 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function maxMint(address receiver) external pure virtual returns (uint256 maxShares) {
+    function maxMint(address receiver) public pure virtual returns (uint256 maxShares) {
         (receiver, maxShares);
         return type(uint256).max;
     }
 
-    /// @inheritdoc IReceiptVaultV2
-    function receipt() public view virtual returns (IReceiptV2) {
-        return sReceipt;
+    /// @inheritdoc IReceiptVaultV1
+    function mint(uint256 shares, address receiver, uint256 mintMinShareRatio, bytes memory receiptInformation)
+        public
+        payable
+        virtual
+        returns (uint256)
+    {
+        uint256 id = _nextId();
+
+        uint256 assets =
+            _calculateMint(shares, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), mintMinShareRatio);
+
+        _deposit(assets, receiver, shares, id, receiptInformation);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return assets;
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function previewDeposit(uint256 assets, uint256 minShareRatio) external payable virtual returns (uint256) {
+    function previewDeposit(uint256 assets, uint256 minShareRatio) public payable virtual returns (uint256) {
         uint256 val = _calculateDeposit(
             assets,
             // Spec doesn't provide us with a receipient but wants a per-user
@@ -274,7 +287,7 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function previewMint(uint256 shares, uint256 minShareRatio) external payable virtual returns (uint256) {
+    function previewMint(uint256 shares, uint256 minShareRatio) public payable virtual returns (uint256) {
         uint256 val = _calculateMint(
             shares,
             // Spec doesn't provide us with a recipient but wants a per-user
@@ -296,27 +309,90 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
-    function mint(uint256 shares, address receiver, uint256 mintMinShareRatio, bytes memory receiptInformation)
-        external
-        payable
-        returns (uint256)
-    {
-        uint256 id = _nextId();
+    function previewRedeem(uint256 shares, uint256 id) public view virtual returns (uint256) {
+        return _calculateRedeem(shares, _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn));
+    }
 
-        uint256 assets =
-            _calculateMint(shares, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), mintMinShareRatio);
-
-        _deposit(assets, receiver, shares, id, receiptInformation);
-        Address.sendValue(payable(msg.sender), address(this).balance);
-        return assets;
+    /// @inheritdoc IReceiptVaultV1
+    function previewWithdraw(uint256 assets, uint256 id) public view virtual returns (uint256) {
+        return _calculateWithdraw(
+            assets,
+            // Assume that owner and receiver are the sender for a preview
+            _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn)
+        );
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
     /// vault. Anyone can call this and provide any information. Indexers and
     /// clients MUST take care against corrupt and malicious data.
     /// @param vaultInformation The information to emit for this vault.
-    function receiptVaultInformation(bytes memory vaultInformation) external virtual {
+    function receiptVaultInformation(bytes memory vaultInformation) public virtual {
         emit ReceiptVaultInformation(msg.sender, vaultInformation);
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function redeem(uint256 shares, address receiver, address owner, uint256 id, bytes memory receiptInformation)
+        public
+        virtual
+        returns (uint256)
+    {
+        uint256 assets = _calculateRedeem(shares, _shareRatio(owner, receiver, id, ShareAction.Burn));
+        _withdraw(assets, receiver, owner, shares, id, receiptInformation);
+        return assets;
+    }
+
+    /// This is NOT allowed to revert BUT if we were to calculate anything
+    /// important internally with this we'd need it to revert if there was an
+    /// issue reading total assets.
+    /// @inheritdoc IReceiptVaultV1
+    function totalAssets() public view virtual returns (uint256) {
+        // There are NO fees so the managed assets are the asset balance of the
+        // vault.
+        try IERC20(asset()).balanceOf(address(this))
+        // slither puts false positives on `try/catch/returns`.
+        // https://github.com/crytic/slither/issues/511
+        //slither-disable-next-line
+        returns (uint256 assetBalance) {
+            return assetBalance;
+        } catch {
+            // It's not clear what the balance should be if querying it is
+            // throwing an error. The conservative error in most cases should
+            // be 0.
+            return 0;
+        }
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function withdraw(uint256 assets, address receiver, address owner, uint256 id, bytes memory receiptInformation)
+        public
+        virtual
+        returns (uint256)
+    {
+        uint256 shares = _calculateWithdraw(assets, _shareRatio(owner, receiver, id, ShareAction.Burn));
+        _withdraw(assets, receiver, owner, shares, id, receiptInformation);
+        return shares;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function maxWithdraw(address owner, uint256 id) public view virtual returns (uint256) {
+        // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
+        // latter requires knowing the assets being withdrawn, which is what we
+        // are attempting to reverse engineer from the owner's receipt balance.
+        return _calculateRedeem(
+            receipt().balanceOf(owner, id),
+            // Assume the owner is hypothetically withdrawing for themselves.
+            _shareRatio(owner, owner, id, ShareAction.Burn)
+        );
+    }
+
+    /// @inheritdoc IReceiptVaultV2
+    function receipt() public view virtual returns (IReceiptV2) {
+        return sReceipt;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
+        return receipt().balanceOf(owner, id);
     }
 
     /// Standard check to enforce the minimum share ratio. If the share ratio is
@@ -398,27 +474,6 @@ abstract contract ReceiptVault is
         // transfer to them for returning a certain amount of shares, it should
         // round down.
         return shares.fixedPointDiv(shareRatio, Math.Rounding.Down);
-    }
-
-    /// This is external NOT public. It is NOT allowed to revert BUT if we were
-    /// to calculate anything important internally with this we'd need it to
-    /// revert if there was an issue reading total assets.
-    /// @inheritdoc IReceiptVaultV1
-    function totalAssets() external view virtual returns (uint256) {
-        // There are NO fees so the managed assets are the asset balance of the
-        // vault.
-        try IERC20(asset()).balanceOf(address(this))
-        // slither puts false positives on `try/catch/returns`.
-        // https://github.com/crytic/slither/issues/511
-        //slither-disable-next-line
-        returns (uint256 assetBalance) {
-            return assetBalance;
-        } catch {
-            // It's not clear what the balance should be if querying it is
-            // throwing an error. The conservative error in most cases should
-            // be 0.
-            return 0;
-        }
     }
 
     /// Define the ratio that shares are minted and burned per asset for both
@@ -545,38 +600,6 @@ abstract contract ReceiptVault is
         (receiver, shares, id, receiptInformation);
     }
 
-    /// @inheritdoc IReceiptVaultV1
-    function maxWithdraw(address owner, uint256 id) external view virtual returns (uint256) {
-        // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
-        // latter requires knowing the assets being withdrawn, which is what we
-        // are attempting to reverse engineer from the owner's receipt balance.
-        return _calculateRedeem(
-            receipt().balanceOf(owner, id),
-            // Assume the owner is hypothetically withdrawing for themselves.
-            _shareRatio(owner, owner, id, ShareAction.Burn)
-        );
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function previewWithdraw(uint256 assets, uint256 id) external view virtual returns (uint256) {
-        return _calculateWithdraw(
-            assets,
-            // Assume that owner and receiver are the sender for a preview
-            _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn)
-        );
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function withdraw(uint256 assets, address receiver, address owner, uint256 id, bytes memory receiptInformation)
-        external
-        virtual
-        returns (uint256)
-    {
-        uint256 shares = _calculateWithdraw(assets, _shareRatio(owner, receiver, id, ShareAction.Burn));
-        _withdraw(assets, receiver, owner, shares, id, receiptInformation);
-        return shares;
-    }
-
     /// Handles burning shares, withdrawing assets and emitting events to spec.
     /// It does NOT do any calculations so shares and assets need to be correct
     /// according to spec including rounding, in the calling context.
@@ -599,7 +622,7 @@ abstract contract ReceiptVault is
         uint256 shares,
         uint256 id,
         bytes memory receiptInformation
-    ) internal nonReentrant {
+    ) internal virtual nonReentrant {
         //slither-disable-next-line incorrect-equality
         if (assets == 0) {
             revert ZeroAssetsAmount();
@@ -641,27 +664,6 @@ abstract contract ReceiptVault is
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets, receiver, owner, shares, id, receiptInformation);
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
-        return receipt().balanceOf(owner, id);
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function previewRedeem(uint256 shares, uint256 id) external view virtual returns (uint256) {
-        return _calculateRedeem(shares, _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn));
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function redeem(uint256 shares, address receiver, address owner, uint256 id, bytes memory receiptInformation)
-        external
-        virtual
-        returns (uint256)
-    {
-        uint256 assets = _calculateRedeem(shares, _shareRatio(owner, receiver, id, ShareAction.Burn));
-        _withdraw(assets, receiver, owner, shares, id, receiptInformation);
-        return assets;
     }
 
     /// @inheritdoc ERC20

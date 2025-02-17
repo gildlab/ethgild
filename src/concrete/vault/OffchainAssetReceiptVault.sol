@@ -383,7 +383,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     /// Assets aren't real so only way to report this is to return the total
     /// supply of shares.
     /// @inheritdoc ReceiptVault
-    function totalAssets() external view virtual override returns (uint256) {
+    function totalAssets() public view virtual override returns (uint256) {
         return totalSupply();
     }
 
