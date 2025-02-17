@@ -52,7 +52,7 @@ bytes32 constant FREEZE_HANDLER_ADMIN = keccak256("FREEZE_HANDLER_ADMIN");
 
 /// @dev Configuration for the OffchainAssetReceiptVaultAuthorizorV1.
 /// @param initialAdmin The initial admin of the contract.
-struct OffchainAssetReceiptVaultAuthorizorV1Config {
+struct OffchainAssetReceiptVaultAuthorizerV1Config {
     address initialAdmin;
     address authorizee;
 }
@@ -60,7 +60,7 @@ struct OffchainAssetReceiptVaultAuthorizorV1Config {
 /// @title OffchainAssetReceiptVaultAuthorizorV1
 /// Implements the IAuthorizeV1 interface and provides a simple role based
 /// access control for the OffchainAssetReceiptVault.
-contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, AccessControl {
+contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, AccessControl {
     address sAuthorizee;
 
     constructor() {
@@ -69,8 +69,8 @@ contract OffchainAssetReceiptVaultAuthorizorV1 is IAuthorizeV1, ICloneableV2, Ac
 
     /// @inheritdoc ICloneableV2
     function initialize(bytes memory data) public initializer returns (bytes32) {
-        OffchainAssetReceiptVaultAuthorizorV1Config memory config =
-            abi.decode(data, (OffchainAssetReceiptVaultAuthorizorV1Config));
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            abi.decode(data, (OffchainAssetReceiptVaultAuthorizerV1Config));
 
         __AccessControl_init();
 

@@ -21,7 +21,7 @@ import {TestErc20} from "../../../concrete/TestErc20.sol";
 import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
-    OffchainAssetReceiptVaultAuthorizorV1,
+    OffchainAssetReceiptVaultAuthorizerV1,
     Unauthorized,
     CERTIFY_ADMIN,
     CONFISCATE_RECEIPT_ADMIN,
@@ -35,7 +35,7 @@ import {
     FREEZE_HANDLER,
     CONFISCATE_RECEIPT,
     CONFISCATE_SHARES
-} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
@@ -44,28 +44,28 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(DEPOSIT_ADMIN, alice));
-        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(WITHDRAW_ADMIN, alice));
-        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CERTIFY_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(DEPOSIT_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(WITHDRAW_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CERTIFY_ADMIN, alice));
         assertTrue(
-            OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER_ADMIN, alice)
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER_ADMIN, alice)
         );
         assertTrue(
-            OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT_ADMIN, alice)
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT_ADMIN, alice)
         );
         assertTrue(
-            OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES_ADMIN, alice)
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES_ADMIN, alice)
         );
 
-        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(DEPOSIT, alice));
-        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(WITHDRAW, alice));
-        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CERTIFY, alice));
-        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(DEPOSIT, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(WITHDRAW, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CERTIFY, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER, alice));
         assertTrue(
-            !OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT, alice)
+            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT, alice)
         );
         assertTrue(
-            !OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES, alice)
+            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES, alice)
         );
     }
 

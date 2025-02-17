@@ -5,7 +5,7 @@ pragma solidity =0.8.25;
 import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {OffchainAssetReceiptVault, DEPOSIT, WITHDRAW} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffchainAssetReceiptVaultTotalAssetsTest is OffchainAssetReceiptVaultTest {
@@ -20,8 +20,8 @@ contract OffchainAssetReceiptVaultTotalAssetsTest is OffchainAssetReceiptVaultTe
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(WITHDRAW, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(WITHDRAW, alice);
 
         vm.mockCall(address(0), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), abi.encode(assets));
         vm.expectCall(address(0), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), 0);

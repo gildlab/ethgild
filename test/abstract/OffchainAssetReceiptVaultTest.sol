@@ -12,12 +12,12 @@ import {
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
-    OffchainAssetReceiptVaultAuthorizorV1 internal immutable iAuthorizorImplementation;
+    OffchainAssetReceiptVaultAuthorizerV1 internal immutable iAuthorizerImplementation;
     ReceiptContract internal immutable receiptImplementation;
 
     constructor() {
@@ -26,7 +26,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         iImplementation = new OffchainAssetReceiptVault(
             ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: receiptImplementation})
         );
-        iAuthorizorImplementation = new OffchainAssetReceiptVaultAuthorizorV1();
+        iAuthorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
     }
 
     function createVault(address admin, string memory shareName, string memory shareSymbol)
@@ -34,7 +34,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         returns (OffchainAssetReceiptVault)
     {
         return LibOffchainAssetVaultCreator.createVault(
-            vm, iFactory, iImplementation, iAuthorizorImplementation, admin, shareName, shareSymbol
+            vm, iFactory, iImplementation, iAuthorizerImplementation, admin, shareName, shareSymbol
         );
     }
 

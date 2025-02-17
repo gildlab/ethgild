@@ -8,13 +8,13 @@ import {
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
-    OffchainAssetReceiptVaultAuthorizorV1,
+    OffchainAssetReceiptVaultAuthorizerV1,
     CertificationExpired,
     FREEZE_HANDLER
-} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {UnmanagedReceiptTransfer} from "src/interface/IReceiptManagerV2.sol";
 
-contract OffchainAssetReceipetVaultAuthorizeReceiptTransferTest is OffchainAssetReceiptVaultTest {
+contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetReceiptVaultTest {
     /// Test AuthorizeReceiptTransfer reverts if the caller is not the managed
     /// receipt.
     function testAuthorizeReceiptTransferNotManaged(
@@ -47,7 +47,7 @@ contract OffchainAssetReceipetVaultAuthorizeReceiptTransferTest is OffchainAsset
 
         // Certify the vault so the authorization can be successful.
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
         vault.certify(timestamp, false, "");
         vm.stopPrank();
 
@@ -92,7 +92,7 @@ contract OffchainAssetReceipetVaultAuthorizeReceiptTransferTest is OffchainAsset
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -137,7 +137,7 @@ contract OffchainAssetReceipetVaultAuthorizeReceiptTransferTest is OffchainAsset
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
 
         vm.startPrank(address(vault.receipt()));
 
@@ -147,7 +147,7 @@ contract OffchainAssetReceipetVaultAuthorizeReceiptTransferTest is OffchainAsset
 
         vm.startPrank(alice);
         // Grant handler role to alice.
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, alice);
 
         vm.startPrank(address(vault.receipt()));
 
@@ -175,7 +175,7 @@ contract OffchainAssetReceipetVaultAuthorizeReceiptTransferTest is OffchainAsset
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(CONFISCATE_RECEIPT, alice);
 
         vm.startPrank(address(vault.receipt()));
 

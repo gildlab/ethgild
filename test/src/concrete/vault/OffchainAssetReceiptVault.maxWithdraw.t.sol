@@ -6,7 +6,7 @@ import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptV
 import {OffchainAssetReceiptVault, DEPOSIT} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract OffchainAssetReceiptVaultMaxRedeemTest is OffchainAssetReceiptVaultTest {
     /// Test vault returns correct max withdraw.
@@ -29,7 +29,7 @@ contract OffchainAssetReceiptVaultMaxRedeemTest is OffchainAssetReceiptVaultTest
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
 
         uint256 maxWithdraw = vault.maxWithdraw(alice, 1);
 

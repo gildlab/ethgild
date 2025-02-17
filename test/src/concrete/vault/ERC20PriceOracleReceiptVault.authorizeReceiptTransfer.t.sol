@@ -7,7 +7,7 @@ import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleR
 import {UnmanagedReceiptTransfer} from "src/interface/IReceiptManagerV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
-contract ERC20PriceOracleReceipetVaultAuthorizeReceiptTransferTest is ERC20PriceOracleReceiptVaultTest {
+contract ERC20PriceOracleReceiptVaultAuthorizeReceiptTransferTest is ERC20PriceOracleReceiptVaultTest {
     /// Test AuthorizeReceiptTransfer reverts if the caller is not the managed
     /// receipt.
     function testAuthorizeReceiptTransferNotManaged(

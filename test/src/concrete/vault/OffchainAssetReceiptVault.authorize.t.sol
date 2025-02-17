@@ -36,11 +36,11 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         address authorizor = address(vault.authorizor());
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
         assertTrue(isProxy);
-        assertEq(implementation, address(iAuthorizorImplementation));
+        assertEq(implementation, address(iAuthorizerImplementation));
     }
 
     /// Test that the owner can change the authorizor.
-    function testChangeAuthorizor(
+    function testChangeAuthorizer(
         uint256 aliceSeed,
         uint256 bobSeed,
         string memory shareName,
@@ -53,12 +53,12 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         address authorizor = address(vault.authorizor());
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
         assertTrue(isProxy);
-        assertEq(implementation, address(iAuthorizorImplementation));
+        assertEq(implementation, address(iAuthorizerImplementation));
 
         AlwaysAuthorize alwaysAuthorize = new AlwaysAuthorize();
 
         vm.prank(alice);
-        vault.setAuthorizor(alwaysAuthorize);
+        vault.setAuthorizer(alwaysAuthorize);
 
         authorizor = address(vault.authorizor());
         assertEq(authorizor, address(alwaysAuthorize));
@@ -68,6 +68,6 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         // Bob cannot set the authorizor.
         vm.prank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        vault.setAuthorizor(alwaysAuthorize2);
+        vault.setAuthorizer(alwaysAuthorize2);
     }
 }
