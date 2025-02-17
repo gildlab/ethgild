@@ -245,6 +245,23 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptVaultV1
+    function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
+        return receipt().balanceOf(owner, id);
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function maxWithdraw(address owner, uint256 id) public view virtual returns (uint256) {
+        // Using `_calculateRedeem` instead of `_calculateWithdraw` because the
+        // latter requires knowing the assets being withdrawn, which is what we
+        // are attempting to reverse engineer from the owner's receipt balance.
+        return _calculateRedeem(
+            receipt().balanceOf(owner, id),
+            // Assume the owner is hypothetically withdrawing for themselves.
+            _shareRatio(owner, owner, id, ShareAction.Burn)
+        );
+    }
+
+    /// @inheritdoc IReceiptVaultV1
     function mint(uint256 shares, address receiver, uint256 mintMinShareRatio, bytes memory receiptInformation)
         public
         payable
@@ -322,6 +339,11 @@ abstract contract ReceiptVault is
         );
     }
 
+    /// @inheritdoc IReceiptVaultV2
+    function receipt() public view virtual returns (IReceiptV2) {
+        return sReceipt;
+    }
+
     /// Similar to `receiptInformation` on the underlying receipt but for this
     /// vault. Anyone can call this and provide any information. Indexers and
     /// clients MUST take care against corrupt and malicious data.
@@ -371,28 +393,6 @@ abstract contract ReceiptVault is
         uint256 shares = _calculateWithdraw(assets, _shareRatio(owner, receiver, id, ShareAction.Burn));
         _withdraw(assets, receiver, owner, shares, id, receiptInformation);
         return shares;
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function maxWithdraw(address owner, uint256 id) public view virtual returns (uint256) {
-        // Using `_calculateRedeem` instead of `_calculateWithdraw` becuase the
-        // latter requires knowing the assets being withdrawn, which is what we
-        // are attempting to reverse engineer from the owner's receipt balance.
-        return _calculateRedeem(
-            receipt().balanceOf(owner, id),
-            // Assume the owner is hypothetically withdrawing for themselves.
-            _shareRatio(owner, owner, id, ShareAction.Burn)
-        );
-    }
-
-    /// @inheritdoc IReceiptVaultV2
-    function receipt() public view virtual returns (IReceiptV2) {
-        return sReceipt;
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function maxRedeem(address owner, uint256 id) external view virtual returns (uint256) {
-        return receipt().balanceOf(owner, id);
     }
 
     /// Standard check to enforce the minimum share ratio. If the share ratio is

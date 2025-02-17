@@ -14,8 +14,8 @@ import {
 contract ERC20PriceOracleReceiptVaultMaxRedeemTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
-    /// Test vault returns correct max redeem.
-    function testMaxRedeem(
+    /// Test vault returns correct max withdraw.
+    function testMaxWithdraw(
         uint256 aliceSeed,
         uint256 bobSeed,
         string memory shareName,
@@ -29,19 +29,18 @@ contract ERC20PriceOracleReceiptVaultMaxRedeemTest is ERC20PriceOracleReceiptVau
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
         assets = bound(assets, 1, type(uint128).max);
         oraclePrice = bound(oraclePrice, 1, type(uint128).max);
+        otherOraclePrice = bound(otherOraclePrice, 1, type(uint128).max);
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
 
-        {
-            uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-            vm.assume(expectedShares > 0);
-        }
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.assume(expectedShares > 0);
         vm.startPrank(alice);
 
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
-        uint256 maxRedeem = vault.maxRedeem(alice, oraclePrice);
+        uint256 maxWithdraw = vault.maxWithdraw(alice, oraclePrice);
 
-        assertEqUint(maxRedeem, 0);
+        assertEqUint(maxWithdraw, 0);
 
         setVaultOraclePrice(oraclePrice);
         vm.mockCall(
@@ -52,16 +51,21 @@ contract ERC20PriceOracleReceiptVaultMaxRedeemTest is ERC20PriceOracleReceiptVau
 
         uint256 actualShares = vault.deposit(assets, alice, minShareRatio, receiptInformation);
 
-        maxRedeem = vault.maxRedeem(alice, oraclePrice);
+        maxWithdraw = vault.maxWithdraw(alice, oraclePrice);
 
-        assertEqUint(maxRedeem, actualShares);
+        assertEqUint(actualShares, expectedShares);
+        assertTrue(maxWithdraw <= assets);
 
-        maxRedeem = vault.maxRedeem(alice, otherOraclePrice == oraclePrice ? otherOraclePrice + 1 : otherOraclePrice);
+        uint256 expectedMaxWithdraw = actualShares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
+        assertEqUint(maxWithdraw, expectedMaxWithdraw);
 
-        assertEqUint(maxRedeem, 0);
+        maxWithdraw =
+            vault.maxWithdraw(alice, otherOraclePrice == oraclePrice ? otherOraclePrice + 1 : otherOraclePrice);
 
-        maxRedeem = vault.maxRedeem(bob, otherOraclePrice);
+        assertEqUint(maxWithdraw, 0);
 
-        assertEqUint(maxRedeem, 0);
+        maxWithdraw = vault.maxWithdraw(bob, otherOraclePrice);
+
+        assertEqUint(maxWithdraw, 0);
     }
 }
