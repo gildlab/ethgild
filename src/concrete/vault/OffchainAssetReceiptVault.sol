@@ -177,7 +177,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// badly or frequently the peg breaks. Ideally the issuer profits more when the
 /// peg is broken more.
 ///
-/// This contract does not attempt to solve for liquidity and trustworthyness,
+/// This contract does not attempt to solve for liquidity and trustworthiness,
 /// it only seeks to provide baseline functionality that a competent issuer
 /// will need to tackle the problem. The implementation provides:
 ///

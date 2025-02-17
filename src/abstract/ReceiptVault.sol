@@ -71,7 +71,7 @@ struct ReceiptVaultConfig {
 
 /// @title ReceiptVault
 /// @notice The workhorse that binds several abstract concepts together into the
-/// specific concrete implemenation of our working system.
+/// specific concrete implementation of our working system.
 ///
 /// - Implementing an ERC4626 standard vault with assets and shares
 /// - where the shares are minted 1:1 with an ERC1155 receipt NFT across many IDs
@@ -282,8 +282,8 @@ abstract contract ReceiptVault is
     function previewDeposit(uint256 assets, uint256 minShareRatio) public payable virtual returns (uint256) {
         uint256 val = _calculateDeposit(
             assets,
-            // Spec doesn't provide us with a receipient but wants a per-user
-            // preview so we assume that depositor = receipient.
+            // Spec doesn't provide us with a recipient but wants a per-user
+            // preview so we assume that depositor = recipient.
             _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
             // IERC4626:
             // > MUST NOT revert due to vault specific user/global limits.
