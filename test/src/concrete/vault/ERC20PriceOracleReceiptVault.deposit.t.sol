@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
+import {MinShareRatio, ZeroAssetsAmount, ZeroSharesAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {TwoPriceOracleV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
@@ -17,219 +17,237 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import "forge-std/StdCheats.sol";
+import {IReceiptV2} from "src/interface/IReceiptV2.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
-    /// Test deposit function
-    function testDepositBasic(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 oraclePrice)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+    address constant ALICE = address(uint160(uint256(keccak256("ALICE"))));
 
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+    function checkDeposit(
+        ERC20PriceOracleReceiptVault vault,
+        address owner,
+        address receiver,
+        uint256 oraclePrice,
+        uint256 assets,
+        uint256 minShareRatio,
+        bytes memory receiptInformation,
+        bytes memory err
+    ) internal {
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
         setVaultOraclePrice(oraclePrice);
 
-        vm.startPrank(alice);
-
-        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
+        vm.startPrank(owner);
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault;
-        {
-            vault = createVault(iVaultOracle, assetName, assetName);
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, owner, address(vault), assets),
+            abi.encode(true)
+        );
 
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
+        uint256 startingShares = vault.balanceOf(receiver);
+        uint256 startingReceiptBalance = receiver == address(0) ? 0 : vault.receipt().balanceOf(receiver, oraclePrice);
+        uint256 totalSupplyBefore = vault.totalSupply();
 
-            assets = bound(assets, 1, type(uint128).max);
-            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-            vm.mockCall(
-                address(iAsset),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
-                abi.encode(true)
-            );
+        if (expectedShares == 0 && err.length == 0) {
+            err = abi.encodeWithSelector(ZeroSharesAmount.selector);
         }
 
-        ReceiptContract receipt = getReceipt();
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptVaultV1.Deposit(alice, alice, assets, expectedShares, oraclePrice, bytes(""));
+        if (err.length > 1) {
+            vm.expectRevert(err);
+            expectedShares = 0;
+        } else {
+            vm.expectEmit(false, false, false, true);
+            emit IReceiptVaultV1.Deposit(owner, receiver, assets, expectedShares, oraclePrice, receiptInformation);
+            if (receiptInformation.length > 0) {
+                vm.expectEmit(false, false, false, true);
+                emit IReceiptV2.ReceiptInformation(owner, oraclePrice, receiptInformation);
+            }
+        }
 
-        vault.deposit(assets, alice, oraclePrice, bytes(""));
+        uint256 actualShares = vault.deposit(assets, receiver, minShareRatio, receiptInformation);
+        assertEqUint(actualShares, expectedShares);
+        assertEqUint(vault.totalSupply(), totalSupplyBefore + expectedShares);
 
-        // Assert that the total supply is equal to expectedShares
-        assertEqUint(vault.totalSupply(), expectedShares);
-        // Check alice balance
-        assertEqUint(vault.balanceOf(alice), expectedShares);
-        // Check bob's receipt balance
-        assertEqUint(receipt.balanceOf(alice, oraclePrice), expectedShares);
+        if (err.length > 1) {
+            assertEqUint(vault.balanceOf(receiver), startingShares);
+            // Reading balance of address 0 is an error in ERC1155.
+            if (receiver != address(0)) {
+                assertEqUint(vault.receipt().balanceOf(receiver, oraclePrice), startingReceiptBalance);
+            }
+        } else {
+            assertEqUint(vault.balanceOf(receiver), startingShares + expectedShares);
+            assertEqUint(vault.receipt().balanceOf(receiver, oraclePrice), startingReceiptBalance + expectedShares);
+        }
+    }
+
+    /// Test deposit function
+    function testDepositBasic(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 assets,
+        uint256 oraclePrice,
+        bytes memory data
+    ) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+
+        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+        assets = bound(assets, 1, type(uint128).max);
+
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol), alice, alice, oraclePrice, assets, 0, data, bytes("")
+        );
+    }
+
+    /// Test multiple deposits under the different oracle prices.
+    function testMultipleDeposits(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 assets1,
+        uint256 assets2,
+        uint256 oraclePrice1,
+        uint256 oraclePrice2,
+        uint256 minShareRatio1,
+        uint256 minShareRatio2,
+        bytes memory data1,
+        bytes memory data2
+    ) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+
+        oraclePrice1 = bound(oraclePrice1, 0.01e18, 100e18);
+        minShareRatio1 = bound(minShareRatio1, 0, oraclePrice1);
+        assets1 = bound(assets1, 1, type(uint128).max);
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            alice,
+            alice,
+            oraclePrice1,
+            assets1,
+            minShareRatio1,
+            data1,
+            bytes("")
+        );
+
+        oraclePrice2 = bound(oraclePrice2, 0.01e18, 100e18);
+        minShareRatio2 = bound(minShareRatio2, 0, oraclePrice2);
+        assets2 = bound(assets2, 1, type(uint128).max);
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            alice,
+            alice,
+            oraclePrice2,
+            assets2,
+            minShareRatio2,
+            data2,
+            bytes("")
+        );
     }
 
     /// Test deposit to someone else
     function testDepositSomeoneElse(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
+        uint256 aliceSeed,
+        uint256 bobSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
-        uint256 oraclePrice
+        uint256 oraclePrice,
+        uint256 minShareRatio,
+        bytes memory data
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
+        minShareRatio = bound(minShareRatio, 0, oraclePrice);
+        assets = bound(assets, 1, type(uint128).max);
 
-        vm.startPrank(alice);
-
-        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
-        vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault;
-        {
-            vault = createVault(iVaultOracle, assetName, assetName);
-
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
-            assets = bound(assets, 1, type(uint128).max);
-            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-            vm.mockCall(
-                address(iAsset),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
-                abi.encode(true)
-            );
-        }
-        ReceiptContract receipt = getReceipt();
-
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
-        uint256 aliceReceiptBalance = receipt.balanceOf(alice, oraclePrice);
-        vm.expectEmit(false, false, false, true);
-        emit IReceiptVaultV1.Deposit(alice, bob, assets, expectedShares, oraclePrice, bytes(""));
-
-        vault.deposit(assets, bob, oraclePrice, bytes(""));
-        // Assert that the total supply is equal to expectedShares
-        assertEqUint(vault.totalSupply(), expectedShares);
-        // Check balance
-        assertEqUint(vault.balanceOf(bob), expectedShares);
-
-        // Check bob's receipt balance
-        assertEqUint(receipt.balanceOf(bob, oraclePrice), expectedShares);
-
-        // Check alice's receipt balance does not change
-        assertEqUint(receipt.balanceOf(alice, oraclePrice), aliceReceiptBalance);
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            alice,
+            bob,
+            oraclePrice,
+            assets,
+            minShareRatio,
+            data,
+            bytes("")
+        );
     }
 
     /// Test deposit function with zero assets
     function testDepositWithZeroAssets(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
-        uint256 oraclePrice
+        uint256 oraclePrice,
+        uint256 minShareRatio
     ) external {
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
-        vault.deposit(0, alice, oraclePrice, data);
+        minShareRatio = bound(minShareRatio, 0, oraclePrice);
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
+            oraclePrice,
+            0,
+            minShareRatio,
+            data,
+            abi.encodeWithSelector(ZeroAssetsAmount.selector)
+        );
     }
 
-    /// Test deposit reverts with incorret price
-    function testDepositWithIncorrectPrice(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
+    /// Test to check deposit reverts with MinShareRatio
+    function testDepositMinShareRatio(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 assets,
-        uint256 oraclePrice
+        uint256 oraclePrice,
+        uint256 minShareRatio
     ) external {
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
+        oraclePrice = bound(oraclePrice, 1, 1e50);
+        minShareRatio = bound(minShareRatio, oraclePrice + 1, type(uint256).max);
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, oraclePrice + 1, oraclePrice));
-        vault.deposit(assets, alice, oraclePrice + 1, data);
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
+            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed),
+            oraclePrice,
+            assets,
+            minShareRatio,
+            data,
+            abi.encodeWithSelector(MinShareRatio.selector, minShareRatio, oraclePrice)
+        );
     }
 
     /// Test deposit reverts with zero receiver
     function testDepositWithZeroReceiver(
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 assets,
-        uint256 oraclePrice
+        uint256 oraclePrice,
+        uint256 minShareRatio
     ) external {
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
+        minShareRatio = bound(minShareRatio, 0, oraclePrice);
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        vm.expectRevert();
-        vault.deposit(assets, address(0), oraclePrice, data);
-    }
-
-    /// Test PreviewDeposit returns correct shares
-    function testPreviewDepositReturnedShares(
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 assets,
-        uint256 oraclePrice
-    ) external {
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
-        uint256 shares = vault.previewDeposit(assets, 0);
-
-        assertEqUint(shares, expectedShares);
-
-        vm.stopPrank();
-    }
-
-    /// forge-config: default.fuzz.runs = 1
-    function testDepositFlareFork(uint256 deposit) public {
-        deposit = bound(deposit, 1, type(uint128).max);
-
-        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, deposit);
-
-        deal(address(SFLR_CONTRACT), alice, deposit);
-
-        vm.startPrank(alice);
-        vm.assume(vault.previewDeposit(deposit, 0) > 0);
-
-        vault.deposit(deposit, alice, 0, hex"00");
-        vm.stopPrank();
-
-        uint256 shareBalance = vault.balanceOf(alice);
-        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
-
-        assertEqUint(deposit.fixedPointMul(rate, Math.Rounding.Down), shareBalance);
+        checkDeposit(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            ALICE,
+            address(0),
+            oraclePrice,
+            assets,
+            minShareRatio,
+            data,
+            abi.encodeWithSelector(ZeroReceiver.selector)
+        );
     }
 
     fallback() external {}
+
+    receive() external payable {}
 }

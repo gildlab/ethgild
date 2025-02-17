@@ -15,15 +15,15 @@ import {IERC1155Upgradeable as IERC1155} from
 /// - transfer
 /// - emit data
 ///
-/// The manager MUST implement `IReceiptManagerV1` to authorize transfers and
-/// receipt information. The `IReceiptV2` MUST call the relevant authorization
-/// function on the manager for receipt information and standard ERC1155
-/// transfers.
+/// The manager MUST implement a compatible `IReceiptManagerV*` to authorize
+/// transfers and receipt information. The `IReceiptV2` MUST call the relevant
+/// authorization function on its manager for receipt information and standard
+/// ERC1155 transfers.
 ///
 /// Earlier versions of `ReceiptVault` implemented the vault as BOTH an ERC1155
 /// AND ERC20/4626 vault, which technically worked fine onchain but offchain
 /// tooling such as MetaMask seems to only understand a contract implementing one
-/// token interface. The combination of `IReceiptV2` and `IReceiptManagerV1`
+/// token interface. The combination of `IReceiptV2` and `IReceiptManagerV*`
 /// attempts to emulate the hybrid token model through paired interfaces.
 ///
 /// The manager is effectively required to be a smart contract by nature, and
@@ -52,7 +52,7 @@ interface IReceiptV2 is IERC1155 {
     /// @return symbol The symbol of the receipt token.
     function symbol() external view returns (string memory);
 
-    /// The address of the `IReceiptManagerV1`. This is expected to be a
+    /// The address of the `IReceiptManagerV*`. This is expected to be a
     /// `ReceiptVault` that can safely manage dangerous `manager*` functions.
     /// @return manager The manager account.
     function manager() external view returns (address);

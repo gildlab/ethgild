@@ -13,49 +13,46 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
-contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
+contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
     /// Test ERC20 name symbol and decimals
-    function testERC20NameSymbolDecimals(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol)
+    function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory shareName, string memory shareSymbol)
         external
     {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         IPriceOracleV2 vaultPriceOracle =
             IPriceOracleV2(payable(address(uint160(uint256(keccak256("twoPriceOracle"))))));
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(vaultPriceOracle, assetName, assetSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(vaultPriceOracle, shareName, shareSymbol);
 
         assert(address(vault) != address(0));
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(assetName)));
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(assetSymbol)));
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(shareSymbol)));
         assertEq(vault.decimals(), 18);
     }
 
     /// Test ERC20 totalSupply and balanceOf
     function testERC20TotalSupplyAndBalanceOf(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         {
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
             assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
@@ -64,6 +61,7 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
                 abi.encode(true)
             );
+            vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
         }
 
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -75,12 +73,9 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     }
 
     // Test ERC20 transfer
-    function testERC20Transfer(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob, uint256 amount, uint256 oraclePrice)
-        external
-    {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+    function testERC20Transfer(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 oraclePrice) external {
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         amount = bound(amount, 1, type(uint128).max);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
@@ -92,13 +87,12 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
         vm.startPrank(alice);
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
 
-        // Mock balance and allowance for deposit
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
         uint256 bobInitialBalance = vault.balanceOf(bob);
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -112,10 +106,8 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     }
 
     // Test ERC20 allowance and approve
-    function testERC20AllowanceAndApprove(uint256 fuzzedKeyAlice, uint256 fuzzedKeyBob, uint256 amount) external {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+    function testERC20AllowanceAndApprove(uint256 aliceSeed, uint256 bobSeed, uint256 amount) external {
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         amount = bound(amount, 1, type(uint256).max);
 
@@ -131,15 +123,14 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
 
     // Test ERC20 transferFrom()
     function testERC20TransferFrom(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 amount,
         uint256 transferFromAmount,
         uint256 oraclePrice
     ) external {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         amount = bound(amount, 1, type(uint128).max);
         transferFromAmount = bound(transferFromAmount, 1, type(uint128).max);
 
@@ -149,12 +140,12 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
         ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
 
         vm.startPrank(alice);
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vm.assume(transferFromAmount < expectedShares);
@@ -176,15 +167,11 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     }
 
     // Test ERC20 increaseAllowance
-    function testERC20IncreaseAllowance(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        uint256 amount,
-        uint256 increaseAmount
-    ) external {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+    function testERC20IncreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 increaseAmount)
+        external
+    {
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         amount = bound(amount, 1, type(uint128).max);
         increaseAmount = bound(increaseAmount, 1, type(uint128).max);
         vm.assume(increaseAmount < amount);
@@ -201,15 +188,11 @@ contract ERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     }
 
     // Test ERC20 decreaseAllowance
-    function testERC20DecreaseAllowance(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        uint256 amount,
-        uint256 decreaseAmount
-    ) external {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
-        vm.assume(alice != bob);
+    function testERC20DecreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 decreaseAmount)
+        external
+    {
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         amount = bound(amount, 1, type(uint128).max);
         decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
         vm.assume(decreaseAmount < amount);

@@ -4,36 +4,47 @@ pragma solidity =0.8.25;
 
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfig
+    OffchainAssetReceiptVaultConfigV2,
+    CONFISCATE_SHARES,
+    DEPOSIT,
+    CERTIFY
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 
 contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
-    event ConfiscateShares(address sender, address confiscatee, uint256 confiscated, bytes justification);
+    using Math for uint256;
 
     /// Checks that confiscateShares balances don't change or do change as expected
-    function checkConfiscateShares(OffchainAssetReceiptVault vault, address alice, address bob, bytes memory data)
-        internal
-    {
+    function checkConfiscateShares(
+        OffchainAssetReceiptVault vault,
+        address alice,
+        address bob,
+        uint256 targetAmount,
+        bytes memory data
+    ) internal {
         uint256 initialBalanceAlice = vault.balanceOf(alice);
         uint256 initialBalanceBob = vault.balanceOf(bob);
         bool expectNoChange = initialBalanceAlice == 0;
 
+        uint256 expectedChange = initialBalanceAlice.min(targetAmount);
         if (!expectNoChange) {
             vm.expectEmit(false, false, false, true);
-            emit ConfiscateShares(bob, alice, initialBalanceAlice, data);
+            emit OffchainAssetReceiptVault.ConfiscateShares(bob, alice, targetAmount, expectedChange, data);
         }
 
-        vault.confiscateShares(alice, data);
+        vault.confiscateShares(alice, targetAmount, data);
 
         uint256 balanceAfterAlice = vault.balanceOf(alice);
         uint256 balanceAfterBob = vault.balanceOf(bob);
 
         bool balancesChanged = initialBalanceAlice == balanceAfterAlice && initialBalanceBob == balanceAfterBob;
         if (!expectNoChange) {
-            balancesChanged = balanceAfterAlice == 0 && balanceAfterBob == initialBalanceBob + initialBalanceAlice;
+            balancesChanged = balanceAfterAlice == initialBalanceAlice - expectedChange
+                && balanceAfterBob == initialBalanceBob + expectedChange;
         }
 
         assertTrue(balancesChanged, expectNoChange ? "Balances should not change" : "Balances should change");
@@ -41,17 +52,18 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
     /// Test to checks ConfiscateShares does not change balances on zero balance
     function testConfiscateSharesOnZeroBalance(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
+        uint256 aliceSeed,
+        uint256 bobSeed,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 balance,
+        uint256 targetAmount,
         uint256 minShareRatio
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        vm.assume(targetAmount > 0);
+
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
@@ -60,12 +72,12 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        vault.grantRole(vault.CONFISCATOR(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_SHARES, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         // Prank as Bob for tranactions
         vm.startPrank(bob);
@@ -73,28 +85,29 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
         // Deposit to increase bob's balance
         vault.deposit(balance, bob, minShareRatio, data);
 
-        checkConfiscateShares(vault, alice, bob, data);
+        checkConfiscateShares(vault, alice, bob, targetAmount, data);
 
         vm.stopPrank();
     }
 
     /// Test to check ConfiscateShares
-    function testConfiscateShares(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+    function testConfiscateSharesBasic(
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 minShareRatio,
         uint256 assets,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         bytes memory data,
         uint256 certifyUntil,
         uint256 blockNumber,
-        bool forceUntil
+        bool forceUntil,
+        uint256 targetAmount
     ) external {
+        vm.assume(targetAmount > 0);
+
         minShareRatio = bound(minShareRatio, 0, 1e18);
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         blockNumber = bound(blockNumber, 0, type(uint256).max);
         vm.roll(blockNumber);
@@ -103,13 +116,13 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(alice != bob);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set roles
         vm.startPrank(alice);
-        vault.grantRole(vault.CONFISCATOR(), bob);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_SHARES, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for transactions
         vm.startPrank(bob);
@@ -122,7 +135,7 @@ contract ConfiscateSharesTest is OffchainAssetReceiptVaultTest {
 
         vault.deposit(assets, alice, minShareRatio, data);
 
-        checkConfiscateShares(vault, alice, bob, data);
+        checkConfiscateShares(vault, alice, bob, targetAmount, data);
         vm.stopPrank();
     }
 }

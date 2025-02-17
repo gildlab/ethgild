@@ -6,165 +6,144 @@ import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetRece
 import {VaultConfig, MinShareRatio} from "src/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetVaultConfig,
-    OffchainAssetReceiptVaultConfig
+    OffchainAssetVaultConfigV2,
+    OffchainAssetReceiptVaultConfigV2,
+    CONFISCATE_RECEIPT,
+    CONFISCATE_SHARES,
+    CERTIFY,
+    CertifyStateChange,
+    DepositStateChange,
+    ConfiscateSharesStateChange,
+    ConfiscateReceiptStateChange
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "../../../concrete/TestErc20.sol";
 import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {
+    OffchainAssetReceiptVaultAuthorizerV1,
+    Unauthorized,
+    CERTIFY_ADMIN,
+    CONFISCATE_RECEIPT_ADMIN,
+    CONFISCATE_SHARES_ADMIN,
+    FREEZE_HANDLER_ADMIN,
+    DEPOSIT_ADMIN,
+    WITHDRAW_ADMIN,
+    DEPOSIT,
+    WITHDRAW,
+    CERTIFY,
+    FREEZE_HANDLER,
+    CONFISCATE_RECEIPT,
+    CONFISCATE_SHARES
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
     /// Test to checks Admin roles granted
-    function testGrantAdminRoles(uint256 fuzzedKeyAlice, string memory assetName, string memory assetSymbol) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+    function testGrantAdminRoles(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        bytes32 depositorAdmin = vault.DEPOSITOR_ADMIN();
-        bytes32 withdrawerAdmin = vault.WITHDRAWER_ADMIN();
-        bytes32 certifierAdmin = vault.CERTIFIER_ADMIN();
-        bytes32 handlerAdmin = vault.HANDLER_ADMIN();
-        bytes32 erc20TiererAdmin = vault.ERC20TIERER_ADMIN();
-        bytes32 erc1155TiererAdmin = vault.ERC1155TIERER_ADMIN();
-        bytes32 confiscatorAdmin = vault.CONFISCATOR_ADMIN();
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(DEPOSIT_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(WITHDRAW_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CERTIFY_ADMIN, alice));
+        assertTrue(
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(FREEZE_HANDLER_ADMIN, alice)
+        );
+        assertTrue(
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_RECEIPT_ADMIN, alice)
+        );
+        assertTrue(
+            OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_SHARES_ADMIN, alice)
+        );
 
-        assertTrue(vault.hasRole(depositorAdmin, alice));
-        assertTrue(vault.hasRole(withdrawerAdmin, alice));
-        assertTrue(vault.hasRole(certifierAdmin, alice));
-        assertTrue(vault.hasRole(handlerAdmin, alice));
-        assertTrue(vault.hasRole(erc20TiererAdmin, alice));
-        assertTrue(vault.hasRole(erc1155TiererAdmin, alice));
-        assertTrue(vault.hasRole(confiscatorAdmin, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(DEPOSIT, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(WITHDRAW, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CERTIFY, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(FREEZE_HANDLER, alice));
+        assertTrue(
+            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_RECEIPT, alice)
+        );
+        assertTrue(
+            !OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).hasRole(CONFISCATE_SHARES, alice)
+        );
     }
 
     /// Test to checks deposit without depositor role
     function testDepositWithoutDepositorRole(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol,
+        uint256 aliceSeed,
+        uint256 bobSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 aliceAssets,
         bytes memory receiptInformation
     ) external {
+        vm.assume(aliceAssets > 0);
+
         // ShareRatio 1
         uint256 shareRatio = 1e18;
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        fuzzedKeyBob = bound(fuzzedKeyBob, 1, SECP256K1_ORDER - 1);
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, shareRatio, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                DEPOSIT,
+                abi.encode(
+                    DepositStateChange({
+                        owner: alice,
+                        receiver: bob,
+                        id: 1,
+                        assetsDeposited: aliceAssets,
+                        sharesMinted: aliceAssets,
+                        data: receiptInformation
+                    })
+                )
+            )
+        );
         vault.deposit(aliceAssets, bob, shareRatio, receiptInformation);
         vm.stopPrank();
     }
 
-    /// Test to checks SetERC20Tier without role
-    function testSetERC20TierWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        bytes memory data,
-        uint8 minTier,
-        uint256[] memory context
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // New testErc20 contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
-
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(vault.ERC20TIERER())
-            )
-        );
-
-        vm.expectRevert(bytes(errorMessage));
-
-        // Set Tier
-        vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
-    }
-
-    /// Test to checks setERC1155Tier without role
-    function testSetERC1155TierWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        bytes memory data,
-        uint8 minTier,
-        uint256[] memory context
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // New testErc20 contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
-
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(vault.ERC1155TIERER())
-            )
-        );
-        vm.expectRevert(bytes(errorMessage));
-
-        // Set Tier
-        vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
-    }
-
     /// Test to checks Certify without role
     function testCertifyWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 certifyUntil,
         bytes memory data
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        vm.assume(certifyUntil > 0);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         bool forceUntil = false;
 
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(vault.CERTIFIER())
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                CERTIFY,
+                abi.encode(
+                    CertifyStateChange({
+                        oldCertifiedUntil: 0,
+                        newCertifiedUntil: certifyUntil,
+                        userCertifyUntil: certifyUntil,
+                        forceUntil: forceUntil,
+                        data: data
+                    })
+                )
             )
         );
-        vm.expectRevert(bytes(errorMessage));
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, data);
@@ -172,32 +151,82 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    /// Test to checks Confiscate without role
-    function testConfiscateWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
+    /// Test to checks confiscate receipt without role
+    function testConfiscateReceiptWithoutRole(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 id,
+        uint256 targetAmount,
         bytes memory data
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
+        vm.assume(targetAmount > 0);
+
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(vault.CONFISCATOR())
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                CONFISCATE_RECEIPT,
+                abi.encode(
+                    ConfiscateReceiptStateChange({
+                        confiscatee: alice,
+                        id: id,
+                        targetAmount: targetAmount,
+                        actualAmount: 0,
+                        data: data
+                    })
+                )
             )
         );
-        vm.expectRevert(bytes(errorMessage));
+
+        // Call the confiscateReceipt function
+        vault.confiscateReceipt(alice, id, targetAmount, data);
+
+        vm.stopPrank();
+    }
+
+    /// Test to checks confiscate shares without role
+    function testConfiscateSharesWithoutRole(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 targetAmount,
+        bytes memory data
+    ) external {
+        vm.assume(targetAmount > 0);
+
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
+
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                CONFISCATE_SHARES,
+                abi.encode(
+                    ConfiscateSharesStateChange({
+                        confiscatee: alice,
+                        targetAmount: targetAmount,
+                        actualAmount: 0,
+                        data: data
+                    })
+                )
+            )
+        );
 
         // Call the confiscateShares function
-        vault.confiscateShares(alice, data);
+        vault.confiscateShares(alice, targetAmount, data);
 
         vm.stopPrank();
     }
