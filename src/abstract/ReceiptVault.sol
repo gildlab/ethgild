@@ -182,17 +182,6 @@ abstract contract ReceiptVault is
         (from, to, ids, amounts);
     }
 
-    /// The spec demands this function ignores per-user concerns. It seems to
-    /// imply minting but doesn't provide a sibling conversion for burning.
-    /// > The amount of shares that the Vault would exchange for the amount of
-    /// > assets provided
-    /// @inheritdoc IReceiptVaultV1
-    function convertToShares(uint256 assets, uint256 id) external payable returns (uint256) {
-        uint256 val = _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
-        Address.sendValue(payable(msg.sender), address(this).balance);
-        return val;
-    }
-
     /// The spec demands that this function ignores per-user concerns. It seems
     /// to imply burning but doesn't provide a sibling conversion for minting.
     /// > The amount of assets that the Vault would exchange for the amount of
@@ -206,6 +195,52 @@ abstract contract ReceiptVault is
             // any other ID to prefer either.
             _shareRatioUserAgnostic(id, ShareAction.Burn)
         );
+    }
+
+    /// The spec demands this function ignores per-user concerns. It seems to
+    /// imply minting but doesn't provide a sibling conversion for burning.
+    /// > The amount of shares that the Vault would exchange for the amount of
+    /// > assets provided
+    /// @inheritdoc IReceiptVaultV1
+    function convertToShares(uint256 assets, uint256 id) external payable returns (uint256) {
+        uint256 val = _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return val;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes memory receiptInformation)
+        external
+        payable
+        returns (uint256)
+    {
+        uint256 id = _nextId();
+
+        uint256 shares =
+            _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), depositMinShareRatio);
+
+        _deposit(assets, receiver, shares, id, receiptInformation);
+        Address.sendValue(payable(msg.sender), address(this).balance);
+        return shares;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function maxDeposit(address receiver) external pure virtual returns (uint256 maxAssets) {
+        (receiver, maxAssets);
+        // The spec states to return this if there is no deposit limit.
+        // Technically a deposit this large would almost certainly overflow
+        // somewhere in the process, but it isn't a limit imposed by the vault
+        // per-se, it's more that the ERC20 tokens themselves won't handle such
+        // large entries on their internal balances. Given typical token
+        // total supplies are smaller than this number, this would be a
+        // theoretical point only.
+        return type(uint256).max;
+    }
+
+    /// @inheritdoc IReceiptVaultV1
+    function maxMint(address receiver) external pure virtual returns (uint256 maxShares) {
+        (receiver, maxShares);
+        return type(uint256).max;
     }
 
     /// @inheritdoc IReceiptVaultV2
@@ -258,22 +293,6 @@ abstract contract ReceiptVault is
         );
         Address.sendValue(payable(msg.sender), address(this).balance);
         return val;
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function deposit(uint256 assets, address receiver, uint256 depositMinShareRatio, bytes memory receiptInformation)
-        external
-        payable
-        returns (uint256)
-    {
-        uint256 id = _nextId();
-
-        uint256 shares =
-            _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), depositMinShareRatio);
-
-        _deposit(assets, receiver, shares, id, receiptInformation);
-        Address.sendValue(payable(msg.sender), address(this).balance);
-        return shares;
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -456,23 +475,6 @@ abstract contract ReceiptVault is
     //slither-disable-next-line dead-code
     function _nextId() internal virtual returns (uint256) {
         return 1;
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function maxDeposit(address) external pure virtual returns (uint256) {
-        // The spec states to return this if there is no deposit limit.
-        // Technically a deposit this large would almost certainly overflow
-        // somewhere in the process, but it isn't a limit imposed by the vault
-        // per-se, it's more that the ERC20 tokens themselves won't handle such
-        // large entries on their internal balances. Given typical token
-        // total supplies are smaller than this number, this would be a
-        // theoretical point only.
-        return type(uint256).max;
-    }
-
-    /// @inheritdoc IReceiptVaultV1
-    function maxMint(address) external pure virtual returns (uint256) {
-        return type(uint256).max;
     }
 
     /// Handles minting and emitting events according to spec.
