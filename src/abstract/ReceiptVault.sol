@@ -577,6 +577,8 @@ abstract contract ReceiptVault is
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
         receipt().managerMint(msg.sender, receiver, id, shares, receiptInformation);
+
+        _afterDeposit(assets, receiver, shares, id, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
@@ -585,9 +587,9 @@ abstract contract ReceiptVault is
     /// may revert. As per 4626 the owner of the assets being deposited is always
     /// the `msg.sender`.
     /// @param assets Number of assets being deposited.
-    /// !param receiver Receiver of shares that will be minted.
-    /// !param shares Amount of shares that will be minted.
-    /// !param id Recipt ID that will be minted for this deposit.
+    /// @param receiver Receiver of shares that will be minted.
+    /// @param shares Amount of shares that will be minted.
+    /// @param id Recipt ID that will be minted for this deposit.
     function _beforeDeposit(
         uint256 assets,
         address receiver,
@@ -598,6 +600,25 @@ abstract contract ReceiptVault is
         // Default behaviour is to move assets before minting shares.
         IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets);
         (receiver, shares, id, receiptInformation);
+    }
+
+    /// Hook for additional actions that MUST complete or revert after deposit is
+    /// complete. This hook is MAY revert the transaction or perform additional
+    /// actions after the deposit is complete, including all minting to the
+    /// receiver. As per 4626 the owner of the assets being deposited is always
+    /// the `msg.sender`.
+    /// @param assets Number of assets being deposited.
+    /// @param receiver Receiver of shares that will be minted.
+    /// @param shares Amount of shares that will be minted.
+    /// @param id Recipt ID that will be minted for this deposit.
+    function _afterDeposit(
+        uint256 assets,
+        address receiver,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual {
+        (assets, receiver, shares, id, receiptInformation);
     }
 
     /// Handles burning shares, withdrawing assets and emitting events to spec.
