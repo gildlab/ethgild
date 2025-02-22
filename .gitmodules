@@ -22,3 +22,6 @@
 [submodule "lib/rain.string"]
 	path = lib/rain.string
 	url = https://github.com/rainlanguage/rain.string
+[submodule "lib/rain.extrospection"]
+	path = lib/rain.extrospection
+	url = https://github.com/rainlanguage/rain.extrospection

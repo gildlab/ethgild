@@ -3,10 +3,16 @@
 pragma solidity =0.8.25;
 
 import {ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount} from "src/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    OffchainAssetReceiptVault,
+    WITHDRAWER,
+    DEPOSITOR,
+    CERTIFIER
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm, ReceiptContract} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
 import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Checks that balance owner balance changes after withdraw
@@ -102,7 +108,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant role
         vm.startPrank(alice);
 
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank as Bob for transaction
         vm.startPrank(bob);
@@ -134,7 +140,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-        vault.grantRole(vault.DEPOSITOR(), alice);
+        vault.grantRole(DEPOSITOR, alice);
 
         // Call the deposit function
         vault.deposit(assets, alice, minShareRatio, data);
@@ -167,8 +173,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -209,8 +215,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -251,8 +257,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -291,8 +297,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -331,8 +337,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -370,8 +376,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -410,8 +416,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -452,9 +458,9 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
-        vault.grantRole(vault.CERTIFIER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -493,8 +499,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -536,10 +542,10 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vault.grantRole(vault.WITHDRAWER(), bob);
-        vault.grantRole(vault.CERTIFIER(), alice);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(DEPOSITOR, alice);
+        vault.grantRole(WITHDRAWER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
 
         // Certify
         vault.certify(certifyUntil, forceUntil, data);
@@ -595,8 +601,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -643,10 +649,10 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Prank as Alice to grant roles
-        vault.grantRole(vault.DEPOSITOR(), alice);
-        vault.grantRole(vault.DEPOSITOR(), bob);
-        vault.grantRole(vault.WITHDRAWER(), alice);
-        vault.grantRole(vault.WITHDRAWER(), bob);
+        vault.grantRole(DEPOSITOR, alice);
+        vault.grantRole(DEPOSITOR, bob);
+        vault.grantRole(WITHDRAWER, alice);
+        vault.grantRole(WITHDRAWER, bob);
 
         vault.deposit(aliceDeposit, alice, aliceMinShareRatio, bytes(""));
         assertEqUint(vault.balanceOf(alice), aliceDeposit);
