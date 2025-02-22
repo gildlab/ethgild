@@ -36,7 +36,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         returns (OffchainAssetReceiptVault)
     {
         return LibOffchainAssetVaultCreator.createVault(
-            iFactory, iImplementation, iAuthorizorImplementation, admin, name, symbol
+            vm, iFactory, iImplementation, iAuthorizorImplementation, admin, name, symbol
         );
     }
 

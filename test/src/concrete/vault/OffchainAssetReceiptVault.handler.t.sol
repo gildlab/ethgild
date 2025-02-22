@@ -2,13 +2,13 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {OffchainAssetReceiptVault, HANDLER, DEPOSITOR} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVault, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {
     OffchainAssetReceiptVaultAuthorizorV1,
-    CERTIFIER
+    FREEZE_HANDLER
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
@@ -57,7 +57,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
-        uint256 balance
+        uint256 balance,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         address alice;
         address bob;
@@ -75,9 +77,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
-        vault.grantRole(HANDLER, bob);
-        vault.grantRole(DEPOSITOR, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));
@@ -87,9 +89,12 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
         vm.warp(futureTimeStamp);
 
+        // Show the transfer is authorized.
+        vm.startPrank(address(receipt));
+        vault.authorizeReceiptTransfer3(bob, bob, ids, amounts);
+
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer2(bob, bob);
         receipt.safeTransferFrom(bob, bob, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(bob, 1), balance);
 
@@ -105,7 +110,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
-        uint256 balance
+        uint256 balance,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         address alice;
         address bob;
@@ -124,9 +131,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
-        vault.grantRole(HANDLER, bob);
-        vault.grantRole(DEPOSITOR, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));
@@ -137,9 +144,12 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
         vm.warp(futureTimeStamp);
 
-        // Prank as Bob
+        // Prank as the receipt
+        vm.startPrank(address(receipt));
+        vault.authorizeReceiptTransfer3(bob, john, ids, amounts);
+        vm.stopPrank();
+
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer2(bob, john);
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), balance);
 
@@ -155,7 +165,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         uint256 certifyUntil,
         uint256 futureTimeStamp,
         bool forceUntil,
-        uint256 balance
+        uint256 balance,
+        uint256[] memory ids,
+        uint256[] memory amounts
     ) external {
         address alice;
         address bob;
@@ -174,9 +186,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFIER, alice);
-        vault.grantRole(HANDLER, john);
-        vault.grantRole(DEPOSITOR, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, alice);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(FREEZE_HANDLER, john);
+        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
 
         // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));
@@ -187,9 +199,12 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
         vm.warp(futureTimeStamp);
 
+        // Show the transfer is authorized.
+        vm.prank(address(receipt));
+        vault.authorizeReceiptTransfer3(bob, john, ids, amounts);
+
         // Prank as Bob
         vm.startPrank(bob);
-        vault.authorizeReceiptTransfer2(bob, john);
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), balance);
 

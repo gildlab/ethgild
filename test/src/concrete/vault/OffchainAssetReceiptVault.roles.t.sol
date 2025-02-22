@@ -8,16 +8,13 @@ import {
     OffchainAssetReceiptVault,
     OffchainAssetVaultConfigV2,
     OffchainAssetReceiptVaultConfigV2,
-    DEPOSITOR_ADMIN,
-    WITHDRAWER_ADMIN,
-    HANDLER_ADMIN,
-    ERC20TIERER_ADMIN,
-    ERC1155TIERER_ADMIN,
-    CONFISCATOR_ADMIN,
-    ERC20TIERER,
-    ERC1155TIERER,
-    CONFISCATOR,
-    CertifyStateChange
+    CONFISCATE_RECEIPT,
+    CONFISCATE_SHARES,
+    CERTIFY,
+    CertifyStateChange,
+    DepositStateChange,
+    ConfiscateSharesStateChange,
+    ConfiscateReceiptStateChange
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {StringsUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {TestErc20} from "../../../concrete/TestErc20.sol";
@@ -25,9 +22,19 @@ import {ReadWriteTier} from "../../../concrete/ReadWriteTier.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
     OffchainAssetReceiptVaultAuthorizorV1,
-    CERTIFIER_ADMIN,
-    CERTIFIER,
-    Unauthorized
+    Unauthorized,
+    CERTIFY_ADMIN,
+    CONFISCATE_RECEIPT_ADMIN,
+    CONFISCATE_SHARES_ADMIN,
+    FREEZE_HANDLER_ADMIN,
+    DEPOSIT_ADMIN,
+    WITHDRAW_ADMIN,
+    DEPOSIT,
+    WITHDRAW,
+    CERTIFY,
+    FREEZE_HANDLER,
+    CONFISCATE_RECEIPT,
+    CONFISCATE_SHARES
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
 
 contract RolesTest is OffchainAssetReceiptVaultTest {
@@ -39,13 +46,29 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
 
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        assertTrue(vault.hasRole(DEPOSITOR_ADMIN, alice));
-        assertTrue(vault.hasRole(WITHDRAWER_ADMIN, alice));
-        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CERTIFIER_ADMIN, alice));
-        assertTrue(vault.hasRole(HANDLER_ADMIN, alice));
-        assertTrue(vault.hasRole(ERC20TIERER_ADMIN, alice));
-        assertTrue(vault.hasRole(ERC1155TIERER_ADMIN, alice));
-        assertTrue(vault.hasRole(CONFISCATOR_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(DEPOSIT_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(WITHDRAW_ADMIN, alice));
+        assertTrue(OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CERTIFY_ADMIN, alice));
+        assertTrue(
+            OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER_ADMIN, alice)
+        );
+        assertTrue(
+            OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT_ADMIN, alice)
+        );
+        assertTrue(
+            OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES_ADMIN, alice)
+        );
+
+        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(DEPOSIT, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(WITHDRAW, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CERTIFY, alice));
+        assertTrue(!OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(FREEZE_HANDLER, alice));
+        assertTrue(
+            !OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_RECEIPT, alice)
+        );
+        assertTrue(
+            !OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).hasRole(CONFISCATE_SHARES, alice)
+        );
     }
 
     /// Test to checks deposit without depositor role
@@ -57,6 +80,8 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         uint256 aliceAssets,
         bytes memory receiptInformation
     ) external {
+        vm.assume(aliceAssets > 0);
+
         // ShareRatio 1
         uint256 shareRatio = 1e18;
         // Ensure the fuzzed key is within the valid range for secp256k1
@@ -71,80 +96,24 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, shareRatio, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                DEPOSIT,
+                abi.encode(
+                    DepositStateChange({
+                        owner: alice,
+                        receiver: bob,
+                        id: 1,
+                        assetsDeposited: aliceAssets,
+                        sharesMinted: aliceAssets
+                    })
+                )
+            )
+        );
         vault.deposit(aliceAssets, bob, shareRatio, receiptInformation);
         vm.stopPrank();
-    }
-
-    /// Test to checks SetERC20Tier without role
-    function testSetERC20TierWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        bytes memory data,
-        uint8 minTier,
-        uint256[] memory context
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // New testErc20 contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
-
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(ERC20TIERER)
-            )
-        );
-
-        vm.expectRevert(bytes(errorMessage));
-
-        // Set Tier
-        vault.setERC20Tier(address(TierV2TestContract), minTier, context, data);
-    }
-
-    /// Test to checks setERC1155Tier without role
-    function testSetERC1155TierWithoutRole(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        bytes memory data,
-        uint8 minTier,
-        uint256[] memory context
-    ) external {
-        // Ensure the fuzzed key is within the valid range for secp256k1
-        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
-        address alice = vm.addr(fuzzedKeyAlice);
-
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
-
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
-
-        // New testErc20 contract
-        ReadWriteTier TierV2TestContract = new ReadWriteTier();
-
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(ERC1155TIERER)
-            )
-        );
-        vm.expectRevert(bytes(errorMessage));
-
-        // Set Tier
-        vault.setERC1155Tier(address(TierV2TestContract), minTier, context, data);
     }
 
     /// Test to checks Certify without role
@@ -159,9 +128,11 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
         // Prank as Alice for the transaction
         vm.startPrank(alice);
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
         bool forceUntil = false;
 
@@ -169,7 +140,7 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
             abi.encodeWithSelector(
                 Unauthorized.selector,
                 alice,
-                CERTIFIER,
+                CERTIFY,
                 abi.encode(
                     CertifyStateChange({
                         oldCertifiedUntil: 0,
@@ -188,32 +159,86 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    /// Test to checks Confiscate without role
-    function testConfiscateWithoutRole(
+    /// Test to checks confiscate receipt without role
+    function testConfiscateReceiptWithoutRole(
         uint256 fuzzedKeyAlice,
         string memory assetName,
         string memory assetSymbol,
+        uint256 id,
+        uint256 targetAmount,
         bytes memory data
     ) external {
+        vm.assume(targetAmount > 0);
+
         // Ensure the fuzzed key is within the valid range for secp256k1
         fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
         address alice = vm.addr(fuzzedKeyAlice);
-        // Prank as Alice for the transaction
-        vm.startPrank(alice);
+
         OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
 
-        string memory errorMessage = string(
-            abi.encodePacked(
-                "AccessControl: account ",
-                StringsUpgradeable.toHexString(alice),
-                " is missing role ",
-                vm.toString(CONFISCATOR)
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                CONFISCATE_RECEIPT,
+                abi.encode(
+                    ConfiscateReceiptStateChange({
+                        confiscatee: alice,
+                        id: id,
+                        targetAmount: targetAmount,
+                        actualAmount: 0,
+                        data: data
+                    })
+                )
             )
         );
-        vm.expectRevert(bytes(errorMessage));
+
+        // Call the confiscateReceipt function
+        vault.confiscateReceipt(alice, id, targetAmount, data);
+
+        vm.stopPrank();
+    }
+
+    /// Test to checks confiscate shares without role
+    function testConfiscateSharesWithoutRole(
+        uint256 fuzzedKeyAlice,
+        string memory assetName,
+        string memory assetSymbol,
+        uint256 targetAmount,
+        bytes memory data
+    ) external {
+        vm.assume(targetAmount > 0);
+
+        // Ensure the fuzzed key is within the valid range for secp256k1
+        fuzzedKeyAlice = bound(fuzzedKeyAlice, 1, SECP256K1_ORDER - 1);
+        address alice = vm.addr(fuzzedKeyAlice);
+
+        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+
+        // Prank as Alice for the transaction
+        vm.startPrank(alice);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Unauthorized.selector,
+                alice,
+                CONFISCATE_SHARES,
+                abi.encode(
+                    ConfiscateSharesStateChange({
+                        confiscatee: alice,
+                        targetAmount: targetAmount,
+                        actualAmount: 0,
+                        data: data
+                    })
+                )
+            )
+        );
 
         // Call the confiscateShares function
-        vault.confiscateShares(alice, data);
+        vault.confiscateShares(alice, targetAmount, data);
 
         vm.stopPrank();
     }
