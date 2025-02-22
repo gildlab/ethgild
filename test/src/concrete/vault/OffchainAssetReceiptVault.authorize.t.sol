@@ -23,53 +23,51 @@ contract AlwaysAuthorize is IAuthorizeV1, IERC165 {
 contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest {
     /// Test that authorize contract is as initialized.
     function testAuthorizeContract(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol
+        uint256 aliceSeed,
+        uint256 bobSeed,
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
         (bob);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        address authorizor = address(vault.authorizor());
-        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
+        address authorizer = address(vault.authorizer());
+        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
-        assertEq(implementation, address(iAuthorizorImplementation));
+        assertEq(implementation, address(iAuthorizerImplementation));
     }
 
-    /// Test that the owner can change the authorizor.
-    function testChangeAuthorizor(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        string memory assetSymbol
+    /// Test that the owner can change the authorizer.
+    function testChangeAuthorizer(
+        uint256 aliceSeed,
+        uint256 bobSeed,
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
-        address authorizor = address(vault.authorizor());
-        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizor.code);
+        address authorizer = address(vault.authorizer());
+        (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
-        assertEq(implementation, address(iAuthorizorImplementation));
+        assertEq(implementation, address(iAuthorizerImplementation));
 
         AlwaysAuthorize alwaysAuthorize = new AlwaysAuthorize();
 
         vm.prank(alice);
-        vault.setAuthorizor(alwaysAuthorize);
+        vault.setAuthorizer(alwaysAuthorize);
 
-        authorizor = address(vault.authorizor());
-        assertEq(authorizor, address(alwaysAuthorize));
+        authorizer = address(vault.authorizer());
+        assertEq(authorizer, address(alwaysAuthorize));
 
         AlwaysAuthorize alwaysAuthorize2 = new AlwaysAuthorize();
 
-        // Bob cannot set the authorizor.
+        // Bob cannot set the authorizer.
         vm.prank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        vault.setAuthorizor(alwaysAuthorize2);
+        vault.setAuthorizer(alwaysAuthorize2);
     }
 }

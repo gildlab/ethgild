@@ -7,9 +7,9 @@ import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.so
 import {OffchainAssetReceiptVault, OffchainAssetVaultConfigV2} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 import {
-    OffchainAssetReceiptVaultAuthorizorV1,
-    OffchainAssetReceiptVaultAuthorizorV1Config
-} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+    OffchainAssetReceiptVaultAuthorizerV1,
+    OffchainAssetReceiptVaultAuthorizerV1Config
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 library LibOffchainAssetVaultCreator {
     /// Helper to create child offchainAssetReceiptVault.
@@ -17,7 +17,7 @@ library LibOffchainAssetVaultCreator {
         Vm vm,
         ICloneableFactoryV2 factory,
         OffchainAssetReceiptVault implementation,
-        OffchainAssetReceiptVaultAuthorizorV1 authorizorImplementation,
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation,
         address initialAdmin,
         string memory name,
         string memory symbol
@@ -32,17 +32,17 @@ library LibOffchainAssetVaultCreator {
             payable(factory.clone(address(implementation), abi.encode(offchainAssetVaultConfig)))
         );
 
-        OffchainAssetReceiptVaultAuthorizorV1 authorizor = OffchainAssetReceiptVaultAuthorizorV1(
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = OffchainAssetReceiptVaultAuthorizerV1(
             factory.clone(
-                address(authorizorImplementation),
+                address(authorizerImplementation),
                 abi.encode(
-                    OffchainAssetReceiptVaultAuthorizorV1Config({initialAdmin: initialAdmin, authorizee: address(vault)})
+                    OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: address(vault)})
                 )
             )
         );
 
         vm.prank(initialAdmin);
-        vault.setAuthorizor(authorizor);
+        vault.setAuthorizer(authorizer);
 
         return vault;
     }

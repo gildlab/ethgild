@@ -5,22 +5,21 @@ pragma solidity =0.8.25;
 import {OffchainAssetReceiptVault, DEPOSIT, WITHDRAW} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {OffchainAssetReceiptVaultAuthorizorV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Mint multicall
     function testMintMulticall(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 firstMintAmount,
         uint256 secondMintAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstMintAmount is not 0
@@ -29,11 +28,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         secondMintAmount = bound(secondMintAmount, 1, type(uint64).max);
         vm.assume(firstMintAmount != secondMintAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -60,17 +59,16 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem multicall
     function testDepositMulticall(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -79,11 +77,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         secondDepositAmount = bound(secondDepositAmount, 1, type(uint64).max);
         vm.assume(firstDepositAmount != secondDepositAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -110,19 +108,18 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
     /// Test Redeem multicall
     function testRedeemMulticall(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 firstRedeemAmount,
         uint256 secondRedeemAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -136,12 +133,12 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(firstRedeemAmount != secondRedeemAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(WITHDRAW, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);
@@ -175,19 +172,18 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
     /// Test Withdraw multicall
     function testWithdrawMulticall(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 firstDepositAmount,
         uint256 secondDepositAmount,
         uint256 firstRedeemAmount,
         uint256 secondRedeemAmount,
         uint256 minShareRatio,
         bytes memory receiptInformation,
-        string memory assetName
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         // Assume that firstDepositAmount is not 0
@@ -201,12 +197,12 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         vm.assume(firstRedeemAmount != secondRedeemAmount);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(WITHDRAW, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(WITHDRAW, bob);
 
         // Prank Bob for the transaction
         vm.startPrank(bob);

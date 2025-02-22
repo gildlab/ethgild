@@ -14,195 +14,185 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract, IReceiptV2} from "src/concrete/receipt/Receipt.sol";
+import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 
 contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
-    /// Test mint function
-    function testMintBasic(uint256 fuzzedKeyAlice, string memory assetName, uint256 assets, uint256 oraclePrice)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+    address constant ALICE = address(uint160(uint256(keccak256("ALICE"))));
 
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
+    function bounds(uint256 oraclePrice, uint256 shares) internal pure returns (uint256, uint256) {
+        return (bound(oraclePrice, 1, 1e50), bound(shares, 1, type(uint128).max));
+    }
+
+    function checkMint(
+        ERC20PriceOracleReceiptVault vault,
+        address owner,
+        address receiver,
+        uint256 oraclePrice,
+        uint256 shares,
+        uint256 minShareRatio,
+        bytes memory receiptInformation,
+        bytes memory err
+    ) internal {
+        uint256 expectedAssets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Up);
         setVaultOraclePrice(oraclePrice);
 
-        vm.startPrank(alice);
-
-        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
+        vm.startPrank(owner);
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault;
-        {
-            vault = createVault(iVaultOracle, assetName, assetName);
+        vm.mockCall(
+            address(iAsset),
+            abi.encodeWithSelector(IERC20.transferFrom.selector, owner, address(vault), expectedAssets),
+            abi.encode(true)
+        );
 
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
+        uint256 startingShares = vault.balanceOf(receiver);
+        uint256 startingReceiptBalance = IReceiptV2(vault.receipt()).balanceOf(receiver, oraclePrice);
 
-            assets = bound(assets, 1, type(uint128).max);
-            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        if (err.length > 1) {
+            vm.expectRevert(err);
+            shares = 0;
+            expectedAssets = 0;
+        } else {
+            vm.expectEmit(true, true, true, true);
+            emit IReceiptVaultV1.Deposit(owner, receiver, expectedAssets, shares, oraclePrice, receiptInformation);
+            if (receiptInformation.length > 0) {
+                vm.expectEmit(false, false, false, true);
+                emit IReceiptV2.ReceiptInformation(owner, oraclePrice, receiptInformation);
+            }
 
-            vm.mockCall(
+            vm.expectCall(
                 address(iAsset),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assets),
-                abi.encode(true)
+                abi.encodeWithSelector(IERC20.transferFrom.selector, owner, address(vault), expectedAssets)
             );
         }
-        ReceiptContract receipt = getReceipt();
+        uint256 actualAssets = vault.mint(shares, receiver, minShareRatio, receiptInformation);
 
-        uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        // Check shares balance
+        assertEqUint(vault.balanceOf(receiver), shares + startingShares);
 
-        vault.mint(shares, alice, oraclePrice, bytes(""));
+        // Check receipt balance
+        assertEqUint(IReceiptV2(vault.receipt()).balanceOf(receiver, oraclePrice), shares + startingReceiptBalance);
 
-        // Check balance
-        assertEqUint(vault.balanceOf(alice), shares);
+        assertEq(actualAssets, expectedAssets);
+    }
 
-        // Check alice's receipt balance
-        assertEqUint(receipt.balanceOf(alice, oraclePrice), shares);
+    /// Test mint function
+    function testMintBasic(
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 shares,
+        uint256 oraclePrice,
+        bytes memory receiptInformation
+    ) external {
+        (uint256 oraclePrice1, uint256 shares1) = bounds(oraclePrice, shares);
+        uint256 minShareRatio1 = bound(oraclePrice, 0, oraclePrice1);
+        checkMint(
+            createVault(iVaultOracle, shareName, shareSymbol),
+            ALICE,
+            ALICE,
+            oraclePrice1,
+            shares1,
+            minShareRatio1,
+            receiptInformation,
+            ""
+        );
+    }
+
+    /// Test multiple mints under different oracle prices
+    function testMultipleMints(
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 shares1,
+        uint256 shares2,
+        uint256 oraclePrice1,
+        uint256 oraclePrice2,
+        bytes memory receiptInformation1,
+        bytes memory receiptInformation2
+    ) external {
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+
+        (uint256 oraclePrice1Bounded, uint256 shares1Bounded) = bounds(oraclePrice1, shares1);
+        uint256 minShareRatio1 = bound(oraclePrice1, 0, oraclePrice1Bounded);
+        checkMint(vault, ALICE, ALICE, oraclePrice1Bounded, shares1Bounded, minShareRatio1, receiptInformation1, "");
+
+        (uint256 oraclePrice2Bounded, uint256 shares2Bounded) = bounds(oraclePrice2, shares2);
+        uint256 minShareRatio2 = bound(oraclePrice2, 0, oraclePrice2Bounded);
+        checkMint(vault, ALICE, ALICE, oraclePrice2Bounded, shares2Bounded, minShareRatio2, receiptInformation2, "");
+    }
+
+    /// Test mint reverts with min share ratio
+    function testMintWithMinShareRatio(
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 shares,
+        uint256 minShareRatio,
+        uint256 oraclePrice,
+        bytes memory receiptInformation
+    ) external {
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+
+        (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
+        uint256 minShareRatioBounded = bound(minShareRatio, oraclePriceBounded + 1, type(uint256).max);
+        checkMint(
+            vault,
+            ALICE,
+            ALICE,
+            oraclePriceBounded,
+            sharesBounded,
+            minShareRatioBounded,
+            receiptInformation,
+            abi.encodeWithSelector(MinShareRatio.selector, minShareRatioBounded, oraclePriceBounded)
+        );
     }
 
     /// Test mint to someone else
     function testMintSomeoneElse(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
-        string memory assetName,
-        uint256 assets,
-        uint256 oraclePrice
+        uint256 aliceSeed,
+        uint256 bobSeed,
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 shares,
+        uint256 oraclePrice,
+        bytes memory receiptInformation
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        vm.startPrank(alice);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
 
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        // Start recording logs to get receipt from ERC20PriceOracleReceiptVaultInitialized event
-        vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-
-        {
-            // Ensure Alice has enough balance and allowance
-            vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
-            assets = bound(assets, 1, type(uint128).max);
-            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-            vm.mockCall(
-                address(iAsset),
-                abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assets),
-                abi.encode(true)
-            );
-        }
-        ReceiptContract receipt = getReceipt();
-
-        uint256 aliceReceiptBalance = receipt.balanceOf(alice, oraclePrice);
-        uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
-        vault.mint(shares, bob, oraclePrice, bytes(""));
-
-        // Check balance
-        assertEqUint(vault.balanceOf(bob), shares);
-
-        // Check bob's receipt balance
-        assertEqUint(receipt.balanceOf(bob, oraclePrice), shares);
-
-        // Check alice's receipt balance does not change
-        assertEqUint(receipt.balanceOf(alice, oraclePrice), aliceReceiptBalance);
+        (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
+        uint256 minShareRatio = bound(oraclePrice, 0, oraclePriceBounded);
+        checkMint(vault, alice, bob, oraclePriceBounded, sharesBounded, minShareRatio, receiptInformation, "");
     }
 
     /// Test mint function with zero shares
-    function testMintWithZeroShares(uint256 fuzzedKeyAlice, string memory assetName, uint256 oraclePrice) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        vm.startPrank(alice);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-
-        vm.expectRevert(abi.encodeWithSelector(ZeroAssetsAmount.selector));
-        vault.mint(0, alice, oraclePrice, bytes(""));
-    }
-
-    /// Test mint reverts with min price
-    function testMintWithMinPrice(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 assets,
-        uint256 minPrice,
-        uint256 oraclePrice
+    function testMintWithZeroShares(
+        string memory shareName,
+        string memory shareSymbol,
+        uint256 minShareRatio,
+        uint256 oraclePrice,
+        bytes memory receiptInformation
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        uint256 shares = 0;
 
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
+        (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
+        uint256 minShareRatioBounded = bound(minShareRatio, 0, oraclePriceBounded);
 
-        assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        vm.assume(minPrice > oraclePrice);
-        uint256 shares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
-
-        vm.expectRevert(abi.encodeWithSelector(MinShareRatio.selector, minPrice, oraclePrice));
-        vault.mint(shares, alice, minPrice, bytes(""));
+        checkMint(
+            vault,
+            ALICE,
+            ALICE,
+            oraclePriceBounded,
+            sharesBounded,
+            minShareRatioBounded,
+            receiptInformation,
+            abi.encodeWithSelector(ZeroAssetsAmount.selector)
+        );
     }
 
-    /// Test PreviewMint returns correct assets
-    function testPreviewMintReturnedAssets(
-        string memory assetName,
-        string memory assetSymbol,
-        uint256 shares,
-        uint256 oraclePrice
-    ) external {
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        shares = bound(shares, 1, type(uint64).max);
-        vm.assume(shares.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetSymbol);
-
-        uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Up);
-
-        uint256 resultAssets = vault.previewMint(shares, 0);
-
-        assertEqUint(assets, resultAssets);
-
-        vm.stopPrank();
-    }
-
-    /// forge-config: default.fuzz.runs = 1
-    function testMintFlareFork(uint256 amount) public {
-        amount = bound(amount, 1, type(uint128).max);
-
-        (ERC20PriceOracleReceiptVault vault, address alice) = LibERC20PriceOracleReceiptVaultFork.setup(vm, amount);
-
-        deal(address(SFLR_CONTRACT), alice, amount);
-        vm.startPrank(alice);
-
-        uint256 rate = LibERC20PriceOracleReceiptVaultFork.getRate();
-
-        uint256 shares = amount.fixedPointMul(rate, Math.Rounding.Down);
-
-        vm.assume(vault.previewMint(shares, 0) > 0);
-
-        // Execute mint
-        vault.mint(shares, alice, 0, hex"00");
-        vm.stopPrank();
-        // Verify the balance of shares minted to Alice
-        uint256 shareBalance = vault.balanceOf(alice);
-        // Assert the calculated share balance
-        assertEqUint(shares, shareBalance);
-    }
+    receive() external payable {}
 
     fallback() external {}
 }

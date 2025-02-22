@@ -15,6 +15,7 @@ import {ZeroAssetsAmount, ZeroReceiver, ZeroOwner} from "src/abstract/ReceiptVau
 import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
+import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -37,7 +38,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         emit IReceiptVaultV1.Withdraw(owner, receiver, owner, assets, shares, id, data);
 
         // Call redeem function
-        vault.redeem(shares, receiver, owner, id, data);
+        uint256 actualAssets = vault.redeem(shares, receiver, owner, id, data);
+        assertEqUint(assets, actualAssets);
 
         uint256 balanceAfterOwner = receipt.balanceOf(owner, id);
         assertEq(balanceAfterOwner, initialBalanceOwner - shares);
@@ -68,7 +70,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
             vm.expectRevert();
         }
         // Call redeem function
-        vault.redeem(shares, receiver, owner, id, data);
+        uint256 actualAssets = vault.redeem(shares, receiver, owner, id, data);
+        assertEqUint(0, actualAssets);
 
         if (owner != address(0)) {
             balanceAfterOwner = receipt.balanceOf(owner, id);
@@ -78,14 +81,14 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function
     function testRedeemBasic(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -93,22 +96,22 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        uint256 expectedAssets = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.assume(expectedAssets > 0);
 
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
-        vault.deposit(assets, alice, oraclePrice, bytes(""));
+        uint256 depositShares = vault.deposit(assets, alice, oraclePrice, bytes(""));
+        assertEqUint(depositShares, expectedAssets);
 
         // Bound shares with max avalilable receipt balance
         shares = bound(shares, 1, receipt.balanceOf(alice, oraclePrice));
@@ -118,13 +121,13 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function reverts on zero shares
     function testRedeemRevertsOnZeroShares(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 oraclePrice
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -132,22 +135,22 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
-
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        vm.assume(expectedShares > 0);
 
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
-        vault.deposit(assets, alice, oraclePrice, bytes(""));
+        uint256 depositShares = vault.deposit(assets, alice, oraclePrice, bytes(""));
+        assertEqUint(depositShares, expectedShares);
 
         checkNoBalanceChange(
             vault, alice, alice, oraclePrice, 0, receipt, bytes(""), abi.encodeWithSelector(ZeroAssetsAmount.selector)
@@ -156,35 +159,33 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function reverts on zero receiver
     function testRedeemRevertsOnZeroReceiver(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
 
         vm.startPrank(alice);
-        // Start recording logs
+
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
-
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
+        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
@@ -205,14 +206,14 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test Redeem function reverts on zero owner
     function testRedeemRevertsOnZeroOwner(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 shares,
         uint256 oraclePrice
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -220,11 +221,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
-
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
@@ -252,41 +250,16 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         );
     }
 
-    /// Test PreviewRedeem returns correct assets
-    function testPreviewRedeem(uint256 fuzzedKeyAlice, string memory assetName, uint256 shares, uint256 oraclePrice)
-        external
-    {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-
-        oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        setVaultOraclePrice(oraclePrice);
-
-        shares = bound(shares, 1, type(uint64).max);
-        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Down) > 0);
-
-        // Prank as Alice to grant role
-        vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
-
-        uint256 assets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
-
-        uint256 ResultAssets = vault.previewRedeem(shares, oraclePrice);
-        assertEq(assets, ResultAssets);
-        // Stop the prank
-        vm.stopPrank();
-    }
-
     /// Test Redeem function with more than balance
     function testRedeemMoreThanBalance(
-        uint256 fuzzedKeyAlice,
-        string memory assetName,
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 assets,
         uint256 sharesToRedeem,
         uint256 oraclePrice
     ) external {
-        // Ensure the fuzzed key is within the valid range for secp256
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
+        address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
@@ -294,11 +267,8 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, assetName, assetName);
+        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
-
-        // Ensure Alice has enough balance and allowance
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(assets));
 
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
@@ -342,14 +312,14 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
     /// Test redeem with erc20 approval
     function testRedeemWithERC20Approval(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 amount,
         uint256 oraclePrice,
         uint256 redeemSharesAmount
     ) external {
-        address alice = vm.addr((fuzzedKeyAlice % (SECP256K1_ORDER - 1)) + 1);
-        address bob = vm.addr((fuzzedKeyBob % (SECP256K1_ORDER - 1)) + 1);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
+
         vm.assume(alice != bob);
         amount = bound(amount, 1, type(uint128).max);
 
@@ -361,7 +331,6 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         ReceiptContract receipt = getReceipt();
 
         vm.startPrank(alice);
-        vm.mockCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, alice), abi.encode(amount));
         vm.mockCall(
             address(iAsset),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),

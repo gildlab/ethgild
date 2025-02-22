@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {UnmanagedReceiptTransfer} from "../../interface/IReceiptManagerV2.sol";
 import {
     ReceiptVaultConfig,
     VaultConfig,
@@ -12,8 +11,6 @@ import {
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfig
 } from "../../abstract/ReceiptVault.sol";
-import {AccessControlUpgradeable as AccessControl} from
-    "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IReceiptV2} from "../../interface/IReceiptV2.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
@@ -22,7 +19,7 @@ import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 import {IERC165Upgradeable as IERC165} from
     "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
 
-import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
@@ -33,15 +30,14 @@ error ZeroCertifyUntil();
 /// Thrown when a 0 confiscation amount is attempted.
 error ZeroConfiscateAmount();
 
-/// Thrown when the authorizor is incompatible according to `IERC165` when set.
-error IncompatibleAuthorizor();
+/// Thrown when the authorizer is incompatible according to `IERC165` when set.
+error IncompatibleAuthorizer();
 
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and set management
 /// to the vault atomically during initialization so there is no opportunity for
 /// an attacker to corrupt the initialzation process.
 /// @param initialAdmin as per `OffchainAssetReceiptVaultConfig`.
-/// @param authorizor as per `OffchainAssetReceiptVaultConfig`.
 /// @param vaultConfig MUST be used by the factory to build a
 /// `ReceiptVaultConfig` once the receipt address is known and management has
 /// been set to the vault contract.
@@ -56,8 +52,6 @@ struct OffchainAssetVaultConfigV2 {
 /// formal governance processes. In general a single EOA holding all admin roles
 /// is completely insecure and counterproductive as it allows a single address
 /// to both mint and audit assets (and everything else).
-/// @param authorizor The authorizor contract that will be used to authorize
-/// sensitive operations.
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
@@ -119,6 +113,7 @@ struct DepositStateChange {
     uint256 id;
     uint256 assetsDeposited;
     uint256 sharesMinted;
+    bytes data;
 }
 
 struct WithdrawStateChange {
@@ -127,6 +122,7 @@ struct WithdrawStateChange {
     uint256 id;
     uint256 assetsWithdrawn;
     uint256 sharesBurned;
+    bytes data;
 }
 
 /// @dev Permission for certification.
@@ -178,7 +174,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// badly or frequently the peg breaks. Ideally the issuer profits more when the
 /// peg is broken more.
 ///
-/// This contract does not attempt to solve for liquidity and trustworthyness,
+/// This contract does not attempt to solve for liquidity and trustworthiness,
 /// it only seeks to provide baseline functionality that a competent issuer
 /// will need to tackle the problem. The implementation provides:
 ///
@@ -190,7 +186,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1, Ownable {
+contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     using Math for uint256;
 
     /// Contract has initialized.
@@ -229,10 +225,10 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         address sender, address confiscatee, uint256 id, uint256 targetAmount, uint256 confiscated, bytes justification
     );
 
-    IAuthorizeV1 sAuthorizor;
+    IAuthorizeV1 sAuthorizer;
 
     /// The largest issued id. The next id issued will be larger than this.
-    uint256 private sHighwaterId;
+    uint256 internal sHighwaterId;
 
     /// The system is certified until this timestamp. If this is in the past then
     /// general transfers of shares and receipts will fail until the system can
@@ -250,7 +246,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         OffchainAssetVaultConfigV2 memory config = abi.decode(data, (OffchainAssetVaultConfigV2));
 
         __ReceiptVault_init(config.vaultConfig);
-        __AccessControl_init();
 
         // There is no asset, the asset is offchain.
         if (config.vaultConfig.asset != address(0)) {
@@ -261,7 +256,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
             revert ZeroInitialAdmin();
         }
 
-        sAuthorizor = IAuthorizeV1(address(this));
+        sAuthorizer = IAuthorizeV1(address(this));
 
         _transferOwnership(config.initialAdmin);
 
@@ -276,13 +271,18 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    /// Returns the current authorizor contract.
-    function authorizor() external view returns (IAuthorizeV1) {
-        return sAuthorizor;
+    /// Returns the current highwater id.
+    function highwaterId() external view returns (uint256) {
+        return sHighwaterId;
     }
 
-    /// The vault initializes with the authorizor as itself. Every permission
-    /// reverts unconditionally, so the owner MUST set the real authorizor before
+    /// Returns the current authorizer contract.
+    function authorizer() external view returns (IAuthorizeV1) {
+        return sAuthorizer;
+    }
+
+    /// The vault initializes with the authorizer as itself. Every permission
+    /// reverts unconditionally, so the owner MUST set the real authorizer before
     /// any operations can be performed.
     /// @inheritdoc IAuthorizeV1
     function authorize(address user, bytes32 permission, bytes memory data) external view virtual override {
@@ -290,28 +290,25 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         revert Unauthorized(user, permission, data);
     }
 
-    /// Sets the authorizor contract. This is a critical operation and should be
+    /// Sets the authorizer contract. This is a critical operation and should be
     /// done with extreme care by the owner.
-    /// @param newAuthorizor The new authorizor contract.
-    function setAuthorizor(IAuthorizeV1 newAuthorizor) external onlyOwner {
-        if (!IERC165(address(newAuthorizor)).supportsInterface(type(IAuthorizeV1).interfaceId)) {
-            revert IncompatibleAuthorizor();
+    /// @param newAuthorizer The new authorizer contract.
+    function setAuthorizer(IAuthorizeV1 newAuthorizer) external onlyOwner {
+        if (!IERC165(address(newAuthorizer)).supportsInterface(type(IAuthorizeV1).interfaceId)) {
+            revert IncompatibleAuthorizer();
         }
-        sAuthorizor = newAuthorizor;
+        sAuthorizer = newAuthorizer;
     }
 
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
     function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        external
+        public
         virtual
         override
     {
-        if (msg.sender != address(receipt())) {
-            revert UnmanagedReceiptTransfer();
-        }
-
-        sAuthorizor.authorize(
+        super.authorizeReceiptTransfer3(from, to, ids, amounts);
+        sAuthorizer.authorize(
             msg.sender,
             TRANSFER_RECEIPT,
             abi.encode(
@@ -329,9 +326,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// DO NOT call super `_beforeDeposit` as there are no assets to move.
     /// Highwater needs to witness the incoming id.
     /// @inheritdoc ReceiptVault
-    function _beforeDeposit(uint256 assets, address receiver, uint256 shares, uint256 id) internal virtual override {
+    function _beforeDeposit(
+        uint256 assets,
+        address receiver,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual override {
         sHighwaterId = sHighwaterId.max(id);
-        sAuthorizor.authorize(
+        sAuthorizer.authorize(
             msg.sender,
             DEPOSIT,
             abi.encode(
@@ -340,7 +343,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
                     receiver: receiver,
                     id: id,
                     assetsDeposited: assets,
-                    sharesMinted: shares
+                    sharesMinted: shares,
+                    data: receiptInformation
                 })
             )
         );
@@ -348,12 +352,15 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
 
     /// DO NOT call super `_afterWithdraw` as there are no assets to move.
     /// @inheritdoc ReceiptVault
-    function _afterWithdraw(uint256 assets, address receiver, address owner, uint256 shares, uint256 id)
-        internal
-        virtual
-        override
-    {
-        sAuthorizor.authorize(
+    function _afterWithdraw(
+        uint256 assets,
+        address receiver,
+        address owner,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual override {
+        sAuthorizer.authorize(
             msg.sender,
             WITHDRAW,
             abi.encode(
@@ -362,7 +369,8 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
                     receiver: receiver,
                     id: id,
                     assetsWithdrawn: assets,
-                    sharesBurned: shares
+                    sharesBurned: shares,
+                    data: receiptInformation
                 })
             )
         );
@@ -372,7 +380,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// Assets aren't real so only way to report this is to return the total
     /// supply of shares.
     /// @inheritdoc ReceiptVault
-    function totalAssets() external view virtual override returns (uint256) {
+    function totalAssets() public view virtual override returns (uint256) {
         return totalSupply();
     }
 
@@ -495,7 +503,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
         }
         emit Certify(msg.sender, certifyUntil, forceUntil, data);
 
-        sAuthorizor.authorize(msg.sender, CERTIFY, abi.encode(certifyStateChange));
+        sAuthorizer.authorize(msg.sender, CERTIFY, abi.encode(certifyStateChange));
     }
 
     function isCertificationExpired() internal view returns (bool) {
@@ -506,7 +514,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
     /// @inheritdoc ReceiptVault
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._beforeTokenTransfer(from, to, amount);
-        sAuthorizor.authorize(
+        sAuthorizer.authorize(
             msg.sender,
             TRANSFER_SHARES,
             abi.encode(
@@ -567,7 +575,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
             _transfer(confiscatee, msg.sender, actualAmount);
         }
 
-        sAuthorizor.authorize(
+        sAuthorizer.authorize(
             msg.sender,
             CONFISCATE_SHARES,
             abi.encode(
@@ -618,7 +626,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, AccessControl, IAuthorizeV1,
             receipt().managerTransferFrom(confiscatee, msg.sender, id, actualAmount, "");
         }
 
-        sAuthorizor.authorize(
+        sAuthorizer.authorize(
             msg.sender,
             CONFISCATE_RECEIPT,
             abi.encode(

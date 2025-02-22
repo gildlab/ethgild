@@ -168,7 +168,7 @@ interface IReceiptVaultV1 {
 
     /// Similar to IERC4626 `previewDeposit` but with min share ratio.
     ///
-    /// > Allows an on-chain or off-chain user to simulate the effects of their
+    /// > Allows an on-chain or offchain user to simulate the effects of their
     /// > deposit at the current block, given current on-chain conditions.
     /// >
     /// > MUST return as close to and no more than the exact amount of Vault
@@ -268,7 +268,7 @@ interface IReceiptVaultV1 {
 
     /// Similar to IERC4626 `previewMint` but with min share ratio.
     ///
-    /// > Allows an on-chain or off-chain user to simulate the effects of their
+    /// > Allows an on-chain or offchain user to simulate the effects of their
     /// > mint at the current block, given current on-chain conditions.
     /// >
     /// > MUST return as close to and no fewer than the exact amount of assets
@@ -368,7 +368,7 @@ interface IReceiptVaultV1 {
 
     /// Similar to IERC4626 `previewWithdraw` but with receipt ID.
     ///
-    /// > Allows an on-chain or off-chain user to simulate the effects of their
+    /// > Allows an on-chain or offchain user to simulate the effects of their
     /// > withdrawal at the current block, given current on-chain conditions.
     /// >
     /// > MUST return as close to and no fewer than the exact amount of Vault
@@ -474,8 +474,8 @@ interface IReceiptVaultV1 {
 
     /// Similar to IERC4626 `previewRedeem` but with receipt ID.
     ///
-    /// > Allows an on-chain or off-chain user to simulate the effects of their
-    /// > redeemption at the current block, given current on-chain conditions.
+    /// > Allows an on-chain or offchain user to simulate the effects of their
+    /// > redemption at the current block, given current on-chain conditions.
     /// >
     /// > MUST return as close to and no more than the exact amount of assets
     /// > that would be withdrawn in a redeem call in the same transaction.

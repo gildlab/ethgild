@@ -13,9 +13,9 @@ import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreato
 import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
-    OffchainAssetReceiptVaultAuthorizorV1,
+    OffchainAssetReceiptVaultAuthorizerV1,
     CertificationExpired
-} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizorV1.sol";
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract RedepositTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -45,20 +45,18 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeposit function
     function testReDeposit(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 assets,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -69,12 +67,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         assets = bound(assets, 1, type(uint256).max / 2);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -92,19 +90,17 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeposit function reverts when assets = 0
     function testReDepositRevertsWithZeroAssets(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 assets,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -114,12 +110,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Bound assets
         assets = bound(assets, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -140,20 +136,18 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeposit to someone else reverts with certification expired
     function testReDepositToSomeoneElseReverts(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 assets,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 futureTimestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max - 1); // Need to subtract 1 for the next bound
@@ -165,12 +159,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -197,29 +191,27 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeposit to someone else with Depositor role
     function testReDepositToSomeoneElse(
-        uint256 fuzzedKeyAlice,
+        uint256 aliceSeed,
         uint256 assets,
-        uint256 fuzzedKeyBob,
+        uint256 bobSeed,
         uint256 minShareRatio,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol
+        string memory shareName,
+        string memory shareSymbol
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
 
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -236,20 +228,18 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeposit to someone else While system is certified
     function testReDepositToSomeoneElseWhileCertified(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 assets,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -260,12 +250,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         assets = bound(assets, 1, type(uint256).max / 2);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -283,20 +273,18 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redeposit reverts on nonexistent receipt id
     function testReDepositToNonExistentReceipt(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 assets,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber,
         uint256 id
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -309,12 +297,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         // Assume that assets are within a valid range
         assets = bound(assets, 1, type(uint256).max / 2);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
         vm.stopPrank();
 
         // Prank as Bob for the transaction
@@ -337,21 +325,19 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redepositing works after there are several IDs due to deposit
     function testReDepositOverSeveralIds(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 depositAmount,
         uint256 anotherDepositAmount,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
-        string memory assetSymbol,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -363,12 +349,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetSymbol);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
@@ -389,21 +375,20 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
 
     /// Test redepositing reverts past the top ID
     function testReDepositrevertsPastTopID(
-        uint256 fuzzedKeyAlice,
-        uint256 fuzzedKeyBob,
+        uint256 aliceSeed,
+        uint256 bobSeed,
         uint256 depositAmount,
         uint256 anotherDepositAmount,
         uint256 assetsToRedeposit,
         bytes memory data,
-        string memory assetName,
+        string memory shareName,
+        string memory shareSymbol,
         uint256 minShareRatio,
         uint256 timestamp,
         uint256 id,
         uint256 blockNumber
     ) external {
-        // Generate unique addresses
-        (address alice, address bob) =
-            LibUniqueAddressesGenerator.generateUniqueAddresses(vm, SECP256K1_ORDER, fuzzedKeyAlice, fuzzedKeyBob);
+        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         minShareRatio = bound(minShareRatio, 0, 1e18);
         timestamp = bound(timestamp, 1, type(uint32).max);
@@ -419,12 +404,12 @@ contract RedepositTest is OffchainAssetReceiptVaultTest {
         anotherDepositAmount = bound(anotherDepositAmount, 1, type(uint64).max);
         assetsToRedeposit = bound(assetsToRedeposit, 1, type(uint64).max);
 
-        OffchainAssetReceiptVault vault = createVault(alice, assetName, assetName);
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
         // Prank as Alice to set roles
         vm.startPrank(alice);
 
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(DEPOSIT, bob);
-        OffchainAssetReceiptVaultAuthorizorV1(address(vault.authorizor())).grantRole(CERTIFY, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, bob);
 
         // Prank as Bob for the transaction
         vm.startPrank(bob);
