@@ -77,6 +77,16 @@ struct CertifyStateChange {
     bytes data;
 }
 
+/// Represents the confiscation of some or all of a receipt.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the confiscation.
+/// @param confiscatee The address that the receipt is being confiscated from.
+/// @param id The ID of the receipt being confiscated.
+/// @param targetAmount The amount of the receipt that the confiscator attempted
+/// to confiscate.
+/// @param actualAmount The amount of the receipt that was actually confiscated.
+/// @param data Arbitrary data justifying the confiscation as provided by the
+/// confiscator.
 struct ConfiscateReceiptStateChange {
     address confiscatee;
     uint256 id;
@@ -85,6 +95,15 @@ struct ConfiscateReceiptStateChange {
     bytes data;
 }
 
+/// Represents the confiscation of some or all of a user's shares.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the confiscation.
+/// @param confiscatee The address that the shares are being confiscated from.
+/// @param targetAmount The amount of shares that the confiscator attempted to
+/// confiscate.
+/// @param actualAmount The amount of shares that were actually confiscated.
+/// @param data Arbitrary data justifying the confiscation as provided by the
+/// confiscator.
 struct ConfiscateSharesStateChange {
     address confiscatee;
     uint256 targetAmount;
@@ -92,6 +111,14 @@ struct ConfiscateSharesStateChange {
     bytes data;
 }
 
+/// Represents a change in the state of the system due to a transfer of shares.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the transfer.
+/// @param from The address that the shares are being transferred from.
+/// @param to The address that the shares are being transferred to.
+/// @param amount The amount of shares that are being transferred.
+/// @param isCertificationExpired Whether the system is currently in a state of
+/// certification lapse.
 struct TransferSharesStateChange {
     address from;
     address to;
@@ -99,6 +126,15 @@ struct TransferSharesStateChange {
     bool isCertificationExpired;
 }
 
+/// Represents a change in the state of the system due to a transfer of receipts.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the transfer.
+/// @param from The address that the receipts are being transferred from.
+/// @param to The address that the receipts are being transferred to.
+/// @param ids The IDs of the receipts that are being transferred.
+/// @param amounts The amounts of the receipts that are being transferred.
+/// @param isCertificationExpired Whether the system is currently in a state of
+/// certification lapse.
 struct TransferReceiptStateChange {
     address from;
     address to;
@@ -107,6 +143,15 @@ struct TransferReceiptStateChange {
     bool isCertificationExpired;
 }
 
+/// Represents a change in the state of the system due to a deposit of assets.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the deposit.
+/// @param owner The address that owns the assets being deposited.
+/// @param receiver The address that shares and receipts are being minted to.
+/// @param id The ID of the receipt that the assets are being deposited under.
+/// @param assetsDeposited The amount of assets that are being deposited.
+/// @param sharesMinted The amount of shares that are being minted.
+/// @param data Arbitrary data justifying the deposit as provided by the
 struct DepositStateChange {
     address owner;
     address receiver;
@@ -116,6 +161,15 @@ struct DepositStateChange {
     bytes data;
 }
 
+/// Represents a change in the state of the system due to a withdrawal of assets.
+/// Provided to the authorization contract in case it needs to make decisions
+/// based on the specifics of the withdrawal.
+/// @param owner The address that owns the shares and receipts being burned.
+/// @param receiver The address that the assets are being withdrawn to.
+/// @param id The ID of the receipt that the assets are being withdrawn from.
+/// @param assetsWithdrawn The amount of assets that are being withdrawn.
+/// @param sharesBurned The amount of shares that are being burned.
+/// @param data Arbitrary data justifying the withdrawal as provided by the
 struct WithdrawStateChange {
     address owner;
     address receiver;
@@ -333,7 +387,22 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         uint256 id,
         bytes memory receiptInformation
     ) internal virtual override {
+        (assets, receiver, shares, receiptInformation);
         sHighwaterId = sHighwaterId.max(id);
+    }
+
+    /// Authorize the deposit after the minting so that the authorizer can handle
+    /// minted assets if appropriate and approved.
+    /// For example, the "authorization" could be payment to a third party for
+    /// the right to mint specific shares.
+    /// @inheritdoc ReceiptVault
+    function _afterDeposit(
+        uint256 assets,
+        address receiver,
+        uint256 shares,
+        uint256 id,
+        bytes memory receiptInformation
+    ) internal virtual override {
         sAuthorizer.authorize(
             msg.sender,
             DEPOSIT,

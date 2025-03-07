@@ -89,6 +89,10 @@ contract RolesTest is OffchainAssetReceiptVaultTest {
         // Prank as Alice for the transaction
         vm.startPrank(alice);
 
+        // Certify the vault so we see the role check.
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
+        vault.certify(block.timestamp, false, "");
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 Unauthorized.selector,
