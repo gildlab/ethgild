@@ -6,6 +6,8 @@ import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 
 import {AccessControlUpgradeable as AccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
+import {IAccessControlUpgradeable as IAccessControl} from
+    "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 import {
     CONFISCATE_RECEIPT,
@@ -119,7 +121,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IAuthorizeV1).interfaceId || interfaceId == type(ICloneableV2).interfaceId
-            || super.supportsInterface(interfaceId);
+            || interfaceId == type(IAccessControl).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /// Permissions are treated as roles in this implementation. This makes the
