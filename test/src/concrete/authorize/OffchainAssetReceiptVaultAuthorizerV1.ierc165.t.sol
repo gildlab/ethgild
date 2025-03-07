@@ -11,7 +11,7 @@ import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {IAccessControlUpgradeable as IAccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
 
-contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
+contract OffchainAssetReceiptVaultAuthorizerV1IERC165Test is Test {
     function testOffchainAssetReceiptVaultAuthorizerV1IERC165(bytes4 badInterfaceId) external {
         vm.assume(badInterfaceId != type(IERC165).interfaceId);
         vm.assume(badInterfaceId != type(ICloneableV2).interfaceId);
