@@ -20,6 +20,7 @@ import {
     FREEZE_HANDLER
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
+import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
 contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
@@ -87,5 +88,74 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
             vm.stopPrank();
             authorizer.authorize(user, roles[i], data);
         }
+    }
+
+    /// When certification is NOT expired then all TRANSFER_SHARES are
+    /// authorized.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferSharesCertifyNotExpired(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address from,
+        address to,
+        uint256 amount
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        authorizer.authorize(
+            user,
+            TRANSFER_SHARES,
+            abi.encode(TransferSharesStateChange({from: from, to: to, amount: amount, isCertificationExpired: false}))
+        );
+    }
+
+    /// When certification is NOT expired then all TRANSFER_RECEIPT are
+    /// authorized.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferReceiptCertifyNotExpired(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        authorizer.authorize(
+            user,
+            TRANSFER_RECEIPT,
+            abi.encode(
+                TransferReceiptStateChange({
+                    from: from,
+                    to: to,
+                    ids: ids,
+                    amounts: amounts,
+                    isCertificationExpired: false
+                })
+            )
+        );
     }
 }
