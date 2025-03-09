@@ -117,6 +117,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         vm.assertTrue(authorizer.hasRole(DEPOSIT, authorizee));
         vm.assertTrue(authorizer.hasRole(WITHDRAW, authorizee));
         vm.assertTrue(authorizer.hasRole(FREEZE_HANDLER, authorizee));
+        vm.assertTrue(!authorizer.hasRole(badRole, authorizee));
     }
 
     function testOffchainAssetReceiptVaultAuthorizerV1InitializeZeroAdmin(address authorizee) external {

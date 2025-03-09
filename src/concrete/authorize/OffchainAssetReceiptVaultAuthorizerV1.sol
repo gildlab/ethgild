@@ -54,6 +54,7 @@ bytes32 constant FREEZE_HANDLER_ADMIN = keccak256("FREEZE_HANDLER_ADMIN");
 
 /// @dev Configuration for the OffchainAssetReceiptVaultAuthorizorV1.
 /// @param initialAdmin The initial admin of the contract.
+/// @param authorizee The address that is authorized to perform actions.
 struct OffchainAssetReceiptVaultAuthorizerV1Config {
     address initialAdmin;
     address authorizee;
