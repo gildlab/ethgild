@@ -17,7 +17,6 @@ import {
     CONFISCATE_SHARES,
     DEPOSIT,
     WITHDRAW,
-    FREEZE_HANDLER,
     CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
@@ -72,13 +71,12 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         OffchainAssetReceiptVaultAuthorizerV1 authorizer =
             OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
 
-        bytes32[] memory roles = new bytes32[](6);
+        bytes32[] memory roles = new bytes32[](5);
         roles[0] = CERTIFY;
         roles[1] = CONFISCATE_SHARES;
         roles[2] = CONFISCATE_RECEIPT;
         roles[3] = DEPOSIT;
         roles[4] = WITHDRAW;
-        roles[5] = FREEZE_HANDLER;
 
         for (uint256 i = 0; i < roles.length; i++) {
             vm.assertTrue(!authorizer.hasRole(roles[i], user));

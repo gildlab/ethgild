@@ -46,12 +46,6 @@ bytes32 constant DEPOSIT_ADMIN = keccak256("DEPOSIT_ADMIN");
 /// @dev Rolename for withdraw admins.
 bytes32 constant WITHDRAW_ADMIN = keccak256("WITHDRAW_ADMIN");
 
-/// @dev Rolename for handlers.
-/// Handler role is required to accept tokens during system freeze.
-bytes32 constant FREEZE_HANDLER = keccak256("FREEZE_HANDLER");
-/// @dev Rolename for handler admins.
-bytes32 constant FREEZE_HANDLER_ADMIN = keccak256("FREEZE_HANDLER_ADMIN");
-
 /// @dev Configuration for the OffchainAssetReceiptVaultAuthorizorV1.
 /// @param initialAdmin The initial admin of the contract.
 /// @param authorizee The address that is authorized to perform actions.
@@ -106,15 +100,11 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
         _setRoleAdmin(WITHDRAW, WITHDRAW_ADMIN);
         _setRoleAdmin(WITHDRAW_ADMIN, WITHDRAW_ADMIN);
 
-        _setRoleAdmin(FREEZE_HANDLER, FREEZE_HANDLER_ADMIN);
-        _setRoleAdmin(FREEZE_HANDLER_ADMIN, FREEZE_HANDLER_ADMIN);
-
         _grantRole(CERTIFY_ADMIN, config.initialAdmin);
         _grantRole(CONFISCATE_RECEIPT_ADMIN, config.initialAdmin);
         _grantRole(CONFISCATE_SHARES_ADMIN, config.initialAdmin);
         _grantRole(DEPOSIT_ADMIN, config.initialAdmin);
         _grantRole(WITHDRAW_ADMIN, config.initialAdmin);
-        _grantRole(FREEZE_HANDLER_ADMIN, config.initialAdmin);
 
         return ICLONEABLE_V2_SUCCESS;
     }
@@ -173,13 +163,6 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
 
             // Everyone else can only transfer while the certification is valid.
             if (isCertificationExpired) {
-                // Handlers can ALWAYS send and receive funds.
-                // Handlers bypass BOTH the timestamp on certification AND tier based
-                // restriction.
-                if (hasRole(FREEZE_HANDLER, from) || hasRole(FREEZE_HANDLER, to)) {
-                    return;
-                }
-
                 // Minting and burning is always allowed for the respective roles if they
                 // interact directly with the shares/receipt. Minting and burning is ALSO
                 // valid after the certification expires as it is likely the only way to
@@ -188,10 +171,13 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
                     return;
                 }
 
-                // Confiscation is always allowed as it likely represents some kind of
-                // regulatory/legal requirement. It may also be required to satisfy
-                // certification requirements.
-                if (hasRole(CONFISCATE_SHARES, to) || hasRole(CONFISCATE_RECEIPT, to)) {
+                // Confiscators bypass the certification check when they are the
+                // user. This allows for legal confiscation during system freeze
+                // and for certification repair.
+                if (
+                    (permission == TRANSFER_SHARES && hasRole(CONFISCATE_SHARES, user))
+                        || (permission == TRANSFER_RECEIPT && hasRole(CONFISCATE_RECEIPT, user))
+                ) {
                     return;
                 }
 
