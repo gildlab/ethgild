@@ -17,7 +17,7 @@ import {
     CONFISCATE_SHARES,
     DEPOSIT,
     WITHDRAW,
-    FREEZE_HANDLER
+    CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
@@ -71,13 +71,12 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         OffchainAssetReceiptVaultAuthorizerV1 authorizer =
             OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
 
-        bytes32[] memory roles = new bytes32[](6);
+        bytes32[] memory roles = new bytes32[](5);
         roles[0] = CERTIFY;
         roles[1] = CONFISCATE_SHARES;
         roles[2] = CONFISCATE_RECEIPT;
         roles[3] = DEPOSIT;
         roles[4] = WITHDRAW;
-        roles[5] = FREEZE_HANDLER;
 
         for (uint256 i = 0; i < roles.length; i++) {
             vm.assertTrue(!authorizer.hasRole(roles[i], user));
@@ -157,5 +156,270 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
                 })
             )
         );
+    }
+
+    /// When certification IS expired and this is not a mint or burn, and there
+    /// are no other roles, then TRANSFER_SHARES is unauthorized.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferSharesCertifyExpired(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address from,
+        address to,
+        uint256 amount
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
+        authorizer.authorize(
+            user,
+            TRANSFER_SHARES,
+            abi.encode(TransferSharesStateChange({from: from, to: to, amount: amount, isCertificationExpired: true}))
+        );
+    }
+
+    /// When certification IS expired and this is not a mint or burn, and there
+    /// are no other roles, then TRANSFER_RECEIPT is unauthorized.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferReceiptCertifyExpired(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
+        authorizer.authorize(
+            user,
+            TRANSFER_RECEIPT,
+            abi.encode(
+                TransferReceiptStateChange({
+                    from: from,
+                    to: to,
+                    ids: ids,
+                    amounts: amounts,
+                    isCertificationExpired: true
+                })
+            )
+        );
+    }
+
+    /// If the certification is expired and this is a mint then TRANSFER_SHARES
+    /// is authorized depending on the DEPOSIT role.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferSharesCertifyExpiredMintBurn(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address to,
+        uint256 amount
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+        vm.assume(to != address(0));
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        bytes memory data = abi.encode(
+            TransferSharesStateChange({from: address(0), to: to, amount: amount, isCertificationExpired: true})
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), to));
+        authorizer.authorize(user, TRANSFER_SHARES, data);
+
+        // Withdraw does nothing.
+        vm.prank(initialAdmin);
+        authorizer.grantRole(WITHDRAW, to);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), to));
+        authorizer.authorize(user, TRANSFER_SHARES, data);
+
+        vm.prank(initialAdmin);
+        authorizer.grantRole(DEPOSIT, to);
+        vm.stopPrank();
+
+        authorizer.authorize(user, TRANSFER_SHARES, data);
+    }
+
+    /// If the certification is expired and this is a mint then TRANSFER_RECEIPT
+    /// is authorized depending on the DEPOSIT role.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferReceiptCertifyExpiredMintBurn(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+        vm.assume(to != address(0));
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        bytes memory data = abi.encode(
+            TransferReceiptStateChange({
+                from: address(0),
+                to: to,
+                ids: ids,
+                amounts: amounts,
+                isCertificationExpired: true
+            })
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), to));
+        authorizer.authorize(user, TRANSFER_RECEIPT, data);
+
+        // Withdraw does nothing.
+        vm.prank(initialAdmin);
+        authorizer.grantRole(WITHDRAW, to);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, address(0), to));
+        authorizer.authorize(user, TRANSFER_RECEIPT, data);
+
+        vm.prank(initialAdmin);
+        authorizer.grantRole(DEPOSIT, to);
+        vm.stopPrank();
+
+        authorizer.authorize(user, TRANSFER_RECEIPT, data);
+    }
+
+    /// If the certification is expired and this is a burn then TRANSFER_SHARES
+    /// is authorized depending on the WITHDRAW role.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferSharesCertifyExpiredBurn(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address from,
+        uint256 amount
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+        vm.assume(from != address(0));
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        bytes memory data = abi.encode(
+            TransferSharesStateChange({from: from, to: address(0), amount: amount, isCertificationExpired: true})
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, address(0)));
+        authorizer.authorize(user, TRANSFER_SHARES, data);
+
+        // Deposit does nothing.
+        vm.prank(initialAdmin);
+        authorizer.grantRole(DEPOSIT, from);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, address(0)));
+        authorizer.authorize(user, TRANSFER_SHARES, data);
+
+        vm.prank(initialAdmin);
+        authorizer.grantRole(WITHDRAW, from);
+        vm.stopPrank();
+
+        authorizer.authorize(user, TRANSFER_SHARES, data);
+    }
+
+    /// If the certification is expired and this is a burn then TRANSFER_RECEIPT
+    /// is authorized depending on the WITHDRAW role.
+    function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferReceiptCertifyExpiredBurn(
+        address initialAdmin,
+        address authorizee,
+        address user,
+        address from,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) external {
+        vm.assume(initialAdmin != address(0));
+        vm.assume(authorizee != address(0));
+        vm.assume(initialAdmin != authorizee);
+        vm.assume(from != address(0));
+
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: authorizee});
+
+        CloneFactory factory = new CloneFactory();
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+
+        bytes memory data = abi.encode(
+            TransferReceiptStateChange({
+                from: from,
+                to: address(0),
+                ids: ids,
+                amounts: amounts,
+                isCertificationExpired: true
+            })
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, address(0)));
+        authorizer.authorize(user, TRANSFER_RECEIPT, data);
+
+        // Deposit does nothing.
+        vm.prank(initialAdmin);
+        authorizer.grantRole(DEPOSIT, from);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, address(0)));
+        authorizer.authorize(user, TRANSFER_RECEIPT, data);
+
+        vm.prank(initialAdmin);
+        authorizer.grantRole(WITHDRAW, from);
+        vm.stopPrank();
+
+        authorizer.authorize(user, TRANSFER_RECEIPT, data);
     }
 }

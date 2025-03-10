@@ -9,8 +9,7 @@ import {
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
-    CertificationExpired,
-    FREEZE_HANDLER
+    CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {UnmanagedReceiptTransfer} from "src/interface/IReceiptManagerV2.sol";
 
@@ -120,7 +119,8 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
         vm.stopPrank();
     }
 
-    /// Test AuthorizeReceiptTransfer does not revert without certification if transfers involve a handler role
+    /// Test AuthorizeReceiptTransfer does not revert without certification if
+    /// transfers involve a handler role
     function testAuthorizeReceiptTransferForHandlerFrom(
         uint256 aliceSeed,
         uint256 bobSeed,
@@ -137,7 +137,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, bob);
+        // OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, bob);
 
         vm.startPrank(address(vault.receipt()));
 
@@ -147,7 +147,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         vm.startPrank(alice);
         // Grant handler role to alice.
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, alice);
+        // OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, alice);
 
         vm.startPrank(address(vault.receipt()));
 
