@@ -34,7 +34,7 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     /// Intended to be a `ReceiptVault` contract.
     IReceiptManagerV2 internal sManager;
 
-    address private sOperator = address(0);
+    address private sSender = address(0);
 
     /// Disables initializers so that the clonable implementation cannot be
     /// initialized and used directly outside a factory deployment.
@@ -50,15 +50,15 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
         _;
     }
 
-    modifier withSender(address operator) {
-        sOperator = operator;
+    modifier withSender(address sender) {
+        sSender = sender;
         _;
-        sOperator = address(0);
+        sSender = address(0);
     }
 
     function _msgSender() internal view virtual override returns (address) {
-        address operator = sOperator;
-        return operator == address(0) ? msg.sender : operator;
+        address sender = sSender;
+        return sender == address(0) ? msg.sender : sender;
     }
 
     /// Initializes the `Receipt` so that it is usable as a clonable

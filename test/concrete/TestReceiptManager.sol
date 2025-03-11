@@ -58,7 +58,7 @@ contract TestReceiptManager is IReceiptManagerV2 {
         uint256[] memory ids,
         uint256[] memory amounts
     ) external view {
-        (ids, amounts);
+        (ids, amounts, operator);
         if (from != sFrom) {
             revert UnauthorizedTransfer(from, to);
         }
