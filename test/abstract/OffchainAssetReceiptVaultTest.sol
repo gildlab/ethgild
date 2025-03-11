@@ -8,7 +8,7 @@ import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     OffchainAssetReceiptVaultConfigV2,
     OffchainAssetReceiptVault,
-    ReceiptVaultConstructionConfig
+    ReceiptVaultConstructionConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
@@ -24,7 +24,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         iFactory = new CloneFactory();
         receiptImplementation = new ReceiptContract();
         iImplementation = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: receiptImplementation})
+            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: receiptImplementation})
         );
         iAuthorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
     }

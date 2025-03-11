@@ -30,15 +30,15 @@ contract ERC20PriceOracleReceiptVaultAuthorizeReceiptTransferTest is ERC20PriceO
 
         // Attempt to authorize receipt transfer, should NOT revert.
         vm.prank(address(vault.receipt()));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
 
         // Attempt to authorize receipt transfer as anyone else, should revert.
         vm.prank(alice);
         vm.expectRevert(abi.encodeWithSelector(UnmanagedReceiptTransfer.selector));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
 
         vm.prank(bob);
         vm.expectRevert(abi.encodeWithSelector(UnmanagedReceiptTransfer.selector));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
     }
 }

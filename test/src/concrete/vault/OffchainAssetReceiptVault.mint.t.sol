@@ -12,8 +12,8 @@ import {
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
-import {IReceiptV2} from "src/interface/IReceiptV2.sol";
+import {IReceiptVaultV3, IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
+import {IReceiptV3} from "src/interface/IReceiptV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
@@ -51,7 +51,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
             emit IReceiptVaultV1.Deposit(minter, receiver, expectedAssets, shares, expectedId, receiptInformation);
             if (receiptInformation.length > 0) {
                 vm.expectEmit(false, false, false, true);
-                emit IReceiptV2.ReceiptInformation(minter, expectedId, receiptInformation);
+                emit IReceiptV3.ReceiptInformation(minter, expectedId, receiptInformation);
             }
         }
 

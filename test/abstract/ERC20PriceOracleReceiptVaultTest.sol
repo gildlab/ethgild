@@ -7,7 +7,7 @@ import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.so
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     ERC20PriceOracleReceiptVault,
-    ReceiptVaultConstructionConfig,
+    ReceiptVaultConstructionConfigV2,
     ERC20PriceOracleReceiptVaultConfig
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
@@ -27,7 +27,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         iFactory = new CloneFactory();
         iReceiptImplementation = new ReceiptContract();
         iImplementation = new ERC20PriceOracleReceiptVault(
-            ReceiptVaultConstructionConfig({factory: iFactory, receiptImplementation: iReceiptImplementation})
+            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
         iAsset = IERC20(address(uint160(uint256(keccak256("asset.test")))));
         iVaultOracle = IPriceOracleV2(payable(address(uint160(uint256(keccak256("vault.oracle"))))));

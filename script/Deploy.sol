@@ -10,7 +10,8 @@ import {
 import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {
-    OffchainAssetReceiptVault, ReceiptVaultConstructionConfig
+    OffchainAssetReceiptVault,
+    ReceiptVaultConstructionConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {SceptreStakedFlrOracle} from "src/concrete/oracle/SceptreStakedFlrOracle.sol";
@@ -33,7 +34,7 @@ contract Deploy is Script {
         vm.startBroadcast(deploymentKey);
 
         ReceiptContract receipt = new ReceiptContract();
-        ReceiptVaultConstructionConfig memory receiptVaultConstructionConfig = ReceiptVaultConstructionConfig({
+        ReceiptVaultConstructionConfigV2 memory receiptVaultConstructionConfig = ReceiptVaultConstructionConfigV2({
             factory: ICloneableFactoryV2(vm.envAddress("CLONE_FACTORY")),
             receiptImplementation: receipt
         });

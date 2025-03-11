@@ -40,7 +40,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // The certification is expired.
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
 
         vm.stopPrank();
 
@@ -52,17 +52,17 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Attempt to authorize receipt transfer, should NOT revert.
         vm.startPrank(address(vault.receipt()));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
         vm.stopPrank();
 
         // Attempt to authorize receipt transfer as anyone else, should revert.
         vm.startPrank(alice);
         vm.expectRevert(abi.encodeWithSelector(UnmanagedReceiptTransfer.selector));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
 
         vm.startPrank(bob);
         vm.expectRevert(abi.encodeWithSelector(UnmanagedReceiptTransfer.selector));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
     }
 
     /// Test AuthorizeReceiptTransfer reverts if system certification is expired
@@ -105,7 +105,7 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
         vault.certify(timestamp, false, data);
 
         vm.startPrank(address(vault.receipt()));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
 
         // Set nextTimestamp as timestamp
         vm.warp(nextTimestamp);
@@ -114,14 +114,14 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Attempt to authorize receipt transfer, should revert
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, alice));
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, alice, ids, amounts);
 
         vm.stopPrank();
     }
 
     /// Test AuthorizeReceiptTransfer does not revert without certification if
-    /// transfers involve a handler role
-    function testAuthorizeReceiptTransferForHandlerFrom(
+    /// it is a confiscation.
+    function testAuthorizeReceiptTransferForConfiscator(
         uint256 aliceSeed,
         uint256 bobSeed,
         uint256 carolSeed,
@@ -137,27 +137,36 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
 
         // Prank as Alice to set role
         vm.startPrank(alice);
-        // OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, bob);
 
         vm.startPrank(address(vault.receipt()));
 
-        // Attempt to authorize receipt transfer, should revert
+        // Attempt to authorize receipt transfer, should revert for alice as
+        // operator.
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, alice, carol));
-        vault.authorizeReceiptTransfer3(alice, carol, ids, amounts);
+        vault.authorizeReceiptTransfer3(alice, alice, carol, ids, amounts);
+
+        // Attempt to authorize receipt transfer, should NOT revert for bob as
+        // operator.
+        vault.authorizeReceiptTransfer3(bob, alice, carol, ids, amounts);
 
         vm.startPrank(alice);
-        // Grant handler role to alice.
-        // OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, alice);
+        // Grant confiscate role to alice.
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, alice);
 
         vm.startPrank(address(vault.receipt()));
 
-        // From handler to non handler is allowed.
-        vault.authorizeReceiptTransfer3(bob, carol, ids, amounts);
-        // From handler to handler is allowed.
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
-        vault.authorizeReceiptTransfer3(bob, bob, ids, amounts);
-        // From non handler to handler is allowed.
-        vault.authorizeReceiptTransfer3(carol, bob, ids, amounts);
+        // Attempt to authorize receipt transfer, should NOT revert for alice as
+        // operator.
+        vault.authorizeReceiptTransfer3(alice, alice, carol, ids, amounts);
+
+        // From confiscator to non confiscator is allowed.
+        vault.authorizeReceiptTransfer3(alice, bob, carol, ids, amounts);
+        // From confiscator to confiscator is allowed.
+        vault.authorizeReceiptTransfer3(alice, bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(alice, bob, bob, ids, amounts);
+        // From non confiscator to confiscator is allowed.
+        vault.authorizeReceiptTransfer3(alice, carol, bob, ids, amounts);
     }
 
     /// Test AuthorizeReceiptTransfer does not revert without certification if To has a confiscator role
@@ -180,11 +189,11 @@ contract OffchainAssetReceiptVaultAuthorizeReceiptTransferTest is OffchainAssetR
         vm.startPrank(address(vault.receipt()));
 
         // To the confiscator is allowed.
-        vault.authorizeReceiptTransfer3(bob, alice, ids, amounts);
-        vault.authorizeReceiptTransfer3(alice, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(alice, bob, alice, ids, amounts);
+        vault.authorizeReceiptTransfer3(alice, alice, alice, ids, amounts);
 
-        // From the confiscator is not allowed.
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, alice, bob));
-        vault.authorizeReceiptTransfer3(alice, bob, ids, amounts);
+        // From the confiscator is allowed.
+        vault.authorizeReceiptTransfer3(alice, alice, bob, ids, amounts);
+        vault.authorizeReceiptTransfer3(alice, bob, bob, ids, amounts);
     }
 }

@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {IReceiptManagerV2} from "src/interface/IReceiptManagerV2.sol";
-import {Receipt as ReceiptContract, IReceiptV2} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
@@ -98,7 +98,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Set up the event expectation for ReceiptInformation
         vm.expectEmit(false, false, false, true);
-        emit IReceiptV2.ReceiptInformation(alice, id, receiptInformation);
+        emit IReceiptV3.ReceiptInformation(alice, id, receiptInformation);
 
         testManager.managerBurn(receipt, alice, id, receiptBalance, receiptInformation);
 
@@ -228,7 +228,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Alice can't transfer to herself.
         vm.expectRevert(abi.encodeWithSelector(OnlyManager.selector));
-        receipt.managerTransferFrom(bob, alice, id, amount, receiptInformation);
+        receipt.managerTransferFrom(alice, bob, alice, id, amount, receiptInformation);
     }
 
     /// Test receipt managerTransferFrom function
