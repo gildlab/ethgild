@@ -191,7 +191,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
             setUpAddressesAndBounds(aliceSeed, bobSeed, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
-        // due to a confiscate role
+        // due to a confiscate role.
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault;
@@ -219,10 +219,11 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as Bob, can't transfer to john
         vm.startPrank(bob);
+        uint256 johnBalance = receipt.balanceOf(john, 1);
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, john));
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
-        // assertEq(receipt.balanceOf(john, 1), balance);
+        assertEq(receipt.balanceOf(john, 1), johnBalance);
 
-        // vm.stopPrank();
+        vm.stopPrank();
     }
 }
