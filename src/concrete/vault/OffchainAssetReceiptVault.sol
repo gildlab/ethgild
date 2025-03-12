@@ -577,7 +577,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         sAuthorizer.authorize(msg.sender, CERTIFY, abi.encode(certifyStateChange));
     }
 
-    function isCertificationExpired() internal view returns (bool) {
+    function isCertificationExpired() public view returns (bool) {
         return block.timestamp > sCertifiedUntil;
     }
 

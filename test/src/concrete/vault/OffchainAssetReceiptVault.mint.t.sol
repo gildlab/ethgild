@@ -5,9 +5,13 @@ pragma solidity =0.8.25;
 import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
+    TransferSharesStateChange,
     DEPOSIT,
     CERTIFY,
+    TRANSFER_SHARES,
+    TRANSFER_RECEIPT,
     DepositStateChange,
+    TransferReceiptStateChange,
     Unauthorized
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
@@ -19,6 +23,8 @@ import {
     OffchainAssetReceiptVaultAuthorizerV1,
     CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
+import {console2} from "forge-std/Test.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function checkMint(
@@ -53,6 +59,62 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
                 vm.expectEmit(false, false, false, true);
                 emit IReceiptV3.ReceiptInformation(minter, expectedId, receiptInformation);
             }
+            vm.expectCall(
+                address(vault.authorizer()),
+                abi.encodeWithSelector(
+                    IAuthorizeV1.authorize.selector,
+                    minter,
+                    DEPOSIT,
+                    abi.encode(
+                        DepositStateChange({
+                            owner: minter,
+                            receiver: receiver,
+                            id: expectedId,
+                            assetsDeposited: shares,
+                            sharesMinted: shares,
+                            data: receiptInformation
+                        })
+                    )
+                )
+            );
+
+            bytes memory transferSharesStateChange = abi.encode(
+                TransferSharesStateChange({
+                    from: address(0),
+                    to: receiver,
+                    amount: shares,
+                    isCertificationExpired: vault.isCertificationExpired()
+                })
+            );
+
+            vm.expectCall(
+                address(vault.authorizer()),
+                abi.encodeWithSelector(
+                    IAuthorizeV1.authorize.selector, minter, TRANSFER_SHARES, transferSharesStateChange
+                )
+            );
+
+            uint256[] memory ids = new uint256[](1);
+            ids[0] = expectedId;
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = shares;
+
+            bytes memory transferReceiptStateChange = abi.encode(
+                TransferReceiptStateChange({
+                    from: address(0),
+                    to: receiver,
+                    ids: ids,
+                    amounts: amounts,
+                    isCertificationExpired: vault.isCertificationExpired()
+                })
+            );
+
+            vm.expectCall(
+                address(vault.authorizer()),
+                abi.encodeWithSelector(
+                    IAuthorizeV1.authorize.selector, minter, TRANSFER_RECEIPT, transferReceiptStateChange
+                )
+            );
         }
 
         uint256 actualAssets = vault.mint(shares, receiver, minShareRatio, receiptInformation);
