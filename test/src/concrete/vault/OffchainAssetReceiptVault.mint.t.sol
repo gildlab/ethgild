@@ -24,7 +24,6 @@ import {
     CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
-import {console2} from "forge-std/Test.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function checkMint(

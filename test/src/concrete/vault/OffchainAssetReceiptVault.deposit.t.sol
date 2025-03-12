@@ -7,8 +7,12 @@ import {
     OffchainAssetReceiptVault,
     DEPOSIT,
     CERTIFY,
+    TRANSFER_SHARES,
     DepositStateChange,
-    Unauthorized
+    TransferSharesStateChange,
+    TransferReceiptStateChange,
+    Unauthorized,
+    TRANSFER_RECEIPT
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
@@ -19,6 +23,7 @@ import {
     CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {IReceiptV3} from "src/interface/IReceiptV3.sol";
+import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
 
 contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
     function checkDeposit(
@@ -55,6 +60,65 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
             if (receiptInformation.length > 0) {
                 vm.expectEmit(false, false, false, true);
                 emit IReceiptV3.ReceiptInformation(depositor, nextId, receiptInformation);
+            }
+
+            {
+                bytes memory depositStateChange = abi.encode(
+                    DepositStateChange({
+                        owner: depositor,
+                        receiver: receiver,
+                        id: nextId,
+                        assetsDeposited: assets,
+                        sharesMinted: expectedShares,
+                        data: receiptInformation
+                    })
+                );
+                vm.expectCall(
+                    address(vault.authorizer()),
+                    abi.encodeWithSelector(IAuthorizeV1.authorize.selector, depositor, DEPOSIT, depositStateChange)
+                );
+            }
+
+            {
+                bytes memory transferSharesStateChange = abi.encode(
+                    TransferSharesStateChange({
+                        from: address(0),
+                        to: receiver,
+                        amount: expectedShares,
+                        isCertificationExpired: vault.isCertificationExpired()
+                    })
+                );
+
+                vm.expectCall(
+                    address(vault.authorizer()),
+                    abi.encodeWithSelector(
+                        IAuthorizeV1.authorize.selector, depositor, TRANSFER_SHARES, transferSharesStateChange
+                    )
+                );
+            }
+
+            {
+                uint256[] memory ids = new uint256[](1);
+                ids[0] = nextId;
+                uint256[] memory amounts = new uint256[](1);
+                amounts[0] = expectedShares;
+
+                bytes memory transferReceiptStateChange = abi.encode(
+                    TransferReceiptStateChange({
+                        from: address(0),
+                        to: receiver,
+                        ids: ids,
+                        amounts: amounts,
+                        isCertificationExpired: vault.isCertificationExpired()
+                    })
+                );
+
+                vm.expectCall(
+                    address(vault.authorizer()),
+                    abi.encodeWithSelector(
+                        IAuthorizeV1.authorize.selector, depositor, TRANSFER_RECEIPT, transferReceiptStateChange
+                    )
+                );
             }
         }
 
