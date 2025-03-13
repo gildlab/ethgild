@@ -244,7 +244,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     using Math for uint256;
 
     /// Contract has initialized.
-    /// @param sender The `msg.sender` constructing the contract.
+    /// @param sender The msg sender constructing the contract.
     /// @param config All initialization config.
     event OffchainAssetReceiptVaultInitializedV2(address sender, OffchainAssetReceiptVaultConfigV2 config);
 
@@ -315,7 +315,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         _transferOwnership(config.initialAdmin);
 
         emit OffchainAssetReceiptVaultInitializedV2(
-            msg.sender,
+            _msgSender(),
             OffchainAssetReceiptVaultConfigV2({
                 initialAdmin: config.initialAdmin,
                 receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
@@ -406,11 +406,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         bytes memory receiptInformation
     ) internal virtual override {
         sAuthorizer.authorize(
-            msg.sender,
+            _msgSender(),
             DEPOSIT,
             abi.encode(
                 DepositStateChange({
-                    owner: msg.sender,
+                    owner: _msgSender(),
                     receiver: receiver,
                     id: id,
                     assetsDeposited: assets,
@@ -432,7 +432,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         bytes memory receiptInformation
     ) internal virtual override {
         sAuthorizer.authorize(
-            msg.sender,
+            _msgSender(),
             WITHDRAW,
             abi.encode(
                 WithdrawStateChange({
@@ -497,7 +497,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
             revert InvalidId(id);
         }
 
-        uint256 shares = _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), 0);
+        uint256 shares = _calculateDeposit(assets, _shareRatio(_msgSender(), receiver, id, ShareAction.Mint), 0);
 
         _deposit(assets, receiver, shares, id, receiptInformation);
         return shares;
@@ -572,9 +572,9 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
             sCertifiedUntil = certifyUntil;
             certifyStateChange.newCertifiedUntil = sCertifiedUntil;
         }
-        emit Certify(msg.sender, certifyUntil, forceUntil, data);
+        emit Certify(_msgSender(), certifyUntil, forceUntil, data);
 
-        sAuthorizer.authorize(msg.sender, CERTIFY, abi.encode(certifyStateChange));
+        sAuthorizer.authorize(_msgSender(), CERTIFY, abi.encode(certifyStateChange));
     }
 
     function isCertificationExpired() public view returns (bool) {
@@ -586,7 +586,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._beforeTokenTransfer(from, to, amount);
         sAuthorizer.authorize(
-            msg.sender,
+            _msgSender(),
             TRANSFER_SHARES,
             abi.encode(
                 TransferSharesStateChange({
@@ -642,12 +642,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
 
         uint256 actualAmount = balanceOf(confiscatee).min(targetAmount);
         if (actualAmount > 0) {
-            emit ConfiscateShares(msg.sender, confiscatee, targetAmount, actualAmount, data);
-            _transfer(confiscatee, msg.sender, actualAmount);
+            emit ConfiscateShares(_msgSender(), confiscatee, targetAmount, actualAmount, data);
+            _transfer(confiscatee, _msgSender(), actualAmount);
         }
 
         sAuthorizer.authorize(
-            msg.sender,
+            _msgSender(),
             CONFISCATE_SHARES,
             abi.encode(
                 ConfiscateSharesStateChange({
@@ -693,12 +693,12 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
 
         uint256 actualAmount = receipt().balanceOf(confiscatee, id).min(targetAmount);
         if (actualAmount > 0) {
-            emit ConfiscateReceipt(msg.sender, confiscatee, id, targetAmount, actualAmount, data);
-            receipt().managerTransferFrom(msg.sender, confiscatee, msg.sender, id, actualAmount, "");
+            emit ConfiscateReceipt(_msgSender(), confiscatee, id, targetAmount, actualAmount, data);
+            receipt().managerTransferFrom(_msgSender(), confiscatee, _msgSender(), id, actualAmount, "");
         }
 
         sAuthorizer.authorize(
-            msg.sender,
+            _msgSender(),
             CONFISCATE_RECEIPT,
             abi.encode(
                 ConfiscateReceiptStateChange({

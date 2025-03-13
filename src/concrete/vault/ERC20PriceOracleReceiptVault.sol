@@ -83,7 +83,7 @@ struct ERC20PriceOracleReceiptVaultConfig {
 /// corrupted somehow.
 contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// Emitted when deployed and constructed.
-    /// @param sender `msg.sender` that deployed the contract.
+    /// @param sender msg sender that deployed the contract.
     /// @param config All construction config.
     event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
 
@@ -103,7 +103,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         // event can be emitted with the correct data.
         // slither-disable-next-line reentrancy-events
         emit ERC20PriceOracleReceiptVaultInitialized(
-            msg.sender,
+            _msgSender(),
             ERC20PriceOracleReceiptVaultConfig({
                 priceOracle: config.priceOracle,
                 receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
