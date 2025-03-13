@@ -17,10 +17,16 @@ interface IReceiptManagerV2 {
     /// This is not view so if there are any possible side effects the manager
     /// must ensure the `msg.sender` is trusted.
     ///
+    /// @param operator The address that is executing the transfer.
     /// @param from The address the receipt is being transferred from.
     /// @param to The address the receipt is being transferred to.
     /// @param ids The receipt IDs.
     /// @param amounts The amounts of the receipt being transferred.
-    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        external;
+    function authorizeReceiptTransfer3(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) external;
 }

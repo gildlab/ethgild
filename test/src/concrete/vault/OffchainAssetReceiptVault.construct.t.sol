@@ -11,7 +11,7 @@ import {
     ZeroInitialAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV2} from "src/interface/IReceiptV2.sol";
+import {IReceiptV3} from "src/interface/IReceiptV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {

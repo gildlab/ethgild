@@ -10,7 +10,7 @@ import {
     ReceiptVault,
     ShareAction,
     ICLONEABLE_V2_SUCCESS,
-    ReceiptVaultConstructionConfig
+    ReceiptVaultConstructionConfigV2
 } from "../../abstract/ReceiptVault.sol";
 import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 
@@ -90,7 +90,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// The price oracle used for all minting calculations.
     IPriceOracleV2 public priceOracle;
 
-    constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
+    constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
 
     /// Initialization of the underlying receipt vault and price oracle.
     function initialize(bytes memory data) public virtual override initializer returns (bytes32) {

@@ -9,10 +9,10 @@ import {
     ShareAction,
     InvalidId,
     ICLONEABLE_V2_SUCCESS,
-    ReceiptVaultConstructionConfig
+    ReceiptVaultConstructionConfigV2
 } from "../../abstract/ReceiptVault.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
-import {IReceiptV2} from "../../interface/IReceiptV2.sol";
+import {IReceiptV3} from "../../interface/IReceiptV3.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
@@ -289,7 +289,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     /// be certified to a future time.
     uint256 internal sCertifiedUntil;
 
-    constructor(ReceiptVaultConstructionConfig memory config) ReceiptVault(config) {}
+    constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
 
     /// Initializes the initial admin and the underlying `ReceiptVault`.
     /// The admin provided will be admin of all roles and can reassign and revoke
@@ -356,14 +356,16 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
 
     /// Apply standard transfer restrictions to receipt transfers.
     /// @inheritdoc ReceiptVault
-    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        public
-        virtual
-        override
-    {
-        super.authorizeReceiptTransfer3(from, to, ids, amounts);
+    function authorizeReceiptTransfer3(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) public virtual override {
+        super.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
         sAuthorizer.authorize(
-            msg.sender,
+            operator,
             TRANSFER_RECEIPT,
             abi.encode(
                 TransferReceiptStateChange({
@@ -575,7 +577,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         sAuthorizer.authorize(msg.sender, CERTIFY, abi.encode(certifyStateChange));
     }
 
-    function isCertificationExpired() internal view returns (bool) {
+    function isCertificationExpired() public view returns (bool) {
         return block.timestamp > sCertifiedUntil;
     }
 
@@ -692,7 +694,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         uint256 actualAmount = receipt().balanceOf(confiscatee, id).min(targetAmount);
         if (actualAmount > 0) {
             emit ConfiscateReceipt(msg.sender, confiscatee, id, targetAmount, actualAmount, data);
-            receipt().managerTransferFrom(confiscatee, msg.sender, id, actualAmount, "");
+            receipt().managerTransferFrom(msg.sender, confiscatee, msg.sender, id, actualAmount, "");
         }
 
         sAuthorizer.authorize(

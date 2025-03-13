@@ -14,8 +14,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
-import {Receipt as ReceiptContract, IReceiptV2} from "src/concrete/receipt/Receipt.sol";
-import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
+import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
+import {IReceiptVaultV3, IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 
 contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -48,7 +48,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         );
 
         uint256 startingShares = vault.balanceOf(receiver);
-        uint256 startingReceiptBalance = IReceiptV2(vault.receipt()).balanceOf(receiver, oraclePrice);
+        uint256 startingReceiptBalance = IReceiptV3(vault.receipt()).balanceOf(receiver, oraclePrice);
 
         if (err.length > 1) {
             vm.expectRevert(err);
@@ -59,7 +59,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
             emit IReceiptVaultV1.Deposit(owner, receiver, expectedAssets, shares, oraclePrice, receiptInformation);
             if (receiptInformation.length > 0) {
                 vm.expectEmit(false, false, false, true);
-                emit IReceiptV2.ReceiptInformation(owner, oraclePrice, receiptInformation);
+                emit IReceiptV3.ReceiptInformation(owner, oraclePrice, receiptInformation);
             }
 
             vm.expectCall(
@@ -73,7 +73,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         assertEqUint(vault.balanceOf(receiver), shares + startingShares);
 
         // Check receipt balance
-        assertEqUint(IReceiptV2(vault.receipt()).balanceOf(receiver, oraclePrice), shares + startingReceiptBalance);
+        assertEqUint(IReceiptV3(vault.receipt()).balanceOf(receiver, oraclePrice), shares + startingReceiptBalance);
 
         assertEq(actualAssets, expectedAssets);
     }

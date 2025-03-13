@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {IReceiptV2} from "src/interface/IReceiptV2.sol";
+import {IReceiptV3} from "src/interface/IReceiptV3.sol";
 import {IReceiptManagerV2} from "src/interface/IReceiptManagerV2.sol";
 
 /// Thrown when a transfer is not authorized.
@@ -21,7 +21,7 @@ contract TestReceiptManagerAsset {
 }
 
 /// @title TestReceiptManager
-/// @notice TEST contract that can be the manager of an `IReceiptV2` and forward
+/// @notice TEST contract that can be the manager of an `IReceiptV3` and forward
 /// function calls to the manager restricted functions on the receipt. Completely
 /// insecure, intended for use only by the test harness to drive tests.
 contract TestReceiptManager is IReceiptManagerV2 {
@@ -51,11 +51,14 @@ contract TestReceiptManager is IReceiptManagerV2 {
 
     /// Only transfers between `from` and `to` are authorized.
     /// @inheritdoc IReceiptManagerV2
-    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        external
-        view
-    {
-        (ids, amounts);
+    function authorizeReceiptTransfer3(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) external view {
+        (ids, amounts, operator);
         if (from != sFrom) {
             revert UnauthorizedTransfer(from, to);
         }
@@ -64,24 +67,24 @@ contract TestReceiptManager is IReceiptManagerV2 {
         }
     }
 
-    /// Exposes `IReceiptV2.managerMint` to anon.
-    /// @param receipt The `IReceiptV2` contract to call.
-    /// @param account As per `IReceiptV2.managerMint`.
-    /// @param id As per `IReceiptV2.managerMint`.
-    /// @param amount As per `IReceiptV2.managerMint`.
-    /// @param data As per `IReceiptV2.managerMint`.
-    function managerMint(IReceiptV2 receipt, address account, uint256 id, uint256 amount, bytes memory data) external {
+    /// Exposes `IReceiptV3.managerMint` to anon.
+    /// @param receipt The `IReceiptV3` contract to call.
+    /// @param account As per `IReceiptV3.managerMint`.
+    /// @param id As per `IReceiptV3.managerMint`.
+    /// @param amount As per `IReceiptV3.managerMint`.
+    /// @param data As per `IReceiptV3.managerMint`.
+    function managerMint(IReceiptV3 receipt, address account, uint256 id, uint256 amount, bytes memory data) external {
         receipt.managerMint(msg.sender, account, id, amount, data);
     }
 
-    /// Exposes `IReceiptV2.managerBurn` to anon.
-    /// @param receipt The `IReceiptV2` contract to call.
-    /// @param account As per `IReceiptV2.managerBurn`.
-    /// @param id As per `IReceiptV2.managerBurn`.
-    /// @param amount As per `IReceiptV2.managerBurn`.
-    /// @param receiptInformation As per `IReceiptV2.managerBurn`.
+    /// Exposes `IReceiptV3.managerBurn` to anon.
+    /// @param receipt The `IReceiptV3` contract to call.
+    /// @param account As per `IReceiptV3.managerBurn`.
+    /// @param id As per `IReceiptV3.managerBurn`.
+    /// @param amount As per `IReceiptV3.managerBurn`.
+    /// @param receiptInformation As per `IReceiptV3.managerBurn`.
     function managerBurn(
-        IReceiptV2 receipt,
+        IReceiptV3 receipt,
         address account,
         uint256 id,
         uint256 amount,
@@ -90,22 +93,22 @@ contract TestReceiptManager is IReceiptManagerV2 {
         receipt.managerBurn(msg.sender, account, id, amount, receiptInformation);
     }
 
-    /// Exposes `IReceiptV2.managerTransferFrom` to anon.
-    /// @param receipt The `IReceiptV2` contract to call.
-    /// @param from As per `IReceiptV2.managerTransferFrom`.
-    /// @param to As per `IReceiptV2.managerTransferFrom`.
-    /// @param id As per `IReceiptV2.managerTransferFrom`.
-    /// @param amount As per `IReceiptV2.managerTransferFrom`.
-    /// @param data As per `IReceiptV2.managerTransferFrom`.
+    /// Exposes `IReceiptV3.managerTransferFrom` to anon.
+    /// @param receipt The `IReceiptV3` contract to call.
+    /// @param from As per `IReceiptV3.managerTransferFrom`.
+    /// @param to As per `IReceiptV3.managerTransferFrom`.
+    /// @param id As per `IReceiptV3.managerTransferFrom`.
+    /// @param amount As per `IReceiptV3.managerTransferFrom`.
+    /// @param data As per `IReceiptV3.managerTransferFrom`.
     function managerTransferFrom(
-        IReceiptV2 receipt,
+        IReceiptV3 receipt,
         address from,
         address to,
         uint256 id,
         uint256 amount,
         bytes memory data
     ) external {
-        receipt.managerTransferFrom(from, to, id, amount, data);
+        receipt.managerTransferFrom(msg.sender, from, to, id, amount, data);
     }
 
     function name() external pure returns (string memory) {

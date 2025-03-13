@@ -11,7 +11,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {MulticallUpgradeable as Multicall} from
     "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
-import {IReceiptVaultV2, IReceiptVaultV1, IReceiptV2} from "../interface/IReceiptVaultV2.sol";
+import {IReceiptVaultV3, IReceiptVaultV1, IReceiptV3} from "../interface/IReceiptVaultV3.sol";
 import {IReceiptManagerV2} from "../interface/IReceiptManagerV2.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -42,9 +42,9 @@ enum ShareAction {
 /// @param factory The factory that will be used to clone the receipt vault.
 /// @param receiptImplementation The receipt implementation that will be cloned
 /// by the factory.
-struct ReceiptVaultConstructionConfig {
+struct ReceiptVaultConstructionConfigV2 {
     ICloneableFactoryV2 factory;
-    IReceiptV2 receiptImplementation;
+    IReceiptV3 receiptImplementation;
 }
 
 /// All config required to initialize `ReceiptVault` except the receipt address.
@@ -110,25 +110,25 @@ abstract contract ReceiptVault is
     Multicall,
     ReentrancyGuard,
     ERC20,
-    IReceiptVaultV2,
+    IReceiptVaultV3,
     ICloneableV2
 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
 
     ICloneableFactoryV2 internal immutable iFactory;
-    IReceiptV2 internal immutable iReceiptImplementation;
+    IReceiptV3 internal immutable iReceiptImplementation;
 
     /// Underlying ERC4626 asset.
     IERC20 internal sAsset;
     /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
     /// mints and enforcing integrity of subsequent burns.
-    IReceiptV2 internal sReceipt;
+    IReceiptV3 internal sReceipt;
 
     /// `ReceiptVault` is intended to be cloned and initialized by a
     /// `ReceiptVaultFactory` so is an implementation contract that can't itself
     /// be initialized.
-    constructor(ReceiptVaultConstructionConfig memory config) {
+    constructor(ReceiptVaultConstructionConfigV2 memory config) {
         _disableInitializers();
 
         iFactory = config.factory;
@@ -154,8 +154,8 @@ abstract contract ReceiptVault is
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
-        IReceiptV2 managedReceipt =
-            IReceiptV2(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+        IReceiptV3 managedReceipt =
+            IReceiptV3(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
         sReceipt = managedReceipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
@@ -172,14 +172,17 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc IReceiptManagerV2
-    function authorizeReceiptTransfer3(address from, address to, uint256[] memory ids, uint256[] memory amounts)
-        public
-        virtual
-    {
+    function authorizeReceiptTransfer3(
+        address operator,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) public virtual {
         if (msg.sender != address(receipt())) {
             revert UnmanagedReceiptTransfer();
         }
-        (from, to, ids, amounts);
+        (operator, from, to, ids, amounts);
     }
 
     /// The spec demands that this function ignores per-user concerns. It seems
@@ -339,8 +342,8 @@ abstract contract ReceiptVault is
         );
     }
 
-    /// @inheritdoc IReceiptVaultV2
-    function receipt() public view virtual returns (IReceiptV2) {
+    /// @inheritdoc IReceiptVaultV3
+    function receipt() public view virtual returns (IReceiptV3) {
         return sReceipt;
     }
 

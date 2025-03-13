@@ -2,13 +2,18 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {OffchainAssetReceiptVault, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    OffchainAssetReceiptVault,
+    DEPOSIT,
+    CERTIFY,
+    CONFISCATE_RECEIPT
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
-    FREEZE_HANDLER
+    CertificationExpired
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
@@ -40,8 +45,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         return (vault, receipt);
     }
 
-    /// Test testReceiptTransfer to self with handler role
-    function testReceiptTransferHandler(
+    /// Test testReceiptTransfer to self with confiscate role
+    function testReceiptTransferConfiscate(
         uint256 aliceSeed,
         uint256 bobSeed,
         string memory shareName,
@@ -58,7 +63,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         (alice, bob,, balance, certifyUntil) = setUpAddressesAndBounds(aliceSeed, bobSeed, 0, balance, certifyUntil);
 
         // Need setting future timestamp so system gets unsertified but transfer is possible
-        // due to a handler role
+        // due to a confiscator role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault;
@@ -69,7 +74,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, bob);
         OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
 
         // Call the certify function
@@ -82,7 +87,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Show the transfer is authorized.
         vm.startPrank(address(receipt));
-        vault.authorizeReceiptTransfer3(bob, bob, ids, amounts);
+        vault.authorizeReceiptTransfer3(bob, bob, bob, ids, amounts);
 
         // Prank as Bob
         vm.startPrank(bob);
@@ -92,8 +97,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.stopPrank();
     }
 
-    /// Test testReceiptTransfer with Owner being a handler
-    function testReceiptTransferHandlerOwner(
+    /// Test testReceiptTransfer with Owner being a confiscator
+    function testReceiptTransferConfiscatorOwner(
         uint256 aliceSeed,
         uint256 bobSeed,
         uint256 carolKey,
@@ -104,7 +109,8 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         bool forceUntil,
         uint256 balance,
         uint256[] memory ids,
-        uint256[] memory amounts
+        uint256[] memory amounts,
+        uint256 confiscateAmount
     ) external {
         address alice;
         address bob;
@@ -113,18 +119,21 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
             setUpAddressesAndBounds(aliceSeed, bobSeed, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
-        // due to a handler role
+        // due to a confiscate role
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault;
         ReceiptContract receipt;
         (vault, receipt) = setUpVault(alice, shareName, shareSymbol);
 
+        uint256 johnBalance = receipt.balanceOf(john, 1);
+        confiscateAmount = bound(confiscateAmount, 1, balance);
+
         // Prank as Alice to grant roles
         vm.startPrank(alice);
 
         OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, bob);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, john);
         OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
 
         // Call the certify function
@@ -138,17 +147,30 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Prank as the receipt
         vm.startPrank(address(receipt));
-        vault.authorizeReceiptTransfer3(bob, john, ids, amounts);
+        vault.authorizeReceiptTransfer3(john, bob, john, ids, amounts);
         vm.stopPrank();
 
-        vm.startPrank(bob);
-        receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
-        assertEq(receipt.balanceOf(john, 1), balance);
+        {
+            // Bob can't transfer to john.
+            vm.startPrank(bob);
+            vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, john));
+            receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
+            assertEq(receipt.balanceOf(john, 1), johnBalance);
+            vm.stopPrank();
+        }
 
+        // John can confiscate the receipt
+        vm.startPrank(john);
+        vm.expectRevert("ERC1155: caller is not token owner or approved");
+        receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
+        assertEq(receipt.balanceOf(john, 1), johnBalance);
+
+        // Confiscate the receipt.
+        vault.confiscateReceipt(bob, 1, confiscateAmount, "");
         vm.stopPrank();
     }
 
-    /// Test testReceiptTransfer with Receiver being a handler
+    /// Test testReceiptTransfer with Receiver being a confisticator
     function testReceiptTransferHandlerReceiver(
         uint256 aliceSeed,
         uint256 bobSeed,
@@ -169,7 +191,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
             setUpAddressesAndBounds(aliceSeed, bobSeed, carolKey, balance, certifyUntil);
 
         // Need setting future timestamp so system gets uncertified but transfer is possible
-        // due to a handler role
+        // due to a confiscate role.
         futureTimeStamp = bound(futureTimeStamp, certifyUntil + 1, type(uint32).max);
 
         OffchainAssetReceiptVault vault;
@@ -180,10 +202,9 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CERTIFY, alice);
-        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(FREEZE_HANDLER, john);
+        OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(CONFISCATE_RECEIPT, john);
         OffchainAssetReceiptVaultAuthorizerV1(address(vault.authorizer())).grantRole(DEPOSIT, alice);
 
-        // Call the certify function
         vault.certify(certifyUntil, forceUntil, bytes(""));
 
         // Cannot fuzz assets value due to variable limits
@@ -194,12 +215,14 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // Show the transfer is authorized.
         vm.prank(address(receipt));
-        vault.authorizeReceiptTransfer3(bob, john, ids, amounts);
+        vault.authorizeReceiptTransfer3(john, bob, john, ids, amounts);
 
-        // Prank as Bob
+        // Prank as Bob, can't transfer to john
         vm.startPrank(bob);
+        uint256 johnBalance = receipt.balanceOf(john, 1);
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, bob, john));
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
-        assertEq(receipt.balanceOf(john, 1), balance);
+        assertEq(receipt.balanceOf(john, 1), johnBalance);
 
         vm.stopPrank();
     }

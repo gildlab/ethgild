@@ -5,8 +5,8 @@ pragma solidity =0.8.25;
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 import {IReceiptManagerV2} from "../../interface/IReceiptManagerV2.sol";
-import {IReceiptV2} from "../../interface/IReceiptV2.sol";
-import {IReceiptVaultV2} from "../../interface/IReceiptVaultV2.sol";
+import {IReceiptV3} from "../../interface/IReceiptV3.sol";
+import {IReceiptVaultV3} from "../../interface/IReceiptVaultV3.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
@@ -25,14 +25,16 @@ string constant RECEIPT_NAME_SUFFIX = " Receipt";
 string constant RECEIPT_SYMBOL_SUFFIX = " RCPT";
 
 /// @title Receipt
-/// @notice The `IReceiptV2` for a `ReceiptVault`. Standard implementation allows
+/// @notice The `IReceiptV3` for a `ReceiptVault`. Standard implementation allows
 /// receipt information to be emitted and mints/burns according to manager
 /// authorization.
-contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
+contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     /// The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
     IReceiptManagerV2 internal sManager;
+
+    address private sSender = address(0);
 
     /// Disables initializers so that the clonable implementation cannot be
     /// initialized and used directly outside a factory deployment.
@@ -46,6 +48,17 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
             revert OnlyManager();
         }
         _;
+    }
+
+    modifier withSender(address sender) {
+        sSender = sender;
+        _;
+        sSender = address(0);
+    }
+
+    function _msgSender() internal view virtual override returns (address) {
+        address sender = sSender;
+        return sender == address(0) ? msg.sender : sender;
     }
 
     /// Initializes the `Receipt` so that it is usable as a clonable
@@ -80,12 +93,12 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         return string.concat(DATA_URI_BASE64_PREFIX, Base64.encode(json));
     }
 
-    /// @inheritdoc IReceiptV2
+    /// @inheritdoc IReceiptV3
     function name() public view virtual returns (string memory) {
         return string.concat(_vaultShareSymbol(), RECEIPT_NAME_SUFFIX);
     }
 
-    /// @inheritdoc IReceiptV2
+    /// @inheritdoc IReceiptV3
     function symbol() external view virtual returns (string memory) {
         return string.concat(_vaultShareSymbol(), RECEIPT_SYMBOL_SUFFIX);
     }
@@ -101,40 +114,45 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
     /// managing this `Receipt` is accepting for mints. Can be overridden if the
     /// manager is not going to be a `ReceiptVault`.
     function _vaultAssetSymbol() internal view virtual returns (string memory) {
-        return IERC20Metadata(IReceiptVaultV2(payable(address(sManager))).asset()).symbol();
+        return IERC20Metadata(IReceiptVaultV3(payable(address(sManager))).asset()).symbol();
     }
 
-    /// @inheritdoc IReceiptV2
+    /// @inheritdoc IReceiptV3
     function manager() external view virtual returns (address) {
         return address(sManager);
     }
 
-    /// @inheritdoc IReceiptV2
+    /// @inheritdoc IReceiptV3
     function managerMint(address sender, address account, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
         onlyManager
+        withSender(sender)
     {
         _receiptInformation(sender, id, data);
         _mint(account, id, amount, data);
     }
 
-    /// @inheritdoc IReceiptV2
+    /// @inheritdoc IReceiptV3
     function managerBurn(address sender, address account, uint256 id, uint256 amount, bytes memory data)
         external
         virtual
         onlyManager
+        withSender(sender)
     {
         _receiptInformation(sender, id, data);
         _burn(account, id, amount);
     }
 
-    /// @inheritdoc IReceiptV2
-    function managerTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
-        external
-        virtual
-        onlyManager
-    {
+    /// @inheritdoc IReceiptV3
+    function managerTransferFrom(
+        address sender,
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) external virtual onlyManager withSender(sender) {
         _safeTransferFrom(from, to, id, amount, data);
     }
 
@@ -150,7 +168,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        sManager.authorizeReceiptTransfer3(from, to, ids, amounts);
+        sManager.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
     }
 
     /// Emits `ReceiptInformation` if there is any data.
@@ -164,7 +182,7 @@ contract Receipt is IReceiptV2, ERC1155, ICloneableV2 {
         }
     }
 
-    /// @inheritdoc IReceiptV2
+    /// @inheritdoc IReceiptV3
     function receiptInformation(uint256 id, bytes memory data) external virtual {
         _receiptInformation(msg.sender, id, data);
     }

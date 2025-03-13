@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.0;
 
-import {IReceiptVaultV1} from "./deprecated/IReceiptVaultV1.sol";
+import {IReceiptVaultV1} from "./IReceiptVaultV1.sol";
 import {IReceiptV2} from "./IReceiptV2.sol";
 
 /// @title IReceiptVaultV2

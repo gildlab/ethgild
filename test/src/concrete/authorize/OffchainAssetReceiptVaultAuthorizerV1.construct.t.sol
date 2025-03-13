@@ -12,8 +12,6 @@ import {
     CONFISCATE_RECEIPT_ADMIN,
     DEPOSIT_ADMIN,
     WITHDRAW_ADMIN,
-    FREEZE_HANDLER_ADMIN,
-    FREEZE_HANDLER,
     CERTIFY,
     CONFISCATE_SHARES,
     CONFISCATE_RECEIPT,
@@ -49,13 +47,11 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         vm.assume(badRole != CONFISCATE_RECEIPT_ADMIN);
         vm.assume(badRole != DEPOSIT_ADMIN);
         vm.assume(badRole != WITHDRAW_ADMIN);
-        vm.assume(badRole != FREEZE_HANDLER_ADMIN);
         vm.assume(badRole != CERTIFY);
         vm.assume(badRole != CONFISCATE_SHARES);
         vm.assume(badRole != CONFISCATE_RECEIPT);
         vm.assume(badRole != DEPOSIT);
         vm.assume(badRole != WITHDRAW);
-        vm.assume(badRole != FREEZE_HANDLER);
 
         OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
 
@@ -76,14 +72,12 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         vm.assertTrue(authorizer.hasRole(CONFISCATE_RECEIPT_ADMIN, initialAdmin));
         vm.assertTrue(authorizer.hasRole(DEPOSIT_ADMIN, initialAdmin));
         vm.assertTrue(authorizer.hasRole(WITHDRAW_ADMIN, initialAdmin));
-        vm.assertTrue(authorizer.hasRole(FREEZE_HANDLER_ADMIN, initialAdmin));
 
         vm.assertTrue(!authorizer.hasRole(CERTIFY, initialAdmin));
         vm.assertTrue(!authorizer.hasRole(CONFISCATE_SHARES, initialAdmin));
         vm.assertTrue(!authorizer.hasRole(CONFISCATE_RECEIPT, initialAdmin));
         vm.assertTrue(!authorizer.hasRole(DEPOSIT, initialAdmin));
         vm.assertTrue(!authorizer.hasRole(WITHDRAW, initialAdmin));
-        vm.assertTrue(!authorizer.hasRole(FREEZE_HANDLER, initialAdmin));
         vm.assertTrue(!authorizer.hasRole(badRole, initialAdmin));
 
         vm.assertTrue(!authorizer.hasRole(CERTIFY_ADMIN, authorizee));
@@ -91,7 +85,6 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         vm.assertTrue(!authorizer.hasRole(CONFISCATE_RECEIPT_ADMIN, authorizee));
         vm.assertTrue(!authorizer.hasRole(DEPOSIT_ADMIN, authorizee));
         vm.assertTrue(!authorizer.hasRole(WITHDRAW_ADMIN, authorizee));
-        vm.assertTrue(!authorizer.hasRole(FREEZE_HANDLER_ADMIN, authorizee));
         vm.assertTrue(!authorizer.hasRole(badRole, authorizee));
 
         vm.assertTrue(!authorizer.hasRole(CERTIFY, authorizee));
@@ -99,7 +92,6 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         vm.assertTrue(!authorizer.hasRole(CONFISCATE_RECEIPT, authorizee));
         vm.assertTrue(!authorizer.hasRole(DEPOSIT, authorizee));
         vm.assertTrue(!authorizer.hasRole(WITHDRAW, authorizee));
-        vm.assertTrue(!authorizer.hasRole(FREEZE_HANDLER, authorizee));
         vm.assertTrue(!authorizer.hasRole(badRole, authorizee));
 
         vm.startPrank(initialAdmin);
@@ -108,7 +100,6 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         authorizer.grantRole(CONFISCATE_RECEIPT, authorizee);
         authorizer.grantRole(DEPOSIT, authorizee);
         authorizer.grantRole(WITHDRAW, authorizee);
-        authorizer.grantRole(FREEZE_HANDLER, authorizee);
         vm.stopPrank();
 
         vm.assertTrue(authorizer.hasRole(CERTIFY, authorizee));
@@ -116,7 +107,6 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         vm.assertTrue(authorizer.hasRole(CONFISCATE_RECEIPT, authorizee));
         vm.assertTrue(authorizer.hasRole(DEPOSIT, authorizee));
         vm.assertTrue(authorizer.hasRole(WITHDRAW, authorizee));
-        vm.assertTrue(authorizer.hasRole(FREEZE_HANDLER, authorizee));
         vm.assertTrue(!authorizer.hasRole(badRole, authorizee));
     }
 

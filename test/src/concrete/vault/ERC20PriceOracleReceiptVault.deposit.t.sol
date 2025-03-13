@@ -12,12 +12,12 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {IReceiptVaultV2, IReceiptVaultV1} from "src/interface/IReceiptVaultV2.sol";
+import {IReceiptVaultV3, IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import "forge-std/StdCheats.sol";
-import {IReceiptV2} from "src/interface/IReceiptV2.sol";
+import {IReceiptV3} from "src/interface/IReceiptV3.sol";
 
 contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -61,7 +61,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
             emit IReceiptVaultV1.Deposit(owner, receiver, assets, expectedShares, oraclePrice, receiptInformation);
             if (receiptInformation.length > 0) {
                 vm.expectEmit(false, false, false, true);
-                emit IReceiptV2.ReceiptInformation(owner, oraclePrice, receiptInformation);
+                emit IReceiptV3.ReceiptInformation(owner, oraclePrice, receiptInformation);
             }
         }
 
