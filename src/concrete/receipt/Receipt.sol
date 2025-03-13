@@ -44,18 +44,23 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
 
     /// Throws if the caller is not the manager of the `Receipt` contract.
     modifier onlyManager() {
-        if (msg.sender != address(sManager)) {
+        if (_msgSender() != address(sManager)) {
             revert OnlyManager();
         }
         _;
     }
 
+    /// Sets the sender for the duration of the function call. Requires that
+    /// `_msgSender()` is used consistently instead of `msg.sender` so that the
+    /// sender that is set here is actually used.
+    /// @param sender The address to set as the sender.
     modifier withSender(address sender) {
         sSender = sender;
         _;
         sSender = address(0);
     }
 
+    /// Overrides `_msgSender` to allow `withSender` modifier to set the sender.
     function _msgSender() internal view virtual override returns (address) {
         address sender = sSender;
         return sender == address(0) ? msg.sender : sender;
@@ -184,6 +189,6 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
 
     /// @inheritdoc IReceiptV3
     function receiptInformation(uint256 id, bytes memory data) external virtual {
-        _receiptInformation(msg.sender, id, data);
+        _receiptInformation(_msgSender(), id, data);
     }
 }

@@ -179,7 +179,7 @@ abstract contract ReceiptVault is
         uint256[] memory ids,
         uint256[] memory amounts
     ) public virtual {
-        if (msg.sender != address(receipt())) {
+        if (_msgSender() != address(receipt())) {
             revert UnmanagedReceiptTransfer();
         }
         (operator, from, to, ids, amounts);
@@ -207,7 +207,7 @@ abstract contract ReceiptVault is
     /// @inheritdoc IReceiptVaultV1
     function convertToShares(uint256 assets, uint256 id) public payable virtual returns (uint256) {
         uint256 val = _calculateDeposit(assets, _shareRatioUserAgnostic(id, ShareAction.Mint), 0);
-        Address.sendValue(payable(msg.sender), address(this).balance);
+        Address.sendValue(payable(_msgSender()), address(this).balance);
         return val;
     }
 
@@ -221,10 +221,10 @@ abstract contract ReceiptVault is
         uint256 id = _nextId();
 
         uint256 shares =
-            _calculateDeposit(assets, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), depositMinShareRatio);
+            _calculateDeposit(assets, _shareRatio(_msgSender(), receiver, id, ShareAction.Mint), depositMinShareRatio);
 
         _deposit(assets, receiver, shares, id, receiptInformation);
-        Address.sendValue(payable(msg.sender), address(this).balance);
+        Address.sendValue(payable(_msgSender()), address(this).balance);
         return shares;
     }
 
@@ -274,10 +274,10 @@ abstract contract ReceiptVault is
         uint256 id = _nextId();
 
         uint256 assets =
-            _calculateMint(shares, _shareRatio(msg.sender, receiver, id, ShareAction.Mint), mintMinShareRatio);
+            _calculateMint(shares, _shareRatio(_msgSender(), receiver, id, ShareAction.Mint), mintMinShareRatio);
 
         _deposit(assets, receiver, shares, id, receiptInformation);
-        Address.sendValue(payable(msg.sender), address(this).balance);
+        Address.sendValue(payable(_msgSender()), address(this).balance);
         return assets;
     }
 
@@ -287,7 +287,7 @@ abstract contract ReceiptVault is
             assets,
             // Spec doesn't provide us with a recipient but wants a per-user
             // preview so we assume that depositor = recipient.
-            _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
+            _shareRatio(_msgSender(), _msgSender(), _nextId(), ShareAction.Mint),
             // IERC4626:
             // > MUST NOT revert due to vault specific user/global limits.
             // > MAY revert due to other conditions that would also cause
@@ -302,7 +302,7 @@ abstract contract ReceiptVault is
             // be 0 and never revert.
             minShareRatio
         );
-        Address.sendValue(payable(msg.sender), address(this).balance);
+        Address.sendValue(payable(_msgSender()), address(this).balance);
         return val;
     }
 
@@ -312,7 +312,7 @@ abstract contract ReceiptVault is
             shares,
             // Spec doesn't provide us with a recipient but wants a per-user
             // preview so we assume that depositor = recipient.
-            _shareRatio(msg.sender, msg.sender, _nextId(), ShareAction.Mint),
+            _shareRatio(_msgSender(), _msgSender(), _nextId(), ShareAction.Mint),
             // IERC4626:
             // > MUST NOT revert due to vault specific user/global limits.
             // > MAY revert due to other conditions that would also cause mint
@@ -324,13 +324,13 @@ abstract contract ReceiptVault is
             // never revert.
             minShareRatio
         );
-        Address.sendValue(payable(msg.sender), address(this).balance);
+        Address.sendValue(payable(_msgSender()), address(this).balance);
         return val;
     }
 
     /// @inheritdoc IReceiptVaultV1
     function previewRedeem(uint256 shares, uint256 id) public view virtual returns (uint256) {
-        return _calculateRedeem(shares, _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn));
+        return _calculateRedeem(shares, _shareRatio(_msgSender(), _msgSender(), id, ShareAction.Burn));
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -338,7 +338,7 @@ abstract contract ReceiptVault is
         return _calculateWithdraw(
             assets,
             // Assume that owner and receiver are the sender for a preview
-            _shareRatio(msg.sender, msg.sender, id, ShareAction.Burn)
+            _shareRatio(_msgSender(), _msgSender(), id, ShareAction.Burn)
         );
     }
 
@@ -352,7 +352,7 @@ abstract contract ReceiptVault is
     /// clients MUST take care against corrupt and malicious data.
     /// @param vaultInformation The information to emit for this vault.
     function receiptVaultInformation(bytes memory vaultInformation) public virtual {
-        emit ReceiptVaultInformation(msg.sender, vaultInformation);
+        emit ReceiptVaultInformation(_msgSender(), vaultInformation);
     }
 
     /// @inheritdoc IReceiptVaultV1
@@ -568,7 +568,7 @@ abstract contract ReceiptVault is
             revert InvalidId(0);
         }
 
-        emit IReceiptVaultV1.Deposit(msg.sender, receiver, assets, shares, id, receiptInformation);
+        emit IReceiptVaultV1.Deposit(_msgSender(), receiver, assets, shares, id, receiptInformation);
         _beforeDeposit(assets, receiver, shares, id, receiptInformation);
 
         // erc20 mint.
@@ -579,16 +579,16 @@ abstract contract ReceiptVault is
 
         // erc1155 mint.
         // Receiving contracts MUST implement `IERC1155Receiver`.
-        receipt().managerMint(msg.sender, receiver, id, shares, receiptInformation);
+        receipt().managerMint(_msgSender(), receiver, id, shares, receiptInformation);
 
         _afterDeposit(assets, receiver, shares, id, receiptInformation);
     }
 
     /// Hook for additional actions that MUST complete or revert before deposit
     /// is complete. This hook is responsible for any transfer of assets from
-    /// the `msg.sender` to the receipt vault IN ADDITION to any other checks that
-    /// may revert. As per 4626 the owner of the assets being deposited is always
-    /// the `msg.sender`.
+    /// the `msg.sender` to the receipt vault IN ADDITION to any other checks
+    /// that may revert. As per 4626 the owner of the assets being deposited is
+    /// always the `msg.sender`.
     /// @param assets Number of assets being deposited.
     /// @param receiver Receiver of shares that will be minted.
     /// @param shares Amount of shares that will be minted.
@@ -601,7 +601,7 @@ abstract contract ReceiptVault is
         bytes memory receiptInformation
     ) internal virtual {
         // Default behaviour is to move assets before minting shares.
-        IERC20(asset()).safeTransferFrom(msg.sender, address(this), assets);
+        IERC20(asset()).safeTransferFrom(_msgSender(), address(this), assets);
         (receiver, shares, id, receiptInformation);
     }
 
@@ -665,26 +665,26 @@ abstract contract ReceiptVault is
             revert InvalidId(id);
         }
 
-        emit IReceiptVaultV1.Withdraw(msg.sender, receiver, owner, assets, shares, id, receiptInformation);
+        emit IReceiptVaultV1.Withdraw(_msgSender(), receiver, owner, assets, shares, id, receiptInformation);
 
         // IERC4626:
         // > MUST support a withdraw flow where the shares are burned from owner
-        // > directly where owner is msg.sender or msg.sender has ERC-20
+        // > directly where owner is `msg.sender` or `msg.sender` has ERC-20
         // > approval over the shares of owner.
-        if (owner != msg.sender) {
-            _spendAllowance(owner, msg.sender, shares);
+        if (owner != _msgSender()) {
+            _spendAllowance(owner, _msgSender(), shares);
 
             // We additionally require that the sender is an operator of the
             // receipt in order to burn the owner's shares.
             // Same error message as Open Zeppelin ERC1155 implementation.
-            require(receipt().isApprovedForAll(owner, msg.sender), "ERC1155: caller is not token owner or approved");
+            require(receipt().isApprovedForAll(owner, _msgSender()), "ERC1155: caller is not token owner or approved");
         }
 
         // ERC20 burn.
         _burn(owner, shares);
 
         // ERC1155 burn.
-        receipt().managerBurn(msg.sender, owner, id, shares, receiptInformation);
+        receipt().managerBurn(_msgSender(), owner, id, shares, receiptInformation);
 
         // Hook to allow additional withdrawal checks.
         _afterWithdraw(assets, receiver, owner, shares, id, receiptInformation);
