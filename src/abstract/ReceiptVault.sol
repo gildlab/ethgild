@@ -30,6 +30,8 @@ import {
     WrongManager
 } from "../error/ErrReceiptVault.sol";
 import {UnmanagedReceiptTransfer} from "../interface/IReceiptManagerV2.sol";
+import {ERC165Upgradeable as ERC165} from
+    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
@@ -111,7 +113,8 @@ abstract contract ReceiptVault is
     ReentrancyGuard,
     ERC20,
     IReceiptVaultV3,
-    ICloneableV2
+    ICloneableV2,
+    ERC165
 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
@@ -164,6 +167,12 @@ abstract contract ReceiptVault is
         if (receiptManager != address(this)) {
             revert WrongManager(address(this), receiptManager);
         }
+    }
+
+    /// @inheritdoc ERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IReceiptManagerV2).interfaceId || interfaceId == type(ICloneableV2).interfaceId
+            || interfaceId == type(IReceiptVaultV3).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /// @inheritdoc IReceiptVaultV1
