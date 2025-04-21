@@ -5,7 +5,13 @@ pragma solidity =0.8.25;
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {OffchainAssetReceiptVault, IAuthorizeV1} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    OffchainAssetReceiptVault,
+    IAuthorizeV1,
+    Unauthorized,
+    CERTIFY,
+    CertifyStateChange
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/lib/LibExtrospectERC1167Proxy.sol";
 import {IERC165Upgradeable as IERC165} from
     "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
@@ -37,6 +43,18 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
         assertEq(implementation, address(iAuthorizerImplementation));
+        CertifyStateChange memory certifyStateChange = CertifyStateChange({
+            oldCertifiedUntil: 0,
+            newCertifiedUntil: 1234,
+            userCertifyUntil: 1234,
+            forceUntil: true,
+            data: ""
+        });
+        // Smoke test the authorizer NOT authorizing.
+        vm.expectRevert(
+            abi.encodeWithSelector(Unauthorized.selector, address(this), CERTIFY, abi.encode(certifyStateChange))
+        );
+        vault.certify(certifyStateChange.newCertifiedUntil, certifyStateChange.forceUntil, "");
     }
 
     /// Test that the owner can change the authorizer.
@@ -58,6 +76,8 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         AlwaysAuthorize alwaysAuthorize = new AlwaysAuthorize();
 
         vm.prank(alice);
+        vm.expectEmit(false, false, false, true);
+        emit IAuthorizeV1.AuthorizerSet(address(alice), alwaysAuthorize);
         vault.setAuthorizer(alwaysAuthorize);
 
         authorizer = address(vault.authorizer());

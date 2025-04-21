@@ -33,6 +33,13 @@ error Unauthorized(address user, bytes32 permission, bytes data);
 /// sensitive operation and should be done with care, such as through a multisig
 /// and/or dedicated governance contract.
 interface IAuthorizeV1 {
+    /// MUST be emitted when a new authorizer contract is set.
+    /// This includes the initial setting of the authorizer contract if it is
+    /// set in the constructor/initializer.
+    /// @param sender The msg sender setting the authorizer.
+    /// @param authorizer The new authorizer contract.
+    event AuthorizerSet(address sender, IAuthorizeV1 authorizer);
+
     /// Authorize a user for a caller-specified permission.
     ///
     /// The authorization contract is expected to be implemented to be compatible

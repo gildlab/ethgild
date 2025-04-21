@@ -248,11 +248,6 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     /// @param config All initialization config.
     event OffchainAssetReceiptVaultInitializedV2(address sender, OffchainAssetReceiptVaultConfigV2 config);
 
-    /// An authorizer has been set.
-    /// @param sender The msg sender setting the authorizer.
-    /// @param authorizer The new authorizer contract.
-    event AuthorizerSet(address sender, IAuthorizeV1 authorizer);
-
     /// A new certification time has been set.
     /// @param sender The certifier setting the new time.
     /// @param certifyUntil The time the system is newly certified until.
@@ -284,6 +279,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         address sender, address confiscatee, uint256 id, uint256 targetAmount, uint256 confiscated, bytes justification
     );
 
+    /// The authorizer contract that is used to authorize actions in the vault.
     IAuthorizeV1 sAuthorizer;
 
     /// The largest issued id. The next id issued will be larger than this.
@@ -315,7 +311,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
             revert ZeroInitialAdmin();
         }
 
-        sAuthorizer = IAuthorizeV1(address(this));
+        _setAuthorizer(IAuthorizeV1(address(this)));
 
         _transferOwnership(config.initialAdmin);
 
@@ -335,6 +331,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         return sHighwaterId;
     }
 
+    /// @inheritdoc IERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IAuthorizeV1).interfaceId || super.supportsInterface(interfaceId);
+    }
+
     /// Returns the current authorizer contract.
     function authorizer() external view returns (IAuthorizeV1) {
         return sAuthorizer;
@@ -349,15 +350,23 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         revert Unauthorized(user, permission, data);
     }
 
-    /// Sets the authorizer contract. This is a critical operation and should be
-    /// done with extreme care by the owner.
+    /// Internal function to set the authorizer contract. This has no access
+    /// control so it MUST only be externally accessible by functions with an
+    /// access check.
     /// @param newAuthorizer The new authorizer contract.
-    function setAuthorizer(IAuthorizeV1 newAuthorizer) external onlyOwner {
+    function _setAuthorizer(IAuthorizeV1 newAuthorizer) internal {
         if (!IERC165(address(newAuthorizer)).supportsInterface(type(IAuthorizeV1).interfaceId)) {
             revert IncompatibleAuthorizer();
         }
         sAuthorizer = newAuthorizer;
         emit AuthorizerSet(msg.sender, newAuthorizer);
+    }
+
+    /// Sets the authorizer contract. This is a critical operation and should be
+    /// done with extreme care by the owner.
+    /// @param newAuthorizer The new authorizer contract.
+    function setAuthorizer(IAuthorizeV1 newAuthorizer) external onlyOwner {
+        _setAuthorizer(newAuthorizer);
     }
 
     /// Apply standard transfer restrictions to receipt transfers.
