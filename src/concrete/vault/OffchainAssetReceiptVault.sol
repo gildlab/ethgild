@@ -280,7 +280,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     );
 
     /// The authorizer contract that is used to authorize actions in the vault.
-    IAuthorizeV1 sAuthorizer;
+    IAuthorizeV1 internal sAuthorizer;
 
     /// The largest issued id. The next id issued will be larger than this.
     uint256 internal sHighwaterId;
