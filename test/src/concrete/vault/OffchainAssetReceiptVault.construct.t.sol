@@ -68,7 +68,11 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         address msgSender;
 
         OffchainAssetReceiptVaultConfigV2 memory config;
-        bool eventFound = false; // Flag to indicate whether the event log was found
+        bool eventFound = false;
+
+        address authorizeSetMsgSender;
+        address authorizeSetTo;
+        bool authorizeSetEventFound = false;
         for (uint256 i = 0; i < logs.length; i++) {
             if (
                 logs[i].topics[0]
@@ -79,7 +83,10 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
                 // Decode the event data
                 (msgSender, config) = abi.decode(logs[i].data, (address, OffchainAssetReceiptVaultConfigV2));
                 eventFound = true; // Set the flag to true since event log was found
-                break;
+            } else if (logs[i].topics[0] == keccak256("AuthorizerSet(address,address)")) {
+                // Decode the event data
+                (authorizeSetMsgSender, authorizeSetTo) = abi.decode(logs[i].data, (address, address));
+                authorizeSetEventFound = true; // Set the flag to true since event log was found
             }
         }
 
@@ -100,6 +107,12 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
         assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));
+
+        /// Check the authorizer set event
+        assertTrue(authorizeSetEventFound, "AuthorizerSet event log not found");
+        assertEq(authorizeSetMsgSender, address(iFactory));
+        assertEq(authorizeSetTo, address(vault));
+        assertTrue(address(vault) != address(0));
 
         // Check the receipt manager is the vault.
         assertEq(address(vault), vault.receipt().manager());
