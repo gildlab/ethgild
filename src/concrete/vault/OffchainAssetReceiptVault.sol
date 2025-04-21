@@ -248,6 +248,11 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     /// @param config All initialization config.
     event OffchainAssetReceiptVaultInitializedV2(address sender, OffchainAssetReceiptVaultConfigV2 config);
 
+    /// An authorizer has been set.
+    /// @param sender The msg sender setting the authorizer.
+    /// @param authorizer The new authorizer contract.
+    event AuthorizerSet(address sender, IAuthorizeV1 authorizer);
+
     /// A new certification time has been set.
     /// @param sender The certifier setting the new time.
     /// @param certifyUntil The time the system is newly certified until.
@@ -352,6 +357,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
             revert IncompatibleAuthorizer();
         }
         sAuthorizer = newAuthorizer;
+        emit AuthorizerSet(msg.sender, newAuthorizer);
     }
 
     /// Apply standard transfer restrictions to receipt transfers.
