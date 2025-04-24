@@ -26,17 +26,10 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
         OffchainAssetReceiptVaultAuthorizerV1 authorizer = new OffchainAssetReceiptVaultAuthorizerV1();
 
         vm.expectRevert("Initializable: contract is already initialized");
-        authorizer.initialize(
-            abi.encode(
-                OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin})
-            )
-        );
+        authorizer.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin})));
     }
 
-    function testOffchainAssetReceiptVaultAuthorizerV1Initialize(
-        address initialAdmin,
-        bytes32 badRole
-    ) external {
+    function testOffchainAssetReceiptVaultAuthorizerV1Initialize(address initialAdmin, bytes32 badRole) external {
         vm.assume(initialAdmin != address(0));
         vm.assume(badRole != CERTIFY_ADMIN);
         vm.assume(badRole != CONFISCATE_SHARES_ADMIN);
@@ -51,9 +44,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
 
         OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
 
-        bytes memory initData = abi.encode(
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin})
-        );
+        bytes memory initData = abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin}));
 
         vm.expectRevert("Initializable: contract is already initialized");
         authorizerImplementation.initialize(initData);
@@ -80,8 +71,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultAuthorizerV1InitializeZeroAdmin() external {
         OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
 
-        bytes memory initData =
-            abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: address(0)}));
+        bytes memory initData = abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: address(0)}));
 
         CloneFactory factory = new CloneFactory();
 

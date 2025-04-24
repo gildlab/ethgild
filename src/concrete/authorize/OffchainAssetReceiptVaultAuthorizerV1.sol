@@ -53,7 +53,6 @@ struct OffchainAssetReceiptVaultAuthorizerV1Config {
 /// Implements the IAuthorizeV1 interface and provides a simple role based
 /// access control for the OffchainAssetReceiptVault.
 contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, AccessControl {
-
     constructor() {
         _disableInitializers();
     }
