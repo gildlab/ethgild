@@ -26,9 +26,6 @@ import {IERC165Upgradeable as IERC165} from
 /// Thrown when the admin is address zero.
 error ZeroInitialAdmin();
 
-/// Thrown when the authorizee is address zero.
-error ZeroAuthorizee();
-
 /// Thrown when a transfer is attempted by an unpriviledged account during system
 /// freeze due to certification lapse.
 /// @param from The account the transfer is from.
@@ -48,17 +45,14 @@ bytes32 constant WITHDRAW_ADMIN = keccak256("WITHDRAW_ADMIN");
 
 /// @dev Configuration for the OffchainAssetReceiptVaultAuthorizorV1.
 /// @param initialAdmin The initial admin of the contract.
-/// @param authorizee The address that is authorized to perform actions.
 struct OffchainAssetReceiptVaultAuthorizerV1Config {
     address initialAdmin;
-    address authorizee;
 }
 
 /// @title OffchainAssetReceiptVaultAuthorizorV1
 /// Implements the IAuthorizeV1 interface and provides a simple role based
 /// access control for the OffchainAssetReceiptVault.
 contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, AccessControl {
-    address sAuthorizee;
 
     constructor() {
         _disableInitializers();
@@ -70,12 +64,6 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
             abi.decode(data, (OffchainAssetReceiptVaultAuthorizerV1Config));
 
         __AccessControl_init();
-
-        // The authorizee MUST be set.
-        if (config.authorizee == address(0)) {
-            revert ZeroAuthorizee();
-        }
-        sAuthorizee = config.authorizee;
 
         // The config admin MUST be set.
         if (config.initialAdmin == address(0)) {

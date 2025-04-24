@@ -36,7 +36,7 @@ library LibOffchainAssetVaultCreator {
             factory.clone(
                 address(authorizerImplementation),
                 abi.encode(
-                    OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin, authorizee: address(vault)})
+                    OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin})
                 )
             )
         );
