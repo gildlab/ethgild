@@ -585,7 +585,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         // in the case of rectifying a prior mistake.
         if (forceUntil || certifyUntil > sCertifiedUntil) {
             sCertifiedUntil = certifyUntil;
-            certifyStateChange.newCertifiedUntil = sCertifiedUntil;
+            certifyStateChange.newCertifiedUntil = certifyUntil;
         }
         emit Certify(_msgSender(), certifyUntil, forceUntil, data);
 
