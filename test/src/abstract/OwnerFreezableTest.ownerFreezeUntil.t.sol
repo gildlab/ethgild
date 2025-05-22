@@ -11,12 +11,13 @@ contract TestOwnerFreezable is OwnerFreezable {
     }
 }
 
-contract OwnerFreezableTestOwnerFreeUntil is Test {
-    /// Only the owner can freeze the contract.
-    function testOwnerFreezableOnlyOwnerCanFreeze(address alice, address bob, uint256 freezeUntil) public {
-        vm.assume(alice != bob);
-        vm.prank(alice);
-        TestOwnerFreezable ownerFreezable = new TestOwnerFreezable();
+contract OwnerFreezableTestOwnerFreezeUntil is Test {
+    function checkOwnerFreezableOnlyOwnerCanFreeze(
+        IOwnerFreezableV1 ownerFreezable,
+        address alice,
+        address bob,
+        uint256 freezeUntil
+    ) internal {
         vm.expectRevert("Ownable: caller is not the owner");
         vm.prank(bob);
         ownerFreezable.ownerFreezeUntil(freezeUntil);
@@ -27,8 +28,17 @@ contract OwnerFreezableTestOwnerFreeUntil is Test {
         assertEq(ownerFreezable.ownerFrozenUntil(), freezeUntil);
     }
 
+    /// Only the owner can freeze the contract.
+    function testOwnerFreezableOnlyOwnerCanFreeze(address alice, address bob, uint256 freezeUntil) external {
+        vm.assume(alice != bob);
+        vm.prank(alice);
+
+        TestOwnerFreezable ownerFreezable = new TestOwnerFreezable();
+        checkOwnerFreezableOnlyOwnerCanFreeze(ownerFreezable, alice, bob, freezeUntil);
+    }
+
     /// Freezing the contract emits an event.
-    function testOwnerFreezableFreezingEmitsEvent(address alice, uint256 freezeUntil) public {
+    function testOwnerFreezableFreezingEmitsEvent(address alice, uint256 freezeUntil) external {
         vm.assume(alice != address(0));
         vm.prank(alice);
         TestOwnerFreezable ownerFreezable = new TestOwnerFreezable();
@@ -36,5 +46,18 @@ contract OwnerFreezableTestOwnerFreeUntil is Test {
         emit IOwnerFreezableV1.OwnerFrozenUntil(alice, freezeUntil);
         vm.prank(alice);
         ownerFreezable.ownerFreezeUntil(freezeUntil);
+    }
+
+    /// Freezing many times works if all times increase.
+    function testOwnerFreezableFreezingManyIncreasing(uint32[] memory times) external {
+        TestOwnerFreezable ownerFreezable = new TestOwnerFreezable();
+
+        uint256 freezeUntil = 0;
+        for (uint256 i; i < times.length; i++) {
+            freezeUntil += times[i];
+
+            ownerFreezable.ownerFreezeUntil(freezeUntil);
+            assertEq(ownerFreezable.ownerFrozenUntil(), freezeUntil);
+        }
     }
 }
