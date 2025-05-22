@@ -600,7 +600,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable
     /// @inheritdoc ReceiptVault
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._beforeTokenTransfer(from, to, amount);
-        owernFreezeCheckTransaction(from, to);
+        ownerFreezeCheckTransaction(from, to);
         sAuthorizer.authorize(
             _msgSender(),
             TRANSFER_SHARES,
