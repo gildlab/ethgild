@@ -21,6 +21,14 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         assertEq(sOwnerFreezable.ownerFrozenUntil(), expectedFreeze);
     }
 
+    function checkOwnerFreezeAlwaysAllowFrom(address from, uint256 protectUntil, uint256 expectedProtect) internal {
+        vm.prank(sAlice);
+        vm.expectEmit(true, true, true, true);
+        emit IOwnerFreezableV1.OwnerFreezeAlwaysAllowedFrom(sAlice, from, protectUntil, expectedProtect);
+        sOwnerFreezable.ownerFreezeAlwaysAllowFrom(from, protectUntil);
+        assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), expectedProtect);
+    }
+
     function testOwnerIsAlice() external {
         assertEq(sOwnerFreezable.owner(), sAlice);
     }
@@ -84,9 +92,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         sOwnerFreezable.ownerFreezeAlwaysAllowFrom(from, protectUntil);
         assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), 0);
 
-        vm.prank(sAlice);
-        sOwnerFreezable.ownerFreezeAlwaysAllowFrom(from, protectUntil);
-        assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), protectUntil);
+        checkOwnerFreezeAlwaysAllowFrom(from, protectUntil, protectUntil);
     }
 
     /// Calling ownerFreezeAlwaysAllowFrom with a zero protectUntil reverts.
@@ -94,5 +100,23 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         vm.expectRevert(abi.encodeWithSignature("OwnerFreezeAlwaysAllowedFromZero(address)", from));
         vm.prank(sAlice);
         sOwnerFreezable.ownerFreezeAlwaysAllowFrom(from, 0);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowFrom twice with increasing times always uses newer times.
+    function testOwnerFreezableAlwaysAllowFromIncrement(address from, uint256 a, uint256 b) external {
+        vm.assume(a != 0);
+        b = bound(b, a, type(uint256).max);
+
+        checkOwnerFreezeAlwaysAllowFrom(from, a, a);
+        checkOwnerFreezeAlwaysAllowFrom(from, b, b);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowFrom twice with decreasing times retains the first time.
+    function testOwnerFreezableAlwaysAllowFromDecrement(address from, uint256 a, uint256 b) external {
+        vm.assume(a != 0);
+        b = bound(b, 1, a);
+
+        checkOwnerFreezeAlwaysAllowFrom(from, a, a);
+        checkOwnerFreezeAlwaysAllowFrom(from, b, a);
     }
 }

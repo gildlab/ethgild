@@ -105,7 +105,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         // Emit the event with the new protected time. We do this even if the
         // protected time is unchanged so that we can track the history of
         // protections offchain.
-        emit OwnerFreezeAlwaysAllowedFrom(owner(), from, protectUntil);
+        emit OwnerFreezeAlwaysAllowedFrom(owner(), from, protectUntil, sAlwaysAllowedFroms[from]);
     }
 
     /// @inheritdoc IOwnerFreezableV1
@@ -117,7 +117,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         }
 
         delete sAlwaysAllowedFroms[from];
-        emit OwnerFreezeAlwaysAllowedFrom(owner(), from, 0);
+        emit OwnerFreezeAlwaysAllowedFrom(owner(), from, 0, 0);
     }
 
     /// @inheritdoc IOwnerFreezableV1

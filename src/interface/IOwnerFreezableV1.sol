@@ -48,9 +48,14 @@ interface IOwnerFreezableV1 is IERC5313 {
     /// Owner added a `from` address to the always allowed list.
     /// @param owner The address of the owner.
     /// @param from The address that is always allowed to send.
+    /// @param targetProtectedUntil The timestamp the owner attempted to protect
+    /// the `from` until. Can be less than the actual protection if a previous
+    /// call already set it higher.
     /// @param protectedUntil The timestamp until the `from` address is unable to
     /// be removed from the always allowed list.
-    event OwnerFreezeAlwaysAllowedFrom(address owner, address from, uint256 protectedUntil);
+    event OwnerFreezeAlwaysAllowedFrom(
+        address owner, address from, uint256 targetProtectedUntil, uint256 protectedUntil
+    );
 
     /// Owner added a `to` address to the always allowed list.
     /// @param owner The address of the owner.
