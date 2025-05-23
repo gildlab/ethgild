@@ -119,4 +119,23 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         checkOwnerFreezeAlwaysAllowFrom(from, a, a);
         checkOwnerFreezeAlwaysAllowFrom(from, b, a);
     }
+
+    /// Calling ownerFreezeAlwaysAllowFrom many times with all times increasing.
+    function testOwnerFreezableAlwaysAllowFromManyIncreasing(address from, uint32[] memory times) external {
+        uint256 expected = 1;
+        for (uint256 i; i < times.length; i++) {
+            expected += times[i];
+            checkOwnerFreezeAlwaysAllowFrom(from, expected, expected);
+        }
+    }
+
+    /// Calling ownerFreezeAlwaysAllowFrom many times.
+    function testOwnerFreezableAlwaysAllowFromMany(address from, uint256[] memory times) external {
+        uint256 highwater = 0;
+        for (uint256 i; i < times.length; i++) {
+            times[i] = times[i].max(1);
+            highwater = highwater.max(times[i]);
+            checkOwnerFreezeAlwaysAllowFrom(from, times[i], highwater);
+        }
+    }
 }
