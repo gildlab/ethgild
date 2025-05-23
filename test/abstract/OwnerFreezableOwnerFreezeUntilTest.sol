@@ -30,7 +30,9 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
     }
 
     function checkOwnerFreezeStopAlwaysAllowingFrom(address from) internal {
-        vm.warp(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from));
+        uint256 time = sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from);
+        time = bound(time, time, type(uint256).max);
+        vm.warp(time);
         vm.prank(sAlice);
         vm.expectEmit(true, true, true, true);
         emit IOwnerFreezableV1.OwnerFreezeAlwaysAllowedFrom(sAlice, from, 0, 0);
@@ -180,5 +182,22 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
 
         checkOwnerFreezeStopAlwaysAllowingFrom(from1);
         checkOwnerFreezeStopAlwaysAllowingFrom(from2);
+    }
+
+    /// Calling ownerFreezeStopAlwaysAllowingFrom before the protected time reverts.
+    function testOwnerFreezableAlwaysAllowFromProtectedReverts(address from, uint256 protectUntil, uint256 time)
+        external
+    {
+        vm.assume(from != address(0));
+        vm.assume(protectUntil != 0);
+        time = bound(time, 0, protectUntil - 1);
+        checkOwnerFreezeAlwaysAllowFrom(from, protectUntil, protectUntil);
+
+        vm.warp(time);
+        vm.prank(sAlice);
+        vm.expectRevert(
+            abi.encodeWithSignature("OwnerFreezeAlwaysAllowedFromProtected(address,uint256)", from, protectUntil)
+        );
+        sOwnerFreezable.ownerFreezeStopAlwaysAllowingFrom(from);
     }
 }
