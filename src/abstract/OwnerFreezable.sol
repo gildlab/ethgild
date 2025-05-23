@@ -69,6 +69,11 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     }
 
     /// @inheritdoc IOwnerFreezableV1
+    function ownerFreezeAlwaysAllowedFrom(address from) external view returns (uint256) {
+        return sAlwaysAllowedFroms[from];
+    }
+
+    /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeUntil(uint256 freezeUntil) external onlyOwner {
         // Freezing is additive so we can only increase the freeze time.
         // It is a no-op on the state if the new freeze time is less than the
@@ -81,11 +86,6 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         // freeze time is unchanged so that we can track the history of
         // freeze calls offchain.
         emit OwnerFrozenUntil(owner(), freezeUntil, sOwnerFrozenUntil);
-    }
-
-    /// @inheritdoc IOwnerFreezableV1
-    function ownerFreezeAlwaysAllowedFrom(address from) external view returns (uint256) {
-        return sAlwaysAllowedFroms[from];
     }
 
     /// @inheritdoc IOwnerFreezableV1
@@ -112,7 +112,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     function ownerFreezeStopAlwaysAllowingFrom(address from) external onlyOwner {
         // If the current time is after the protection for this `from` then
         // we can remove it. Otherwise we revert to respect the protection.
-        if (block.timestamp <= sAlwaysAllowedFroms[from]) {
+        if (block.timestamp < sAlwaysAllowedFroms[from]) {
             revert OwnerFreezeAlwaysAllowedFromProtected(from, sAlwaysAllowedFroms[from]);
         }
 
@@ -144,7 +144,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     function ownerFreezeStopAlwaysAllowingTo(address to) external onlyOwner {
         // If the current time is after the protection for this `to` then
         // we can remove it. Otherwise we revert to respect the protection.
-        if (block.timestamp <= sAlwaysAllowedTos[to]) {
+        if (block.timestamp < sAlwaysAllowedTos[to]) {
             revert IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToProtected(to, sAlwaysAllowedTos[to]);
         }
 

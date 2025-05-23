@@ -29,7 +29,16 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), expectedProtect);
     }
 
-    function testOwnerIsAlice() external {
+    function checkOwnerFreezeStopAlwaysAllowingFrom(address from) internal {
+        vm.warp(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from));
+        vm.prank(sAlice);
+        vm.expectEmit(true, true, true, true);
+        emit IOwnerFreezableV1.OwnerFreezeAlwaysAllowedFrom(sAlice, from, 0, 0);
+        sOwnerFreezable.ownerFreezeStopAlwaysAllowingFrom(from);
+        assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), 0);
+    }
+
+    function testOwnerIsAlice() external view {
         assertEq(sOwnerFreezable.owner(), sAlice);
     }
 
@@ -93,6 +102,8 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), 0);
 
         checkOwnerFreezeAlwaysAllowFrom(from, protectUntil, protectUntil);
+
+        checkOwnerFreezeStopAlwaysAllowingFrom(from);
     }
 
     /// Calling ownerFreezeAlwaysAllowFrom with a zero protectUntil reverts.
@@ -109,6 +120,8 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
 
         checkOwnerFreezeAlwaysAllowFrom(from, a, a);
         checkOwnerFreezeAlwaysAllowFrom(from, b, b);
+
+        checkOwnerFreezeStopAlwaysAllowingFrom(from);
     }
 
     /// Calling ownerFreezeAlwaysAllowFrom twice with decreasing times retains the first time.
@@ -118,6 +131,8 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
 
         checkOwnerFreezeAlwaysAllowFrom(from, a, a);
         checkOwnerFreezeAlwaysAllowFrom(from, b, a);
+
+        checkOwnerFreezeStopAlwaysAllowingFrom(from);
     }
 
     /// Calling ownerFreezeAlwaysAllowFrom many times with all times increasing.
@@ -127,6 +142,8 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
             expected += times[i];
             checkOwnerFreezeAlwaysAllowFrom(from, expected, expected);
         }
+
+        checkOwnerFreezeStopAlwaysAllowingFrom(from);
     }
 
     /// Calling ownerFreezeAlwaysAllowFrom many times.
@@ -137,5 +154,31 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
             highwater = highwater.max(times[i]);
             checkOwnerFreezeAlwaysAllowFrom(from, times[i], highwater);
         }
+
+        checkOwnerFreezeStopAlwaysAllowingFrom(from);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowFrom with different `from`.
+    function testOwnerFreezableAlwaysAllowFromDifferentFrom(
+        address from1,
+        address from2,
+        uint256 protectUntil1a,
+        uint256 protectUntil1b,
+        uint256 protectUntil2a,
+        uint256 protectUntil2b
+    ) external {
+        vm.assume(from1 != from2);
+        vm.assume(protectUntil1a != 0);
+        vm.assume(protectUntil1b != 0);
+        vm.assume(protectUntil2a != 0);
+        vm.assume(protectUntil2b != 0);
+
+        checkOwnerFreezeAlwaysAllowFrom(from1, protectUntil1a, protectUntil1a);
+        checkOwnerFreezeAlwaysAllowFrom(from1, protectUntil1b, protectUntil1b.max(protectUntil1a));
+        checkOwnerFreezeAlwaysAllowFrom(from2, protectUntil2a, protectUntil2a);
+        checkOwnerFreezeAlwaysAllowFrom(from2, protectUntil2b, protectUntil2b.max(protectUntil2a));
+
+        checkOwnerFreezeStopAlwaysAllowingFrom(from1);
+        checkOwnerFreezeStopAlwaysAllowingFrom(from2);
     }
 }
