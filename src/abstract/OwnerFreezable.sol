@@ -74,6 +74,11 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     }
 
     /// @inheritdoc IOwnerFreezableV1
+    function ownerFreezeAlwaysAllowedTo(address to) external view returns (uint256) {
+        return sAlwaysAllowedTos[to];
+    }
+
+    /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeUntil(uint256 freezeUntil) external onlyOwner {
         // Freezing is additive so we can only increase the freeze time.
         // It is a no-op on the state if the new freeze time is less than the
@@ -137,7 +142,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         // Emit the event with the new protected time. We do this even if the
         // protected time is unchanged so that we can track the history of
         // protections offchain.
-        emit OwnerFreezeAlwaysAllowedTo(owner(), to, protectUntil);
+        emit OwnerFreezeAlwaysAllowedTo(owner(), to, protectUntil, sAlwaysAllowedTos[to]);
     }
 
     /// @inheritdoc IOwnerFreezableV1
@@ -149,7 +154,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         }
 
         delete sAlwaysAllowedTos[to];
-        emit OwnerFreezeAlwaysAllowedTo(owner(), to, 0);
+        emit OwnerFreezeAlwaysAllowedTo(owner(), to, 0, 0);
     }
 
     /// Check if the contract is frozen. If it is, revert if the `from` or

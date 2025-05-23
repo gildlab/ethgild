@@ -60,9 +60,12 @@ interface IOwnerFreezableV1 is IERC5313 {
     /// Owner added a `to` address to the always allowed list.
     /// @param owner The address of the owner.
     /// @param to The address that is always allowed to receive.
+    /// @param targetProtectedUntil The timestamp the owner attempted to protect
+    /// the `to` until. Can be less than the actual protection if a previous
+    /// call already set it higher.
     /// @param protectedUntil The timestamp until the `to` address is unable to
     /// be removed from the always allowed list.
-    event OwnerFreezeAlwaysAllowedTo(address owner, address to, uint256 protectedUntil);
+    event OwnerFreezeAlwaysAllowedTo(address owner, address to, uint256 targetProtectedUntil, uint256 protectedUntil);
 
     /// Returns the timestamp until when the contract is frozen.
     /// @return The timestamp until when the contract is frozen.
@@ -98,6 +101,16 @@ interface IOwnerFreezableV1 is IERC5313 {
     /// provided the current time is greater than the protected time.
     /// @param from The address that is always allowed to send.
     function ownerFreezeStopAlwaysAllowingFrom(address from) external;
+
+    /// If the `to` address is always allowed to receive tokens a non-zero
+    /// timestamp is returned. The timestamp represents the time until when
+    /// the `to` address is unable to be removed from the always allowed list.
+    /// After this time the `to` address is still always allowed to receive
+    /// tokens, but the owner can remove it from the always allowed list.
+    /// @param to The address that is always allowed to receive.
+    /// @return protectedUntil The timestamp until the `to` address is unable
+    /// to be removed from the always allowed list.
+    function ownerFreezeAlwaysAllowedTo(address to) external view returns (uint256 protectedUntil);
 
     /// The owner can add a `to` address to the always allowed list. The
     /// owner cannot remove this address from the always allowed list until

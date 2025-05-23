@@ -40,6 +40,25 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), 0);
     }
 
+    function checkOwnerFreezeAlwaysAllowTo(address to, uint256 protectUntil, uint256 expectedProtect) internal {
+        vm.prank(sAlice);
+        vm.expectEmit(true, true, true, true);
+        emit IOwnerFreezableV1.OwnerFreezeAlwaysAllowedTo(sAlice, to, protectUntil, expectedProtect);
+        sOwnerFreezable.ownerFreezeAlwaysAllowTo(to, protectUntil);
+        assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedTo(to), expectedProtect);
+    }
+
+    function checkOwnerFreezeStopAlwaysAllowingTo(address to) internal {
+        uint256 time = sOwnerFreezable.ownerFreezeAlwaysAllowedTo(to);
+        time = bound(time, time, type(uint256).max);
+        vm.warp(time);
+        vm.prank(sAlice);
+        vm.expectEmit(true, true, true, true);
+        emit IOwnerFreezableV1.OwnerFreezeAlwaysAllowedTo(sAlice, to, 0, 0);
+        sOwnerFreezable.ownerFreezeStopAlwaysAllowingTo(to);
+        assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedTo(to), 0);
+    }
+
     function testOwnerIsAlice() external view {
         assertEq(sOwnerFreezable.owner(), sAlice);
     }
@@ -199,5 +218,108 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
             abi.encodeWithSignature("OwnerFreezeAlwaysAllowedFromProtected(address,uint256)", from, protectUntil)
         );
         sOwnerFreezable.ownerFreezeStopAlwaysAllowingFrom(from);
+    }
+
+    /// Only owner can call ownerFreezeAlwaysAllowTo.
+    function testOwnerFreezableOnlyOwnerCanFreezeAlwaysAllowTo(address to, uint256 protectUntil) external {
+        vm.assume(protectUntil != 0);
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(sBob);
+        sOwnerFreezable.ownerFreezeAlwaysAllowTo(to, protectUntil);
+        assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedTo(to), 0);
+
+        checkOwnerFreezeAlwaysAllowTo(to, protectUntil, protectUntil);
+
+        checkOwnerFreezeStopAlwaysAllowingTo(to);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowTo with a zero protectUntil reverts.
+    function testOwnerFreezableZeroProtectUntilRevertsTo(address to) external {
+        vm.expectRevert(abi.encodeWithSignature("OwnerFreezeAlwaysAllowedToZero(address)", to));
+        vm.prank(sAlice);
+        sOwnerFreezable.ownerFreezeAlwaysAllowTo(to, 0);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowTo twice with increasing times always uses newer times.
+    function testOwnerFreezableAlwaysAllowToIncrement(address to, uint256 a, uint256 b) external {
+        vm.assume(a != 0);
+        b = bound(b, a, type(uint256).max);
+
+        checkOwnerFreezeAlwaysAllowTo(to, a, a);
+        checkOwnerFreezeAlwaysAllowTo(to, b, b);
+
+        checkOwnerFreezeStopAlwaysAllowingTo(to);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowTo twice with decreasing times retains the first time.
+    function testOwnerFreezableAlwaysAllowToDecrement(address to, uint256 a, uint256 b) external {
+        vm.assume(a != 0);
+        b = bound(b, 1, a);
+
+        checkOwnerFreezeAlwaysAllowTo(to, a, a);
+        checkOwnerFreezeAlwaysAllowTo(to, b, a);
+
+        checkOwnerFreezeStopAlwaysAllowingTo(to);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowTo many times with all times increasing.
+    function testOwnerFreezableAlwaysAllowToManyIncreasing(address to, uint32[] memory times) external {
+        uint256 expected = 1;
+        for (uint256 i; i < times.length; i++) {
+            expected += times[i];
+            checkOwnerFreezeAlwaysAllowTo(to, expected, expected);
+        }
+
+        checkOwnerFreezeStopAlwaysAllowingTo(to);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowTo many times.
+    function testOwnerFreezableAlwaysAllowToMany(address to, uint256[] memory times) external {
+        uint256 highwater = 0;
+        for (uint256 i; i < times.length; i++) {
+            times[i] = times[i].max(1);
+            highwater = highwater.max(times[i]);
+            checkOwnerFreezeAlwaysAllowTo(to, times[i], highwater);
+        }
+
+        checkOwnerFreezeStopAlwaysAllowingTo(to);
+    }
+
+    /// Calling ownerFreezeAlwaysAllowTo with different `to`.
+    function testOwnerFreezableAlwaysAllowToDifferentTo(
+        address to1,
+        address to2,
+        uint256 protectUntil1a,
+        uint256 protectUntil1b,
+        uint256 protectUntil2a,
+        uint256 protectUntil2b
+    ) external {
+        vm.assume(to1 != to2);
+        vm.assume(protectUntil1a != 0);
+        vm.assume(protectUntil1b != 0);
+        vm.assume(protectUntil2a != 0);
+        vm.assume(protectUntil2b != 0);
+
+        checkOwnerFreezeAlwaysAllowTo(to1, protectUntil1a, protectUntil1a);
+        checkOwnerFreezeAlwaysAllowTo(to1, protectUntil1b, protectUntil1b.max(protectUntil1a));
+        checkOwnerFreezeAlwaysAllowTo(to2, protectUntil2a, protectUntil2a);
+        checkOwnerFreezeAlwaysAllowTo(to2, protectUntil2b, protectUntil2b.max(protectUntil2a));
+
+        checkOwnerFreezeStopAlwaysAllowingTo(to1);
+        checkOwnerFreezeStopAlwaysAllowingTo(to2);
+    }
+
+    /// Calling ownerFreezeStopAlwaysAllowingTo before the protected time reverts.
+    function testOwnerFreezableAlwaysAllowToProtectedReverts(address to, uint256 protectUntil, uint256 time) external {
+        vm.assume(to != address(0));
+        vm.assume(protectUntil != 0);
+        time = bound(time, 0, protectUntil - 1);
+        checkOwnerFreezeAlwaysAllowTo(to, protectUntil, protectUntil);
+        vm.warp(time);
+        vm.prank(sAlice);
+        vm.expectRevert(
+            abi.encodeWithSignature("OwnerFreezeAlwaysAllowedToProtected(address,uint256)", to, protectUntil)
+        );
+        sOwnerFreezable.ownerFreezeStopAlwaysAllowingTo(to);
     }
 }
