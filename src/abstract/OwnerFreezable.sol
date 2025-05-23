@@ -80,7 +80,12 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         // Emit the event with the new freeze time. We do this even if the
         // freeze time is unchanged so that we can track the history of
         // freeze calls offchain.
-        emit OwnerFrozenUntil(owner(), freezeUntil);
+        emit OwnerFrozenUntil(owner(), freezeUntil, sOwnerFrozenUntil);
+    }
+
+    /// @inheritdoc IOwnerFreezableV1
+    function ownerFreezeAlwaysAllowedFrom(address from) external view returns (uint256) {
+        return sAlwaysAllowedFroms[from];
     }
 
     /// @inheritdoc IOwnerFreezableV1
