@@ -18,13 +18,13 @@ contract OffchainAssetReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable iFactory;
     OffchainAssetReceiptVault internal immutable iImplementation;
     OffchainAssetReceiptVaultAuthorizerV1 internal immutable iAuthorizerImplementation;
-    ReceiptContract internal immutable receiptImplementation;
+    ReceiptContract internal immutable iReceiptImplementation;
 
     constructor() {
         iFactory = new CloneFactory();
-        receiptImplementation = new ReceiptContract();
+        iReceiptImplementation = new ReceiptContract();
         iImplementation = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: receiptImplementation})
+            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
         iAuthorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
     }

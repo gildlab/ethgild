@@ -11,7 +11,6 @@ import {
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfigV2
 } from "../../abstract/ReceiptVault.sol";
-import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IReceiptV3} from "../../interface/IReceiptV3.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
 import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
@@ -20,6 +19,7 @@ import {IERC165Upgradeable as IERC165} from
     "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
 
 import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {OwnerFreezable} from "../../abstract/OwnerFreezable.sol";
 
 /// Thrown when the asset is NOT address zero.
 error NonZeroAsset();
@@ -240,7 +240,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
+contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable {
     using Math for uint256;
 
     /// Contract has initialized.
@@ -379,6 +379,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
         uint256[] memory amounts
     ) public virtual override {
         super.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
+        ownerFreezeCheckTransaction(from, to);
         sAuthorizer.authorize(
             operator,
             TRANSFER_RECEIPT,
@@ -600,6 +601,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, Ownable {
     /// @inheritdoc ReceiptVault
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._beforeTokenTransfer(from, to, amount);
+        ownerFreezeCheckTransaction(from, to);
         sAuthorizer.authorize(
             _msgSender(),
             TRANSFER_SHARES,
