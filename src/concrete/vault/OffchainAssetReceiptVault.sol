@@ -379,6 +379,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable
         uint256[] memory amounts
     ) public virtual override {
         super.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
+        ownerFreezeCheckTransaction(from, to);
         sAuthorizer.authorize(
             operator,
             TRANSFER_RECEIPT,

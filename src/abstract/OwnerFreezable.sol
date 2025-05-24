@@ -165,7 +165,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
         // We either simply revert or no-op for this check.
         // Revert if the contract is frozen and neither the `from` nor `to` are
         // in their respective always allowed lists.
-        if (block.timestamp < sOwnerFrozenUntil || sAlwaysAllowedFroms[from] != 0 || sAlwaysAllowedTos[to] != 0) {
+        if (block.timestamp < sOwnerFrozenUntil && sAlwaysAllowedFroms[from] == 0 && sAlwaysAllowedTos[to] == 0) {
             revert IOwnerFreezableV1.OwnerFrozen(sOwnerFrozenUntil, from, to);
         }
     }
