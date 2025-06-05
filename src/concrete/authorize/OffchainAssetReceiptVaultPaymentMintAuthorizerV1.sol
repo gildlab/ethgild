@@ -14,10 +14,16 @@ import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {DEPOSIT, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {IERC20MetadataUpgradeable as IERC20Metadata} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+
+import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
 error ZeroInitialOwner();
 
 error ZeroPaymentToken();
+
+error PaymentTokenDecimalMismatch(uint256 expected, uint256 actual);
 
 struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
     address owner;
@@ -34,6 +40,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
     using SafeERC20 for IERC20;
 
     address internal sPaymentToken;
+    uint256 internal sPaymentTokenDecimals;
 
     constructor() {
         _disableInitializers();
@@ -52,6 +59,8 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
             revert ZeroInitialOwner();
         }
         sPaymentToken = config.paymentToken;
+        uint256 paymentTokenDecimals = IERC20Metadata(config.paymentToken).decimals();
+        sPaymentTokenDecimals = paymentTokenDecimals;
 
         _transferOwnership(config.owner);
 
@@ -67,7 +76,18 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
     function authorize(address, bytes32 permission, bytes calldata data) external virtual override {
         if (permission == DEPOSIT) {
             DepositStateChange memory stateChange = abi.decode(data, (DepositStateChange));
-            IERC20(sPaymentToken).safeTransferFrom(stateChange.owner, address(this), stateChange.sharesMinted);
+            address paymentToken = sPaymentToken;
+            uint256 paymentTokenDecimals = sPaymentTokenDecimals;
+            uint256 paymentAmount =
+                LibFixedPointDecimalScale.scaleN(stateChange.sharesMinted, paymentTokenDecimals, FLAG_ROUND_UP);
+
+            // Enforce TOFU use of payment token decimals value.
+            uint256 currentPaymentTokenDecimals = IERC20Metadata(paymentToken).decimals();
+            if (currentPaymentTokenDecimals != paymentTokenDecimals) {
+                revert PaymentTokenDecimalMismatch(paymentTokenDecimals, currentPaymentTokenDecimals);
+            }
+
+            IERC20(paymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
         }
     }
 
