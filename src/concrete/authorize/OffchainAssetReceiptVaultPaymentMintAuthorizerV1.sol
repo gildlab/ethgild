@@ -19,15 +19,23 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
 
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
+error ZeroReceiptVault();
+
 error ZeroInitialOwner();
 
 error ZeroPaymentToken();
 
+error ZeroMaxSharesSupply();
+
+error MaxSharesSupplyExceeded(uint256 maxSharesSupply, uint256 sharesMinted);
+
 error PaymentTokenDecimalMismatch(uint256 expected, uint256 actual);
 
 struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
+    address receiptVault;
     address owner;
     address paymentToken;
+    uint256 maxSharesSupply;
 }
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
@@ -39,8 +47,10 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 {
     using SafeERC20 for IERC20;
 
+    address internal sReceiptVault;
     address internal sPaymentToken;
     uint256 internal sPaymentTokenDecimals;
+    uint256 internal sMaxSharesSupply;
 
     constructor() {
         _disableInitializers();
@@ -51,16 +61,27 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config memory config =
             abi.decode(data, (OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config));
 
-        if (config.paymentToken == address(0)) {
-            revert ZeroPaymentToken();
+        if (config.receiptVault == address(0)) {
+            revert ZeroReceiptVault();
         }
 
         if (config.owner == address(0)) {
             revert ZeroInitialOwner();
         }
+
+        if (config.paymentToken == address(0)) {
+            revert ZeroPaymentToken();
+        }
+
+        if (config.maxSharesSupply == 0) {
+            revert ZeroMaxSharesSupply();
+        }
+
+        sReceiptVault = config.receiptVault;
         sPaymentToken = config.paymentToken;
         uint256 paymentTokenDecimals = IERC20Metadata(config.paymentToken).decimals();
         sPaymentTokenDecimals = paymentTokenDecimals;
+        sMaxSharesSupply = config.maxSharesSupply;
 
         _transferOwnership(config.owner);
 
@@ -73,7 +94,14 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
     }
 
     /// @inheritdoc IAuthorizeV1
-    function authorize(address, bytes32 permission, bytes calldata data) external virtual override {
+    function authorize(address user, bytes32 permission, bytes calldata data) external virtual override {
+        address receiptVault = sReceiptVault;
+        // Ensure that the caller is the receipt vault to prevent any possible
+        // malicious calls from untrusted sources.
+        if (msg.sender != receiptVault) {
+            revert Unauthorized(user, permission, data);
+        }
+
         if (permission == DEPOSIT) {
             DepositStateChange memory stateChange = abi.decode(data, (DepositStateChange));
             address paymentToken = sPaymentToken;
@@ -85,6 +113,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
             uint256 currentPaymentTokenDecimals = IERC20Metadata(paymentToken).decimals();
             if (currentPaymentTokenDecimals != paymentTokenDecimals) {
                 revert PaymentTokenDecimalMismatch(paymentTokenDecimals, currentPaymentTokenDecimals);
+            }
+
+            uint256 oldSharesSupply = IERC20(receiptVault).totalSupply();
+            uint256 newSharesSupply = oldSharesSupply + stateChange.sharesMinted;
+            if (newSharesSupply > sMaxSharesSupply) {
+                revert MaxSharesSupplyExceeded(sMaxSharesSupply, newSharesSupply);
             }
 
             IERC20(paymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
