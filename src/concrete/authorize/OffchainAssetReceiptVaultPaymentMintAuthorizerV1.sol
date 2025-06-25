@@ -5,8 +5,8 @@ pragma solidity =0.8.25;
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
-import {IERC165Upgradeable as IERC165} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
+import {ERC165Upgradeable as ERC165} from
+    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
 import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -38,13 +38,7 @@ struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
     uint256 maxSharesSupply;
 }
 
-contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
-    IAuthorizeV1,
-    ICloneableV2,
-    IERC165,
-    Initializable,
-    Ownable
-{
+contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, ICloneableV2, ERC165, Ownable {
     using SafeERC20 for IERC20;
 
     address internal sReceiptVault;
@@ -88,9 +82,10 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    /// @inheritdoc IERC165
-    function supportsInterface(bytes4 interfaceId) external view virtual override returns (bool) {
-        return interfaceId == type(IAuthorizeV1).interfaceId || interfaceId == type(ICloneableV2).interfaceId;
+    /// @inheritdoc ERC165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IAuthorizeV1).interfaceId || interfaceId == type(ICloneableV2).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     /// @inheritdoc IAuthorizeV1
