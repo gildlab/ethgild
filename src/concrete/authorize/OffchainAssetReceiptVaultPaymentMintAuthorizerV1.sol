@@ -43,8 +43,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
 
     address internal sReceiptVault;
     address internal sPaymentToken;
-    uint256 internal sPaymentTokenDecimals;
+    uint8 internal sPaymentTokenDecimals;
     uint256 internal sMaxSharesSupply;
+
+    event Initialized(
+        address receiptVault, address owner, address paymentToken, uint8 paymentTokenDecimals, uint256 maxSharesSupply
+    );
 
     constructor() {
         _disableInitializers();
@@ -73,9 +77,16 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
 
         sReceiptVault = config.receiptVault;
         sPaymentToken = config.paymentToken;
-        uint256 paymentTokenDecimals = IERC20Metadata(config.paymentToken).decimals();
-        sPaymentTokenDecimals = paymentTokenDecimals;
+        uint8 lPaymentTokenDecimals = IERC20Metadata(config.paymentToken).decimals();
+        sPaymentTokenDecimals = lPaymentTokenDecimals;
         sMaxSharesSupply = config.maxSharesSupply;
+
+        __Ownable_init();
+        __ERC165_init();
+
+        emit Initialized(
+            config.receiptVault, config.owner, config.paymentToken, lPaymentTokenDecimals, config.maxSharesSupply
+        );
 
         _transferOwnership(config.owner);
 
@@ -90,37 +101,53 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
 
     /// @inheritdoc IAuthorizeV1
     function authorize(address user, bytes32 permission, bytes calldata data) external virtual override {
-        address receiptVault = sReceiptVault;
+        address lReceiptVault = sReceiptVault;
         // Ensure that the caller is the receipt vault to prevent any possible
         // malicious calls from untrusted sources.
-        if (msg.sender != receiptVault) {
+        if (msg.sender != lReceiptVault) {
             revert Unauthorized(user, permission, data);
         }
 
         if (permission == DEPOSIT) {
             DepositStateChange memory stateChange = abi.decode(data, (DepositStateChange));
-            address paymentToken = sPaymentToken;
-            uint256 paymentTokenDecimals = sPaymentTokenDecimals;
+            address lPaymentToken = sPaymentToken;
+            uint256 lPaymentTokenDecimals = sPaymentTokenDecimals;
             uint256 paymentAmount =
-                LibFixedPointDecimalScale.scaleN(stateChange.sharesMinted, paymentTokenDecimals, FLAG_ROUND_UP);
+                LibFixedPointDecimalScale.scaleN(stateChange.sharesMinted, lPaymentTokenDecimals, FLAG_ROUND_UP);
 
             // Enforce TOFU use of payment token decimals value.
-            uint256 currentPaymentTokenDecimals = IERC20Metadata(paymentToken).decimals();
-            if (currentPaymentTokenDecimals != paymentTokenDecimals) {
-                revert PaymentTokenDecimalMismatch(paymentTokenDecimals, currentPaymentTokenDecimals);
+            uint256 currentPaymentTokenDecimals = IERC20Metadata(lPaymentToken).decimals();
+            if (currentPaymentTokenDecimals != lPaymentTokenDecimals) {
+                revert PaymentTokenDecimalMismatch(lPaymentTokenDecimals, currentPaymentTokenDecimals);
             }
 
-            uint256 oldSharesSupply = IERC20(receiptVault).totalSupply();
+            uint256 oldSharesSupply = IERC20(lReceiptVault).totalSupply();
             uint256 newSharesSupply = oldSharesSupply + stateChange.sharesMinted;
             if (newSharesSupply > sMaxSharesSupply) {
                 revert MaxSharesSupplyExceeded(sMaxSharesSupply, newSharesSupply);
             }
 
-            IERC20(paymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
+            IERC20(lPaymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
         }
     }
 
     function sendPaymentToOwner() external {
         IERC20(sPaymentToken).safeTransfer(owner(), IERC20(sPaymentToken).balanceOf(address(this)));
+    }
+
+    function receiptVault() external view returns (address) {
+        return sReceiptVault;
+    }
+
+    function paymentToken() external view returns (address) {
+        return sPaymentToken;
+    }
+
+    function paymentTokenDecimals() external view returns (uint8) {
+        return sPaymentTokenDecimals;
+    }
+
+    function maxSharesSupply() external view returns (uint256) {
+        return sMaxSharesSupply;
     }
 }
