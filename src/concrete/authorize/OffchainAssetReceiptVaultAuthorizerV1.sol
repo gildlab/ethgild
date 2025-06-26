@@ -58,7 +58,13 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
     }
 
     /// @inheritdoc ICloneableV2
-    function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
+    function initialize(bytes memory data) external virtual override initializer returns (bytes32) {
+        return _initialize(data);
+    }
+
+    /// Initialization logic without the initializer modifier so inheriting
+    /// contracts can access it and be the initializer.
+    function _initialize(bytes memory data) internal returns (bytes32) {
         OffchainAssetReceiptVaultAuthorizerV1Config memory config =
             abi.decode(data, (OffchainAssetReceiptVaultAuthorizerV1Config));
 

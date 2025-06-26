@@ -92,7 +92,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
 
         _transferOwnership(config.owner);
 
-        super.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: config.owner})));
+        super._initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: config.owner})));
 
         return ICLONEABLE_V2_SUCCESS;
     }
