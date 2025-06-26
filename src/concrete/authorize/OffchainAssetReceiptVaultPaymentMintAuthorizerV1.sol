@@ -12,11 +12,14 @@ import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {DEPOSIT, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
+import {DEPOSIT, WITHDRAW, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-
+import {
+    OffchainAssetReceiptVaultAuthorizerV1,
+    OffchainAssetReceiptVaultAuthorizerV1Config
+} from "./OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
 error ZeroReceiptVault();
@@ -38,7 +41,7 @@ struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
     uint256 maxSharesSupply;
 }
 
-contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, ICloneableV2, ERC165, Ownable {
+contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceiptVaultAuthorizerV1, Ownable {
     using SafeERC20 for IERC20;
 
     address internal sReceiptVault;
@@ -55,7 +58,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
     }
 
     /// @inheritdoc ICloneableV2
-    function initialize(bytes calldata data) external initializer returns (bytes32) {
+    function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config memory config =
             abi.decode(data, (OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config));
 
@@ -82,7 +85,6 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
         sMaxSharesSupply = config.maxSharesSupply;
 
         __Ownable_init();
-        __ERC165_init();
 
         emit Initialized(
             config.receiptVault, config.owner, config.paymentToken, lPaymentTokenDecimals, config.maxSharesSupply
@@ -90,24 +92,19 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
 
         _transferOwnership(config.owner);
 
+        super.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: config.owner})));
+
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    /// @inheritdoc ERC165
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IAuthorizeV1).interfaceId || interfaceId == type(ICloneableV2).interfaceId
-            || super.supportsInterface(interfaceId);
-    }
-
     /// @inheritdoc IAuthorizeV1
-    function authorize(address user, bytes32 permission, bytes calldata data) external virtual override {
+    function authorize(address user, bytes32 permission, bytes memory data) public virtual override {
         address lReceiptVault = sReceiptVault;
         // Ensure that the caller is the receipt vault to prevent any possible
         // malicious calls from untrusted sources.
         if (msg.sender != lReceiptVault) {
             revert Unauthorized(user, permission, data);
         }
-
         if (permission == DEPOSIT) {
             DepositStateChange memory stateChange = abi.decode(data, (DepositStateChange));
             address lPaymentToken = sPaymentToken;
@@ -128,6 +125,14 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is IAuthorizeV1, IClon
             }
 
             IERC20(lPaymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
+
+            return;
+        }
+        // Withdraws are disallowed always.
+        else if (permission == WITHDRAW) {
+            revert Unauthorized(user, permission, data);
+        } else {
+            super.authorize(user, permission, data);
         }
     }
 

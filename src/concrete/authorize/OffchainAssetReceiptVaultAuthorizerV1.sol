@@ -58,7 +58,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
     }
 
     /// @inheritdoc ICloneableV2
-    function initialize(bytes memory data) external initializer returns (bytes32) {
+    function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
         OffchainAssetReceiptVaultAuthorizerV1Config memory config =
             abi.decode(data, (OffchainAssetReceiptVaultAuthorizerV1Config));
 
@@ -107,7 +107,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, Ac
     /// OpenZeppelin's AccessControl.
     /// As this is implemented as `view` we don't need to enforce the caller.
     /// @inheritdoc IAuthorizeV1
-    function authorize(address user, bytes32 permission, bytes calldata data) external view virtual override {
+    function authorize(address user, bytes32 permission, bytes memory data) public virtual override {
         // The permission to transfer is not RBAC. In certain circumstances some
         // users with roles MAY be able to transfer when otherwise disallowed,
         // but the base case is that everyone can transfer.
