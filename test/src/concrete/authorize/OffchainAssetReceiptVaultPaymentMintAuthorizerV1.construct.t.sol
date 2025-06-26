@@ -18,6 +18,20 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {IAuthorizeV1} from "src/interface/IAuthorizeV1.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
+import {
+    WITHDRAW,
+    DEPOSIT,
+    CONFISCATE_RECEIPT,
+    CONFISCATE_SHARES,
+    CERTIFY
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    WITHDRAW_ADMIN,
+    DEPOSIT_ADMIN,
+    CONFISCATE_RECEIPT_ADMIN,
+    CONFISCATE_SHARES_ADMIN,
+    CERTIFY_ADMIN
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1Construct() external {
@@ -121,13 +135,25 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         address receiptVault,
         address owner,
         uint8 paymentTokenDecimals,
-        uint256 maxSharesSupply
+        uint256 maxSharesSupply,
+        bytes32 badRole
     ) external {
         address paymentToken = address(0x1234567890123456789012345678901234567890);
         vm.assume(receiptVault != address(0));
         vm.assume(owner != address(0));
         vm.assume(paymentToken != address(0));
         vm.assume(maxSharesSupply > 0);
+        vm.assume(badRole != CERTIFY_ADMIN);
+        vm.assume(badRole != CONFISCATE_SHARES_ADMIN);
+        vm.assume(badRole != CONFISCATE_RECEIPT_ADMIN);
+        vm.assume(badRole != DEPOSIT_ADMIN);
+        vm.assume(badRole != WITHDRAW_ADMIN);
+        vm.assume(badRole != CERTIFY);
+        vm.assume(badRole != CONFISCATE_SHARES);
+        vm.assume(badRole != CONFISCATE_RECEIPT);
+        vm.assume(badRole != DEPOSIT);
+        vm.assume(badRole != WITHDRAW);
+
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 implementation =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
         CloneFactory factory = new CloneFactory();
@@ -159,5 +185,18 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         assertTrue(authorizer.supportsInterface(type(IERC165).interfaceId));
         assertTrue(authorizer.supportsInterface(type(ICloneableV2).interfaceId));
         assertTrue(authorizer.supportsInterface(type(IAuthorizeV1).interfaceId));
+
+        vm.assertTrue(authorizer.hasRole(CERTIFY_ADMIN, owner));
+        vm.assertTrue(authorizer.hasRole(CONFISCATE_SHARES_ADMIN, owner));
+        vm.assertTrue(authorizer.hasRole(CONFISCATE_RECEIPT_ADMIN, owner));
+        vm.assertTrue(authorizer.hasRole(DEPOSIT_ADMIN, owner));
+        vm.assertTrue(authorizer.hasRole(WITHDRAW_ADMIN, owner));
+
+        vm.assertTrue(!authorizer.hasRole(CERTIFY, owner));
+        vm.assertTrue(!authorizer.hasRole(CONFISCATE_SHARES, owner));
+        vm.assertTrue(!authorizer.hasRole(CONFISCATE_RECEIPT, owner));
+        vm.assertTrue(!authorizer.hasRole(DEPOSIT, owner));
+        vm.assertTrue(!authorizer.hasRole(WITHDRAW, owner));
+        vm.assertTrue(!authorizer.hasRole(badRole, owner));
     }
 }
