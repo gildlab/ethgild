@@ -22,6 +22,17 @@ import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
 contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
+    function newAuthorizer(address initialAdmin) internal returns (OffchainAssetReceiptVaultAuthorizerV1) {
+        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+
+        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
+            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
+
+        CloneFactory factory = new CloneFactory();
+        return
+            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+    }
+
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
         address initialAdmin,
         address user,
@@ -33,14 +44,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         vm.assume(permission != TRANSFER_SHARES);
         vm.assume(permission != TRANSFER_RECEIPT);
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, user, permission, data));
         authorizer.authorize(user, permission, data);
@@ -54,14 +58,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     ) external {
         vm.assume(initialAdmin != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         bytes32[] memory roles = new bytes32[](5);
         roles[0] = CERTIFY;
@@ -92,14 +89,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     ) external {
         vm.assume(initialAdmin != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         authorizer.authorize(
             user,
@@ -120,14 +110,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     ) external {
         vm.assume(initialAdmin != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         authorizer.authorize(
             user,
@@ -155,14 +138,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     ) external {
         vm.assume(initialAdmin != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
         authorizer.authorize(
@@ -184,14 +160,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     ) external {
         vm.assume(initialAdmin != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
         authorizer.authorize(
@@ -220,14 +189,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         vm.assume(initialAdmin != address(0));
         vm.assume(to != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         bytes memory data = abi.encode(
             TransferSharesStateChange({from: address(0), to: to, amount: amount, isCertificationExpired: true})
@@ -263,14 +225,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         vm.assume(initialAdmin != address(0));
         vm.assume(to != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         bytes memory data = abi.encode(
             TransferReceiptStateChange({
@@ -311,14 +266,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         vm.assume(initialAdmin != address(0));
         vm.assume(from != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         bytes memory data = abi.encode(
             TransferSharesStateChange({from: from, to: address(0), amount: amount, isCertificationExpired: true})
@@ -354,14 +302,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
         vm.assume(initialAdmin != address(0));
         vm.assume(from != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
-
-        OffchainAssetReceiptVaultAuthorizerV1Config memory config =
-            OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin});
-
-        CloneFactory factory = new CloneFactory();
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
-            OffchainAssetReceiptVaultAuthorizerV1(factory.clone(address(authorizerImplementation), abi.encode(config)));
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
         bytes memory data = abi.encode(
             TransferReceiptStateChange({
