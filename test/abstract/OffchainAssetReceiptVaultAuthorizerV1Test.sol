@@ -5,7 +5,11 @@ pragma solidity ^0.8.25;
 import {Test} from "forge-std/Test.sol";
 
 import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
-import {TRANSFER_SHARES, TRANSFER_RECEIPT} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {
+    TRANSFER_SHARES,
+    TRANSFER_RECEIPT,
+    CertificationExpired
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {IAccessControlUpgradeable as IAccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
 import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
@@ -91,6 +95,24 @@ contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
                     isCertificationExpired: false
                 })
             )
+        );
+        vm.stopPrank();
+    }
+
+    function checkAuthorizeTransferSharesCertifyExpired(
+        IAuthorizeV1 authorizer,
+        address sender,
+        address user,
+        address from,
+        address to,
+        uint256 amount
+    ) internal {
+        vm.startPrank(sender);
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
+        authorizer.authorize(
+            user,
+            TRANSFER_SHARES,
+            abi.encode(TransferSharesStateChange({from: from, to: to, amount: amount, isCertificationExpired: true}))
         );
         vm.stopPrank();
     }
