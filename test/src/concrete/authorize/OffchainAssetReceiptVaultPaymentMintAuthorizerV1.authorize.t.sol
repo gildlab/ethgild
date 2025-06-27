@@ -119,4 +119,27 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
         roles[2] = CONFISCATE_RECEIPT;
         checkRolesAuthorized(authorizer, owner, receiptVault, user, data, roles);
     }
+
+    function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1AuthorizeTransferSharesCertifyNotExpired(
+        address receiptVault,
+        address owner,
+        address paymentToken,
+        uint8 paymentTokenDecimals,
+        uint256 maxSharesSupply,
+        address user,
+        address from,
+        address to,
+        uint256 amount
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(receiptVault != address(0));
+        vm.assume(uint160(paymentToken) > type(uint160).max / 2);
+        vm.assume(maxSharesSupply > 0);
+        vm.assume(user != address(0));
+        vm.assume(from != address(0));
+        vm.assume(to != address(0));
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply);
+        checkAuthorizeTransferSharesCertifyNotExpired(authorizer, receiptVault, user, from, to, amount);
+    }
 }

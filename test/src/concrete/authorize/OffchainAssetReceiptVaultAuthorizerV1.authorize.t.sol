@@ -71,6 +71,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
     /// When certification is NOT expired then all TRANSFER_SHARES are
     /// authorized.
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferSharesCertifyNotExpired(
+        address sender,
         address initialAdmin,
         address user,
         address from,
@@ -81,11 +82,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
 
         OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
-        authorizer.authorize(
-            user,
-            TRANSFER_SHARES,
-            abi.encode(TransferSharesStateChange({from: from, to: to, amount: amount, isCertificationExpired: false}))
-        );
+        checkAuthorizeTransferSharesCertifyNotExpired(authorizer, sender, user, from, to, amount);
     }
 
     /// When certification is NOT expired then all TRANSFER_RECEIPT are

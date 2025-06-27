@@ -8,6 +8,7 @@ import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
 import {TRANSFER_SHARES, TRANSFER_RECEIPT} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {IAccessControlUpgradeable as IAccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
+import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
 contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
     function checkDefaultOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
@@ -49,5 +50,22 @@ contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
             authorizer.authorize(user, roles[i], data);
             vm.stopPrank();
         }
+    }
+
+    function checkAuthorizeTransferSharesCertifyNotExpired(
+        IAuthorizeV1 authorizer,
+        address sender,
+        address user,
+        address from,
+        address to,
+        uint256 amount
+    ) internal {
+        vm.startPrank(sender);
+        authorizer.authorize(
+            user,
+            TRANSFER_SHARES,
+            abi.encode(TransferSharesStateChange({from: from, to: to, amount: amount, isCertificationExpired: false}))
+        );
+        vm.stopPrank();
     }
 }
