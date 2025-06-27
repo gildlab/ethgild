@@ -18,7 +18,9 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
-    OffchainAssetReceiptVaultAuthorizerV1Config
+    OffchainAssetReceiptVaultAuthorizerV1Config,
+    DEPOSIT_ADMIN,
+    WITHDRAW_ADMIN
 } from "./OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
@@ -94,6 +96,14 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
 
         super._initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: config.owner})));
 
+        // By revoking the deposit and withdraw admin roles we ensure that there
+        // can never be any addresses with deposit or withdraw roles. This
+        // simplifies the logic of overriding the inherited authorize function
+        // by allowing all the default deposit/withdraw logic to exist knowing
+        // it will never execute.
+        _revokeRole(DEPOSIT_ADMIN, config.owner);
+        _revokeRole(WITHDRAW_ADMIN, config.owner);
+
         return ICLONEABLE_V2_SUCCESS;
     }
 
@@ -127,10 +137,6 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
             IERC20(lPaymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
 
             return;
-        }
-        // Withdraws are disallowed always.
-        else if (permission == WITHDRAW) {
-            revert Unauthorized(user, permission, data);
         } else {
             super.authorize(user, permission, data);
         }

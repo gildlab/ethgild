@@ -3,7 +3,7 @@
 pragma solidity =0.8.25;
 
 import {OffchainAssetReceiptVaultAuthorizerV1Test} from "test/abstract/OffchainAssetReceiptVaultAuthorizerV1Test.sol";
-
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config,
@@ -16,7 +16,11 @@ import {
 import {
     CERTIFY,
     CONFISCATE_SHARES,
-    CONFISCATE_RECEIPT
+    CONFISCATE_RECEIPT,
+    DEPOSIT,
+    DEPOSIT_ADMIN,
+    WITHDRAW_ADMIN,
+    WITHDRAW
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
@@ -24,6 +28,8 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is OffchainAssetReceiptVaultAuthorizerV1Test {
+    using Strings for address;
+
     function newAuthorizer(
         address receiptVault,
         address owner,
@@ -212,5 +218,57 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
             newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply);
         checkAuthorizeTransferReceiptCertifyExpired(authorizer, receiptVault, user, from, to, ids, amounts);
+    }
+
+    function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1AdminCannotGrantDeposit(
+        address receiptVault,
+        address owner,
+        address paymentToken,
+        uint8 paymentTokenDecimals,
+        uint256 maxSharesSupply,
+        address user
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(receiptVault != address(0));
+        vm.assume(uint160(paymentToken) > type(uint160).max / 2);
+        vm.assume(maxSharesSupply > 0);
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply);
+
+        vm.prank(owner);
+        vm.expectRevert(
+            bytes(
+                string.concat(
+                    "AccessControl: account ", owner.toHexString(), " is missing role ", vm.toString(DEPOSIT_ADMIN)
+                )
+            )
+        );
+        authorizer.grantRole(DEPOSIT, user);
+    }
+
+    function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1AdminCannotGrantWithdraw(
+        address receiptVault,
+        address owner,
+        address paymentToken,
+        uint8 paymentTokenDecimals,
+        uint256 maxSharesSupply,
+        address user
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(receiptVault != address(0));
+        vm.assume(uint160(paymentToken) > type(uint160).max / 2);
+        vm.assume(maxSharesSupply > 0);
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply);
+
+        vm.prank(owner);
+        vm.expectRevert(
+            bytes(
+                string.concat(
+                    "AccessControl: account ", owner.toHexString(), " is missing role ", vm.toString(WITHDRAW_ADMIN)
+                )
+            )
+        );
+        authorizer.grantRole(WITHDRAW, user);
     }
 }

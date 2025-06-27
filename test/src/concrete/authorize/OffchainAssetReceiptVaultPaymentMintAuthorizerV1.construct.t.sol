@@ -189,8 +189,11 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         vm.assertTrue(authorizer.hasRole(CERTIFY_ADMIN, owner));
         vm.assertTrue(authorizer.hasRole(CONFISCATE_SHARES_ADMIN, owner));
         vm.assertTrue(authorizer.hasRole(CONFISCATE_RECEIPT_ADMIN, owner));
-        vm.assertTrue(authorizer.hasRole(DEPOSIT_ADMIN, owner));
-        vm.assertTrue(authorizer.hasRole(WITHDRAW_ADMIN, owner));
+
+        // Deposit and withdraw admin roles are NOT granted to the owner for
+        // payment mint authorizers.
+        vm.assertTrue(!authorizer.hasRole(DEPOSIT_ADMIN, owner));
+        vm.assertTrue(!authorizer.hasRole(WITHDRAW_ADMIN, owner));
 
         vm.assertTrue(!authorizer.hasRole(CERTIFY, owner));
         vm.assertTrue(!authorizer.hasRole(CONFISCATE_SHARES, owner));
