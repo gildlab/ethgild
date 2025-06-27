@@ -88,6 +88,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
     /// When certification is NOT expired then all TRANSFER_RECEIPT are
     /// authorized.
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeTransferReceiptCertifyNotExpired(
+        address sender,
         address initialAdmin,
         address user,
         address from,
@@ -99,19 +100,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
 
         OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
-        authorizer.authorize(
-            user,
-            TRANSFER_RECEIPT,
-            abi.encode(
-                TransferReceiptStateChange({
-                    from: from,
-                    to: to,
-                    ids: ids,
-                    amounts: amounts,
-                    isCertificationExpired: false
-                })
-            )
-        );
+        checkAuthorizeTransferReceiptCertifyNotExpired(authorizer, sender, user, from, to, ids, amounts);
     }
 
     /// When certification IS expired and this is not a mint or burn, and there
