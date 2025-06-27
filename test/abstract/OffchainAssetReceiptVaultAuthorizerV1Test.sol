@@ -6,6 +6,8 @@ import {Test} from "forge-std/Test.sol";
 
 import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
 import {TRANSFER_SHARES, TRANSFER_RECEIPT} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {IAccessControlUpgradeable as IAccessControl} from
+    "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
 
 contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
     function checkDefaultOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
@@ -22,5 +24,30 @@ contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, user, permission, data));
         authorizer.authorize(user, permission, data);
         vm.stopPrank();
+    }
+
+    function checkRolesAuthorized(
+        IAuthorizeV1 authorizer,
+        address admin,
+        address sender,
+        address user,
+        bytes memory data,
+        bytes32[] memory roles
+    ) internal {
+        for (uint256 i = 0; i < roles.length; i++) {
+            vm.startPrank(sender);
+            vm.assertTrue(!IAccessControl(address(authorizer)).hasRole(roles[i], user));
+            vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, user, roles[i], data));
+            authorizer.authorize(user, roles[i], data);
+            vm.stopPrank();
+
+            vm.startPrank(admin);
+            IAccessControl(address(authorizer)).grantRole(roles[i], user);
+            vm.stopPrank();
+
+            vm.startPrank(sender);
+            authorizer.authorize(user, roles[i], data);
+            vm.stopPrank();
+        }
     }
 }

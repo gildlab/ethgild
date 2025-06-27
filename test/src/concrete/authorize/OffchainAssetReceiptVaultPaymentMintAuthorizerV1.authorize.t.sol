@@ -13,6 +13,11 @@ import {
     ZeroMaxSharesSupply,
     Unauthorized
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
+import {
+    CERTIFY,
+    CONFISCATE_SHARES,
+    CONFISCATE_RECEIPT
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
@@ -91,5 +96,27 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
             permission,
             data
         );
+    }
+
+    function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1RolesAuthorized(
+        address receiptVault,
+        address owner,
+        address paymentToken,
+        uint8 paymentTokenDecimals,
+        uint256 maxSharesSupply,
+        address user,
+        bytes memory data
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(receiptVault != address(0));
+        vm.assume(uint160(paymentToken) > type(uint160).max / 2);
+        vm.assume(maxSharesSupply > 0);
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply);
+        bytes32[] memory roles = new bytes32[](3);
+        roles[0] = CERTIFY;
+        roles[1] = CONFISCATE_SHARES;
+        roles[2] = CONFISCATE_RECEIPT;
+        checkRolesAuthorized(authorizer, owner, receiptVault, user, data, roles);
     }
 }

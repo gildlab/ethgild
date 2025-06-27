@@ -49,13 +49,14 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
     }
 
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeAuthorized(
-        address initialAdmin,
+        address admin,
         address user,
-        bytes memory data
+        bytes memory data,
+        address sender
     ) external {
-        vm.assume(initialAdmin != address(0));
+        vm.assume(admin != address(0));
 
-        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(admin);
 
         bytes32[] memory roles = new bytes32[](5);
         roles[0] = CERTIFY;
@@ -64,15 +65,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
         roles[3] = DEPOSIT;
         roles[4] = WITHDRAW;
 
-        for (uint256 i = 0; i < roles.length; i++) {
-            vm.assertTrue(!authorizer.hasRole(roles[i], user));
-            vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, user, roles[i], data));
-            authorizer.authorize(user, roles[i], data);
-            vm.startPrank(initialAdmin);
-            authorizer.grantRole(roles[i], user);
-            vm.stopPrank();
-            authorizer.authorize(user, roles[i], data);
-        }
+        checkRolesAuthorized(authorizer, admin, sender, user, data, roles);
     }
 
     /// When certification is NOT expired then all TRANSFER_SHARES are
