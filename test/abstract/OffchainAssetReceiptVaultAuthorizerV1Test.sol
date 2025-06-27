@@ -116,4 +116,31 @@ contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
         );
         vm.stopPrank();
     }
+
+    function checkAuthorizeTransferReceiptCertifyExpired(
+        IAuthorizeV1 authorizer,
+        address sender,
+        address user,
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) internal {
+        vm.startPrank(sender);
+        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
+        authorizer.authorize(
+            user,
+            TRANSFER_RECEIPT,
+            abi.encode(
+                TransferReceiptStateChange({
+                    from: from,
+                    to: to,
+                    ids: ids,
+                    amounts: amounts,
+                    isCertificationExpired: true
+                })
+            )
+        );
+        vm.stopPrank();
+    }
 }

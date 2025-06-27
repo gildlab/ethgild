@@ -133,20 +133,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetRece
 
         OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
-        vm.expectRevert(abi.encodeWithSelector(CertificationExpired.selector, from, to));
-        authorizer.authorize(
-            user,
-            TRANSFER_RECEIPT,
-            abi.encode(
-                TransferReceiptStateChange({
-                    from: from,
-                    to: to,
-                    ids: ids,
-                    amounts: amounts,
-                    isCertificationExpired: true
-                })
-            )
-        );
+        checkAuthorizeTransferReceiptCertifyExpired(authorizer, initialAdmin, user, from, to, ids, amounts);
     }
 
     /// If the certification is expired and this is a mint then TRANSFER_SHARES
