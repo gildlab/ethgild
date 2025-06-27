@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1Test} from "test/abstract/OffchainAssetReceiptVaultAuthorizerV1Test.sol";
 
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
@@ -21,7 +21,7 @@ import {
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
-contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
+contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is OffchainAssetReceiptVaultAuthorizerV1Test {
     function newAuthorizer(address initialAdmin) internal returns (OffchainAssetReceiptVaultAuthorizerV1) {
         OffchainAssetReceiptVaultAuthorizerV1 authorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
 
@@ -34,21 +34,18 @@ contract OffchainAssetReceiptVaultAuthorizerV1AuthorizeTest is Test {
     }
 
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
+        address sender,
         address initialAdmin,
         address user,
         bytes32 permission,
         bytes memory data
     ) external {
         vm.assume(initialAdmin != address(0));
-
-        vm.assume(permission != TRANSFER_SHARES);
-        vm.assume(permission != TRANSFER_RECEIPT);
-
         OffchainAssetReceiptVaultAuthorizerV1 authorizer = newAuthorizer(initialAdmin);
 
-        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, user, permission, data));
-        authorizer.authorize(user, permission, data);
-        vm.stopPrank();
+        checkDefaultOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
+            authorizer, sender, user, permission, data
+        );
     }
 
     function testOffchainAssetReceiptVaultAuthorizerV1AuthorizeAuthorized(

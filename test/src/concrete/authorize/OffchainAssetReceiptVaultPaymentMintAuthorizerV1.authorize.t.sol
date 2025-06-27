@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1Test} from "test/abstract/OffchainAssetReceiptVaultAuthorizerV1Test.sol";
 
 import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
@@ -18,7 +18,7 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 
-contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Test {
+contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is OffchainAssetReceiptVaultAuthorizerV1Test {
     function newAuthorizer(
         address receiptVault,
         address owner,
@@ -59,11 +59,37 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Test {
         vm.assume(paymentToken != address(0));
         vm.assume(maxSharesSupply > 0);
         vm.assume(caller != receiptVault);
+        vm.assume(uint160(caller) > type(uint160).max / 2);
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
             newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply);
 
         vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, user, permission, data));
         vm.prank(caller);
         authorizer.authorize(user, permission, data);
+    }
+
+    function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1AuthorizeUnauthorized(
+        address receiptVault,
+        address owner,
+        address paymentToken,
+        uint8 paymentTokenDecimals,
+        uint256 maxSharesSupply,
+        address sender,
+        address user,
+        bytes32 permission,
+        bytes memory data
+    ) external {
+        vm.assume(owner != address(0));
+        vm.assume(receiptVault != address(0));
+        vm.assume(uint160(paymentToken) > type(uint160).max / 2);
+        vm.assume(maxSharesSupply > 0);
+        vm.assume(uint160(sender) > type(uint160).max / 2);
+        checkDefaultOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
+            newAuthorizer(receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply),
+            sender,
+            user,
+            permission,
+            data
+        );
     }
 }
