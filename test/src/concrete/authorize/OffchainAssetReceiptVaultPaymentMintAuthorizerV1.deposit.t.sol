@@ -8,7 +8,8 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
-    PaymentTokenDecimalMismatch
+    PaymentTokenDecimalMismatch,
+    MaxSharesSupplyExceeded
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
@@ -210,6 +211,62 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
             200e6,
             paymentToken.balanceOf(address(authorizer)),
             "Authorizer should have received tokens after second mint"
+        );
+    }
+
+    function testMaxSharesSupplyExceeded(address receiptVault, address alice, address bob) external {
+        vm.assume(alice != address(0) && bob != address(0) && alice != bob);
+        vm.assume(uint160(receiptVault) > type(uint160).max / 2);
+
+        vm.prank(alice);
+        TestErc20 paymentToken = new TestErc20();
+
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, bob, address(paymentToken), 100e18);
+
+        assertEq(authorizer.maxSharesSupply(), 100e18, "Max shares supply should be set to 100e18");
+
+        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(50e18));
+
+        vm.prank(alice);
+        paymentToken.approve(address(authorizer), 100e18);
+
+        vm.prank(receiptVault);
+        authorizer.authorize(
+            alice,
+            DEPOSIT,
+            abi.encode(
+                DepositStateChange({
+                    owner: alice,
+                    receiver: alice,
+                    id: 1,
+                    assetsDeposited: 50e18,
+                    sharesMinted: 50e18,
+                    data: ""
+                })
+            )
+        );
+
+        assertEq(1e27 - 50e18, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq(
+            50e18, paymentToken.balanceOf(address(authorizer)), "Authorizer should have received tokens after mint"
+        );
+
+        vm.prank(receiptVault);
+        vm.expectRevert(abi.encodeWithSelector(MaxSharesSupplyExceeded.selector, 100e18, 101e18));
+        authorizer.authorize(
+            alice,
+            DEPOSIT,
+            abi.encode(
+                DepositStateChange({
+                    owner: alice,
+                    receiver: alice,
+                    id: 1,
+                    assetsDeposited: 51e18,
+                    sharesMinted: 51e18,
+                    data: ""
+                })
+            )
         );
     }
 }
