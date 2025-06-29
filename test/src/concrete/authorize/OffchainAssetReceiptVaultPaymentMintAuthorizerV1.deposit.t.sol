@@ -40,7 +40,9 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         return OffchainAssetReceiptVaultPaymentMintAuthorizerV1(factory.clone(address(implementation), initData));
     }
 
-    function testMintSimple(address receiptVault, address alice, address bob) external {
+    function testMintSimpleRealReceiptVault(address alice, address bob) external {}
+
+    function testMintSimpleMockedReceiptVault(address receiptVault, address alice, address bob) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
         vm.assume(uint160(receiptVault) > type(uint160).max / 2);
 

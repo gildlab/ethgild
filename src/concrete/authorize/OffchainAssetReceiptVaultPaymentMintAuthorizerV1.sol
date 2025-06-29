@@ -134,6 +134,13 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
                 revert MaxSharesSupplyExceeded(sMaxSharesSupply, newSharesSupply);
             }
 
+            // This is a false positive for slither because the offchain asset
+            // receipt vault sets `stateChange.owner` to `msg.sender` from its
+            // perspective, which is the main thing slither wants, to avoid users
+            // being able to consume approvals from other unrelated users.
+            // This contract is NOT compatible with arbitrary callers, it is ONLY
+            // compatible with the well known offchain asset receipt vault.
+            //slither-disable-next-line arbitrary-send-erc20
             IERC20(lPaymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
 
             return;
