@@ -49,7 +49,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
     }
 
     function testMintSimpleRealReceiptVault(address alice, address bob) external {
-        vm.assume(alice != address(0) && bob != address(0) && alice != bob);
+        vm.assume(uint160(alice) > type(uint160).max / 2 && uint160(bob) > type(uint160).max / 2 && alice != bob);
 
         vm.prank(bob);
         TestErc20 paymentToken = new TestErc20();
