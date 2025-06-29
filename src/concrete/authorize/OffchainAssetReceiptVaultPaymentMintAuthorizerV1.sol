@@ -24,18 +24,41 @@ import {
 } from "./OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
+/// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
+/// initialized with a zero address for the receipt vault.
 error ZeroReceiptVault();
 
+/// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
+/// initialized with a zero address for the owner.
 error ZeroInitialOwner();
 
+/// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
+/// initialized with a zero address for the payment token.
 error ZeroPaymentToken();
 
+/// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
+/// initialized with a zero max shares supply.
 error ZeroMaxSharesSupply();
 
+/// @dev Thrown when more than the maximum shares supply is minted.
+/// @param maxSharesSupply The maximum shares supply allowed.
+/// @param sharesMinted The total shares minted, including the current mint.
 error MaxSharesSupplyExceeded(uint256 maxSharesSupply, uint256 sharesMinted);
 
+/// @dev Thrown when the payment token decimals do not match the expected
+/// value.
+/// @param expected The expected payment token decimals.
+/// @param actual The actual payment token decimals.
 error PaymentTokenDecimalMismatch(uint256 expected, uint256 actual);
 
+/// @dev Configuration for the OffchainAssetReceiptVaultPaymentMintAuthorizerV1
+/// initialization.
+/// @param receiptVault The address of the receipt vault.
+/// @param owner The address of the initial owner. Will also be the initial admin
+/// for role management.
+/// @param paymentToken The address of the payment token used to pay for minting.
+/// @param maxSharesSupply The maximum number of shares that can be minted in
+/// total globally.
 struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
     address receiptVault;
     address owner;
@@ -43,18 +66,67 @@ struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
     uint256 maxSharesSupply;
 }
 
+/// @title OffchainAssetReceiptVaultPaymentMintAuthorizerV1
+/// @notice This contract is an authorizer for the OffchainAssetReceiptVault
+/// that allows minting of shares in exchange for payment in a specified token.
+///
+/// It makes several critical security sensitive assumptions that rely on the
+/// caller of the `authorize` function being the well known
+/// `OffchainAssetReceiptVault` contract. For this reason, all calls to
+/// `authorize` will revert as `Unauthorized` if the caller is not the receipt
+/// vault address set at initialization.
+///
+/// This contract inherits from `OffchainAssetReceiptVaultAuthorizerV1` and so
+/// implements all the same roles and associated access logic for those roles,
+/// but removes the ability for DEPOSIT and WITHDRAW to ever be granted to
+/// any address.
+///
+/// To successfully authorize a deposit, the owner of the deposit must pay tokens
+/// 1:1 to this contract in exchange for shares minted. The 1:1 ratio is
+/// calculated according to the payment token's decimals, against the shares
+/// being 18 decimals. There are no restrictions on who can deposit, as long
+/// as they pay the required amount of payment tokens.
+///
+/// Withdrawals are completely disabled. Instead there is a maximum number of
+/// shares that can be minted in total, which is set at initialization.
+///
+/// At any time anon can call `sendPaymentToOwner` to transfer all the payment
+/// tokens held by this contract to the owner of the authorizer.
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceiptVaultAuthorizerV1, Ownable {
     using SafeERC20 for IERC20;
 
+    /// @dev The address of the receipt vault that this authorizer is for.
+    /// Immutable after initialization.
     address internal sReceiptVault;
+    /// @dev The address of the payment token that is used to pay for minting.
+    /// Immutable after initialization.
     address internal sPaymentToken;
+    /// @dev The decimals of the payment token that is used to pay for minting.
+    /// Immutable after initialization.
+    /// If the payment token contract ever reports a different decimals value
+    /// than this value, the authorizer will revert all deposits.
     uint8 internal sPaymentTokenDecimals;
+    /// @dev The maximum number of shares that can be minted in total globally.
+    /// Immutable after initialization.
     uint256 internal sMaxSharesSupply;
 
+    /// @dev Emitted when the authorizer is initialized.
+    /// @param receiptVault The address of the receipt vault.
+    /// @param owner The address of the initial owner.
+    /// @param paymentToken The address of the payment token used to pay for
+    /// minting.
+    /// @param paymentTokenDecimals The decimals of the payment token used to
+    /// pay for minting.
+    /// @param maxSharesSupply The maximum number of shares that can be minted
+    /// in total globally.
     event Initialized(
         address receiptVault, address owner, address paymentToken, uint8 paymentTokenDecimals, uint256 maxSharesSupply
     );
 
+    /// Constructor is used to disable initializers in the base contract
+    /// so that this contract can only be initialized through the `initialize`
+    /// function. Standard approach to cloneable contracts compatible with the
+    /// Rain clone factory.
     constructor() {
         _disableInitializers();
     }
@@ -82,6 +154,8 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
 
         sReceiptVault = config.receiptVault;
         sPaymentToken = config.paymentToken;
+        // TOFU pattern to snapshot token decimals at initialization, then
+        // enforce they are always the same for all deposits.
         uint8 lPaymentTokenDecimals = IERC20Metadata(config.paymentToken).decimals();
         sPaymentTokenDecimals = lPaymentTokenDecimals;
         sMaxSharesSupply = config.maxSharesSupply;
@@ -92,8 +166,8 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
             config.receiptVault, config.owner, config.paymentToken, lPaymentTokenDecimals, config.maxSharesSupply
         );
 
+        // Owner of the authorizer is also the initial admin for role management.
         _transferOwnership(config.owner);
-
         super._initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: config.owner})));
 
         // By revoking the deposit and withdraw admin roles we ensure that there
@@ -145,26 +219,34 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
 
             return;
         } else {
+            // Fallback to the inherited authorize function for all other
+            // permissions.
             super.authorize(user, permission, data);
         }
     }
 
+    /// Anon can call this function at any time to transfer all the payment
+    /// tokens held by this contract to the owner of the authorizer.
     function sendPaymentToOwner() external {
         IERC20(sPaymentToken).safeTransfer(owner(), IERC20(sPaymentToken).balanceOf(address(this)));
     }
 
+    /// Returns the address of the receipt vault that this authorizer is for.
     function receiptVault() external view returns (address) {
         return sReceiptVault;
     }
 
+    /// Returns the address of the payment token that is used to pay for minting.
     function paymentToken() external view returns (address) {
         return sPaymentToken;
     }
 
+    /// Returns the decimals of the payment token that is used to pay for minting.
     function paymentTokenDecimals() external view returns (uint8) {
         return sPaymentTokenDecimals;
     }
 
+    /// Returns the maximum number of shares that can be minted in total.
     function maxSharesSupply() external view returns (uint256) {
         return sMaxSharesSupply;
     }
