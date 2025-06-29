@@ -9,15 +9,23 @@ import {IERC20MetadataUpgradeable as IERC20Metadata} from
 import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
     PaymentTokenDecimalMismatch,
-    MaxSharesSupplyExceeded
+    MaxSharesSupplyExceeded,
+    Unauthorized
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
-import {DepositStateChange, DEPOSIT} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {DepositStateChange, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {
+    ReceiptVaultConstructionConfigV2,
+    OffchainAssetVaultConfigV2,
+    VaultConfig
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
@@ -40,7 +48,67 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         return OffchainAssetReceiptVaultPaymentMintAuthorizerV1(factory.clone(address(implementation), initData));
     }
 
-    function testMintSimpleRealReceiptVault(address alice, address bob) external {}
+    function testMintSimpleRealReceiptVault(address alice, address bob) external {
+        vm.assume(alice != address(0) && bob != address(0) && alice != bob);
+
+        vm.prank(bob);
+        TestErc20 paymentToken = new TestErc20();
+
+        OffchainAssetReceiptVault receiptVaultImplementation = new OffchainAssetReceiptVault(
+            ReceiptVaultConstructionConfigV2({factory: new CloneFactory(), receiptImplementation: new ReceiptContract()})
+        );
+        OffchainAssetReceiptVault receiptVault = OffchainAssetReceiptVault(
+            payable(
+                (new CloneFactory()).clone(
+                    address(receiptVaultImplementation),
+                    abi.encode(
+                        OffchainAssetVaultConfigV2({
+                            initialAdmin: alice,
+                            vaultConfig: VaultConfig({asset: address(0), name: "Test Vault", symbol: "TVLT"})
+                        })
+                    )
+                )
+            )
+        );
+
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(address(receiptVault), alice, address(paymentToken), 1000e18);
+        vm.startPrank(alice);
+        receiptVault.setAuthorizer(authorizer);
+        authorizer.grantRole(CERTIFY, alice);
+        receiptVault.certify(block.timestamp + 1, false, "");
+        vm.stopPrank();
+
+        assertEq(authorizer.owner(), alice, "Owner should be set to Alice");
+        assertEq(1e27, paymentToken.balanceOf(bob), "Bob should have all the payment tokens initially");
+        assertEq(0, paymentToken.balanceOf(alice), "Alice should have no tokens initially");
+        assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens initially");
+
+        // Alice can't afford to deposit.
+        vm.startPrank(alice);
+        paymentToken.approve(address(authorizer), 100e18);
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        receiptVault.deposit(1e18, alice, 0, hex"");
+        vm.stopPrank();
+
+        // Bob can afford to deposit.
+        vm.startPrank(bob);
+        paymentToken.approve(address(authorizer), 100e18);
+        receiptVault.deposit(1e18, bob, 0, hex"");
+        vm.stopPrank();
+
+        assertEq(1e27 - 1e18, paymentToken.balanceOf(bob), "Bob should have reduced balance after deposit");
+        assertEq(
+            1e18, paymentToken.balanceOf(address(authorizer)), "Authorizer should have received tokens after deposit"
+        );
+        assertEq(0, paymentToken.balanceOf(alice), "Alice should still have no tokens after deposit");
+
+        authorizer.sendPaymentToOwner();
+
+        assertEq(1e27 - 1e18, paymentToken.balanceOf(bob), "Bob should still have reduced balance after payment");
+        assertEq(1e18, paymentToken.balanceOf(alice), "Alice should have received payment after send");
+        assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens after send");
+    }
 
     function testMintSimpleMockedReceiptVault(address receiptVault, address alice, address bob) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
