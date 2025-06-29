@@ -14,9 +14,19 @@ string constant SYMBOL = "TKN";
 /// @title Erc20Token
 /// @notice A test token that can be used as a vault asset.
 contract TestErc20 is ERC20 {
+    uint8 internal sDecimals = 18;
+
     /// Define and mint the erc20 token.
     constructor() initializer {
         __ERC20_init(NAME, SYMBOL);
         _mint(msg.sender, TOTAL_SUPPLY);
+    }
+
+    function decimals() public view override returns (uint8) {
+        return sDecimals;
+    }
+
+    function setDecimals(uint8 newDecimals) external {
+        sDecimals = newDecimals;
     }
 }
