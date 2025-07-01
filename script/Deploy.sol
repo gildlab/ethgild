@@ -22,6 +22,8 @@ import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1} from
+    "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 
 bytes32 constant DEPLOYMENT_SUITE_IMPLEMENTATIONS = keccak256("implementations");
 bytes32 constant DEPLOYMENT_SUITE_OWNABLE_ORACLE_VAULT = keccak256("ownable-oracle-vault");
