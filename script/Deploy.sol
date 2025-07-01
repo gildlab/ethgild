@@ -42,6 +42,7 @@ contract Deploy is Script {
         new OffchainAssetReceiptVault(receiptVaultConstructionConfig);
         new ERC20PriceOracleReceiptVault(receiptVaultConstructionConfig);
         new OffchainAssetReceiptVaultAuthorizerV1();
+        new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
 
         vm.stopBroadcast();
     }
