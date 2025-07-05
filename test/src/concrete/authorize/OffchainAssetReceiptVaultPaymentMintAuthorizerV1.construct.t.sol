@@ -32,6 +32,7 @@ import {
     CONFISCATE_SHARES_ADMIN,
     CERTIFY_ADMIN
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {VerifyAlwaysApproved} from "rain.verify/concrete/VerifyAlwaysApproved.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1Construct() external {
@@ -43,6 +44,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
             abi.encode(
                 OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                     receiptVault: address(0),
+                    verify: address(0),
                     owner: address(0),
                     paymentToken: address(0),
                     maxSharesSupply: 0
@@ -55,10 +57,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 implementation =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
         CloneFactory factory = new CloneFactory();
+        address verify = address(new VerifyAlwaysApproved());
 
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: address(0),
+                verify: verify,
                 owner: address(0),
                 paymentToken: address(0),
                 maxSharesSupply: 0
@@ -73,10 +77,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 implementation =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
         CloneFactory factory = new CloneFactory();
+        address verify = address(new VerifyAlwaysApproved());
 
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: receiptVault,
+                verify: verify,
                 owner: address(0),
                 paymentToken: address(0),
                 maxSharesSupply: 0
@@ -94,10 +100,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 implementation =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
         CloneFactory factory = new CloneFactory();
+        address verify = address(new VerifyAlwaysApproved());
 
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: receiptVault,
+                verify: verify,
                 owner: owner,
                 paymentToken: address(0),
                 maxSharesSupply: 0
@@ -118,10 +126,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 implementation =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
         CloneFactory factory = new CloneFactory();
+        address verify = address(new VerifyAlwaysApproved());
 
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: receiptVault,
+                verify: verify,
                 owner: owner,
                 paymentToken: paymentToken,
                 maxSharesSupply: 0
@@ -158,9 +168,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
         CloneFactory factory = new CloneFactory();
 
+        address verify = address(new VerifyAlwaysApproved());
+
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: receiptVault,
+                verify: verify,
                 owner: owner,
                 paymentToken: paymentToken,
                 maxSharesSupply: maxSharesSupply
@@ -173,7 +186,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
 
         vm.expectEmit(true, true, false, true);
         emit OffchainAssetReceiptVaultPaymentMintAuthorizerV1.Initialized(
-            receiptVault, owner, paymentToken, paymentTokenDecimals, maxSharesSupply
+            receiptVault, verify, owner, paymentToken, paymentTokenDecimals, maxSharesSupply
         );
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1(factory.clone(address(implementation), initData));

@@ -14,6 +14,7 @@ import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
+import {VerifyAlwaysApproved} from "rain.verify/concrete/VerifyAlwaysApproved.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is OffchainAssetReceiptVaultAuthorizerV1Test {
     function newAuthorizer(
@@ -29,6 +30,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: receiptVault,
+                verify: address(new VerifyAlwaysApproved()),
                 owner: owner,
                 paymentToken: paymentToken,
                 maxSharesSupply: maxSharesSupply
