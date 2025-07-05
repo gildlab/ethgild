@@ -159,6 +159,10 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
             revert ZeroReceiptVault();
         }
 
+        if (config.verify == address(0)) {
+            revert ZeroVerifyContract();
+        }
+
         if (config.owner == address(0)) {
             revert ZeroInitialOwner();
         }
