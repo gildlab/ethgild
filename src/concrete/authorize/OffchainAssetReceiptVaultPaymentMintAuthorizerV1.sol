@@ -23,10 +23,16 @@ import {
     WITHDRAW_ADMIN
 } from "./OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
+import {VerifyStatus, IVerifyV1, VERIFY_STATUS_APPROVED} from "rain.verify/interface/IVerifyV1.sol";
 
 /// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 /// initialized with a zero address for the receipt vault.
 error ZeroReceiptVault();
+
+/// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
+/// initialized with a zero address for the verify contract used to KYC the
+/// owner of the payment token that is buying the tokens.
+error ZeroVerifyContract();
 
 /// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 /// initialized with a zero address for the owner.
@@ -54,6 +60,8 @@ error PaymentTokenDecimalMismatch(uint256 expected, uint256 actual);
 /// @dev Configuration for the OffchainAssetReceiptVaultPaymentMintAuthorizerV1
 /// initialization.
 /// @param receiptVault The address of the receipt vault.
+/// @param verify The address of the verify contract used to KYC the owner of
+/// the payment token that is buying the tokens.
 /// @param owner The address of the initial owner. Will also be the initial admin
 /// for role management.
 /// @param paymentToken The address of the payment token used to pay for minting.
@@ -61,6 +69,7 @@ error PaymentTokenDecimalMismatch(uint256 expected, uint256 actual);
 /// total globally.
 struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
     address receiptVault;
+    address verify;
     address owner;
     address paymentToken;
     uint256 maxSharesSupply;
@@ -109,9 +118,14 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
     /// @dev The maximum number of shares that can be minted in total globally.
     /// Immutable after initialization.
     uint256 internal sMaxSharesSupply;
+    /// @dev The verify contract used to KYC the owner of the payment token that
+    /// is buying the tokens.
+    IVerifyV1 internal sVerify;
 
     /// @dev Emitted when the authorizer is initialized.
     /// @param receiptVault The address of the receipt vault.
+    /// @param verify The address of the verify contract used to KYC the owner of
+    /// the payment token that is buying the tokens.
     /// @param owner The address of the initial owner.
     /// @param paymentToken The address of the payment token used to pay for
     /// minting.
@@ -120,7 +134,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
     /// @param maxSharesSupply The maximum number of shares that can be minted
     /// in total globally.
     event Initialized(
-        address receiptVault, address owner, address paymentToken, uint8 paymentTokenDecimals, uint256 maxSharesSupply
+        address receiptVault,
+        address verify,
+        address owner,
+        address paymentToken,
+        uint8 paymentTokenDecimals,
+        uint256 maxSharesSupply
     );
 
     /// Constructor is used to disable initializers in the base contract
@@ -153,6 +172,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
         }
 
         sReceiptVault = config.receiptVault;
+        sVerify = IVerifyV1(config.verify);
         sPaymentToken = config.paymentToken;
         // TOFU pattern to snapshot token decimals at initialization, then
         // enforce they are always the same for all deposits.
@@ -163,7 +183,12 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
         __Ownable_init();
 
         emit Initialized(
-            config.receiptVault, config.owner, config.paymentToken, lPaymentTokenDecimals, config.maxSharesSupply
+            config.receiptVault,
+            config.verify,
+            config.owner,
+            config.paymentToken,
+            lPaymentTokenDecimals,
+            config.maxSharesSupply
         );
 
         // Owner of the authorizer is also the initial admin for role management.
@@ -216,6 +241,16 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
             // compatible with the well known offchain asset receipt vault.
             //slither-disable-next-line arbitrary-send-erc20
             IERC20(lPaymentToken).safeTransferFrom(stateChange.owner, address(this), paymentAmount);
+
+            // KYC the owner of the payment token that is buying the tokens. We
+            // do this rather than KYC on the receiver of the minted shares as
+            // there is no KYC on transfers, there's nothing stopping the owner
+            // from minting to themselves then transferring the shares to an
+            // arbitrary address.
+            VerifyStatus verifyStatus = sVerify.accountStatusAtTime(stateChange.owner, block.timestamp);
+            if (VerifyStatus.unwrap(verifyStatus) != VerifyStatus.unwrap(VERIFY_STATUS_APPROVED)) {
+                revert Unauthorized(stateChange.owner, DEPOSIT, data);
+            }
 
             return;
         } else {
