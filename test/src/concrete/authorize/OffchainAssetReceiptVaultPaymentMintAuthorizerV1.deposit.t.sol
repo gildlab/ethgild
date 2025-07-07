@@ -26,7 +26,7 @@ import {
     OffchainAssetVaultConfigV2,
     VaultConfig
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {VerifyAlwaysApproved} from "rain.verify/concrete/VerifyAlwaysApproved.sol";
+import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 

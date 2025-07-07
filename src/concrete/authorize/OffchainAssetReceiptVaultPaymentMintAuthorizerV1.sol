@@ -23,7 +23,7 @@ import {
     WITHDRAW_ADMIN
 } from "./OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
-import {VerifyStatus, IVerifyV1, VERIFY_STATUS_APPROVED} from "rain.verify/interface/IVerifyV1.sol";
+import {VerifyStatus, IVerifyV1, VERIFY_STATUS_APPROVED} from "rain.verify.interface/interface/IVerifyV1.sol";
 
 /// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 /// initialized with a zero address for the receipt vault.

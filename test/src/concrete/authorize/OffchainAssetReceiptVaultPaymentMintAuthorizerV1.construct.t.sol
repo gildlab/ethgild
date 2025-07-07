@@ -8,6 +8,7 @@ import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config,
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
     ZeroReceiptVault,
+    ZeroVerifyContract,
     ZeroInitialOwner,
     ZeroPaymentToken,
     ZeroMaxSharesSupply
@@ -32,7 +33,7 @@ import {
     CONFISCATE_SHARES_ADMIN,
     CERTIFY_ADMIN
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
-import {VerifyAlwaysApproved} from "rain.verify/concrete/VerifyAlwaysApproved.sol";
+import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1Construct() external {
@@ -89,6 +90,28 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
             })
         );
         vm.expectRevert(ZeroInitialOwner.selector);
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1(factory.clone(address(implementation), initData));
+    }
+
+    function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1ZeroVerifyContract(address receiptVault, address owner)
+        external
+    {
+        vm.assume(receiptVault != address(0));
+        vm.assume(owner != address(0));
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 implementation =
+            new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        CloneFactory factory = new CloneFactory();
+
+        bytes memory initData = abi.encode(
+            OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
+                receiptVault: receiptVault,
+                verify: address(0),
+                owner: owner,
+                paymentToken: address(0),
+                maxSharesSupply: 0
+            })
+        );
+        vm.expectRevert(ZeroVerifyContract.selector);
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1(factory.clone(address(implementation), initData));
     }
 
