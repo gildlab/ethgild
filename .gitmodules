@@ -25,9 +25,6 @@
 [submodule "lib/rain.extrospection"]
 	path = lib/rain.extrospection
 	url = https://github.com/rainlanguage/rain.extrospection
-[submodule "lib/rain.verify"]
-	path = lib/rain.verify
-	url = https://github.com/rainlanguage/rain.verify
 [submodule "lib/rain.verify.interface"]
 	path = lib/rain.verify.interface
 	url = https://github.com/rainlanguage/rain.verify.interface
