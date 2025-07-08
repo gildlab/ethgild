@@ -26,6 +26,7 @@ import {
     OffchainAssetVaultConfigV2,
     VaultConfig
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
@@ -40,6 +41,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         bytes memory initData = abi.encode(
             OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({
                 receiptVault: receiptVault,
+                verify: address(new VerifyAlwaysApproved()),
                 owner: owner,
                 paymentToken: paymentToken,
                 maxSharesSupply: maxSharesSupply
