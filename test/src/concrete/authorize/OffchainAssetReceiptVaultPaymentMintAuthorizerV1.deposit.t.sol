@@ -197,6 +197,35 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens after send");
     }
 
+    function testZeroPaymentAmount(address receiptVault, address alice) external {
+        vm.assume(uint160(alice) > type(uint160).max / 2);
+        vm.assume(uint160(receiptVault) > type(uint160).max / 2);
+
+        vm.prank(alice);
+        TestErc20 paymentToken = new TestErc20();
+
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, alice, address(paymentToken), 1e27);
+
+        assertEq(authorizer.owner(), alice, "Owner should be set to Alice");
+        assertEq(1e27, paymentToken.balanceOf(alice), "Alice should have tokens initially");
+        assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens initially");
+
+        bytes memory data = abi.encode(
+            DepositStateChange({
+                owner: alice,
+                receiver: alice,
+                id: 1,
+                assetsDeposited: 0, // No assets deposited
+                sharesMinted: 0, // No shares minted
+                data: ""
+            })
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, alice, DEPOSIT, data));
+        authorizer.authorize(alice, DEPOSIT, data);
+    }
+
     function testTokenDecimals(
         address receiptVault,
         address alice,
