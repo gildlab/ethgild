@@ -237,6 +237,10 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
                 revert MaxSharesSupplyExceeded(sMaxSharesSupply, newSharesSupply);
             }
 
+            if (paymentAmount == 0) {
+                revert Unauthorized(stateChange.owner, DEPOSIT, data);
+            }
+
             // This is a false positive for slither because the offchain asset
             // receipt vault sets `stateChange.owner` to `msg.sender` from its
             // perspective, which is the main thing slither wants, to avoid users

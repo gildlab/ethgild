@@ -27,8 +27,11 @@ import {
     VaultConfig
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
+import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
+
+import {console2} from "forge-std/console2.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is OffchainAssetReceiptVaultAuthorizerV1Test {
     function newAuthorizer(address receiptVault, address owner, address paymentToken, uint256 maxSharesSupply)
@@ -202,23 +205,39 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         );
     }
 
-    function testTofuTokenDecimals(address receiptVault, address alice, address bob) external {
+    function testTofuTokenDecimals(
+        address receiptVault,
+        address alice,
+        address bob,
+        uint8 decimals,
+        uint256 maxShares,
+        uint256 totalSupply,
+        uint256 firstShares
+    ) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
         vm.assume(uint160(receiptVault) > type(uint160).max / 2);
 
+        maxShares = bound(maxShares, 2e18, 1e27);
+        totalSupply = bound(totalSupply, 0, 1e18);
+        decimals = uint8(bound(decimals, 1, 17));
+
+        firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
+        uint256 secondShares = bound(firstShares, 1, maxShares - totalSupply - firstShares);
+        uint256 paymentAmount = LibFixedPointDecimalScale.scaleN(firstShares, decimals, FLAG_ROUND_UP);
+
         vm.prank(alice);
         TestErc20 paymentToken = new TestErc20();
-        paymentToken.setDecimals(6);
+        paymentToken.setDecimals(decimals);
 
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
-            newAuthorizer(receiptVault, bob, address(paymentToken), 1000e18);
+            newAuthorizer(receiptVault, bob, address(paymentToken), maxShares);
 
-        assertEq(authorizer.paymentTokenDecimals(), 6, "Payment token decimals should be set to 6");
+        assertEq(authorizer.paymentTokenDecimals(), decimals, "Payment token decimals should be set");
 
-        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(500e18));
+        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
 
         vm.prank(alice);
-        paymentToken.approve(address(authorizer), 100e18);
+        paymentToken.approve(address(authorizer), maxShares * 2);
 
         vm.prank(receiptVault);
         authorizer.authorize(
@@ -229,23 +248,23 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: firstShares,
+                    sharesMinted: firstShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 100e6, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq((1e27 - paymentAmount), paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
         assertEq(
-            100e6,
+            paymentAmount,
             paymentToken.balanceOf(address(authorizer)),
             "Authorizer should have received tokens after second mint"
         );
 
-        paymentToken.setDecimals(18);
+        paymentToken.setDecimals(decimals + 1);
         vm.prank(receiptVault);
-        vm.expectRevert(abi.encodeWithSelector(PaymentTokenDecimalMismatch.selector, 6, 18));
+        vm.expectRevert(abi.encodeWithSelector(PaymentTokenDecimalMismatch.selector, decimals, decimals + 1));
         authorizer.authorize(
             alice,
             DEPOSIT,
@@ -254,14 +273,14 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: secondShares,
+                    sharesMinted: secondShares,
                     data: ""
                 })
             )
         );
 
-        paymentToken.setDecimals(6);
+        paymentToken.setDecimals(decimals);
         vm.prank(receiptVault);
         authorizer.authorize(
             alice,
@@ -271,16 +290,20 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: secondShares,
+                    sharesMinted: secondShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 200e6, paymentToken.balanceOf(alice), "Alice should have reduced balance after second mint");
+        paymentAmount = paymentAmount + LibFixedPointDecimalScale.scaleN(secondShares, decimals, FLAG_ROUND_UP);
+
         assertEq(
-            200e6,
+            1e27 - paymentAmount, paymentToken.balanceOf(alice), "Alice should have reduced balance after second mint"
+        );
+        assertEq(
+            paymentAmount,
             paymentToken.balanceOf(address(authorizer)),
             "Authorizer should have received tokens after second mint"
         );
@@ -303,7 +326,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
 
         maxShares = bound(maxShares, 1e18, 1e27);
         totalSupply = bound(totalSupply, 0, maxShares - 1);
-        firstShares = bound(firstShares, 0, maxShares - totalSupply);
+        firstShares = bound(firstShares, 1, maxShares - totalSupply);
         secondShares = bound(secondShares, maxShares - totalSupply + 1, type(uint128).max);
 
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
