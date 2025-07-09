@@ -31,8 +31,6 @@ import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is OffchainAssetReceiptVaultAuthorizerV1Test {
     function newAuthorizer(address receiptVault, address owner, address paymentToken, uint256 maxSharesSupply)
         internal
