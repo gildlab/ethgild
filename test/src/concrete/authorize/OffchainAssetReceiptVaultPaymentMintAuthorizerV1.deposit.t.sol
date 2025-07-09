@@ -27,6 +27,7 @@ import {
     VaultConfig
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
+import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
@@ -50,11 +51,22 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         return OffchainAssetReceiptVaultPaymentMintAuthorizerV1(factory.clone(address(implementation), initData));
     }
 
-    function testMintSimpleRealReceiptVault(address alice, address bob) external {
+    function testMintSimpleRealReceiptVault(
+        address alice,
+        address bob,
+        uint256 maxShares,
+        uint256 totalSupply,
+        uint256 firstShares
+    ) external {
         vm.assume(uint160(alice) > type(uint160).max / 2 && uint160(bob) > type(uint160).max / 2 && alice != bob);
 
         vm.prank(bob);
         TestErc20 paymentToken = new TestErc20();
+
+        maxShares = bound(maxShares, 2e18, 1e27);
+        totalSupply = bound(totalSupply, 0, 1e18);
+        firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
+        uint256 paymentAmount = firstShares;
 
         OffchainAssetReceiptVault receiptVaultImplementation = new OffchainAssetReceiptVault(
             ReceiptVaultConstructionConfigV2({factory: new CloneFactory(), receiptImplementation: new ReceiptContract()})
@@ -73,8 +85,10 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
             )
         );
 
+        vm.mockCall(address(receiptVault), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
+
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
-            newAuthorizer(address(receiptVault), alice, address(paymentToken), 1000e18);
+            newAuthorizer(address(receiptVault), alice, address(paymentToken), maxShares);
         vm.startPrank(alice);
         receiptVault.setAuthorizer(authorizer);
         authorizer.grantRole(CERTIFY, alice);
@@ -88,49 +102,66 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
 
         // Alice can't afford to deposit.
         vm.startPrank(alice);
-        paymentToken.approve(address(authorizer), 100e18);
+        paymentToken.approve(address(authorizer), paymentAmount);
         vm.expectRevert("ERC20: transfer amount exceeds balance");
-        receiptVault.deposit(1e18, alice, 0, hex"");
+        receiptVault.mint(firstShares, alice, 0, hex"");
         vm.stopPrank();
 
         // Bob can afford to deposit.
         vm.startPrank(bob);
-        paymentToken.approve(address(authorizer), 100e18);
-        receiptVault.deposit(1e18, bob, 0, hex"");
+        paymentToken.approve(address(authorizer), paymentAmount);
+        receiptVault.mint(firstShares, bob, 0, hex"");
         vm.stopPrank();
 
-        assertEq(1e27 - 1e18, paymentToken.balanceOf(bob), "Bob should have reduced balance after deposit");
+        assertEq(1e27 - paymentAmount, paymentToken.balanceOf(bob), "Bob should have reduced balance after deposit");
         assertEq(
-            1e18, paymentToken.balanceOf(address(authorizer)), "Authorizer should have received tokens after deposit"
+            paymentAmount,
+            paymentToken.balanceOf(address(authorizer)),
+            "Authorizer should have received tokens after deposit"
         );
         assertEq(0, paymentToken.balanceOf(alice), "Alice should still have no tokens after deposit");
 
         authorizer.sendPaymentToOwner();
 
-        assertEq(1e27 - 1e18, paymentToken.balanceOf(bob), "Bob should still have reduced balance after payment");
-        assertEq(1e18, paymentToken.balanceOf(alice), "Alice should have received payment after send");
+        assertEq(
+            1e27 - paymentAmount, paymentToken.balanceOf(bob), "Bob should still have reduced balance after payment"
+        );
+        assertEq(paymentAmount, paymentToken.balanceOf(alice), "Alice should have received payment after send");
         assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens after send");
     }
 
-    function testMintSimpleMockedReceiptVault(address receiptVault, address alice, address bob) external {
+    function testMintSimpleMockedReceiptVault(
+        address receiptVault,
+        address alice,
+        address bob,
+        uint256 maxShares,
+        uint256 totalSupply,
+        uint256 firstShares
+    ) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
         vm.assume(uint160(receiptVault) > type(uint160).max / 2);
 
         vm.prank(alice);
         TestErc20 paymentToken = new TestErc20();
 
+        maxShares = bound(maxShares, 2e18, 1e27);
+        totalSupply = bound(totalSupply, 0, 1e18);
+        firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
+
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
-            newAuthorizer(receiptVault, bob, address(paymentToken), 1000e18);
+            newAuthorizer(receiptVault, bob, address(paymentToken), maxShares);
 
         assertEq(authorizer.owner(), bob, "Owner should be set to Bob");
         assertEq(1e27, paymentToken.balanceOf(alice), "Alice should have tokens initially");
         assertEq(0, paymentToken.balanceOf(bob), "Bob should have no tokens initially");
         assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens initially");
 
-        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(500e18));
+        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
 
         vm.prank(alice);
-        paymentToken.approve(address(authorizer), 100e18);
+        paymentToken.approve(address(authorizer), maxShares * 2);
+
+        uint256 paymentAmount = firstShares;
 
         vm.prank(receiptVault);
         authorizer.authorize(
@@ -141,44 +172,92 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: firstShares,
+                    sharesMinted: firstShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 100e18, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq(1e27 - paymentAmount, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
         assertEq(
-            100e18, paymentToken.balanceOf(address(authorizer)), "Authorizer should have received tokens after mint"
+            paymentAmount,
+            paymentToken.balanceOf(address(authorizer)),
+            "Authorizer should have received tokens after mint"
         );
         assertEq(0, paymentToken.balanceOf(bob), "Bob should still have no tokens after mint");
 
         vm.prank(alice);
         authorizer.sendPaymentToOwner();
 
-        assertEq(1e27 - 100e18, paymentToken.balanceOf(alice), "Alice should still have reduced balance after payment");
-        assertEq(100e18, paymentToken.balanceOf(bob), "Bob should have received payment after send");
+        assertEq(
+            1e27 - paymentAmount, paymentToken.balanceOf(alice), "Alice should still have reduced balance after payment"
+        );
+        assertEq(paymentAmount, paymentToken.balanceOf(bob), "Bob should have received payment after send");
         assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens after send");
     }
 
-    function testTokenDecimals(address receiptVault, address alice, address bob) external {
-        vm.assume(alice != address(0) && bob != address(0) && alice != bob);
+    function testZeroPaymentAmount(address receiptVault, address alice) external {
+        vm.assume(uint160(alice) > type(uint160).max / 2);
         vm.assume(uint160(receiptVault) > type(uint160).max / 2);
 
         vm.prank(alice);
         TestErc20 paymentToken = new TestErc20();
-        paymentToken.setDecimals(12);
 
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
-            newAuthorizer(receiptVault, bob, address(paymentToken), 1000e18);
+            newAuthorizer(receiptVault, alice, address(paymentToken), 1e27);
 
-        assertEq(authorizer.paymentTokenDecimals(), 12, "Payment token decimals should be set to 18");
+        assertEq(authorizer.owner(), alice, "Owner should be set to Alice");
+        assertEq(1e27, paymentToken.balanceOf(alice), "Alice should have tokens initially");
+        assertEq(0, paymentToken.balanceOf(address(authorizer)), "Authorizer should have no tokens initially");
 
-        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(500e18));
+        bytes memory data = abi.encode(
+            DepositStateChange({
+                owner: alice,
+                receiver: alice,
+                id: 1,
+                assetsDeposited: 0, // No assets deposited
+                sharesMinted: 0, // No shares minted
+                data: ""
+            })
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(Unauthorized.selector, alice, DEPOSIT, data));
+        authorizer.authorize(alice, DEPOSIT, data);
+    }
+
+    function testTokenDecimals(
+        address receiptVault,
+        address alice,
+        address bob,
+        uint8 decimals,
+        uint256 maxShares,
+        uint256 totalSupply,
+        uint256 firstShares
+    ) external {
+        vm.assume(alice != address(0) && bob != address(0) && alice != bob);
+        vm.assume(uint160(receiptVault) > type(uint160).max / 2);
+
+        maxShares = bound(maxShares, 2e18, 1e27);
+        totalSupply = bound(totalSupply, 0, 1e18);
+        decimals = uint8(bound(decimals, 1, 17));
+
+        firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
+        uint256 paymentAmount = LibFixedPointDecimalScale.scaleN(firstShares, decimals, FLAG_ROUND_UP);
 
         vm.prank(alice);
-        paymentToken.approve(address(authorizer), 100e18);
+        TestErc20 paymentToken = new TestErc20();
+        paymentToken.setDecimals(decimals);
+
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
+            newAuthorizer(receiptVault, bob, address(paymentToken), maxShares);
+
+        assertEq(authorizer.paymentTokenDecimals(), decimals, "Payment token decimals should be set to 18");
+
+        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
+
+        vm.prank(alice);
+        paymentToken.approve(address(authorizer), maxShares * 2);
 
         vm.prank(receiptVault);
         authorizer.authorize(
@@ -189,36 +268,54 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: firstShares,
+                    sharesMinted: firstShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 100e12, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq(1e27 - paymentAmount, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
         assertEq(
-            100e12, paymentToken.balanceOf(address(authorizer)), "Authorizer should have received tokens after mint"
+            paymentAmount,
+            paymentToken.balanceOf(address(authorizer)),
+            "Authorizer should have received tokens after mint"
         );
     }
 
-    function testTofuTokenDecimals(address receiptVault, address alice, address bob) external {
+    function testTofuTokenDecimals(
+        address receiptVault,
+        address alice,
+        address bob,
+        uint8 decimals,
+        uint256 maxShares,
+        uint256 totalSupply,
+        uint256 firstShares
+    ) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
         vm.assume(uint160(receiptVault) > type(uint160).max / 2);
 
+        maxShares = bound(maxShares, 2e18, 1e27);
+        totalSupply = bound(totalSupply, 0, 1e18);
+        decimals = uint8(bound(decimals, 1, 17));
+
+        firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
+        uint256 secondShares = bound(firstShares, 1, maxShares - totalSupply - firstShares);
+        uint256 paymentAmount = LibFixedPointDecimalScale.scaleN(firstShares, decimals, FLAG_ROUND_UP);
+
         vm.prank(alice);
         TestErc20 paymentToken = new TestErc20();
-        paymentToken.setDecimals(6);
+        paymentToken.setDecimals(decimals);
 
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
-            newAuthorizer(receiptVault, bob, address(paymentToken), 1000e18);
+            newAuthorizer(receiptVault, bob, address(paymentToken), maxShares);
 
-        assertEq(authorizer.paymentTokenDecimals(), 6, "Payment token decimals should be set to 6");
+        assertEq(authorizer.paymentTokenDecimals(), decimals, "Payment token decimals should be set");
 
-        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(500e18));
+        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
 
         vm.prank(alice);
-        paymentToken.approve(address(authorizer), 100e18);
+        paymentToken.approve(address(authorizer), maxShares * 2);
 
         vm.prank(receiptVault);
         authorizer.authorize(
@@ -229,23 +326,23 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: firstShares,
+                    sharesMinted: firstShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 100e6, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq((1e27 - paymentAmount), paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
         assertEq(
-            100e6,
+            paymentAmount,
             paymentToken.balanceOf(address(authorizer)),
             "Authorizer should have received tokens after second mint"
         );
 
-        paymentToken.setDecimals(18);
+        paymentToken.setDecimals(decimals + 1);
         vm.prank(receiptVault);
-        vm.expectRevert(abi.encodeWithSelector(PaymentTokenDecimalMismatch.selector, 6, 18));
+        vm.expectRevert(abi.encodeWithSelector(PaymentTokenDecimalMismatch.selector, decimals, decimals + 1));
         authorizer.authorize(
             alice,
             DEPOSIT,
@@ -254,14 +351,14 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: secondShares,
+                    sharesMinted: secondShares,
                     data: ""
                 })
             )
         );
 
-        paymentToken.setDecimals(6);
+        paymentToken.setDecimals(decimals);
         vm.prank(receiptVault);
         authorizer.authorize(
             alice,
@@ -271,37 +368,54 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 100e18,
-                    sharesMinted: 100e18,
+                    assetsDeposited: secondShares,
+                    sharesMinted: secondShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 200e6, paymentToken.balanceOf(alice), "Alice should have reduced balance after second mint");
+        paymentAmount = paymentAmount + LibFixedPointDecimalScale.scaleN(secondShares, decimals, FLAG_ROUND_UP);
+
         assertEq(
-            200e6,
+            1e27 - paymentAmount, paymentToken.balanceOf(alice), "Alice should have reduced balance after second mint"
+        );
+        assertEq(
+            paymentAmount,
             paymentToken.balanceOf(address(authorizer)),
             "Authorizer should have received tokens after second mint"
         );
     }
 
-    function testMaxSharesSupplyExceeded(address receiptVault, address alice, address bob) external {
+    function testMaxSharesSupplyExceeded(
+        address receiptVault,
+        address alice,
+        address bob,
+        uint256 maxShares,
+        uint256 totalSupply,
+        uint256 firstShares,
+        uint256 secondShares
+    ) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
         vm.assume(uint160(receiptVault) > type(uint160).max / 2);
 
         vm.prank(alice);
         TestErc20 paymentToken = new TestErc20();
 
+        maxShares = bound(maxShares, 1e18, 1e27);
+        totalSupply = bound(totalSupply, 0, maxShares - 1);
+        firstShares = bound(firstShares, 1, maxShares - totalSupply);
+        secondShares = bound(secondShares, maxShares - totalSupply + 1, type(uint128).max);
+
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
-            newAuthorizer(receiptVault, bob, address(paymentToken), 100e18);
+            newAuthorizer(receiptVault, bob, address(paymentToken), maxShares);
 
-        assertEq(authorizer.maxSharesSupply(), 100e18, "Max shares supply should be set to 100e18");
+        assertEq(authorizer.maxSharesSupply(), maxShares, "Max shares supply should be set");
 
-        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(50e18));
+        vm.mockCall(receiptVault, abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
 
         vm.prank(alice);
-        paymentToken.approve(address(authorizer), 100e18);
+        paymentToken.approve(address(authorizer), maxShares);
 
         vm.prank(receiptVault);
         authorizer.authorize(
@@ -312,20 +426,22 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 50e18,
-                    sharesMinted: 50e18,
+                    assetsDeposited: firstShares,
+                    sharesMinted: firstShares,
                     data: ""
                 })
             )
         );
 
-        assertEq(1e27 - 50e18, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq(1e27 - firstShares, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
         assertEq(
-            50e18, paymentToken.balanceOf(address(authorizer)), "Authorizer should have received tokens after mint"
+            firstShares,
+            paymentToken.balanceOf(address(authorizer)),
+            "Authorizer should have received tokens after mint"
         );
 
         vm.prank(receiptVault);
-        vm.expectRevert(abi.encodeWithSelector(MaxSharesSupplyExceeded.selector, 100e18, 101e18));
+        vm.expectRevert(abi.encodeWithSelector(MaxSharesSupplyExceeded.selector, maxShares, totalSupply + secondShares));
         authorizer.authorize(
             alice,
             DEPOSIT,
@@ -334,8 +450,8 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                     owner: alice,
                     receiver: alice,
                     id: 1,
-                    assetsDeposited: 51e18,
-                    sharesMinted: 51e18,
+                    assetsDeposited: secondShares,
+                    sharesMinted: secondShares,
                     data: ""
                 })
             )
