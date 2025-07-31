@@ -231,8 +231,9 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceip
                 revert PaymentTokenDecimalMismatch(lPaymentTokenDecimals, currentPaymentTokenDecimals);
             }
 
-            uint256 oldSharesSupply = IERC20(lReceiptVault).totalSupply();
-            uint256 newSharesSupply = oldSharesSupply + stateChange.sharesMinted;
+            // Authorization happens after deposit so supply includes the newly
+            // minted shares.
+            uint256 newSharesSupply = IERC20(lReceiptVault).totalSupply();
             if (newSharesSupply > sMaxSharesSupply) {
                 revert MaxSharesSupplyExceeded(sMaxSharesSupply, newSharesSupply);
             }
