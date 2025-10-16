@@ -16,7 +16,6 @@ import {
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {SceptreStakedFlrOracle} from "src/concrete/oracle/SceptreStakedFlrOracle.sol";
 import {TwoPriceOracleV2, TwoPriceOracleConfigV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
-import {IStakedFlr} from "rain.flare/interface/IStakedFlr.sol";
 import {FtsoV2LTSFeedOracle, FtsoV2LTSFeedOracleConfig} from "src/concrete/oracle/FtsoV2LTSFeedOracle.sol";
 import {FLR_USD_FEED_ID} from "rain.flare/lib/lts/LibFtsoV2LTS.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
@@ -51,6 +50,7 @@ contract Deploy is Script {
 
     function deployStakedFlrPriceVault(uint256 deploymentKey) internal {
         vm.startBroadcast(deploymentKey);
+        //forge-lint: disable-next-line(mixed-case-variable)
         IPriceOracleV2 ftsoV2LTSFeedOracle = IPriceOracleV2(
             new FtsoV2LTSFeedOracle(
                 FtsoV2LTSFeedOracleConfig({

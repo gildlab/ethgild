@@ -2,8 +2,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {IERC20Upgradeable as IERC20} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
 import {
     ReceiptVaultConfig,
     VaultConfig,
@@ -19,6 +17,7 @@ import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 /// by a factory to build the full config.
 /// @param priceOracle as per `ERC20PriceOracleReceiptVaultConfig`.
 /// @param vaultConfig config for the underlying `ReceiptVault`.
+//forge-lint: disable-next-line(pascal-case-struct)
 struct ERC20PriceOracleVaultConfig {
     IPriceOracleV2 priceOracle;
     VaultConfig vaultConfig;
@@ -27,6 +26,7 @@ struct ERC20PriceOracleVaultConfig {
 /// @param priceOracle The price oracle that will be permanently bound to the
 /// `ERC20PriceOracleVault` upon initialization.
 /// @param receiptVaultConfig All config for the underlying receipt vault.
+//forge-lint: disable-next-line(pascal-case-struct)
 struct ERC20PriceOracleReceiptVaultConfig {
     IPriceOracleV2 priceOracle;
     ReceiptVaultConfig receiptVaultConfig;

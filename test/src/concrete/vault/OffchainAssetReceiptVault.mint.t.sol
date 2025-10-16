@@ -16,7 +16,7 @@ import {
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
-import {IReceiptVaultV3, IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 import {IReceiptV3} from "src/interface/IReceiptV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {

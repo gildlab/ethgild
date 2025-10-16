@@ -9,8 +9,6 @@ import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config,
     ZeroReceiptVault,
     ZeroInitialOwner,
-    ZeroPaymentToken,
-    ZeroMaxSharesSupply,
     Unauthorized
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {
@@ -25,7 +23,6 @@ import {
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is OffchainAssetReceiptVaultAuthorizerV1Test {

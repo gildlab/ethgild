@@ -85,6 +85,7 @@ contract ERC20PriceOracleReceipt is Receipt {
     /// Provides the URL for redeeming receipts. Can be overridden to provide a
     /// custom redeem URL. Default is an empty string, which will not include a
     /// redeem URL in the metadata json.
+    //forge-lint: disable-next-line(mixed-case-function)
     function _redeemURL() internal view virtual returns (string memory) {
         return DEFAULT_REDEEM_URL;
     }

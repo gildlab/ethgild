@@ -4,8 +4,6 @@ pragma solidity =0.8.25;
 
 import {OffchainAssetReceiptVaultAuthorizerV1Test} from "test/abstract/OffchainAssetReceiptVaultAuthorizerV1Test.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
-import {IERC20MetadataUpgradeable as IERC20Metadata} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
     PaymentTokenDecimalMismatch,
@@ -14,8 +12,6 @@ import {
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
-import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
-import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {DepositStateChange, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
@@ -29,19 +25,18 @@ import {
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is OffchainAssetReceiptVaultAuthorizerV1Test {
     ICloneableFactoryV2 internal immutable iFactory;
     ReceiptContract internal immutable iReceiptImplementation;
-    OffchainAssetReceiptVault internal immutable iImplementation;
+    OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
 
     constructor() {
         iFactory = new CloneFactory();
         iReceiptImplementation = new ReceiptContract();
-        iImplementation = new OffchainAssetReceiptVault(
+        I_IMPLEMENTATION = new OffchainAssetReceiptVault(
             ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
         );
     }
@@ -417,7 +412,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         });
         // Use the factory to create the child contract
         OffchainAssetReceiptVault receiptVault = OffchainAssetReceiptVault(
-            payable(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)))
+            payable(iFactory.clone(address(I_IMPLEMENTATION), abi.encode(offchainAssetVaultConfig)))
         );
 
         vm.prank(alice);

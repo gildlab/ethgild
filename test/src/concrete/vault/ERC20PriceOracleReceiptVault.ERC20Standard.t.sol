@@ -2,11 +2,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ERC20PriceOracleReceiptVault,
-    ERC20PriceOracleReceiptVaultConfig
-} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
+import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {
@@ -98,7 +95,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vault.deposit(amount, alice, oraclePrice, bytes(""));
 
-        vault.transfer(bob, expectedShares);
+        assertTrue(vault.transfer(bob, expectedShares));
 
         // Check balances
         assertEqUint(bobInitialBalance, 0);
@@ -160,7 +157,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         vm.startPrank(bob);
 
         // Bob transfers from Alice's account to his own
-        vault.transferFrom(alice, bob, transferFromAmount);
+        assertTrue(vault.transferFrom(alice, bob, transferFromAmount));
 
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);

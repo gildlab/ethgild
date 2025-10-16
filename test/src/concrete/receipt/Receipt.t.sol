@@ -6,7 +6,7 @@ import {IReceiptManagerV2} from "src/interface/IReceiptManagerV2.sol";
 import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {ReceiptFactoryTest, Vm} from "test/abstract/ReceiptFactoryTest.sol";
+import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
 import {OnlyManager} from "src/error/ErrReceipt.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {

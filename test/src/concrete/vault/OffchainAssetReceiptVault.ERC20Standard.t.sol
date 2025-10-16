@@ -166,7 +166,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         vm.startPrank(bob);
 
         // Bob transfers from Alice's account to his own
-        vault.transferFrom(alice, bob, transferFromAmount);
+        assertTrue(vault.transferFrom(alice, bob, transferFromAmount));
 
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);

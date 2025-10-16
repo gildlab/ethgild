@@ -13,7 +13,6 @@ import {
 } from "../../abstract/ReceiptVault.sol";
 import {IReceiptV3} from "../../interface/IReceiptV3.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
-import {ITierV2} from "rain.tier.interface/interface/ITierV2.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 import {IERC165Upgradeable as IERC165} from
     "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";

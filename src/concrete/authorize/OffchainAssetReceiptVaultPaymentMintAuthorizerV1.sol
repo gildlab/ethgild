@@ -12,7 +12,7 @@ import {SafeERC20Upgradeable as SafeERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {DEPOSIT, WITHDRAW, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
+import {DEPOSIT, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";

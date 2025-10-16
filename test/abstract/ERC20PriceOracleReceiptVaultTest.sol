@@ -50,7 +50,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
     }
 
     /// Get Receipt from event
-    function getReceipt() internal returns (ReceiptContract) {
+    function getReceipt() internal view returns (ReceiptContract) {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         // Find the ERC20PriceOracleReceiptVaultInitialized event log
