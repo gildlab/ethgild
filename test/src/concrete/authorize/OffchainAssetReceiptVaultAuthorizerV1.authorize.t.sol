@@ -10,8 +10,6 @@ import {
     TRANSFER_SHARES,
     TRANSFER_RECEIPT,
     CERTIFY,
-    ZeroInitialAdmin,
-    Unauthorized,
     CONFISCATE_RECEIPT,
     CONFISCATE_SHARES,
     DEPOSIT,

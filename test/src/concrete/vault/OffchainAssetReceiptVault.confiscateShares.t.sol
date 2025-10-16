@@ -4,13 +4,11 @@ pragma solidity =0.8.25;
 
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfigV2,
     CONFISCATE_SHARES,
     DEPOSIT,
     CERTIFY
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";

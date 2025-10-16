@@ -12,8 +12,6 @@ import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
-import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
-import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is OffchainAssetReceiptVaultAuthorizerV1Test {
@@ -68,7 +66,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
         );
 
         vm.prank(bob);
-        paymentToken.transfer(address(authorizer), 1e18);
+        assertTrue(paymentToken.transfer(address(authorizer), 1e18));
 
         assertEq(0, paymentToken.balanceOf(alice), "Alice should still have no tokens after transfer to authorizer");
         assertEq(
@@ -109,7 +107,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
         );
 
         vm.prank(alice);
-        paymentToken.transfer(address(authorizer), 0.5e18);
+        assertTrue(paymentToken.transfer(address(authorizer), 0.5e18));
 
         assertEq(0.5e18, paymentToken.balanceOf(alice), "Alice should have 0.5e18 tokens after transfer to authorizer");
         assertEq(

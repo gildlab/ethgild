@@ -14,7 +14,7 @@ import {
     TransferReceiptStateChange,
     Unauthorized
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 import {IReceiptV3} from "src/interface/IReceiptV3.sol";
@@ -143,7 +143,7 @@ contract OffchainAssetReceiptVaultDepositTest is OffchainAssetReceiptVaultTest {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
         OffchainAssetReceiptVault vault = LibOffchainAssetVaultCreator.createVault(
-            vm, iFactory, iImplementation, iAuthorizerImplementation, alice, shareName, shareSymbol
+            vm, I_FACTORY, I_IMPLEMENTATION, I_AUTHORIZER_IMPLEMENTATION, alice, shareName, shareSymbol
         );
 
         checkMint(vault, bob, bob, shares, minShareRatio, receiptInformation, "");

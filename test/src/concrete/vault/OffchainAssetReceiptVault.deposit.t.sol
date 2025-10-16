@@ -14,7 +14,7 @@ import {
     Unauthorized,
     TRANSFER_RECEIPT
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {

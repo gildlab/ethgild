@@ -10,7 +10,6 @@ import {IReceiptVaultV3} from "../../interface/IReceiptVaultV3.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
@@ -44,10 +43,16 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
 
     /// Throws if the caller is not the manager of the `Receipt` contract.
     modifier onlyManager() {
+        _onlyManager();
+        _;
+    }
+    /// Throws if the caller is not the manager of the `Receipt` contract.
+    /// Dedicated function to avoid code bloat from using a modifier directly.
+
+    function _onlyManager() internal view {
         if (_msgSender() != address(sManager)) {
             revert OnlyManager();
         }
-        _;
     }
 
     /// Sets the sender for the duration of the function call. Requires that
@@ -55,8 +60,21 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     /// sender that is set here is actually used.
     /// @param sender The address to set as the sender.
     modifier withSender(address sender) {
-        sSender = sender;
+        _withSenderBefore(sender);
         _;
+        _withSenderAfter();
+    }
+    /// Sets the sender to `sender`. Dedicated function to avoid code bloat from
+    /// using a modifier directly.
+    /// @param sender The address to set as the sender.
+
+    function _withSenderBefore(address sender) internal {
+        sSender = sender;
+    }
+    /// Resets the sender to address(0). Dedicated function to avoid code bloat
+    /// from using a modifier directly.
+
+    function _withSenderAfter() internal {
         sSender = address(0);
     }
 

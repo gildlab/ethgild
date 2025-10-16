@@ -48,17 +48,17 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         {
             assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
             vm.mockCall(
-                address(iAsset),
+                address(I_ASSET),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
                 abi.encode(true)
             );
-            vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+            vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
         }
 
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -82,14 +82,14 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         // Setup vault and deposit initial balance
         vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
         uint256 bobInitialBalance = vault.balanceOf(bob);
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -108,7 +108,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         amount = bound(amount, 1, type(uint256).max);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         // Set an allowance for Bob
@@ -134,15 +134,15 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vm.assume(transferFromAmount < expectedShares);
@@ -173,7 +173,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         increaseAmount = bound(increaseAmount, 1, type(uint128).max);
         vm.assume(increaseAmount < amount);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         vault.approve(bob, amount);
@@ -194,7 +194,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
         vm.assume(decreaseAmount < amount);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         vault.approve(bob, amount);

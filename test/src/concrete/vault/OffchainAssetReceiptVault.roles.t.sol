@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
-import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
     CONFISCATE_RECEIPT,

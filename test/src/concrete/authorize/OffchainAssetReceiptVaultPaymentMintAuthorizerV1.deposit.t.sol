@@ -29,15 +29,15 @@ import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.so
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is OffchainAssetReceiptVaultAuthorizerV1Test {
-    ICloneableFactoryV2 internal immutable iFactory;
-    ReceiptContract internal immutable iReceiptImplementation;
+    ICloneableFactoryV2 internal immutable I_FACTORY;
+    ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
     OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
 
     constructor() {
-        iFactory = new CloneFactory();
-        iReceiptImplementation = new ReceiptContract();
+        I_FACTORY = new CloneFactory();
+        I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
         I_IMPLEMENTATION = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
+            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
         );
     }
 
@@ -412,7 +412,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         });
         // Use the factory to create the child contract
         OffchainAssetReceiptVault receiptVault = OffchainAssetReceiptVault(
-            payable(iFactory.clone(address(I_IMPLEMENTATION), abi.encode(offchainAssetVaultConfig)))
+            payable(I_FACTORY.clone(address(I_IMPLEMENTATION), abi.encode(offchainAssetVaultConfig)))
         );
 
         vm.prank(alice);

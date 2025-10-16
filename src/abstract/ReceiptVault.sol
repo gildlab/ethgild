@@ -18,6 +18,7 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
+//forge-lint: disable-next-line(unused-import)
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 import {
@@ -119,8 +120,8 @@ abstract contract ReceiptVault is
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
 
-    ICloneableFactoryV2 internal immutable iFactory;
-    IReceiptV3 internal immutable iReceiptImplementation;
+    ICloneableFactoryV2 internal immutable I_FACTORY;
+    IReceiptV3 internal immutable I_RECEIPT_IMPLEMENTATION;
 
     /// Underlying ERC4626 asset.
     IERC20 internal sAsset;
@@ -134,8 +135,8 @@ abstract contract ReceiptVault is
     constructor(ReceiptVaultConstructionConfigV2 memory config) {
         _disableInitializers();
 
-        iFactory = config.factory;
-        iReceiptImplementation = config.receiptImplementation;
+        I_FACTORY = config.factory;
+        I_RECEIPT_IMPLEMENTATION = config.receiptImplementation;
     }
 
     /// Deposits are payable so this allows refunds.
@@ -148,6 +149,7 @@ abstract contract ReceiptVault is
     /// @param config All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase
     // slither-disable-next-line naming-convention
+    // forge-lint: disable-next-line(mixed-case-function)
     function __ReceiptVault_init(VaultConfig memory config) internal virtual {
         __Multicall_init();
         __ReentrancyGuard_init();
@@ -158,7 +160,7 @@ abstract contract ReceiptVault is
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
         IReceiptV3 managedReceipt =
-            IReceiptV3(iFactory.clone(address(iReceiptImplementation), abi.encode(address(this))));
+            IReceiptV3(I_FACTORY.clone(address(I_RECEIPT_IMPLEMENTATION), abi.encode(address(this))));
         sReceipt = managedReceipt;
 
         // Sanity check here. Should always be true as we cloned the receipt

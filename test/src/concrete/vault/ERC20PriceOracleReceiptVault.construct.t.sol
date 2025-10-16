@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ReceiptVaultConfig} from "src/abstract/ReceiptVault.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ERC20PriceOracleReceiptVaultConfig
@@ -50,7 +49,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Assert that the event log was found
         assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
 
-        assertEq(msgSender, address(iFactory));
+        assertEq(msgSender, address(I_FACTORY));
         assert(address(vault) != address(0));
 
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.name)));
@@ -59,7 +58,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.symbol)));
         assertEq(config.receiptVaultConfig.vaultConfig.symbol, shareSymbol);
 
-        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), address(iAsset));
+        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), address(I_ASSET));
 
         assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
         assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));
@@ -85,7 +84,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Simulate transaction from alice
         vm.prank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
         assert(address(vault) != address(0));
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
@@ -94,7 +93,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Simulate transaction from alice
         vm.prank(bob);
 
-        ERC20PriceOracleReceiptVault vaultTwo = createVault(iVaultOracle, shareNameTwo, shareSymbolTwo);
+        ERC20PriceOracleReceiptVault vaultTwo = createVault(I_VAULT_ORACLE, shareNameTwo, shareSymbolTwo);
 
         assert(address(vaultTwo) != address(0));
         assertEq(keccak256(bytes(vaultTwo.name())), keccak256(bytes(shareNameTwo)));

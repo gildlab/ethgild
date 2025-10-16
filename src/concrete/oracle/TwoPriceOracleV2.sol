@@ -32,9 +32,9 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
     event Construction(address sender, TwoPriceOracleConfigV2 config);
 
     /// As per `ConstructionConfig.base`.
-    IPriceOracleV2 public immutable base;
+    IPriceOracleV2 public immutable BASE;
     /// As per `ConstructionConfig.quote`.
-    IPriceOracleV2 public immutable quote;
+    IPriceOracleV2 public immutable QUOTE;
 
     /// @param config Config required to construct.
     constructor(TwoPriceOracleConfigV2 memory config) {
@@ -42,8 +42,8 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
             revert ErrTwoPriceOracleV2SameQuoteBase(address(config.base));
         }
 
-        base = IPriceOracleV2(config.base);
-        quote = IPriceOracleV2(config.quote);
+        BASE = IPriceOracleV2(config.base);
+        QUOTE = IPriceOracleV2(config.quote);
         emit Construction(msg.sender, config);
 
         // Dry run the price to flush out any trivial issues with the oracles
@@ -64,9 +64,9 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
         // oracles that might need to be paid.
         // This means the slither detector here is a false positive.
         //slither-disable-next-line arbitrary-send-eth
-        uint256 quotePrice = quote.price{value: address(this).balance}();
+        uint256 quotePrice = QUOTE.price{value: address(this).balance}();
         //slither-disable-next-line arbitrary-send-eth
-        uint256 basePrice = base.price{value: address(this).balance}();
+        uint256 basePrice = BASE.price{value: address(this).balance}();
         return basePrice.fixedPointDiv(quotePrice, Math.Rounding.Up);
     }
 }

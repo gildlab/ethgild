@@ -29,13 +29,17 @@ contract ERC20PriceOracleReceipt is Receipt {
         if (id == 0) {
             revert ZeroReceiptId();
         }
+        //forge-lint: disable-next-line(mixed-case-variable)
         string memory redeemURL = _redeemURL();
+        //forge-lint: disable-next-line(mixed-case-variable)
         string memory redeemURLPhrase = bytes(redeemURL).length > 0 ? string.concat(" Redeem at ", redeemURL, ".") : "";
 
         string memory brandName = _brandName();
         string memory brandNamePhrase = bytes(brandName).length > 0 ? string.concat(brandName, " ") : "";
 
+        //forge-lint: disable-next-line(mixed-case-variable)
         string memory receiptSVGURI = _receiptSVGURI();
+        //forge-lint: disable-next-line(mixed-case-variable)
         string memory receiptSVGURIPhrase =
             bytes(receiptSVGURI).length > 0 ? string.concat("\"image\":\"", receiptSVGURI, "\",") : "";
 
@@ -71,6 +75,7 @@ contract ERC20PriceOracleReceipt is Receipt {
     /// Provides the SVG URI for the receipt. Can be overridden to provide a
     /// custom SVG URI. Default is an empty string, which will not include an
     /// image in the metadata json.
+    //forge-lint: disable-next-line(mixed-case-function)
     function _receiptSVGURI() internal view virtual returns (string memory) {
         return DEFAULT_SVG_URI;
     }

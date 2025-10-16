@@ -2,20 +2,17 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount, ZeroReceiver} from "src/abstract/ReceiptVault.sol";
+import {MinShareRatio, ZeroAssetsAmount} from "src/abstract/ReceiptVault.sol";
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracleV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
+import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
-import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
-import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
-import {IReceiptVaultV3, IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
+import {IReceiptV3} from "src/concrete/receipt/Receipt.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 
 contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -42,7 +39,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         vm.startPrank(owner);
         vm.recordLogs();
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, owner, address(vault), expectedAssets),
             abi.encode(true)
         );
@@ -63,7 +60,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
             }
 
             vm.expectCall(
-                address(iAsset),
+                address(I_ASSET),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, owner, address(vault), expectedAssets)
             );
         }
@@ -89,7 +86,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         (uint256 oraclePrice1, uint256 shares1) = bounds(oraclePrice, shares);
         uint256 minShareRatio1 = bound(oraclePrice, 0, oraclePrice1);
         checkMint(
-            createVault(iVaultOracle, shareName, shareSymbol),
+            createVault(I_VAULT_ORACLE, shareName, shareSymbol),
             ALICE,
             ALICE,
             oraclePrice1,
@@ -111,7 +108,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         bytes memory receiptInformation1,
         bytes memory receiptInformation2
     ) external {
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
         (uint256 oraclePrice1Bounded, uint256 shares1Bounded) = bounds(oraclePrice1, shares1);
         uint256 minShareRatio1 = bound(oraclePrice1, 0, oraclePrice1Bounded);
@@ -131,7 +128,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         uint256 oraclePrice,
         bytes memory receiptInformation
     ) external {
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
         (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
         uint256 minShareRatioBounded = bound(minShareRatio, oraclePriceBounded + 1, type(uint256).max);
@@ -159,7 +156,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
     ) external {
         (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
         (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);
         uint256 minShareRatio = bound(oraclePrice, 0, oraclePriceBounded);
@@ -174,7 +171,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         uint256 oraclePrice,
         bytes memory receiptInformation
     ) external {
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         uint256 shares = 0;
 
         (uint256 oraclePriceBounded, uint256 sharesBounded) = bounds(oraclePrice, shares);

@@ -18,12 +18,12 @@ contract ERC20PriceOracleReceiptVaultTotalAssetsTest is ERC20PriceOracleReceiptV
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
         vm.mockCall(
-            address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), abi.encode(assets)
+            address(I_ASSET), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)), abi.encode(assets)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.balanceOf.selector, address(vault)));
 
         uint256 resultAssets = vault.totalAssets();
 

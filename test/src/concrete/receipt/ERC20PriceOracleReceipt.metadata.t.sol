@@ -22,8 +22,10 @@ import {CMASK_QUOTATION_MARK, CMASK_PRINTABLE, CMASK_BACKSLASH} from "rain.strin
 contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
     string internal sVaultShareSymbol;
     string internal sVaultAssetSymbol;
+    //forge-lint: disable-next-line(mixed-case-variable)
     string internal sReceiptSVGURI;
     string internal sReferenceAssetSymbol;
+    //forge-lint: disable-next-line(mixed-case-variable)
     string internal sRedeemURL;
     string internal sBrandName;
 
@@ -35,6 +37,7 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
         sVaultAssetSymbol = vaultAssetSymbol;
     }
 
+    //forge-lint: disable-next-line(mixed-case-function,mixed-case-variable)
     function setReceiptSVGURI(string memory receiptSVGURI) external {
         sReceiptSVGURI = receiptSVGURI;
     }
@@ -84,7 +87,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         vm.expectRevert(ZeroReceiptId.selector);
@@ -97,7 +100,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         string memory uri = receipt.uri(id);
@@ -127,7 +130,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         assertEq(receipt.name(), "TRM Receipt");
@@ -137,7 +140,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         assertEq(receipt.symbol(), "TRM RCPT");

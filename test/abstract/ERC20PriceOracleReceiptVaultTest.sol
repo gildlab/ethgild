@@ -12,30 +12,29 @@ import {
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {TwoPriceOracleV2, TwoPriceOracleConfigV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
-    ICloneableFactoryV2 internal immutable iFactory;
-    ERC20PriceOracleReceiptVault internal immutable iImplementation;
-    ReceiptContract internal immutable iReceiptImplementation;
-    IERC20 immutable iAsset;
-    IPriceOracleV2 immutable iVaultOracle;
+    ICloneableFactoryV2 internal immutable I_FACTORY;
+    ERC20PriceOracleReceiptVault internal immutable I_IMPLEMENTATION;
+    ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
+    IERC20 immutable I_ASSET;
+    IPriceOracleV2 immutable I_VAULT_ORACLE;
 
     constructor() {
-        iFactory = new CloneFactory();
-        iReceiptImplementation = new ReceiptContract();
-        iImplementation = new ERC20PriceOracleReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
+        I_FACTORY = new CloneFactory();
+        I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
+        I_IMPLEMENTATION = new ERC20PriceOracleReceiptVault(
+            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
         );
-        iAsset = IERC20(address(uint160(uint256(keccak256("asset.test")))));
-        iVaultOracle = IPriceOracleV2(payable(address(uint160(uint256(keccak256("vault.oracle"))))));
+        I_ASSET = IERC20(address(uint160(uint256(keccak256("asset.test")))));
+        I_VAULT_ORACLE = IPriceOracleV2(payable(address(uint160(uint256(keccak256("vault.oracle"))))));
     }
 
     function setVaultOraclePrice(uint256 oraclePrice) internal {
         vm.mockCall(
-            address(iVaultOracle), abi.encodeWithSelector(IPriceOracleV2.price.selector), abi.encode(oraclePrice)
+            address(I_VAULT_ORACLE), abi.encodeWithSelector(IPriceOracleV2.price.selector), abi.encode(oraclePrice)
         );
     }
 
@@ -44,7 +43,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         returns (ERC20PriceOracleReceiptVault)
     {
         ERC20PriceOracleReceiptVault vault = LibERC20PriceOracleReceiptVaultCreator.createVault(
-            iFactory, iImplementation, priceOracle, address(iAsset), name, symbol
+            I_FACTORY, I_IMPLEMENTATION, priceOracle, address(I_ASSET), name, symbol
         );
         return vault;
     }

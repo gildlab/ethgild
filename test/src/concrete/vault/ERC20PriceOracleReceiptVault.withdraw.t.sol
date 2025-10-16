@@ -3,8 +3,7 @@
 pragma solidity =0.8.25;
 
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
-import {TwoPriceOracleV2} from "src/concrete/oracle/TwoPriceOracleV2.sol";
+import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
@@ -92,18 +91,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 2, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 withdrawAssets =
@@ -127,18 +126,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
@@ -163,18 +162,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 availableReceiptBalance = receipt.balanceOf(alice, oraclePrice);
@@ -207,18 +206,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 availableReceiptBalance = receipt.balanceOf(alice, oraclePrice);
@@ -253,7 +252,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.assume(alicePrice != bobPrice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Alice", "Alice");
 
         // Alice deposits so that she receives ERC20 shares under her receipt.
         setVaultOraclePrice(alicePrice);
@@ -261,11 +260,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, aliceDeposit),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, aliceDeposit));
+        vm.expectCall(
+            address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, aliceDeposit)
+        );
 
         vault.deposit(aliceDeposit, alice, alicePrice, bytes(""));
         vm.stopPrank();
@@ -276,11 +277,11 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(bob);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit));
 
         uint256 bobExpectedSharesAfterActions;
         {
@@ -319,11 +320,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
             vm.startPrank(bob);
             vm.mockCall(
-                address(iAsset),
+                address(I_ASSET),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit),
                 abi.encode(true)
             );
-            vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit));
+            vm.expectCall(
+                address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, bob, vault, bobDeposit)
+            );
 
             uint256 bobSharesDeposit1 = vault.deposit(bobDeposit, bob, alicePrice, bytes(""));
             vm.stopPrank();
@@ -386,18 +389,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max - 1);
         vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
@@ -451,7 +454,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         // Start recording logs
         vm.recordLogs();
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Alice", "Alice");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Alice", "Alice");
         ReceiptContract receipt = getReceipt();
 
         // Set initial oracle price and deposit first half
@@ -459,12 +462,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(alice);
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
             abi.encode(true)
         );
         vm.expectCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2)
         );
 
@@ -480,12 +483,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         setVaultOraclePrice(priceTwo);
         vm.startPrank(alice);
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2),
             abi.encode(true)
         );
         vm.expectCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), aliceDeposit / 2)
         );
 
@@ -501,7 +504,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         uint256 assetsRequired = aliceDeposit.fixedPointDiv(priceTwo, Math.Rounding.Up);
         vm.startPrank(alice);
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, address(vault), assetsRequired),
             abi.encode(true)
         );

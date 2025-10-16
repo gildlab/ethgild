@@ -7,8 +7,6 @@ import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 import {
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1,
     OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config,
-    ZeroReceiptVault,
-    ZeroInitialOwner,
     Unauthorized
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {
