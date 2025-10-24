@@ -17,9 +17,6 @@
   "lib/rain.string": {
     "rev": "85d0074c8cd1fdca3285366c15bc9b44b84ad5e9"
   },
-  "lib/rain.tier.interface": {
-    "rev": "047096f4b95535dbaf86c1fb4d5eedf6052cae6e"
-  },
   "lib/rain.verify.interface": {
     "rev": "2c6942e5f1f96783f6173d59817e3de6e47e93ff"
   },
