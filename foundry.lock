@@ -18,7 +18,7 @@
     "rev": "85d0074c8cd1fdca3285366c15bc9b44b84ad5e9"
   },
   "lib/rain.verify.interface": {
-    "rev": "2c6942e5f1f96783f6173d59817e3de6e47e93ff"
+    "rev": "9ce9de169ede1098be98199f084bf7145e6311e4"
   },
   "lib/solady": {
     "rev": "836c169fe357b3c23ad5d5755a9b4fbbfad7a99b"
