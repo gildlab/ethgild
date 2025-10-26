@@ -98,7 +98,7 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
         // Cannot transfer while frozen.
         vm.prank(sBob);
         vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFrozen.selector, freezeUntil, sBob, sAlice));
-        assertTrue(vault.transfer(sAlice, 1e18));
+        assertFalse(vault.transfer(sAlice, 1e18));
 
         // Can transfer again if there's a reason to allow it.
         giveReasonToTransfer(seed, sBob, sAlice);
@@ -109,7 +109,7 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
         vm.warp(freezeUntil - 1);
         vm.prank(sAlice);
         vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFrozen.selector, freezeUntil, sAlice, sBob));
-        assertTrue(vault.transfer(sBob, 1e18));
+        assertFalse(vault.transfer(sBob, 1e18));
     }
 
     function testReceiptTransferFroze(uint256 seed) external {
