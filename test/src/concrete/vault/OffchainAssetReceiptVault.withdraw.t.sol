@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroSharesAmount, ZeroOwner} from "src/abstract/ReceiptVault.sol";
+import {ZeroReceiver, InvalidId, ZeroAssetsAmount, ZeroOwner} from "src/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVault,
     WITHDRAW,
@@ -11,7 +11,7 @@ import {
     WithdrawStateChange
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm, ReceiptContract} from "../../../abstract/OffchainAssetReceiptVaultTest.sol";
-import {IReceiptVaultV3, IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,

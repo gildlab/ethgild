@@ -15,7 +15,7 @@ remappings = [
     "rain.flare/=lib/rain.flare/src/",
     "chainlink/=lib/rain.chainlink/lib/chainlink/contracts/src/",
     "rain.math.fixedpoint/=lib/rain.math.fixedpoint/src/",
-    "rain.extrospection/=lib/rain.extrospection/src/",
+    "rain.extrospection/=lib/rain.factory/lib/rain.extrospection/src/",
 ]
 
 bytecode_hash = "none"

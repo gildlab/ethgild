@@ -3,7 +3,6 @@
 pragma solidity =0.8.25;
 
 import {
-    ReceiptVault,
     ReceiptVaultConstructionConfigV2,
     IReceiptV3,
     ICloneableFactoryV2,

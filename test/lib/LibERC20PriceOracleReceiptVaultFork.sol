@@ -17,14 +17,14 @@ import {LibSceptreStakedFlare} from "rain.flare/lib/sflr/LibSceptreStakedFlare.s
 library LibERC20PriceOracleReceiptVaultFork {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
 
+    uint256 constant BLOCK_NUMBER = 31725348;
+
     function setup(Vm vm, uint256 amount) internal returns (ERC20PriceOracleReceiptVault, address) {
         address alice = address(uint160(uint256(keccak256("ALICE"))));
 
         // Contract address on Flare
         ERC20PriceOracleReceiptVault vault =
             ERC20PriceOracleReceiptVault(payable(0xf0363b922299EA467d1E9c0F9c37d89830d9a4C4));
-
-        uint256 BLOCK_NUMBER = 31725348;
 
         vm.createSelectFork(LibFork.rpcUrlFlare(vm), BLOCK_NUMBER);
 

@@ -8,13 +8,10 @@ import {
 } from "test/abstract/OwnerFreezableOwnerFreezeUntilTest.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {
-    OffchainAssetReceiptVaultConfigV2,
     OffchainAssetReceiptVault,
     ReceiptVaultConstructionConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
@@ -29,25 +26,25 @@ import {IAccessControlUpgradeable as IAccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
 
 contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFreezeUntilTest {
-    ICloneableFactoryV2 internal immutable iFactory;
-    OffchainAssetReceiptVault internal immutable iImplementation;
-    ReceiptContract internal immutable iReceiptImplementation;
-    OffchainAssetReceiptVaultAuthorizerV1 internal immutable iAuthorizerImplementation;
+    ICloneableFactoryV2 internal immutable I_FACTORY;
+    OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
+    ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
+    OffchainAssetReceiptVaultAuthorizerV1 internal immutable I_AUTHORIZER_IMPLEMENTATION;
 
     constructor() {
-        iFactory = new CloneFactory();
-        iReceiptImplementation = new ReceiptContract();
-        iImplementation = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
+        I_FACTORY = new CloneFactory();
+        I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
+        I_IMPLEMENTATION = new OffchainAssetReceiptVault(
+            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
         );
-        iAuthorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+        I_AUTHORIZER_IMPLEMENTATION = new OffchainAssetReceiptVaultAuthorizerV1();
 
         sAlice = address(123456);
         sBob = address(949330);
 
         sOwnerFreezable = IOwnerFreezableV1(
             LibOffchainAssetVaultCreator.createVault(
-                vm, iFactory, iImplementation, iAuthorizerImplementation, sAlice, "vault", "VLT"
+                vm, I_FACTORY, I_IMPLEMENTATION, I_AUTHORIZER_IMPLEMENTATION, sAlice, "vault", "VLT"
             )
         );
     }
@@ -88,7 +85,7 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
         OffchainAssetReceiptVault vault = setupTokenTransferTest();
 
         vm.prank(sBob);
-        vault.transfer(sAlice, 1e18);
+        assertTrue(vault.transfer(sAlice, 1e18));
     }
 
     function testTokenTransferFroze(uint256 seed) external {
@@ -101,18 +98,18 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
         // Cannot transfer while frozen.
         vm.prank(sBob);
         vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFrozen.selector, freezeUntil, sBob, sAlice));
-        vault.transfer(sAlice, 1e18);
+        assertFalse(vault.transfer(sAlice, 1e18));
 
         // Can transfer again if there's a reason to allow it.
         giveReasonToTransfer(seed, sBob, sAlice);
         vm.prank(sBob);
-        vault.transfer(sAlice, 1e18);
+        assertTrue(vault.transfer(sAlice, 1e18));
 
         // Alice can't transfer while everything is frozen.
         vm.warp(freezeUntil - 1);
         vm.prank(sAlice);
         vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFrozen.selector, freezeUntil, sAlice, sBob));
-        vault.transfer(sBob, 1e18);
+        assertFalse(vault.transfer(sBob, 1e18));
     }
 
     function testReceiptTransferFroze(uint256 seed) external {

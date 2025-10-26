@@ -4,7 +4,6 @@ pragma solidity =0.8.25;
 
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfigV2,
     CONFISCATE_RECEIPT,
     DEPOSIT,
     CERTIFY

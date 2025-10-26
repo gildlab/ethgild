@@ -2,18 +2,10 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    OffchainAssetReceiptVault,
-    OffchainAssetReceiptVaultConfigV2,
-    DEPOSIT,
-    CERTIFY
-} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {
-    LibFixedPointDecimalArithmeticOpenZeppelin,
-    Math
-} from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
+import {OffchainAssetReceiptVault, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {LibFixedPointDecimalArithmeticOpenZeppelin} from
+    "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
@@ -101,7 +93,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         uint256 expectedShares = amount;
         vault.deposit(amount, alice, minShareRatio, bytes(""));
 
-        vault.transfer(bob, expectedShares);
+        assertTrue(vault.transfer(bob, expectedShares));
 
         // Check balances
         assertEqUint(bobInitialBalance, 0);
@@ -166,7 +158,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         vm.startPrank(bob);
 
         // Bob transfers from Alice's account to his own
-        vault.transferFrom(alice, bob, transferFromAmount);
+        assertTrue(vault.transferFrom(alice, bob, transferFromAmount));
 
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);

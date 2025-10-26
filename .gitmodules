@@ -13,18 +13,12 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "lib/rain.tier.interface"]
-	path = lib/rain.tier.interface
-	url = https://github.com/rainlanguage/rain.tier.interface
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
 [submodule "lib/rain.string"]
 	path = lib/rain.string
 	url = https://github.com/rainlanguage/rain.string
-[submodule "lib/rain.extrospection"]
-	path = lib/rain.extrospection
-	url = https://github.com/rainlanguage/rain.extrospection
 [submodule "lib/rain.verify.interface"]
 	path = lib/rain.verify.interface
 	url = https://github.com/rainlanguage/rain.verify.interface

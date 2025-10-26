@@ -15,18 +15,18 @@ import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
-    ICloneableFactoryV2 internal immutable iFactory;
-    OffchainAssetReceiptVault internal immutable iImplementation;
-    OffchainAssetReceiptVaultAuthorizerV1 internal immutable iAuthorizerImplementation;
-    ReceiptContract internal immutable iReceiptImplementation;
+    ICloneableFactoryV2 internal immutable I_FACTORY;
+    OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
+    OffchainAssetReceiptVaultAuthorizerV1 internal immutable I_AUTHORIZER_IMPLEMENTATION;
+    ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
 
     constructor() {
-        iFactory = new CloneFactory();
-        iReceiptImplementation = new ReceiptContract();
-        iImplementation = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: iFactory, receiptImplementation: iReceiptImplementation})
+        I_FACTORY = new CloneFactory();
+        I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
+        I_IMPLEMENTATION = new OffchainAssetReceiptVault(
+            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
         );
-        iAuthorizerImplementation = new OffchainAssetReceiptVaultAuthorizerV1();
+        I_AUTHORIZER_IMPLEMENTATION = new OffchainAssetReceiptVaultAuthorizerV1();
     }
 
     function createVault(address admin, string memory shareName, string memory shareSymbol)
@@ -34,7 +34,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         returns (OffchainAssetReceiptVault)
     {
         return LibOffchainAssetVaultCreator.createVault(
-            vm, iFactory, iImplementation, iAuthorizerImplementation, admin, shareName, shareSymbol
+            vm, I_FACTORY, I_IMPLEMENTATION, I_AUTHORIZER_IMPLEMENTATION, admin, shareName, shareSymbol
         );
     }
 

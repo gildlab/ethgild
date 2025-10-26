@@ -1,0 +1,26 @@
+{
+  "lib/forge-std": {
+    "rev": "b8f065fda83b8cd94a6b2fec8fcd911dc3b444fd"
+  },
+  "lib/openzeppelin-contracts-upgradeable": {
+    "rev": "2d081f24cac1a867f6f73d512f2022e1fa987854"
+  },
+  "lib/rain.factory": {
+    "rev": "3e286c742a2ddb3665c0ecb8f225f22ae7fd2c95"
+  },
+  "lib/rain.flare": {
+    "rev": "930783303d9c40f3f76bab84db74e6180ab7af52"
+  },
+  "lib/rain.math.fixedpoint": {
+    "rev": "0a1dbfb246d903768f52687555bab62a5a3d4da3"
+  },
+  "lib/rain.string": {
+    "rev": "85d0074c8cd1fdca3285366c15bc9b44b84ad5e9"
+  },
+  "lib/rain.verify.interface": {
+    "rev": "9ce9de169ede1098be98199f084bf7145e6311e4"
+  },
+  "lib/solady": {
+    "rev": "836c169fe357b3c23ad5d5755a9b4fbbfad7a99b"
+  }
+}

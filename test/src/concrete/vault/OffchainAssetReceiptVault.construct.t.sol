@@ -11,7 +11,6 @@ import {
     ZeroInitialAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {IReceiptV3} from "src/interface/IReceiptV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
@@ -20,8 +19,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
-        iFactory.clone(
-            address(iImplementation),
+        I_FACTORY.clone(
+            address(I_IMPLEMENTATION),
             abi.encode(OffchainAssetVaultConfigV2({initialAdmin: address(0), vaultConfig: vaultConfig}))
         );
     }
@@ -36,8 +35,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
-        iFactory.clone(
-            address(iImplementation),
+        I_FACTORY.clone(
+            address(I_IMPLEMENTATION),
             abi.encode(OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig}))
         );
     }
@@ -58,7 +57,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         // Start recording logs
         vm.recordLogs();
         OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(
-            payable(iFactory.clone(address(iImplementation), abi.encode(offchainAssetVaultConfig)))
+            payable(I_FACTORY.clone(address(I_IMPLEMENTATION), abi.encode(offchainAssetVaultConfig)))
         );
 
         // Get the logs
@@ -93,7 +92,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         // Assert that the event log was found
         assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
 
-        assertEq(msgSender, address(iFactory));
+        assertEq(msgSender, address(I_FACTORY));
         assertEq(config.initialAdmin, alice);
         assert(address(vault) != address(0));
 
@@ -110,7 +109,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         /// Check the authorizer set event
         assertTrue(authorizeSetEventFound, "AuthorizerSet event log not found");
-        assertEq(authorizeSetMsgSender, address(iFactory));
+        assertEq(authorizeSetMsgSender, address(I_FACTORY));
         assertEq(authorizeSetTo, address(vault));
         assertTrue(address(vault) != address(0));
 

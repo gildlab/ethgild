@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
-import {LibOffchainAssetVaultCreator} from "test/lib/LibOffchainAssetVaultCreator.sol";
+import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {
     OffchainAssetReceiptVault,
@@ -42,7 +41,7 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         address authorizer = address(vault.authorizer());
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
-        assertEq(implementation, address(iAuthorizerImplementation));
+        assertEq(implementation, address(I_AUTHORIZER_IMPLEMENTATION));
         CertifyStateChange memory certifyStateChange = CertifyStateChange({
             oldCertifiedUntil: 0,
             newCertifiedUntil: 1234,
@@ -71,7 +70,7 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
         address authorizer = address(vault.authorizer());
         (bool isProxy, address implementation) = LibExtrospectERC1167Proxy.isERC1167Proxy(authorizer.code);
         assertTrue(isProxy);
-        assertEq(implementation, address(iAuthorizerImplementation));
+        assertEq(implementation, address(I_AUTHORIZER_IMPLEMENTATION));
 
         AlwaysAuthorize alwaysAuthorize = new AlwaysAuthorize();
 

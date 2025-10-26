@@ -22,8 +22,10 @@ import {CMASK_QUOTATION_MARK, CMASK_PRINTABLE, CMASK_BACKSLASH} from "rain.strin
 contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
     string internal sVaultShareSymbol;
     string internal sVaultAssetSymbol;
+    //forge-lint: disable-next-line(mixed-case-variable)
     string internal sReceiptSVGURI;
     string internal sReferenceAssetSymbol;
+    //forge-lint: disable-next-line(mixed-case-variable)
     string internal sRedeemURL;
     string internal sBrandName;
 
@@ -35,6 +37,7 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
         sVaultAssetSymbol = vaultAssetSymbol;
     }
 
+    //forge-lint: disable-next-line(mixed-case-function,mixed-case-variable)
     function setReceiptSVGURI(string memory receiptSVGURI) external {
         sReceiptSVGURI = receiptSVGURI;
     }
@@ -43,6 +46,7 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
         sReferenceAssetSymbol = referenceAssetSymbol;
     }
 
+    //forge-lint: disable-next-line(mixed-case-function,mixed-case-variable)
     function setRedeemURL(string memory redeemURL) external {
         sRedeemURL = redeemURL;
     }
@@ -59,6 +63,7 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
         return sVaultAssetSymbol;
     }
 
+    //forge-lint: disable-next-line(mixed-case-function)
     function _receiptSVGURI() internal view override returns (string memory) {
         return sReceiptSVGURI;
     }
@@ -67,6 +72,7 @@ contract MutableMetadataReceipt is ERC20PriceOracleReceipt {
         return sReferenceAssetSymbol;
     }
 
+    //forge-lint: disable-next-line(mixed-case-function)
     function _redeemURL() internal view override returns (string memory) {
         return sRedeemURL;
     }
@@ -81,7 +87,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         vm.expectRevert(ZeroReceiptId.selector);
@@ -94,7 +100,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         string memory uri = receipt.uri(id);
@@ -124,7 +130,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         assertEq(receipt.name(), "TRM Receipt");
@@ -134,7 +140,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         // Deploy the Receipt contract
         TestReceiptManager testManager = new TestReceiptManager();
         ERC20PriceOracleReceipt receipt = ERC20PriceOracleReceipt(
-            iFactory.clone(address(iERC20PriceOracleReceiptImplementation), abi.encode(address(testManager)))
+            I_FACTORY.clone(address(I_ERC20_PRICE_ORACLE_RECEIPT_IMPLEMENTATION), abi.encode(address(testManager)))
         );
 
         assertEq(receipt.symbol(), "TRM RCPT");
@@ -144,7 +150,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         uint256 id,
         string memory vaultShareSymbol,
         string memory vaultAssetSymbol,
-        string memory redeemURL,
+        string memory redeemUrl,
         string memory brandName,
         string memory referenceAssetSymbol
     ) external {
@@ -156,13 +162,13 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
 
             LibConformString.conformStringToMask(vaultShareSymbol, mask, 0x100);
             LibConformString.conformStringToMask(vaultAssetSymbol, mask, 0x100);
-            LibConformString.conformStringToMask(redeemURL, mask, 0x100);
+            LibConformString.conformStringToMask(redeemUrl, mask, 0x100);
             LibConformString.conformStringToMask(brandName, mask, 0x100);
             LibConformString.conformStringToMask(referenceAssetSymbol, mask, 0x100);
 
             receipt.setVaultShareSymbol(vaultShareSymbol);
             receipt.setVaultAssetSymbol(vaultAssetSymbol);
-            receipt.setRedeemURL(redeemURL);
+            receipt.setRedeemURL(redeemUrl);
             receipt.setBrandName(brandName);
             receipt.setReferenceAssetSymbol(referenceAssetSymbol);
         }
@@ -174,7 +180,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
             LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
         );
 
-        string memory redeemURLPhrase = bytes(redeemURL).length > 0 ? string.concat(" Redeem at ", redeemURL, ".") : "";
+        string memory redeemUrlPhrase = bytes(redeemUrl).length > 0 ? string.concat(" Redeem at ", redeemUrl, ".") : "";
         string memory brandNamePhrase = bytes(brandName).length > 0 ? string.concat(brandName, " ") : "";
 
         assertEq(metadata.decimals, 18);
@@ -188,7 +194,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
                 " of ",
                 vaultAssetSymbol,
                 ".",
-                redeemURLPhrase
+                redeemUrlPhrase
             )
         );
         assertEq(
@@ -211,12 +217,12 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         uint256 id,
         string memory vaultShareSymbol,
         string memory vaultAssetSymbol,
-        string memory redeemURL,
+        string memory redeemUrl,
         string memory brandName,
         string memory referenceAssetSymbol,
-        string memory receiptSVGURI
+        string memory receiptSvgUri
     ) external {
-        vm.assume(bytes(receiptSVGURI).length > 0);
+        vm.assume(bytes(receiptSvgUri).length > 0);
         vm.assume(id != 0);
         MutableMetadataReceipt receipt = new MutableMetadataReceipt();
 
@@ -225,17 +231,17 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
 
             LibConformString.conformStringToMask(vaultShareSymbol, mask, 0x100);
             LibConformString.conformStringToMask(vaultAssetSymbol, mask, 0x100);
-            LibConformString.conformStringToMask(redeemURL, mask, 0x100);
+            LibConformString.conformStringToMask(redeemUrl, mask, 0x100);
             LibConformString.conformStringToMask(brandName, mask, 0x100);
             LibConformString.conformStringToMask(referenceAssetSymbol, mask, 0x100);
-            LibConformString.conformStringToMask(receiptSVGURI, mask, 0x100);
+            LibConformString.conformStringToMask(receiptSvgUri, mask, 0x100);
 
             receipt.setVaultShareSymbol(vaultShareSymbol);
             receipt.setVaultAssetSymbol(vaultAssetSymbol);
-            receipt.setRedeemURL(redeemURL);
+            receipt.setRedeemURL(redeemUrl);
             receipt.setBrandName(brandName);
             receipt.setReferenceAssetSymbol(referenceAssetSymbol);
-            receipt.setReceiptSVGURI(receiptSVGURI);
+            receipt.setReceiptSVGURI(receiptSvgUri);
         }
 
         string memory uri = receipt.uri(id);
@@ -248,8 +254,8 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         assertEq(metadata.decimals, 18);
 
         {
-            string memory redeemURLPhrase =
-                bytes(redeemURL).length > 0 ? string.concat(" Redeem at ", redeemURL, ".") : "";
+            string memory redeemUrlPhrase =
+                bytes(redeemUrl).length > 0 ? string.concat(" Redeem at ", redeemUrl, ".") : "";
             assertEq(
                 metadata.description,
                 string.concat(
@@ -260,7 +266,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
                     " of ",
                     vaultAssetSymbol,
                     ".",
-                    redeemURLPhrase
+                    redeemUrlPhrase
                 )
             );
         }
@@ -283,6 +289,6 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
             );
         }
 
-        assertEq(metadata.image, receiptSVGURI);
+        assertEq(metadata.image, receiptSvgUri);
     }
 }

@@ -2,11 +2,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ERC20PriceOracleReceiptVault,
-    ERC20PriceOracleReceiptVaultConfig
-} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
+import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {
@@ -51,17 +48,17 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         vm.startPrank(alice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, shareName, shareSymbol);
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         {
             assets = bound(assets, 1, type(uint128).max);
             vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
 
             vm.mockCall(
-                address(iAsset),
+                address(I_ASSET),
                 abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets),
                 abi.encode(true)
             );
-            vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
+            vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
         }
 
         uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
@@ -85,20 +82,20 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         // Setup vault and deposit initial balance
         vm.startPrank(alice);
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
         uint256 bobInitialBalance = vault.balanceOf(bob);
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vault.deposit(amount, alice, oraclePrice, bytes(""));
 
-        vault.transfer(bob, expectedShares);
+        assertTrue(vault.transfer(bob, expectedShares));
 
         // Check balances
         assertEqUint(bobInitialBalance, 0);
@@ -111,7 +108,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         amount = bound(amount, 1, type(uint256).max);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         // Set an allowance for Bob
@@ -137,15 +134,15 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         setVaultOraclePrice(oraclePrice);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         vm.mockCall(
-            address(iAsset),
+            address(I_ASSET),
             abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount),
             abi.encode(true)
         );
-        vm.expectCall(address(iAsset), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
+        vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
 
         uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
         vm.assume(transferFromAmount < expectedShares);
@@ -160,7 +157,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         vm.startPrank(bob);
 
         // Bob transfers from Alice's account to his own
-        vault.transferFrom(alice, bob, transferFromAmount);
+        assertTrue(vault.transferFrom(alice, bob, transferFromAmount));
 
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);
@@ -176,7 +173,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         increaseAmount = bound(increaseAmount, 1, type(uint128).max);
         vm.assume(increaseAmount < amount);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         vault.approve(bob, amount);
@@ -197,7 +194,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
         vm.assume(decreaseAmount < amount);
 
-        ERC20PriceOracleReceiptVault vault = createVault(iVaultOracle, "Test Token", "TST");
+        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
 
         vm.startPrank(alice);
         vault.approve(bob, amount);

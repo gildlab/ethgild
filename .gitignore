@@ -5,3 +5,4 @@ venv
 bin
 out
 forge-cache
+.DS_Store
