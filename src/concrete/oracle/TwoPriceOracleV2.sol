@@ -32,8 +32,10 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
     event Construction(address sender, TwoPriceOracleConfigV2 config);
 
     /// As per `ConstructionConfig.base`.
+    //slither-disable-next-line naming-convention
     IPriceOracleV2 public immutable BASE;
     /// As per `ConstructionConfig.quote`.
+    //slither-disable-next-line naming-convention
     IPriceOracleV2 public immutable QUOTE;
 
     /// @param config Config required to construct.

@@ -14,7 +14,9 @@ struct FtsoV2LTSFeedOracleConfig {
 contract FtsoV2LTSFeedOracle is PriceOracleV2 {
     event Construction(address sender, FtsoV2LTSFeedOracleConfig config);
 
+    //slither-disable-next-line naming-convention
     bytes21 public immutable I_FEED_ID;
+    //slither-disable-next-line naming-convention
     uint256 public immutable I_STALE_AFTER;
 
     constructor(FtsoV2LTSFeedOracleConfig memory config) {

@@ -120,7 +120,9 @@ abstract contract ReceiptVault is
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
 
+    //slither-disable-next-line naming-convention
     ICloneableFactoryV2 internal immutable I_FACTORY;
+    //slither-disable-next-line naming-convention
     IReceiptV3 internal immutable I_RECEIPT_IMPLEMENTATION;
 
     /// Underlying ERC4626 asset.
@@ -148,7 +150,7 @@ abstract contract ReceiptVault is
     /// Initialize the `ReceiptVault`.
     /// @param config All config required for initialization.
     // solhint-disable-next-line func-name-mixedcase
-    // slither-disable-next-line naming-convention
+    // slither-disable-start naming-convention
     // forge-lint: disable-next-line(mixed-case-function)
     function __ReceiptVault_init(VaultConfig memory config) internal virtual {
         __Multicall_init();
@@ -170,6 +172,7 @@ abstract contract ReceiptVault is
             revert WrongManager(address(this), receiptManager);
         }
     }
+    //slither-disable-end naming-convention
 
     /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
