@@ -22,3 +22,6 @@
 [submodule "lib/rain.verify.interface"]
 	path = lib/rain.verify.interface
 	url = https://github.com/rainlanguage/rain.verify.interface
+[submodule "lib/rain.pyth"]
+	path = lib/rain.pyth
+	url = https://github.com/rainlanguage/rain.pyth
