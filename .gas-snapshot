@@ -166,7 +166,7 @@ OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenDepositFrozen(uint256) (r
 OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenMintFrozen(uint256) (runs: 256, μ: 369652, ~: 376465)
 OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenRedeemFrozen(uint256) (runs: 256, μ: 334722, ~: 340175)
 OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenRedepositFrozen(uint256) (runs: 256, μ: 443837, ~: 450650)
-OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenTransferFroze(uint256) (runs: 257, μ: 326674, ~: 333569)
+OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenTransferFroze(uint256) (runs: 256, μ: 326750, ~: 333569)
 OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenTransferNotFroze() (gas: 258229)
 OffchainAssetReceiptVaultOwnerFreezeUntilTest:testTokenWithdrawFrozen(uint256) (runs: 256, μ: 334875, ~: 340328)
 OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest:testOffchainAssetReceiptVaultPaymentMintAuthorizerV1Construct() (gas: 2516599)
