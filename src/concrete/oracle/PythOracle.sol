@@ -18,8 +18,11 @@ struct PythOracleConfig {
 contract PythOracle is PriceOracleV2 {
     event Construction(address sender, PythOracleConfig config);
 
+    //slither-disable-next-line naming-convention
     bytes32 public immutable I_PRICE_FEED_ID;
+    //slither-disable-next-line naming-convention
     uint256 public immutable I_STALE_AFTER;
+    //slither-disable-next-line naming-convention
     IPyth public immutable I_PYTH_CONTRACT;
 
     constructor(PythOracleConfig memory config) {
@@ -31,16 +34,19 @@ contract PythOracle is PriceOracleV2 {
     }
 
     function _price() internal virtual override returns (uint256) {
-        PythStructs.Price memory price = I_PYTH_CONTRACT.getPriceNoOlderThan(I_PRICE_FEED_ID, I_STALE_AFTER);
-        int256 conservativePrice = int256(price.price) - int256(uint256(price.conf));
+        // Slither false positive, confidence is checked here.
+        // slither-disable-next-line pyth-unchecked-confidence
+        PythStructs.Price memory priceData = I_PYTH_CONTRACT.getPriceNoOlderThan(I_PRICE_FEED_ID, I_STALE_AFTER);
+        int256 conservativePrice = int256(priceData.price) - int256(uint256(priceData.conf));
         if (conservativePrice <= 0) {
-            revert NonPositivePrice(price.price);
+            revert NonPositivePrice(conservativePrice);
         }
         // It is safe to pack lossless here because the price data uses only
         // 64 bits while we have 224 bits for a packed signed coefficient, and
         // the exponent bit size is the same for both.
-        Float conservativePriceFloat = LibDecimalFloat.packLossless(conservativePrice, price.expo);
+        Float conservativePriceFloat = LibDecimalFloat.packLossless(conservativePrice, priceData.expo);
         // We ignore precision loss here, truncating towards zero.
+        //slither-disable-next-line unused-return
         (uint256 price18,) = LibDecimalFloat.toFixedDecimalLossy(conservativePriceFloat, 18);
         return price18;
     }
