@@ -143,6 +143,7 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
         return IERC20Metadata(IReceiptVaultV3(payable(address(sManager))).asset()).symbol();
     }
 
+    //slither-disable-next-line dead-code
     function _vaultDecimals() internal view virtual returns (uint8) {
         return IERC20Metadata(payable(address(sManager))).decimals();
     }
