@@ -187,6 +187,7 @@ abstract contract ReceiptVault is
         return address(sAsset);
     }
 
+    /// @inheritdoc IERC20Metadata
     function decimals() public view virtual override returns (uint8) {
         address lAsset = address(sAsset);
         uint256 lAssetCodeSize;
