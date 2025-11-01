@@ -405,6 +405,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         uint256 thirdShares
     ) external {
         vm.assume(alice != address(0) && bob != address(0) && alice != bob);
+        vm.assume(alice.code.length == 0);
 
         OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
             initialAdmin: bob,

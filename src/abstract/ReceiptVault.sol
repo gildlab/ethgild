@@ -33,6 +33,8 @@ import {
 import {UnmanagedReceiptTransfer} from "../interface/IReceiptManagerV2.sol";
 import {ERC165Upgradeable as ERC165} from
     "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
+import {IERC20MetadataUpgradeable as IERC20Metadata} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
@@ -183,6 +185,16 @@ abstract contract ReceiptVault is
     /// @inheritdoc IReceiptVaultV1
     function asset() public view virtual returns (address) {
         return address(sAsset);
+    }
+
+    /// @inheritdoc IERC20Metadata
+    function decimals() public view virtual override returns (uint8) {
+        address lAsset = address(sAsset);
+        uint256 lAssetCodeSize;
+        assembly ("memory-safe") {
+            lAssetCodeSize := extcodesize(lAsset)
+        }
+        return lAssetCodeSize > 0 ? IERC20Metadata(lAsset).decimals() : super.decimals();
     }
 
     /// @inheritdoc IReceiptManagerV2
