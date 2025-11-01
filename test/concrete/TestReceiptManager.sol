@@ -122,4 +122,8 @@ contract TestReceiptManager is IReceiptManagerV2 {
     function asset() external view returns (address) {
         return iAsset;
     }
+
+    function decimals() external pure returns (uint8) {
+        return 18;
+    }
 }
