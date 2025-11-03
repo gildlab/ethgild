@@ -12,24 +12,9 @@ import {
     ICloneableV2
 } from "src/abstract/ReceiptVault.sol";
 import {Test} from "forge-std/Test.sol";
+import {ConcreteReceiptVault} from "test/concrete/ConcreteReceiptVault.sol";
 
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
-
-contract ConcreteReceiptVault is ReceiptVault {
-    constructor()
-        ReceiptVault(
-            ReceiptVaultConstructionConfigV2({
-                factory: ICloneableFactoryV2(address(0)),
-                receiptImplementation: IReceiptV3(address(0))
-            })
-        )
-    {}
-
-    function initialize(bytes calldata) external pure returns (bytes32) {
-        // Fails initialize but we never call it.
-        return bytes32(0);
-    }
-}
 
 contract ReceiptVaultIERC165Test is Test {
     function testReceiptVaultIERC165(bytes4 badInterfaceId) external {
