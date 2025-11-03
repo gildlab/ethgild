@@ -13,6 +13,7 @@ import {ERC1155Upgradeable as ERC1155} from
 import {IERC20MetadataUpgradeable as IERC20Metadata} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
+import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
@@ -102,7 +103,9 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     function uri(uint256) public view virtual override returns (string memory) {
         bytes memory json = bytes(
             string.concat(
-                "{\"decimals\":18,\"description\":\"1 of these receipts can be burned alongside 1 ",
+                "{\"decimals\":",
+                Strings.toString(_vaultDecimals()),
+                ",\"description\":\"1 of these receipts can be burned alongside 1 ",
                 _vaultShareSymbol(),
                 " to redeem ",
                 _vaultAssetSymbol(),
@@ -138,6 +141,11 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     /// manager is not going to be a `ReceiptVault`.
     function _vaultAssetSymbol() internal view virtual returns (string memory) {
         return IERC20Metadata(IReceiptVaultV3(payable(address(sManager))).asset()).symbol();
+    }
+
+    //slither-disable-next-line dead-code
+    function _vaultDecimals() internal view virtual returns (uint8) {
+        return IERC20Metadata(payable(address(sManager))).decimals();
     }
 
     /// @inheritdoc IReceiptV3

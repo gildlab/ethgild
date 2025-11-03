@@ -33,8 +33,11 @@ contract TestReceiptManager is IReceiptManagerV2 {
     /// The address that is authorized to receive transfers.
     address internal sTo;
 
+    uint8 internal sDecimals;
+
     constructor() {
         iAsset = address(new TestReceiptManagerAsset());
+        sDecimals = 18;
     }
 
     /// Anon can set the from address.
@@ -121,5 +124,13 @@ contract TestReceiptManager is IReceiptManagerV2 {
 
     function asset() external view returns (address) {
         return iAsset;
+    }
+
+    function decimals() external view returns (uint8) {
+        return sDecimals;
+    }
+
+    function setDecimals(uint8 newDecimals) external {
+        sDecimals = newDecimals;
     }
 }
