@@ -14,6 +14,8 @@ import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstan
 import {ZeroReceiptId} from "src/error/ErrReceipt.sol";
 import {LibConformString} from "rain.string/lib/mut/LibConformString.sol";
 import {CMASK_QUOTATION_MARK, CMASK_PRINTABLE, CMASK_BACKSLASH} from "rain.string/lib/parse/LibParseCMask.sol";
+import {IERC20MetadataUpgradeable as IERC20Metadata} from
+    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 /// This contract is used to test the metadata of the `Receipt` contract.
 /// As all the overridden functions are internal, we need to create a new
@@ -146,13 +148,14 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         assertEq(receipt.symbol(), "TRM RCPT");
     }
 
-    function testOverriddenMetadata(
+    function testOverriddenMetadataWithoutImage(
         uint256 id,
         string memory vaultShareSymbol,
         string memory vaultAssetSymbol,
         string memory redeemUrl,
         string memory brandName,
-        string memory referenceAssetSymbol
+        string memory referenceAssetSymbol,
+        uint8 decimals
     ) external {
         vm.assume(id != 0);
         MutableMetadataReceipt receipt = new MutableMetadataReceipt();
@@ -173,6 +176,8 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
             receipt.setReferenceAssetSymbol(referenceAssetSymbol);
         }
 
+        vm.mockCall(address(0), abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(uint8(decimals)));
+        vm.expectCall(address(0), abi.encodeWithSelector(IERC20Metadata.decimals.selector));
         string memory uri = receipt.uri(id);
         Metadata memory metadata = decodeMetadataURI(uri);
 
@@ -183,7 +188,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         string memory redeemUrlPhrase = bytes(redeemUrl).length > 0 ? string.concat(" Redeem at ", redeemUrl, ".") : "";
         string memory brandNamePhrase = bytes(brandName).length > 0 ? string.concat(brandName, " ") : "";
 
-        assertEq(metadata.decimals, 18);
+        assertEq(metadata.decimals, decimals);
         assertEq(
             metadata.description,
             string.concat(
@@ -197,20 +202,18 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
                 redeemUrlPhrase
             )
         );
-        assertEq(
-            metadata.name,
-            string.concat(
-                "Receipt for ",
-                brandNamePhrase,
-                "lock at ",
-                LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
-                " ",
-                referenceAssetSymbol,
-                " per ",
-                vaultAssetSymbol,
-                "."
-            )
+        string memory nameString = string.concat(
+            "Receipt for ",
+            brandNamePhrase,
+            "lock at ",
+            LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
+            " ",
+            referenceAssetSymbol,
+            " per ",
+            vaultAssetSymbol,
+            "."
         );
+        assertEq(metadata.name, nameString);
     }
 
     function testOverriddenMetadataWithImage(
@@ -220,7 +223,8 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         string memory redeemUrl,
         string memory brandName,
         string memory referenceAssetSymbol,
-        string memory receiptSvgUri
+        string memory receiptSvgUri,
+        uint8 decimals
     ) external {
         vm.assume(bytes(receiptSvgUri).length > 0);
         vm.assume(id != 0);
@@ -244,6 +248,9 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
             receipt.setReceiptSVGURI(receiptSvgUri);
         }
 
+        vm.mockCall(address(0), abi.encodeWithSelector(IERC20Metadata.decimals.selector), abi.encode(uint8(decimals)));
+        vm.expectCall(address(0), abi.encodeWithSelector(IERC20Metadata.decimals.selector));
+
         string memory uri = receipt.uri(id);
         MetadataWithImage memory metadata = decodeMetadataURIWithImage(uri);
 
@@ -251,7 +258,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
             LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
         );
 
-        assertEq(metadata.decimals, 18);
+        assertEq(metadata.decimals, decimals);
 
         {
             string memory redeemUrlPhrase =
@@ -273,20 +280,18 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
 
         {
             string memory brandNamePhrase = bytes(brandName).length > 0 ? string.concat(brandName, " ") : "";
-            assertEq(
-                metadata.name,
-                string.concat(
-                    "Receipt for ",
-                    brandNamePhrase,
-                    "lock at ",
-                    LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
-                    " ",
-                    referenceAssetSymbol,
-                    " per ",
-                    vaultAssetSymbol,
-                    "."
-                )
+            string memory nameString = string.concat(
+                "Receipt for ",
+                brandNamePhrase,
+                "lock at ",
+                LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
+                " ",
+                referenceAssetSymbol,
+                " per ",
+                vaultAssetSymbol,
+                "."
             );
+            assertEq(metadata.name, nameString);
         }
 
         assertEq(metadata.image, receiptSvgUri);
