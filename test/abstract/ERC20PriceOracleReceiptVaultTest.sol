@@ -11,9 +11,9 @@ import {
     ERC20PriceOracleReceiptVaultConfig
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
+import {IPriceOracleV2} from "../../src/interface/IPriceOracleV2.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable I_FACTORY;

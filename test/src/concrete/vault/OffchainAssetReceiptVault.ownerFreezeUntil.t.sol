@@ -11,7 +11,7 @@ import {
     OffchainAssetReceiptVault,
     ReceiptVaultConstructionConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract, IReceiptV3} from "../../../../src/concrete/receipt/Receipt.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
@@ -20,7 +20,7 @@ import {
     WITHDRAW,
     CONFISCATE_SHARES,
     CONFISCATE_RECEIPT
-} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+} from "../../../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
 import {IAccessControlUpgradeable as IAccessControl} from
     "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";

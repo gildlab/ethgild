@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {ConcreteReceiptVault} from "test/concrete/ConcreteReceiptVault.sol";
 import {TestErc20} from "test/concrete/TestErc20.sol";
-import {ReceiptVault, VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {VaultConfig} from "src/abstract/ReceiptVault.sol";
 
 import {Test} from "forge-std/Test.sol";
 
