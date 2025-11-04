@@ -2,11 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Receipt as ReceiptContract, IReceiptV3} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract, IReceiptV3} from "../../../../src/concrete/receipt/Receipt.sol";
 import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceiptManager.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
-import {OnlyManager} from "src/error/ErrReceipt.sol";
+import {OnlyManager} from "../../../../src/error/ErrReceipt.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     function testInitialize() public {

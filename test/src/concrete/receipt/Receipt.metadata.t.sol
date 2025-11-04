@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
 import {TestReceiptManager} from "test/concrete/TestReceiptManager.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "../../../../src/concrete/receipt/Receipt.sol";
 
 contract ReceiptMetadataTest is ReceiptFactoryTest {
     function testReceiptURI(uint256 id, uint8 decimalsB) external {

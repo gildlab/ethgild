@@ -11,8 +11,9 @@ import {
     ReceiptVaultConstructionConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
+import {OffchainAssetReceiptVaultAuthorizerV1} from
+    "../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
     ICloneableFactoryV2 internal immutable I_FACTORY;

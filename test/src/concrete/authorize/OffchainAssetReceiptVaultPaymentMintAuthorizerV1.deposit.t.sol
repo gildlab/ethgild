@@ -15,13 +15,13 @@ import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
 import {DepositStateChange, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IERC20Upgradeable as IERC20} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC20/IERC20Upgradeable.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {Receipt as ReceiptContract} from "../../../../src/concrete/receipt/Receipt.sol";
+import {OffchainAssetReceiptVault} from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {
     ReceiptVaultConstructionConfigV2,
     OffchainAssetVaultConfigV2,
     VaultConfig
-} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+} from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";

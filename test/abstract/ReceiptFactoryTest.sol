@@ -5,9 +5,9 @@ pragma solidity ^0.8.25;
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {Test} from "forge-std/Test.sol";
-import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
-import {ERC20PriceOracleReceipt} from "src/concrete/receipt/ERC20PriceOracleReceipt.sol";
-import {DATA_URI_BASE64_PREFIX} from "src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
+import {ERC20PriceOracleReceipt} from "../../src/concrete/receipt/ERC20PriceOracleReceipt.sol";
+import {DATA_URI_BASE64_PREFIX} from "../../src/concrete/receipt/Receipt.sol";
 import {Base64} from "solady/utils/Base64.sol";
 
 contract ReceiptFactoryTest is Test {

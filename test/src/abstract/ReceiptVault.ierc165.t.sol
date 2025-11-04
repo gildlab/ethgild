@@ -2,15 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ReceiptVault,
-    ReceiptVaultConstructionConfigV2,
-    IReceiptV3,
-    ICloneableFactoryV2,
-    IReceiptManagerV2,
-    IReceiptVaultV3,
-    ICloneableV2
-} from "src/abstract/ReceiptVault.sol";
+import {IReceiptManagerV2, IReceiptVaultV3, ICloneableV2} from "src/abstract/ReceiptVault.sol";
 import {Test} from "forge-std/Test.sol";
 import {ConcreteReceiptVault} from "test/concrete/ConcreteReceiptVault.sol";
 

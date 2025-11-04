@@ -6,12 +6,11 @@ import {
     ReceiptVault,
     VaultConfig,
     ReceiptVaultConstructionConfigV2,
-    ICloneableFactoryV2,
-    IReceiptV3
-} from "src/abstract/ReceiptVault.sol";
+    ICloneableFactoryV2
+} from "../../src/abstract/ReceiptVault.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
-import {Receipt} from "src/concrete/receipt/Receipt.sol";
-import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
+import {Receipt} from "../../src/concrete/receipt/Receipt.sol";
+import {ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 contract ConcreteReceiptVault is ReceiptVault {
     constructor()
