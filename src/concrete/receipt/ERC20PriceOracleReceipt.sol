@@ -10,6 +10,7 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstants.sol";
+import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
 
 /// @dev The default symbol for the reference asset.
 string constant DEFAULT_REFERENCE_ASSET_SYMBOL = "USD";
@@ -43,9 +44,25 @@ contract ERC20PriceOracleReceipt is Receipt {
         string memory receiptSVGURIPhrase =
             bytes(receiptSVGURI).length > 0 ? string.concat("\"image\":\"", receiptSVGURI, "\",") : "";
 
+        string memory idString = LibFixedPointDecimalFormat.fixedPointToDecimalString(id);
+
+        string memory nameString = string.concat(
+            "Receipt for ",
+            brandNamePhrase,
+            "lock at ",
+            idString,
+            " ",
+            _referenceAssetSymbol(),
+            " per ",
+            _vaultAssetSymbol(),
+            "."
+        );
+
         bytes memory json = bytes(
             string.concat(
-                "{\"decimals\":18,\"description\":\"1 of these receipts can be burned alongside 1 ",
+                "{\"decimals\":",
+                Strings.toString(_vaultDecimals()),
+                ",\"description\":\"1 of these receipts can be burned alongside 1 ",
                 _vaultShareSymbol(),
                 " to redeem ",
                 LibFixedPointDecimalFormat.fixedPointToDecimalString(
@@ -57,15 +74,9 @@ contract ERC20PriceOracleReceipt is Receipt {
                 redeemURLPhrase,
                 "\",",
                 receiptSVGURIPhrase,
-                "\"name\":\"Receipt for ",
-                brandNamePhrase,
-                "lock at ",
-                LibFixedPointDecimalFormat.fixedPointToDecimalString(id),
-                " ",
-                _referenceAssetSymbol(),
-                " per ",
-                _vaultAssetSymbol(),
-                ".\"}"
+                "\"name\":\"",
+                nameString,
+                "\"}"
             )
         );
 
