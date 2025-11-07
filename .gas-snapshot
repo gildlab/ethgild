@@ -2,7 +2,7 @@ ConfiscateReceiptTest:testConfiscateReceiptBasic(uint256,uint256,uint256,string,
 ConfiscateReceiptTest:testConfiscateReceiptOnZeroBalance(uint256,uint256,string,string,bytes,uint256,uint256) (runs: 254, μ: 1009656, ~: 1010098)
 ConfiscateSharesTest:testConfiscateSharesBasic(uint256,uint256,uint256,uint256,string,string,bytes,uint256,uint256,bool,uint256) (runs: 252, μ: 1199817, ~: 1206571)
 ConfiscateSharesTest:testConfiscateSharesOnZeroBalance(uint256,uint256,string,string,bytes,uint256,uint256,uint256) (runs: 253, μ: 1116287, ~: 1118067)
-ERC20PriceOracleReceiptMetadataTest:testOverriddenMetadataWithImage(uint256,string,string,string,string,string,string,uint8) (runs: 243, μ: 3540116, ~: 3541220)
+ERC20PriceOracleReceiptMetadataTest:testOverriddenMetadataWithImage(uint256,string,string,string,string,string,string,uint8) (runs: 242, μ: 3539946, ~: 3540787)
 ERC20PriceOracleReceiptMetadataTest:testOverriddenMetadataWithoutImage(uint256,string,string,string,string,string,uint8) (runs: 254, μ: 3466691, ~: 3471774)
 ERC20PriceOracleReceiptMetadataTest:testReceiptName() (gas: 791527)
 ERC20PriceOracleReceiptMetadataTest:testReceiptSymbol() (gas: 791549)
