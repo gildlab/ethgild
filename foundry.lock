@@ -17,9 +17,6 @@
   "lib/rain.pyth": {
     "rev": "99f4304c5725ec9aaa9d89c3b344de840899e386"
   },
-  "lib/rain.string": {
-    "rev": "85d0074c8cd1fdca3285366c15bc9b44b84ad5e9"
-  },
   "lib/rain.verify.interface": {
     "rev": "9ce9de169ede1098be98199f084bf7145e6311e4"
   },
