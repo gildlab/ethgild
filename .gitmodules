@@ -16,9 +16,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/Vectorized/solady
-[submodule "lib/rain.string"]
-	path = lib/rain.string
-	url = https://github.com/rainlanguage/rain.string
 [submodule "lib/rain.verify.interface"]
 	path = lib/rain.verify.interface
 	url = https://github.com/rainlanguage/rain.verify.interface
