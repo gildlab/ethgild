@@ -12,8 +12,7 @@ import {
     CertifyStateChange
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/lib/LibExtrospectERC1167Proxy.sol";
-import {IERC165} from
-    "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
+import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 
 contract AlwaysAuthorize is IAuthorizeV1, IERC165 {
     /// @inheritdoc IERC165

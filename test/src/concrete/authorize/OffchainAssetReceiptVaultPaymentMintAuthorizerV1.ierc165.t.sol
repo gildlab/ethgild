@@ -9,8 +9,7 @@ import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {IAuthorizeV1} from "src/interface/IAuthorizeV1.sol";
 import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
-import {IAccessControl} from
-    "openzeppelin-contracts/contracts/access/IAccessControl.sol";
+import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Test {
     function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165(bytes4 badInterfaceId) external {
