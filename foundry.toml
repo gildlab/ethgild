@@ -9,6 +9,8 @@ optimizer_runs = 100000
 evm_version = "cancun"
 
 remappings = [
+    "openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+    "openzeppelin-contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
     "rain.factory/=lib/rain.factory/src/",
     "rain.intorastring/=lib/rain.interpreter/lib/rain.intorastring/src/",
     "rain.flare/=lib/rain.flare/src/",

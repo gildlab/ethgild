@@ -189,7 +189,7 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     /// Checks with the manager before authorizing transfer IN ADDITION to
     /// `super` inherited checks.
     /// @inheritdoc ERC1155
-    function _beforeTokenTransfer(
+    function _update(
         address operator,
         address from,
         address to,
@@ -197,8 +197,8 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
         uint256[] memory amounts,
         bytes memory data
     ) internal virtual override {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
         sManager.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
+        super._update(operator, from, to, ids, amounts, data);
     }
 
     /// Emits `ReceiptInformation` if there is any data.

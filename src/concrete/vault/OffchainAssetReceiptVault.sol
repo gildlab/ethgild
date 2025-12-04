@@ -596,8 +596,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable
 
     /// Apply standard transfer restrictions to share transfers.
     /// @inheritdoc ReceiptVault
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
-        super._beforeTokenTransfer(from, to, amount);
+    function _update(address from, address to, uint256 amount) internal virtual override {
         ownerFreezeCheckTransaction(from, to);
         sAuthorizer.authorize(
             _msgSender(),
@@ -611,6 +610,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable
                 })
             )
         );
+        super._update(from, to, amount);
     }
 
     /// Confiscators can confiscate ERC20 vault shares from `confiscatee`.

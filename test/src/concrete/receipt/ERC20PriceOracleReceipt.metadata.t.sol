@@ -109,7 +109,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         Metadata memory metadataJson = decodeMetadataURI(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
-            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
         );
         assertEq(
             metadataJson.description,
@@ -181,7 +181,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         Metadata memory metadata = decodeMetadataURI(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
-            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
         );
 
         string memory redeemUrlPhrase = bytes(redeemUrl).length > 0 ? string.concat(" Redeem at ", redeemUrl, ".") : "";
@@ -254,7 +254,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         MetadataWithImage memory metadata = decodeMetadataURIWithImage(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
-            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
         );
 
         assertEq(metadata.decimals, decimals);

@@ -449,7 +449,7 @@ abstract contract ReceiptVault is
         // If (1) it’s calculating how many shares to issue to a user for a
         // certain amount of the underlying tokens they provide, it should
         // round down.
-        return assets.fixedPointMul(shareRatio, Math.Rounding.Down);
+        return assets.fixedPointMul(shareRatio, Math.Rounding.Floor);
     }
 
     /// Calculate how many `assets` are needed to mint `shares` as per ERC4626
@@ -471,7 +471,7 @@ abstract contract ReceiptVault is
         // If (2) it’s calculating the amount of underlying tokens a user has
         // to provide to receive a certain amount of shares, it should
         // round up.
-        return shares.fixedPointDiv(shareRatio, Math.Rounding.Up);
+        return shares.fixedPointDiv(shareRatio, Math.Rounding.Ceil);
     }
 
     /// Calculate how many `shares` to burn to withdraw `assets` as per ERC4626
@@ -483,7 +483,7 @@ abstract contract ReceiptVault is
         // IERC4626:
         // If (1) it’s calculating the amount of shares a user has to supply to
         // receive a given amount of the underlying tokens, it should round up.
-        return assets.fixedPointMul(shareRatio, Math.Rounding.Up);
+        return assets.fixedPointMul(shareRatio, Math.Rounding.Ceil);
     }
 
     /// Calculate how many `assets` to withdraw for burning `shares` as per
@@ -497,7 +497,7 @@ abstract contract ReceiptVault is
         // If (2) it’s determining the amount of the underlying tokens to
         // transfer to them for returning a certain amount of shares, it should
         // round down.
-        return shares.fixedPointDiv(shareRatio, Math.Rounding.Down);
+        return shares.fixedPointDiv(shareRatio, Math.Rounding.Floor);
     }
 
     /// Define the ratio that shares are minted and burned per asset for both
@@ -712,8 +712,8 @@ abstract contract ReceiptVault is
     }
 
     /// @inheritdoc ERC20
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
-        super._beforeTokenTransfer(from, to, amount);
+    function _update(address from, address to, uint256 amount) internal virtual override {
+        super._update(from, to, amount);
     }
 
     /// Hook that can be overridden/extended to add additional checks and
