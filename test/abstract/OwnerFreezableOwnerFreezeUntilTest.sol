@@ -4,7 +4,7 @@ pragma solidity ^0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 import {IOwnerFreezableV1} from "src/abstract/OwnerFreezable.sol";
-import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 
 abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
     using Math for uint256;
