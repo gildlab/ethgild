@@ -18,6 +18,8 @@ import {
     CertificationExpired,
     Unauthorized
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {IERC20Errors} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import {IERC1155Errors} from "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 
 contract WithdrawTest is OffchainAssetReceiptVaultTest {
     /// Checks that balance owner balance changes after withdraw
@@ -442,7 +444,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Call the deposit function
         vault.deposit(assets, alice, minShareRatio, data);
 
-        checkNoBalanceChange(vault, bob, alice, 1, assets, data, "ERC20: insufficient allowance");
+        bytes memory err = abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, bob, 0, assets);
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data, err);
 
         // Stop the prank
         vm.stopPrank();
@@ -523,7 +526,8 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         // Prank Bob for the withdraw transaction
         vm.startPrank(bob);
 
-        checkNoBalanceChange(vault, bob, alice, 1, assets, data, "ERC20: insufficient allowance");
+        bytes memory err = abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, bob, 0, assets);
+        checkNoBalanceChange(vault, bob, alice, 1, assets, data, err);
 
         // Stop the prank
         vm.stopPrank();
@@ -640,11 +644,11 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vm.startPrank(alice);
 
         // Alice attempts to burn Bob's receipt by ID, using herself as owner.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, 1, 2));
         vault.withdraw(1, alice, alice, 2, bytes(""));
 
         // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, alice, 0, 1));
         vault.withdraw(1, alice, bob, 2, bytes(""));
 
         vm.stopPrank();
@@ -656,7 +660,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         vault.deposit(bobDeposit, bob, aliceMinShareRatio, bytes("")); //id 3
 
         // Bob cannot burn Alice's receipt.
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, bob, 0, 1, 1));
         vault.withdraw(1, bob, alice, 1, bytes(""));
 
         uint256 maxWithdrawBalance = vault.maxWithdraw(bob, 3);
@@ -665,7 +669,7 @@ contract WithdrawTest is OffchainAssetReceiptVaultTest {
         assertEqUint(vault.balanceOf(bob), maxWithdrawBalance);
 
         // Bob cannot withdraw any more under alice price.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, bob, 0, 1, 1));
         vault.withdraw(1, bob, bob, 1, bytes(""));
 
         vm.stopPrank();
