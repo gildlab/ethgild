@@ -9,10 +9,10 @@ import {IReceiptV3} from "../../interface/IReceiptV3.sol";
 import {IReceiptVaultV3} from "../../interface/IReceiptVaultV3.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
-import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
-import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
+    "openzeppelin-contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Base64} from "openzeppelin-contracts/utils/Base64.sol";
+import {Strings} from "openzeppelin-contracts/utils/Strings.sol";
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";

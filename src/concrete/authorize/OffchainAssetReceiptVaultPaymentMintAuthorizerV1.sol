@@ -5,11 +5,11 @@ pragma solidity =0.8.25;
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
-import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {DEPOSIT, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
-import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
-import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
     OffchainAssetReceiptVaultAuthorizerV1Config,

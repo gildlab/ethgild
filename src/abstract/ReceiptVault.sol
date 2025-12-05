@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
-import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
-import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/utils/ReentrancyGuard.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {MulticallUpgradeable as Multicall} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
+    "openzeppelin-contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV3, IReceiptVaultV1, IReceiptV3} from "../interface/IReceiptVaultV3.sol";
 import {IReceiptManagerV2} from "../interface/IReceiptManagerV2.sol";
 import {
@@ -17,7 +17,7 @@ import {
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 //forge-lint: disable-next-line(unused-import)
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
-import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
+import {Address} from "openzeppelin-contracts/utils/Address.sol";
 import {
     InvalidId,
     ZeroReceiver,
@@ -29,8 +29,8 @@ import {
 } from "../error/ErrReceiptVault.sol";
 import {UnmanagedReceiptTransfer} from "../interface/IReceiptManagerV2.sol";
 import {ERC165Upgradeable as ERC165} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
-import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+    "openzeppelin-contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
