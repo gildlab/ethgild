@@ -4,11 +4,11 @@ pragma solidity =0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 
-import {IERC165} from "openzeppelin-contracts/utils/introspection/IERC165.sol";
+import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {IAuthorizeV1} from "src/interface/IAuthorizeV1.sol";
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
-import {IAccessControl} from "openzeppelin-contracts/access/IAccessControl.sol";
+import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 
 contract OffchainAssetReceiptVaultAuthorizerV1IERC165Test is Test {
     function testOffchainAssetReceiptVaultAuthorizerV1IERC165(bytes4 badInterfaceId) external {

@@ -11,9 +11,9 @@ import {
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfigV2
 } from "../../abstract/ReceiptVault.sol";
-import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
+import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
-import {IERC165} from "openzeppelin-contracts/utils/introspection/IERC165.sol";
+import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 
 import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {OwnerFreezable} from "../../abstract/OwnerFreezable.sol";

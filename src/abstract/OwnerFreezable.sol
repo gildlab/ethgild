@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 
 /// @title OwnerFreezable

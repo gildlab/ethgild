@@ -5,13 +5,12 @@ pragma solidity =0.8.25;
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeERC20, IERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -201,7 +200,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         vm.startPrank(alice);
         vault.approve(bob, amount);
 
-        vault.decreaseAllowance(bob, decreaseAmount);
+        IERC20(address(vault)).safeDecreaseAllowance(bob, decreaseAmount);
 
         // Check that allowance decreased correctly
         assertEq(vault.allowance(alice, bob), amount - decreaseAmount);

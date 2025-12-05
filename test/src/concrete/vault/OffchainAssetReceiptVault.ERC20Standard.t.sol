@@ -8,9 +8,11 @@ import {LibFixedPointDecimalArithmeticOpenZeppelin} from
     "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {SafeERC20, IERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
+    using SafeERC20 for IERC20;
 
     /// Test ERC20 name symbol and decimals
     function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory shareName, string memory shareSymbol)
@@ -181,7 +183,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         vm.startPrank(alice);
         vault.approve(bob, amount);
 
-        vault.increaseAllowance(bob, increaseAmount);
+        IERC20(address(vault)).safeIncreaseAllowance(bob, increaseAmount);
 
         // Check that allowance increased correctly
         assertEq(vault.allowance(alice, bob), amount + increaseAmount);
@@ -203,7 +205,7 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         vm.startPrank(alice);
         vault.approve(bob, amount);
 
-        vault.decreaseAllowance(bob, decreaseAmount);
+        IERC20(address(vault)).safeDecreaseAllowance(bob, decreaseAmount);
 
         // Check that allowance decreased correctly
         assertEq(vault.allowance(alice, bob), amount - decreaseAmount);

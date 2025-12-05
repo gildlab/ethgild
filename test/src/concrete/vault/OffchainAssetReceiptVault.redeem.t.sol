@@ -376,7 +376,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
-        uint256 shares = assets.fixedPointMul(minShareRatio, Math.Rounding.Down);
+        uint256 shares = assets.fixedPointMul(minShareRatio, Math.Rounding.Floor);
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 

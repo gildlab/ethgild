@@ -30,7 +30,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         bytes memory data
     ) internal {
         uint256 initialBalanceOwner = receipt.balanceOf(owner, id);
-        uint256 assets = shares.fixedPointDiv(id, Math.Rounding.Down);
+        uint256 assets = shares.fixedPointDiv(id, Math.Rounding.Floor);
 
         // Set up the event expectation for WithdrawWithReceipt
         vm.expectEmit(true, true, true, true);
@@ -99,7 +99,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        uint256 expectedAssets = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedAssets = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vm.assume(expectedAssets > 0);
 
         vm.mockCall(
@@ -114,7 +114,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
 
         // Bound shares with max avalilable receipt balance
         shares = bound(shares, 1, receipt.balanceOf(alice, oraclePrice));
-        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Floor) > 0);
         checkBalanceChange(vault, alice, alice, oraclePrice, shares, receipt, bytes(""));
     }
 
@@ -138,7 +138,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vm.assume(expectedShares > 0);
 
         vm.mockCall(
@@ -177,7 +177,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -189,7 +189,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
         shares = bound(shares, 1, receipt.balanceOf(alice, oraclePrice));
-        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Floor) > 0);
 
         checkNoBalanceChange(
             vault,
@@ -224,7 +224,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -235,7 +235,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vault.deposit(assets, alice, oraclePrice, bytes(""));
 
         shares = bound(shares, 1, receipt.balanceOf(alice, oraclePrice));
-        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(shares.fixedPointDiv(oraclePrice, Math.Rounding.Floor) > 0);
 
         checkNoBalanceChange(
             vault,
@@ -270,7 +270,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -299,7 +299,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
         vault.deposit(deposit, alice, 0, hex"00");
 
         uint256 shareBalance = vault.balanceOf(alice);
-        uint256 shares = shareBalance.fixedPointMul(rate, Math.Rounding.Up);
+        uint256 shares = shareBalance.fixedPointMul(rate, Math.Rounding.Ceil);
 
         // Call redeem function
         vault.redeem(shares, alice, alice, rate, hex"00");
@@ -336,7 +336,7 @@ contract ERC20PriceOracleReceiptVaultRedeemTest is ERC20PriceOracleReceiptVaultT
             abi.encode(true)
         );
 
-        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vm.assume(expectedShares > 0);
 
         uint256 totalShares = vault.deposit(amount, alice, oraclePrice, bytes(""));

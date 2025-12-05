@@ -23,11 +23,11 @@ contract ERC20PriceOracleReceiptVaultPreviewDepositTest is ERC20PriceOracleRecei
         setVaultOraclePrice(oraclePrice);
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
 
         uint256 shares = vault.previewDeposit(assets, 0);
 
