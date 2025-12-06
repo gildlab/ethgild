@@ -6,6 +6,7 @@ import {OffchainAssetReceiptVault, DEPOSIT, WITHDRAW} from "src/concrete/vault/O
 import {OffchainAssetReceiptVaultTest} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 
 contract MulticallTest is OffchainAssetReceiptVaultTest {
     /// Test Mint multicall
@@ -40,11 +41,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 initialBalanceOwner = vault.balanceOf(bob);
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSignature(
-            "mint(uint256,address,uint256,bytes)", firstMintAmount, bob, minShareRatio, receiptInformation
+        data[0] = abi.encodeWithSelector(
+            IReceiptVaultV1.mint.selector, firstMintAmount, bob, minShareRatio, receiptInformation
         );
-        data[1] = abi.encodeWithSignature(
-            "mint(uint256,address,uint256,bytes)", secondMintAmount, bob, minShareRatio, receiptInformation
+        data[1] = abi.encodeWithSelector(
+            IReceiptVaultV1.mint.selector, secondMintAmount, bob, minShareRatio, receiptInformation
         );
 
         uint256 totalMint = firstMintAmount + secondMintAmount;
@@ -89,11 +90,11 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
         uint256 initialBalanceOwner = vault.balanceOf(bob);
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSignature(
-            "deposit(uint256,address,uint256,bytes)", firstDepositAmount, bob, minShareRatio, receiptInformation
+        data[0] = abi.encodeWithSelector(
+            IReceiptVaultV1.deposit.selector, firstDepositAmount, bob, minShareRatio, receiptInformation
         );
-        data[1] = abi.encodeWithSignature(
-            "deposit(uint256,address,uint256,bytes)", secondDepositAmount, bob, minShareRatio, receiptInformation
+        data[1] = abi.encodeWithSelector(
+            IReceiptVaultV1.deposit.selector, secondDepositAmount, bob, minShareRatio, receiptInformation
         );
 
         uint256 totalMint = firstDepositAmount + secondDepositAmount;
@@ -153,12 +154,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSignature(
-            "redeem(uint256,address,address,uint256,bytes)", firstDepositAmount, bob, bob, 1, ""
-        );
-        data[1] = abi.encodeWithSignature(
-            "redeem(uint256,address,address,uint256,bytes)", secondDepositAmount, bob, bob, 2, ""
-        );
+        data[0] = abi.encodeWithSelector(IReceiptVaultV1.redeem.selector, firstDepositAmount, bob, bob, 1, "");
+        data[1] = abi.encodeWithSelector(IReceiptVaultV1.redeem.selector, secondDepositAmount, bob, bob, 2, "");
 
         uint256 totalRedeemed = firstDepositAmount + secondDepositAmount;
         // Call multicall on redeem function
@@ -217,12 +214,8 @@ contract MulticallTest is OffchainAssetReceiptVaultTest {
 
         bytes[] memory data = new bytes[](2);
 
-        data[0] = abi.encodeWithSignature(
-            "withdraw(uint256,address,address,uint256,bytes)", firstDepositAmount, bob, bob, 1, ""
-        );
-        data[1] = abi.encodeWithSignature(
-            "withdraw(uint256,address,address,uint256,bytes)", secondDepositAmount, bob, bob, 2, ""
-        );
+        data[0] = abi.encodeWithSelector(IReceiptVaultV1.withdraw.selector, firstDepositAmount, bob, bob, 1, "");
+        data[1] = abi.encodeWithSelector(IReceiptVaultV1.withdraw.selector, secondDepositAmount, bob, bob, 2, "");
 
         uint256 totalRedeemed = firstDepositAmount + secondDepositAmount;
         // Call multicall on redeem function

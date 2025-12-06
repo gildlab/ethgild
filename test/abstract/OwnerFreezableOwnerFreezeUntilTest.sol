@@ -5,6 +5,7 @@ pragma solidity ^0.8.25;
 import {Test} from "forge-std/Test.sol";
 import {IOwnerFreezableV1} from "src/abstract/OwnerFreezable.sol";
 import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 
 abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
     using Math for uint256;
@@ -64,7 +65,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
     }
 
     function testOwnerFreezableOnlyOwnerCanFreeze(uint256 freezeUntil) external {
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, sBob));
         vm.prank(sBob);
         sOwnerFreezable.ownerFreezeUntil(freezeUntil);
         assertEq(sOwnerFreezable.ownerFrozenUntil(), 0);
@@ -117,7 +118,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
     /// Only owner can call ownerFreezeAlwaysAllowFrom.
     function testOwnerFreezableOnlyOwnerCanFreezeAlwaysAllowFrom(address from, uint256 protectUntil) external {
         vm.assume(protectUntil != 0);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, sBob));
         vm.prank(sBob);
         sOwnerFreezable.ownerFreezeAlwaysAllowFrom(from, protectUntil);
         assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedFrom(from), 0);
@@ -129,7 +130,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
 
     /// Calling ownerFreezeAlwaysAllowFrom with a zero protectUntil reverts.
     function testOwnerFreezableZeroProtectUntilReverts(address from) external {
-        vm.expectRevert(abi.encodeWithSignature("OwnerFreezeAlwaysAllowedFromZero(address)", from));
+        vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFreezeAlwaysAllowedFromZero.selector, from));
         vm.prank(sAlice);
         sOwnerFreezable.ownerFreezeAlwaysAllowFrom(from, 0);
     }
@@ -215,7 +216,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         vm.warp(time);
         vm.prank(sAlice);
         vm.expectRevert(
-            abi.encodeWithSignature("OwnerFreezeAlwaysAllowedFromProtected(address,uint256)", from, protectUntil)
+            abi.encodeWithSelector(IOwnerFreezableV1.OwnerFreezeAlwaysAllowedFromProtected.selector, from, protectUntil)
         );
         sOwnerFreezable.ownerFreezeStopAlwaysAllowingFrom(from);
     }
@@ -223,7 +224,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
     /// Only owner can call ownerFreezeAlwaysAllowTo.
     function testOwnerFreezableOnlyOwnerCanFreezeAlwaysAllowTo(address to, uint256 protectUntil) external {
         vm.assume(protectUntil != 0);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, sBob));
         vm.prank(sBob);
         sOwnerFreezable.ownerFreezeAlwaysAllowTo(to, protectUntil);
         assertEq(sOwnerFreezable.ownerFreezeAlwaysAllowedTo(to), 0);
@@ -235,7 +236,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
 
     /// Calling ownerFreezeAlwaysAllowTo with a zero protectUntil reverts.
     function testOwnerFreezableZeroProtectUntilRevertsTo(address to) external {
-        vm.expectRevert(abi.encodeWithSignature("OwnerFreezeAlwaysAllowedToZero(address)", to));
+        vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToZero.selector, to));
         vm.prank(sAlice);
         sOwnerFreezable.ownerFreezeAlwaysAllowTo(to, 0);
     }
@@ -318,7 +319,7 @@ abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
         vm.warp(time);
         vm.prank(sAlice);
         vm.expectRevert(
-            abi.encodeWithSignature("OwnerFreezeAlwaysAllowedToProtected(address,uint256)", to, protectUntil)
+            abi.encodeWithSelector(IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToProtected.selector, to, protectUntil)
         );
         sOwnerFreezable.ownerFreezeStopAlwaysAllowingTo(to);
     }
