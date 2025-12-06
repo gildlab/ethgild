@@ -15,6 +15,8 @@ import {IReceiptVaultV1} from "../../../../src/interface/IReceiptVaultV3.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {IERC1155Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
+import {IERC20Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -294,12 +296,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
                 vm.startPrank(alice);
 
                 // Alice attempts to burn Bob's receipt by ID, using herself as owner.
-                vm.expectRevert("ERC1155: burn amount exceeds balance");
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, bobPrice, bobPrice
+                    )
+                );
                 uint256 aliceSharesWithdraw0 = vault.withdraw(1e18, alice, alice, bobPrice, bytes(""));
                 assertEqUint(aliceSharesWithdraw0, 0);
 
                 // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
-                vm.expectRevert("ERC20: insufficient allowance");
+                vm.expectRevert(
+                    abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, alice, 0, bobPrice)
+                );
                 uint256 aliceSharesWithdraw1 = vault.withdraw(1e18, alice, bob, bobPrice, bytes(""));
                 assertEqUint(aliceSharesWithdraw1, 0);
 
@@ -337,7 +345,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.startPrank(bob);
         // Bob cannot burn Alice's receipt.
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, bob, 0, alicePrice));
         vault.withdraw(1e18, bob, alice, alicePrice, bytes(""));
 
         uint256 maxWithdrawBob = vault.maxWithdraw(bob, alicePrice);
@@ -360,7 +368,12 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(bob);
 
         // Bob cannot withdraw any more under alice price.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        uint256 bobBalance = vault.receipt().balanceOf(bob, alicePrice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC1155Errors.ERC1155InsufficientBalance.selector, bob, bobBalance, alicePrice, alicePrice
+            )
+        );
         vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
 
         vm.stopPrank();
@@ -522,20 +535,28 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         // Ensure burns cannot occur at the new oracle price
         vm.startPrank(alice);
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, priceThree, priceThree)
+        );
         vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
 
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, 1e18, priceThree)
+        );
         vault.redeem(1e18, alice, alice, priceThree, bytes(""));
         vm.stopPrank();
 
         setVaultOraclePrice(priceThree);
 
         vm.startPrank(alice);
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, priceThree, priceThree)
+        );
         vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
 
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, 1e18, priceThree)
+        );
         vault.redeem(1e18, alice, alice, priceThree, bytes(""));
         vm.stopPrank();
 

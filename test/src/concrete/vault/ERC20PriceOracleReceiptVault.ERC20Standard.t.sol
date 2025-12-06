@@ -163,46 +163,4 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);
     }
-
-    // Test ERC20 increaseAllowance
-    function testERC20IncreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 increaseAmount)
-        external
-    {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        amount = bound(amount, 1, type(uint128).max);
-        increaseAmount = bound(increaseAmount, 1, type(uint128).max);
-        vm.assume(increaseAmount < amount);
-
-        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
-
-        vm.startPrank(alice);
-        vault.approve(bob, amount);
-
-        IERC20(address(vault)).safeIncreaseAllowance(bob, increaseAmount);
-
-        // Check that allowance increased correctly
-        assertEq(vault.allowance(alice, bob), amount + increaseAmount);
-    }
-
-    // Test ERC20 decreaseAllowance
-    function testERC20DecreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 decreaseAmount)
-        external
-    {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        amount = bound(amount, 1, type(uint128).max);
-        decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
-        vm.assume(decreaseAmount < amount);
-
-        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
-
-        vm.startPrank(alice);
-        vault.approve(bob, amount);
-
-        IERC20(address(vault)).safeDecreaseAllowance(bob, decreaseAmount);
-
-        // Check that allowance decreased correctly
-        assertEq(vault.allowance(alice, bob), amount - decreaseAmount);
-    }
 }

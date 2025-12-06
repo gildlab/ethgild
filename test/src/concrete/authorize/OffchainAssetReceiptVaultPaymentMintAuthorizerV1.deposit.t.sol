@@ -24,6 +24,7 @@ import {
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
+import {IERC20Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
@@ -111,7 +112,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         // Alice can't afford to deposit.
         vm.startPrank(alice);
         paymentToken.approve(address(authorizer), paymentAmount);
-        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, alice, 0, paymentAmount));
         receiptVault.mint(firstShares, alice, 0, hex"");
         vm.stopPrank();
 

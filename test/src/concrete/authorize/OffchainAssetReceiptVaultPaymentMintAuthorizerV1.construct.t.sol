@@ -33,13 +33,14 @@ import {
     CERTIFY_ADMIN
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1Construct() external {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
         authorizer.initialize(
             abi.encode(
                 OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({

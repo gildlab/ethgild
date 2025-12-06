@@ -13,6 +13,7 @@ import {
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {LibExtrospectERC1167Proxy} from "rain.extrospection/lib/LibExtrospectERC1167Proxy.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
+import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 
 contract AlwaysAuthorize is IAuthorizeV1, IERC165 {
     /// @inheritdoc IERC165
@@ -85,7 +86,7 @@ contract OffchainAssetReceiptVaultAuthorizeTest is OffchainAssetReceiptVaultTest
 
         // Bob cannot set the authorizer.
         vm.prank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, bob));
         vault.setAuthorizer(alwaysAuthorize2);
     }
 }

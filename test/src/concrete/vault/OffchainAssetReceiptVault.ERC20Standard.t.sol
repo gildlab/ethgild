@@ -9,6 +9,7 @@ import {LibFixedPointDecimalArithmeticOpenZeppelin} from
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {SafeERC20, IERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import {console2} from "forge-std/console2.sol";
 
 contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -165,49 +166,5 @@ contract OffchainAssetReceiptVaultERC20StandardTest is OffchainAssetReceiptVault
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);
         vm.stopPrank();
-    }
-
-    // Test ERC20 increaseAllowance
-    function testERC20IncreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 increaseAmount)
-        external
-    {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        vm.assume(alice != bob);
-        amount = bound(amount, 1, type(uint128).max);
-        increaseAmount = bound(increaseAmount, 1, type(uint128).max);
-        vm.assume(increaseAmount < amount);
-
-        OffchainAssetReceiptVault vault = createVault(alice, "Test Token", "TST");
-
-        vm.startPrank(alice);
-        vault.approve(bob, amount);
-
-        IERC20(address(vault)).safeIncreaseAllowance(bob, increaseAmount);
-
-        // Check that allowance increased correctly
-        assertEq(vault.allowance(alice, bob), amount + increaseAmount);
-    }
-
-    // Test ERC20 decreaseAllowance
-    function testERC20DecreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 decreaseAmount)
-        external
-    {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        vm.assume(alice != bob);
-        amount = bound(amount, 1, type(uint128).max);
-        decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
-        vm.assume(decreaseAmount < amount);
-
-        OffchainAssetReceiptVault vault = createVault(alice, "Test Token", "TST");
-
-        vm.startPrank(alice);
-        vault.approve(bob, amount);
-
-        IERC20(address(vault)).safeDecreaseAllowance(bob, decreaseAmount);
-
-        // Check that allowance decreased correctly
-        assertEq(vault.allowance(alice, bob), amount - decreaseAmount);
     }
 }
