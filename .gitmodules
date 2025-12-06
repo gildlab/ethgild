@@ -22,3 +22,6 @@
 [submodule "lib/rain.pyth"]
 	path = lib/rain.pyth
 	url = https://github.com/rainlanguage/rain.pyth
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

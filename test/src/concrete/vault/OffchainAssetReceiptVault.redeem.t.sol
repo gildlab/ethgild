@@ -12,6 +12,7 @@ import {
 import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {OffchainAssetReceiptVaultAuthorizerV1} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {IERC20Errors} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract RedeemTest is OffchainAssetReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -376,7 +377,7 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
         // Assume that assets is not 0
         assets = bound(assets, 1, type(uint256).max);
 
-        uint256 shares = assets.fixedPointMul(minShareRatio, Math.Rounding.Down);
+        uint256 shares = assets.fixedPointMul(minShareRatio, Math.Rounding.Floor);
 
         OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
@@ -585,7 +586,9 @@ contract RedeemTest is OffchainAssetReceiptVaultTest {
 
         // Bob has no allowance so he cannot withdraw.
         vm.startPrank(bob);
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, bob, 0, redeemSharesAmount)
+        );
         uint256 assets = vault.redeem(redeemSharesAmount, bob, alice, 1, bytes(""));
         assertEqUint(assets, 0);
         vm.stopPrank();

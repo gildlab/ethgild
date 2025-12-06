@@ -30,7 +30,7 @@ contract ERC20PriceOracleReceiptVaultConvertToSharesTest is ERC20PriceOracleRece
 
         ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
-        uint256 expectedShares = assets.fixedPointMul(id, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(id, Math.Rounding.Floor);
         uint256 resultShares = vault.convertToShares(assets, id);
 
         assertEqUint(expectedShares, resultShares);

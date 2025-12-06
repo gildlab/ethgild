@@ -32,7 +32,7 @@ contract ERC20PriceOracleReceiptVaultMaxRedeemTest is ERC20PriceOracleReceiptVau
         otherOraclePrice = bound(otherOraclePrice, 1, type(uint128).max);
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
 
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vm.assume(expectedShares > 0);
         vm.startPrank(alice);
 
@@ -56,7 +56,7 @@ contract ERC20PriceOracleReceiptVaultMaxRedeemTest is ERC20PriceOracleReceiptVau
         assertEqUint(actualShares, expectedShares);
         assertTrue(maxWithdraw <= assets);
 
-        uint256 expectedMaxWithdraw = actualShares.fixedPointDiv(oraclePrice, Math.Rounding.Down);
+        uint256 expectedMaxWithdraw = actualShares.fixedPointDiv(oraclePrice, Math.Rounding.Floor);
         assertEqUint(maxWithdraw, expectedMaxWithdraw);
 
         maxWithdraw =

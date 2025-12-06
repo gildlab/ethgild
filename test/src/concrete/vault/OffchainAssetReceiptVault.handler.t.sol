@@ -15,6 +15,7 @@ import {
     CertificationExpired
 } from "../../../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {IERC1155Errors} from "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 
 contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
     function setUpAddressesAndBounds(
@@ -160,7 +161,7 @@ contract OffchainAssetReceiptVaultHandlerTest is OffchainAssetReceiptVaultTest {
 
         // John can confiscate the receipt
         vm.startPrank(john);
-        vm.expectRevert("ERC1155: caller is not token owner or approved");
+        vm.expectRevert(abi.encodeWithSelector(IERC1155Errors.ERC1155MissingApprovalForAll.selector, john, bob));
         receipt.safeTransferFrom(bob, john, 1, balance, bytes(""));
         assertEq(receipt.balanceOf(john, 1), johnBalance);
 

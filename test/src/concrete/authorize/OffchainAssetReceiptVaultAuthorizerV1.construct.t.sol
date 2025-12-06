@@ -20,12 +20,13 @@ import {
     ZeroInitialAdmin
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
 contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultAuthorizerV1Construct(address initialAdmin) external {
         OffchainAssetReceiptVaultAuthorizerV1 authorizer = new OffchainAssetReceiptVaultAuthorizerV1();
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
         authorizer.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin})));
     }
 
@@ -46,7 +47,7 @@ contract OffchainAssetReceiptVaultAuthorizerV1ConstructTest is Test {
 
         bytes memory initData = abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: initialAdmin}));
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
         authorizerImplementation.initialize(initData);
 
         CloneFactory factory = new CloneFactory();

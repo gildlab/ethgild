@@ -5,15 +5,16 @@ pragma solidity =0.8.25;
 import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
-import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {SafeERC20, IERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
+    using SafeERC20 for IERC20;
 
     /// Test ERC20 name symbol and decimals
     function testERC20NameSymbolDecimals(uint256 aliceSeed, string memory shareName, string memory shareSymbol)
@@ -51,7 +52,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
         {
             assets = bound(assets, 1, type(uint128).max);
-            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+            vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
             vm.mockCall(
                 address(I_ASSET),
@@ -61,7 +62,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
             vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, assets));
         }
 
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         // Assert that the total supply is equal to expectedShares
         assertEqUint(vault.totalSupply(), expectedShares);
@@ -76,7 +77,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         amount = bound(amount, 1, type(uint128).max);
 
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
-        vm.assume(amount.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(amount.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         setVaultOraclePrice(oraclePrice);
 
@@ -92,7 +93,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
         uint256 bobInitialBalance = vault.balanceOf(bob);
 
-        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vault.deposit(amount, alice, oraclePrice, bytes(""));
 
         assertTrue(vault.transfer(bob, expectedShares));
@@ -144,7 +145,7 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
         );
         vm.expectCall(address(I_ASSET), abi.encodeWithSelector(IERC20.transferFrom.selector, alice, vault, amount));
 
-        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = amount.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         vm.assume(transferFromAmount < expectedShares);
 
         vault.deposit(amount, alice, oraclePrice, bytes(""));
@@ -161,47 +162,5 @@ contract ERC20PriceOracleReceiptVaultERC20StandardTest is ERC20PriceOracleReceip
 
         assertEqUint(vault.balanceOf(alice), aliceBalanceBeforeTransfer - transferFromAmount);
         assertEqUint(vault.balanceOf(bob), transferFromAmount);
-    }
-
-    // Test ERC20 increaseAllowance
-    function testERC20IncreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 increaseAmount)
-        external
-    {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        amount = bound(amount, 1, type(uint128).max);
-        increaseAmount = bound(increaseAmount, 1, type(uint128).max);
-        vm.assume(increaseAmount < amount);
-
-        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
-
-        vm.startPrank(alice);
-        vault.approve(bob, amount);
-
-        vault.increaseAllowance(bob, increaseAmount);
-
-        // Check that allowance increased correctly
-        assertEq(vault.allowance(alice, bob), amount + increaseAmount);
-    }
-
-    // Test ERC20 decreaseAllowance
-    function testERC20DecreaseAllowance(uint256 aliceSeed, uint256 bobSeed, uint256 amount, uint256 decreaseAmount)
-        external
-    {
-        (address alice, address bob) = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed, bobSeed);
-
-        amount = bound(amount, 1, type(uint128).max);
-        decreaseAmount = bound(decreaseAmount, 1, type(uint128).max);
-        vm.assume(decreaseAmount < amount);
-
-        ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, "Test Token", "TST");
-
-        vm.startPrank(alice);
-        vault.approve(bob, amount);
-
-        vault.decreaseAllowance(bob, decreaseAmount);
-
-        // Check that allowance decreased correctly
-        assertEq(vault.allowance(alice, bob), amount - decreaseAmount);
     }
 }

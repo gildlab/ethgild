@@ -69,6 +69,6 @@ contract TwoPriceOracleV2 is PriceOracleV2 {
         uint256 quotePrice = QUOTE.price{value: address(this).balance}();
         //slither-disable-next-line arbitrary-send-eth
         uint256 basePrice = BASE.price{value: address(this).balance}();
-        return basePrice.fixedPointDiv(quotePrice, Math.Rounding.Up);
+        return basePrice.fixedPointDiv(quotePrice, Math.Rounding.Ceil);
     }
 }

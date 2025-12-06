@@ -19,9 +19,9 @@ import {
     WITHDRAW
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
-import {IERC20MetadataUpgradeable as IERC20Metadata} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
+import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is OffchainAssetReceiptVaultAuthorizerV1Test {
     using Strings for address;
@@ -234,11 +234,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
 
         vm.prank(owner);
         vm.expectRevert(
-            bytes(
-                string.concat(
-                    "AccessControl: account ", owner.toHexString(), " is missing role ", vm.toString(DEPOSIT_ADMIN)
-                )
-            )
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, owner, DEPOSIT_ADMIN, "")
         );
         authorizer.grantRole(DEPOSIT, user);
     }
@@ -260,11 +256,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1IERC165Test is Offchain
 
         vm.prank(owner);
         vm.expectRevert(
-            bytes(
-                string.concat(
-                    "AccessControl: account ", owner.toHexString(), " is missing role ", vm.toString(WITHDRAW_ADMIN)
-                )
-            )
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, owner, WITHDRAW_ADMIN, "")
         );
         authorizer.grantRole(WITHDRAW, user);
     }

@@ -22,8 +22,7 @@ import {
     CONFISCATE_RECEIPT
 } from "../../../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
-import {IAccessControlUpgradeable as IAccessControl} from
-    "openzeppelin-contracts-upgradeable/contracts/access/IAccessControlUpgradeable.sol";
+import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 
 contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFreezeUntilTest {
     ICloneableFactoryV2 internal immutable I_FACTORY;

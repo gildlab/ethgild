@@ -33,7 +33,7 @@ contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTes
         bytes memory receiptInformation,
         bytes memory err
     ) internal {
-        uint256 expectedAssets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Up);
+        uint256 expectedAssets = shares.fixedPointDiv(oraclePrice, Math.Rounding.Ceil);
         setVaultOraclePrice(oraclePrice);
 
         vm.startPrank(owner);
