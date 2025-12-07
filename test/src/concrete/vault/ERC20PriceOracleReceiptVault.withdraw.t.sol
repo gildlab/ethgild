@@ -368,12 +368,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(bob);
 
         // Bob cannot withdraw any more under alice price.
-        uint256 bobBalance = vault.receipt().balanceOf(bob, alicePrice);
-        vm.expectRevert(
-            abi.encodeWithSelector(
+        {
+            uint256 bobBalance = vault.receipt().balanceOf(bob, alicePrice);
+            bytes memory err = abi.encodeWithSelector(
                 IERC1155Errors.ERC1155InsufficientBalance.selector, bob, bobBalance, alicePrice, alicePrice
-            )
-        );
+            );
+            vm.expectRevert(err);
+        }
+
         vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
 
         vm.stopPrank();
