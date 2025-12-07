@@ -5,8 +5,6 @@ pragma solidity ^0.8.25;
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 /// @title OwnerFreezable
 /// This abstract contract inherits from Ownable and adds the ability for the
 /// owner to freeze the contract until a given timestamp. The owner cannot
@@ -164,9 +162,6 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     /// @param from The address that tokens are being sent from.
     /// @param to The address that tokens are being sent to.
     function ownerFreezeCheckTransaction(address from, address to) internal view {
-        console2.log("owner freeze check transaction");
-        console2.log(block.timestamp);
-        console2.log(sOwnerFrozenUntil);
         // We either simply revert or no-op for this check.
         // Revert if the contract is frozen and neither the `from` nor `to` are
         // in their respective always allowed lists.
