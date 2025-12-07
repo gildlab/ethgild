@@ -118,7 +118,6 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
 
         uint256 freezeUntil = block.timestamp + 1;
         vm.prank(sAlice);
-        console2.log("freeze until", freezeUntil);
         vault.ownerFreezeUntil(freezeUntil);
 
         // Cannot transfer while frozen.
@@ -135,10 +134,7 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
         vm.stopPrank();
 
         // Alice can't transfer while everything is frozen.
-        console2.log("freeze until", freezeUntil);
-        console2.log("warp to", freezeUntil - 1);
         vm.warp(freezeUntil - 1);
-        console2.log("current time", block.timestamp);
         vm.prank(sAlice);
         vm.expectRevert(abi.encodeWithSelector(IOwnerFreezableV1.OwnerFrozen.selector, freezeUntil, sAlice, sBob));
         receipt.safeTransferFrom(sAlice, sBob, 1, 1e18, "");
