@@ -5,6 +5,9 @@ pragma solidity ^0.8.25;
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 
+bytes32 constant OWNER_FREEZABLE_V1_STORAGE_LOCATION =
+    0x04485615b1da6633eec3daf54aadca2a89ef8b155744e223a046f4a6e38be700;
+
 /// @title OwnerFreezable
 /// This abstract contract inherits from Ownable and adds the ability for the
 /// owner to freeze the contract until a given timestamp. The owner cannot
@@ -40,23 +43,30 @@ import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 /// addresses, to mitigate the risk that the attacker opens up the ability to
 /// dump on the LPs en masse after the snapshot.
 abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
-    /// Contract is frozen until this time.
-    /// Explicitly initialized to `0` for clarity.
-    uint256 private sOwnerFrozenUntil = 0;
+    /// @param ownerFrozenUntil Contract is frozen until this time.
+    /// @param alwaysAllowedFroms Mapping of `from` addresses that are always
+    /// allowed to send. If the protected time is any non-zero value then the
+    /// `from` address is always allowed to send. While the current time is less
+    /// than the protected time the `from` address cannot be removed from the
+    /// always allowed list.
+    /// @param alwaysAllowedTos Mapping of `to` addresses that are always
+    /// allowed to receive. If the protected time is any non-zero value then the
+    /// `to` address is always allowed to receive. While the current time is less
+    /// than the protected time the `to` address cannot be removed from the
+    /// always allowed list.
+    /// @custom:storage-location erc7201:rain.storage.owner-freezable.1
+    struct OwnerFreezableV1Storage {
+        uint256 ownerFrozenUntil;
+        mapping(address from => uint256 protectedUntil) alwaysAllowedFroms;
+        mapping(address to => uint256 protectedUntil) alwaysAllowedTos;
+    }
 
-    /// @dev Mapping of `from` addresses that are always allowed to send.
-    /// If the protected time is any non-zero value then the `from` address is
-    /// always allowed to send. While the current time is less than the
-    /// protected time the `from` address cannot be removed from the always
-    /// allowed list.
-    mapping(address from => uint256 protectedUntil) private sAlwaysAllowedFroms;
-
-    /// @dev Mapping of `to` addresses that are always allowed to receive.
-    /// If the protected time is any non-zero value then the `to` address is
-    /// always allowed to receive. While the current time is less than the
-    /// protected time the `to` address cannot be removed from the always
-    /// allowed list.
-    mapping(address to => uint256 protectedUntil) private sAlwaysAllowedTos;
+    function getStorage() private pure returns (OwnerFreezableV1Storage storage s) {
+        // bytes32 location = OWNER_FREEZABLE_V1_STORAGE_LOCATION;
+        assembly {
+            s.slot := OWNER_FREEZABLE_V1_STORAGE_LOCATION
+        }
+    }
 
     /// @inheritdoc IERC5313
     function owner() public view virtual override(IERC5313, Ownable) returns (address) {
@@ -64,33 +74,37 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     }
 
     /// @inheritdoc IOwnerFreezableV1
-    function ownerFrozenUntil() external view returns (uint256) {
-        return sOwnerFrozenUntil;
+    function ownerFrozenUntil() public view returns (uint256) {
+        OwnerFreezableV1Storage storage s = getStorage();
+        return s.ownerFrozenUntil;
     }
 
     /// @inheritdoc IOwnerFreezableV1
-    function ownerFreezeAlwaysAllowedFrom(address from) external view returns (uint256) {
-        return sAlwaysAllowedFroms[from];
+    function ownerFreezeAlwaysAllowedFrom(address from) public view returns (uint256) {
+        OwnerFreezableV1Storage storage s = getStorage();
+        return s.alwaysAllowedFroms[from];
     }
 
     /// @inheritdoc IOwnerFreezableV1
-    function ownerFreezeAlwaysAllowedTo(address to) external view returns (uint256) {
-        return sAlwaysAllowedTos[to];
+    function ownerFreezeAlwaysAllowedTo(address to) public view returns (uint256) {
+        OwnerFreezableV1Storage storage s = getStorage();
+        return s.alwaysAllowedTos[to];
     }
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeUntil(uint256 freezeUntil) external onlyOwner {
+        OwnerFreezableV1Storage storage s = getStorage();
         // Freezing is additive so we can only increase the freeze time.
         // It is a no-op on the state if the new freeze time is less than the
         // current one.
-        if (freezeUntil > sOwnerFrozenUntil) {
-            sOwnerFrozenUntil = freezeUntil;
+        if (freezeUntil > s.ownerFrozenUntil) {
+            s.ownerFrozenUntil = freezeUntil;
         }
 
         // Emit the event with the new freeze time. We do this even if the
         // freeze time is unchanged so that we can track the history of
         // freeze calls offchain.
-        emit OwnerFrozenUntil(owner(), freezeUntil, sOwnerFrozenUntil);
+        emit OwnerFrozenUntil(owner(), freezeUntil, s.ownerFrozenUntil);
     }
 
     /// @inheritdoc IOwnerFreezableV1
@@ -101,27 +115,31 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
             revert OwnerFreezeAlwaysAllowedFromZero(from);
         }
 
+        OwnerFreezableV1Storage storage s = getStorage();
+
         // Adding a `from` is additive so we can only increase the protected
         // time. It is a no-op on the state if the new protected time is less
         // than the current one.
-        if (protectUntil > sAlwaysAllowedFroms[from]) {
-            sAlwaysAllowedFroms[from] = protectUntil;
+        if (protectUntil > s.alwaysAllowedFroms[from]) {
+            s.alwaysAllowedFroms[from] = protectUntil;
         }
         // Emit the event with the new protected time. We do this even if the
         // protected time is unchanged so that we can track the history of
         // protections offchain.
-        emit OwnerFreezeAlwaysAllowedFrom(owner(), from, protectUntil, sAlwaysAllowedFroms[from]);
+        emit OwnerFreezeAlwaysAllowedFrom(owner(), from, protectUntil, s.alwaysAllowedFroms[from]);
     }
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeStopAlwaysAllowingFrom(address from) external onlyOwner {
+        OwnerFreezableV1Storage storage s = getStorage();
+
         // If the current time is after the protection for this `from` then
         // we can remove it. Otherwise we revert to respect the protection.
-        if (block.timestamp < sAlwaysAllowedFroms[from]) {
-            revert OwnerFreezeAlwaysAllowedFromProtected(from, sAlwaysAllowedFroms[from]);
+        if (block.timestamp < s.alwaysAllowedFroms[from]) {
+            revert OwnerFreezeAlwaysAllowedFromProtected(from, s.alwaysAllowedFroms[from]);
         }
 
-        delete sAlwaysAllowedFroms[from];
+        delete s.alwaysAllowedFroms[from];
         emit OwnerFreezeAlwaysAllowedFrom(owner(), from, 0, 0);
     }
 
@@ -133,27 +151,31 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
             revert IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToZero(to);
         }
 
+        OwnerFreezableV1Storage storage s = getStorage();
+
         // Adding a `to` is additive so we can only increase the protected time.
         // It is a no-op on the state if the new protected time is less than the
         // current one.
-        if (protectUntil > sAlwaysAllowedTos[to]) {
-            sAlwaysAllowedTos[to] = protectUntil;
+        if (protectUntil > s.alwaysAllowedTos[to]) {
+            s.alwaysAllowedTos[to] = protectUntil;
         }
         // Emit the event with the new protected time. We do this even if the
         // protected time is unchanged so that we can track the history of
         // protections offchain.
-        emit OwnerFreezeAlwaysAllowedTo(owner(), to, protectUntil, sAlwaysAllowedTos[to]);
+        emit OwnerFreezeAlwaysAllowedTo(owner(), to, protectUntil, s.alwaysAllowedTos[to]);
     }
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeStopAlwaysAllowingTo(address to) external onlyOwner {
+        OwnerFreezableV1Storage storage s = getStorage();
+
         // If the current time is after the protection for this `to` then
         // we can remove it. Otherwise we revert to respect the protection.
-        if (block.timestamp < sAlwaysAllowedTos[to]) {
-            revert IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToProtected(to, sAlwaysAllowedTos[to]);
+        if (block.timestamp < s.alwaysAllowedTos[to]) {
+            revert IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToProtected(to, s.alwaysAllowedTos[to]);
         }
 
-        delete sAlwaysAllowedTos[to];
+        delete s.alwaysAllowedTos[to];
         emit OwnerFreezeAlwaysAllowedTo(owner(), to, 0, 0);
     }
 
@@ -162,11 +184,13 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     /// @param from The address that tokens are being sent from.
     /// @param to The address that tokens are being sent to.
     function ownerFreezeCheckTransaction(address from, address to) internal view {
+        OwnerFreezableV1Storage storage s = getStorage();
+
         // We either simply revert or no-op for this check.
         // Revert if the contract is frozen and neither the `from` nor `to` are
         // in their respective always allowed lists.
-        if (block.timestamp < sOwnerFrozenUntil && sAlwaysAllowedFroms[from] == 0 && sAlwaysAllowedTos[to] == 0) {
-            revert IOwnerFreezableV1.OwnerFrozen(sOwnerFrozenUntil, from, to);
+        if (block.timestamp < s.ownerFrozenUntil && s.alwaysAllowedFroms[from] == 0 && s.alwaysAllowedTos[to] == 0) {
+            revert IOwnerFreezableV1.OwnerFrozen(s.ownerFrozenUntil, from, to);
         }
     }
 }
