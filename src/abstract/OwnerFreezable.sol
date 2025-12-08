@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 
 /// @dev String ID for the OwnerFreezableV1 storage location.
@@ -46,7 +46,7 @@ bytes32 constant OWNER_FREEZABLE_V1_STORAGE_LOCATION =
 /// allow adding `from` addresses to the always allowed list, but not `to`
 /// addresses, to mitigate the risk that the attacker opens up the ability to
 /// dump on the LPs en masse after the snapshot.
-abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
+abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
     /// @param ownerFrozenUntil Contract is frozen until this time.
     /// @param alwaysAllowedFroms Mapping of `from` addresses that are always
     /// allowed to send. If the protected time is any non-zero value then the
@@ -72,7 +72,7 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     }
 
     /// @inheritdoc IERC5313
-    function owner() public view virtual override(IERC5313, Ownable) returns (address) {
+    function owner() public view virtual override(IERC5313, OwnableUpgradeable) returns (address) {
         return super.owner();
     }
 
