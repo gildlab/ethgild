@@ -444,33 +444,33 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         receiptVault.mint(firstShares, alice, 0, hex"");
         vm.stopPrank();
 
-        // assertEq(1e27 - firstShares, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
-        // assertEq(
-        //     firstShares,
-        //     paymentToken.balanceOf(address(authorizer)),
-        //     "Authorizer should have received tokens after mint"
-        // );
+        assertEq(1e27 - firstShares, paymentToken.balanceOf(alice), "Alice should have reduced balance after mint");
+        assertEq(
+            firstShares,
+            paymentToken.balanceOf(address(authorizer)),
+            "Authorizer should have received tokens after mint"
+        );
 
-        // vm.startPrank(alice);
-        // vm.expectRevert(abi.encodeWithSelector(MaxSharesSupplyExceeded.selector, maxShares, firstShares + secondShares));
-        // receiptVault.mint(secondShares, alice, 0, hex"");
-        // vm.stopPrank();
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(MaxSharesSupplyExceeded.selector, maxShares, firstShares + secondShares));
+        receiptVault.mint(secondShares, alice, 0, hex"");
+        vm.stopPrank();
 
-        // if (firstShares != maxShares) {
-        //     vm.startPrank(alice);
-        //     receiptVault.mint(thirdShares, alice, 0, hex"");
-        //     vm.stopPrank();
+        if (firstShares != maxShares) {
+            vm.startPrank(alice);
+            receiptVault.mint(thirdShares, alice, 0, hex"");
+            vm.stopPrank();
 
-        //     assertEq(
-        //         1e27 - firstShares - thirdShares,
-        //         paymentToken.balanceOf(alice),
-        //         "Alice should have reduced balance after second mint"
-        //     );
-        //     assertEq(
-        //         firstShares + thirdShares,
-        //         paymentToken.balanceOf(address(authorizer)),
-        //         "Authorizer should have received tokens after second mint"
-        //     );
-        // }
+            assertEq(
+                1e27 - firstShares - thirdShares,
+                paymentToken.balanceOf(alice),
+                "Alice should have reduced balance after second mint"
+            );
+            assertEq(
+                firstShares + thirdShares,
+                paymentToken.balanceOf(address(authorizer)),
+                "Authorizer should have received tokens after second mint"
+            );
+        }
     }
 }
