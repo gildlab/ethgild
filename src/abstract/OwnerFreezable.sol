@@ -5,6 +5,7 @@ pragma solidity ^0.8.25;
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 
+/// @dev "rain.storage.owner-freezable.1" with the erc7201 formula.
 bytes32 constant OWNER_FREEZABLE_V1_STORAGE_LOCATION =
     0x04485615b1da6633eec3daf54aadca2a89ef8b155744e223a046f4a6e38be700;
 
@@ -62,7 +63,6 @@ abstract contract OwnerFreezable is Ownable, IOwnerFreezableV1 {
     }
 
     function getStorage() private pure returns (OwnerFreezableV1Storage storage s) {
-        // bytes32 location = OWNER_FREEZABLE_V1_STORAGE_LOCATION;
         assembly {
             s.slot := OWNER_FREEZABLE_V1_STORAGE_LOCATION
         }
