@@ -27,14 +27,14 @@ contract ERC20PriceOracleReceiptVaultPreviewWithdrawTest is ERC20PriceOracleRece
         setVaultOraclePrice(oraclePrice);
 
         assets = bound(assets, 1, type(uint64).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         // Prank as Alice to grant role
         vm.startPrank(alice);
         ERC20PriceOracleReceiptVault vault = createVault(I_VAULT_ORACLE, shareName, shareSymbol);
 
         // Call withdraw function
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Up);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Ceil);
         uint256 shares = vault.previewWithdraw(assets, oraclePrice);
 
         assertEq(shares, expectedShares);

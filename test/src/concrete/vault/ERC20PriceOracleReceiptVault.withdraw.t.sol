@@ -15,6 +15,8 @@ import {IReceiptVaultV1} from "../../../../src/interface/IReceiptVaultV3.sol";
 import {SFLR_CONTRACT} from "rain.flare/lib/sflr/LibSceptreStakedFlare.sol";
 import {LibERC20PriceOracleReceiptVaultFork} from "../../../lib/LibERC20PriceOracleReceiptVaultFork.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
+import {IERC1155Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
+import {IERC20Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
 contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -30,7 +32,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         bytes memory data
     ) internal {
         uint256 initialBalanceOwner = receipt.balanceOf(owner, id);
-        uint256 shares = assets.fixedPointMul(id, Math.Rounding.Up);
+        uint256 shares = assets.fixedPointMul(id, Math.Rounding.Ceil);
 
         vm.expectEmit(true, true, true, true);
         emit IReceiptVaultV1.Withdraw(owner, receiver, owner, assets, shares, id, data);
@@ -95,7 +97,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 2, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -106,7 +108,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vault.deposit(assets, alice, oraclePrice, bytes(""));
         uint256 withdrawAssets =
-            assets.fixedPointMul(oraclePrice, Math.Rounding.Down).fixedPointDiv(oraclePrice, Math.Rounding.Down);
+            assets.fixedPointMul(oraclePrice, Math.Rounding.Floor).fixedPointDiv(oraclePrice, Math.Rounding.Floor);
         checkBalanceChange(vault, alice, alice, oraclePrice, withdrawAssets, receipt, bytes(""));
     }
 
@@ -130,7 +132,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -166,7 +168,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -210,7 +212,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -294,12 +296,18 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
                 vm.startPrank(alice);
 
                 // Alice attempts to burn Bob's receipt by ID, using herself as owner.
-                vm.expectRevert("ERC1155: burn amount exceeds balance");
+                vm.expectRevert(
+                    abi.encodeWithSelector(
+                        IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, bobPrice, bobPrice
+                    )
+                );
                 uint256 aliceSharesWithdraw0 = vault.withdraw(1e18, alice, alice, bobPrice, bytes(""));
                 assertEqUint(aliceSharesWithdraw0, 0);
 
                 // Alice attempts to burn Bob's receipt by ID, using Bob as owner.
-                vm.expectRevert("ERC20: insufficient allowance");
+                vm.expectRevert(
+                    abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, alice, 0, bobPrice)
+                );
                 uint256 aliceSharesWithdraw1 = vault.withdraw(1e18, alice, bob, bobPrice, bytes(""));
                 assertEqUint(aliceSharesWithdraw1, 0);
 
@@ -337,7 +345,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         vm.startPrank(bob);
         // Bob cannot burn Alice's receipt.
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, bob, 0, alicePrice));
         vault.withdraw(1e18, bob, alice, alicePrice, bytes(""));
 
         uint256 maxWithdrawBob = vault.maxWithdraw(bob, alicePrice);
@@ -360,7 +368,14 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.startPrank(bob);
 
         // Bob cannot withdraw any more under alice price.
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        {
+            uint256 bobBalance = vault.receipt().balanceOf(bob, alicePrice);
+            bytes memory err = abi.encodeWithSelector(
+                IERC1155Errors.ERC1155InsufficientBalance.selector, bob, bobBalance, alicePrice, alicePrice
+            );
+            vm.expectRevert(err);
+        }
+
         vault.withdraw(1e18, bob, bob, alicePrice, bytes(""));
 
         vm.stopPrank();
@@ -393,7 +408,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         ReceiptContract receipt = getReceipt();
 
         assets = bound(assets, 1, type(uint128).max - 1);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
 
         vm.mockCall(
             address(I_ASSET),
@@ -426,7 +441,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         // Call withdraw function
         vault.withdraw(shareBalance, alice, alice, rate, hex"00");
 
-        uint256 shares = shareBalance.fixedPointMul(rate, Math.Rounding.Up);
+        uint256 shares = shareBalance.fixedPointMul(rate, Math.Rounding.Ceil);
         uint256 shareBalanceAft = vault.balanceOf(alice);
 
         assertEqUint(shareBalanceAft, shareBalance - shares);
@@ -475,7 +490,7 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vm.stopPrank();
 
         // Assert receipt balance and vault state after first deposit
-        uint256 expectedSharesOne = (aliceDeposit / 2).fixedPointMul(priceOne, Math.Rounding.Down);
+        uint256 expectedSharesOne = (aliceDeposit / 2).fixedPointMul(priceOne, Math.Rounding.Floor);
         assertEq(vault.balanceOf(alice), expectedSharesOne);
         assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
 
@@ -495,13 +510,13 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
         vault.deposit(aliceDeposit / 2, alice, priceTwo, bytes(""));
         vm.stopPrank();
 
-        uint256 expectedSharesTwo = (aliceDeposit / 2).fixedPointMul(priceTwo, Math.Rounding.Down);
+        uint256 expectedSharesTwo = (aliceDeposit / 2).fixedPointMul(priceTwo, Math.Rounding.Floor);
         assertEq(vault.balanceOf(alice), expectedSharesOne + expectedSharesTwo);
         assertEq(receipt.balanceOf(alice, priceOne), expectedSharesOne);
         assertEq(receipt.balanceOf(alice, priceTwo), expectedSharesTwo);
 
         // Mint additional shares at priceTwo
-        uint256 assetsRequired = aliceDeposit.fixedPointDiv(priceTwo, Math.Rounding.Up);
+        uint256 assetsRequired = aliceDeposit.fixedPointDiv(priceTwo, Math.Rounding.Ceil);
         vm.startPrank(alice);
         vm.mockCall(
             address(I_ASSET),
@@ -522,20 +537,28 @@ contract ERC20PriceOracleReceiptVaultWithdrawTest is ERC20PriceOracleReceiptVaul
 
         // Ensure burns cannot occur at the new oracle price
         vm.startPrank(alice);
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, priceThree, priceThree)
+        );
         vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
 
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, 1e18, priceThree)
+        );
         vault.redeem(1e18, alice, alice, priceThree, bytes(""));
         vm.stopPrank();
 
         setVaultOraclePrice(priceThree);
 
         vm.startPrank(alice);
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, priceThree, priceThree)
+        );
         vault.withdraw(1e18, alice, alice, priceThree, bytes(""));
 
-        vm.expectRevert("ERC1155: burn amount exceeds balance");
+        vm.expectRevert(
+            abi.encodeWithSelector(IERC1155Errors.ERC1155InsufficientBalance.selector, alice, 0, 1e18, priceThree)
+        );
         vault.redeem(1e18, alice, alice, priceThree, bytes(""));
         vm.stopPrank();
 

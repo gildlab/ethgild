@@ -11,10 +11,9 @@ import {
     ICLONEABLE_V2_SUCCESS,
     ReceiptVaultConstructionConfigV2
 } from "../../abstract/ReceiptVault.sol";
-import {MathUpgradeable as Math} from "openzeppelin-contracts-upgradeable/contracts/utils/math/MathUpgradeable.sol";
+import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
-import {IERC165Upgradeable as IERC165} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/IERC165Upgradeable.sol";
+import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
 
 import {ZeroInitialAdmin} from "../authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {OwnerFreezable} from "../../abstract/OwnerFreezable.sol";
@@ -597,8 +596,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable
 
     /// Apply standard transfer restrictions to share transfers.
     /// @inheritdoc ReceiptVault
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
-        super._beforeTokenTransfer(from, to, amount);
+    function _update(address from, address to, uint256 amount) internal virtual override {
         ownerFreezeCheckTransaction(from, to);
         sAuthorizer.authorize(
             _msgSender(),
@@ -612,6 +610,7 @@ contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable
                 })
             )
         );
+        super._update(from, to, amount);
     }
 
     /// Confiscators can confiscate ERC20 vault shares from `confiscatee`.

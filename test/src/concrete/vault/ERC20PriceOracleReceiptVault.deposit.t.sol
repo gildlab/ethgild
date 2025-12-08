@@ -29,7 +29,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         bytes memory receiptInformation,
         bytes memory err
     ) internal {
-        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+        uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
         setVaultOraclePrice(oraclePrice);
 
         vm.startPrank(owner);
@@ -229,7 +229,7 @@ contract ERC20PriceOracleReceiptVaultDepositTest is ERC20PriceOracleReceiptVault
         oraclePrice = bound(oraclePrice, 0.01e18, 100e18);
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
         assets = bound(assets, 1, type(uint128).max);
-        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Down) > 0);
+        vm.assume(assets.fixedPointMul(oraclePrice, Math.Rounding.Floor) > 0);
         checkDeposit(
             createVault(I_VAULT_ORACLE, shareName, shareSymbol),
             ALICE,

@@ -7,6 +7,7 @@ import {TestReceiptManager, UnauthorizedTransfer} from "test/concrete/TestReceip
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {ReceiptFactoryTest} from "test/abstract/ReceiptFactoryTest.sol";
 import {OnlyManager} from "../../../../src/error/ErrReceipt.sol";
+import {IERC1155Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 
 contract ReceiptTest is ReceiptFactoryTest {
     function testInitialize() public {
@@ -382,7 +383,7 @@ contract ReceiptTest is ReceiptFactoryTest {
 
         // Expect revert on transfer to zero address
         testManager.setTo(address(0));
-        vm.expectRevert("ERC1155: transfer to the zero address");
+        vm.expectRevert(abi.encodeWithSelector(IERC1155Errors.ERC1155InvalidReceiver.selector, address(0)));
         receipt.safeTransferFrom(alice, address(0), tokenId, amount, "");
 
         testManager.setFrom(alice);

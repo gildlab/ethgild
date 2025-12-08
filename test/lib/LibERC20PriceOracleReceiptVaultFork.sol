@@ -39,7 +39,7 @@ library LibERC20PriceOracleReceiptVaultFork {
     function getRate() internal returns (uint256) {
         uint256 usdPerFlr = LibFtsoV2LTS.ftsoV2LTSGetFeed(FLR_USD_FEED_ID, 60);
         uint256 sflrPerFlr = LibSceptreStakedFlare.getSFLRPerFLR18();
-        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Up);
+        uint256 rate = usdPerFlr.fixedPointDiv(sflrPerFlr, Math.Rounding.Ceil);
 
         return rate;
     }

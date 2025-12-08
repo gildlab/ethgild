@@ -10,7 +10,7 @@ import {
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstants.sol";
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 /// @dev The default symbol for the reference asset.
 string constant DEFAULT_REFERENCE_ASSET_SYMBOL = "USD";
@@ -66,7 +66,7 @@ contract ERC20PriceOracleReceipt is Receipt {
                 _vaultShareSymbol(),
                 " to redeem ",
                 LibFixedPointDecimalFormat.fixedPointToDecimalString(
-                    LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+                    LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
                 ),
                 " of ",
                 _vaultAssetSymbol(),

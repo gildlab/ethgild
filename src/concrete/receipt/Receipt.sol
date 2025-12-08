@@ -10,10 +10,9 @@ import {IReceiptVaultV3} from "../../interface/IReceiptVaultV3.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
 import {ERC1155Upgradeable as ERC1155} from
     "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
-import {IERC20MetadataUpgradeable as IERC20Metadata} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import {Base64Upgradeable as Base64} from "openzeppelin-contracts-upgradeable/contracts/utils/Base64Upgradeable.sol";
-import {StringsUpgradeable as Strings} from "openzeppelin-contracts-upgradeable/contracts/utils/StringsUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
+import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
@@ -65,10 +64,10 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
         _;
         _withSenderAfter();
     }
+
     /// Sets the sender to `sender`. Dedicated function to avoid code bloat from
     /// using a modifier directly.
     /// @param sender The address to set as the sender.
-
     function _withSenderBefore(address sender) internal {
         sSender = sender;
     }
@@ -190,16 +189,14 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
     /// Checks with the manager before authorizing transfer IN ADDITION to
     /// `super` inherited checks.
     /// @inheritdoc ERC1155
-    function _beforeTokenTransfer(
-        address operator,
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal virtual override {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        sManager.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
+    function _update(address from, address to, uint256[] memory ids, uint256[] memory amounts)
+        internal
+        virtual
+        override
+    {
+        // _msgSender = operator in OZ 5.
+        sManager.authorizeReceiptTransfer3(_msgSender(), from, to, ids, amounts);
+        super._update(from, to, ids, amounts);
     }
 
     /// Emits `ReceiptInformation` if there is any data.

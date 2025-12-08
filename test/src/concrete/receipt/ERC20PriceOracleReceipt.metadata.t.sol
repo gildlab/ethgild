@@ -14,8 +14,7 @@ import {FIXED_POINT_ONE} from "rain.math.fixedpoint/lib/FixedPointDecimalConstan
 import {ZeroReceiptId} from "src/error/ErrReceipt.sol";
 import {LibConformString} from "rain.string/lib/mut/LibConformString.sol";
 import {CMASK_QUOTATION_MARK, CMASK_PRINTABLE, CMASK_BACKSLASH} from "rain.string/lib/parse/LibParseCMask.sol";
-import {IERC20MetadataUpgradeable as IERC20Metadata} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// This contract is used to test the metadata of the `Receipt` contract.
 /// As all the overridden functions are internal, we need to create a new
@@ -110,7 +109,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         Metadata memory metadataJson = decodeMetadataURI(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
-            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
         );
         assertEq(
             metadataJson.description,
@@ -182,7 +181,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         Metadata memory metadata = decodeMetadataURI(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
-            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
         );
 
         string memory redeemUrlPhrase = bytes(redeemUrl).length > 0 ? string.concat(" Redeem at ", redeemUrl, ".") : "";
@@ -255,7 +254,7 @@ contract ERC20PriceOracleReceiptMetadataTest is ReceiptFactoryTest {
         MetadataWithImage memory metadata = decodeMetadataURIWithImage(uri);
 
         string memory idInvFormatted = LibFixedPointDecimalFormat.fixedPointToDecimalString(
-            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Down)
+            LibFixedPointDecimalArithmeticOpenZeppelin.fixedPointDiv(FIXED_POINT_ONE, id, Math.Rounding.Floor)
         );
 
         assertEq(metadata.decimals, decimals);

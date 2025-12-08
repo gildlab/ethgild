@@ -14,8 +14,7 @@ import {
     ZeroMaxSharesSupply
 } from "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
-import {IERC20MetadataUpgradeable as IERC20Metadata} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
+import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ICloneableV2} from "rain.factory/interface/ICloneableV2.sol";
 import {IAuthorizeV1} from "src/interface/IAuthorizeV1.sol";
 import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC165.sol";
@@ -34,13 +33,14 @@ import {
     CERTIFY_ADMIN
 } from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
+import {Initializable} from "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1ConstructTest is Test {
     function testOffchainAssetReceiptVaultPaymentMintAuthorizerV1Construct() external {
         OffchainAssetReceiptVaultPaymentMintAuthorizerV1 authorizer =
             new OffchainAssetReceiptVaultPaymentMintAuthorizerV1();
 
-        vm.expectRevert("Initializable: contract is already initialized");
+        vm.expectRevert(abi.encodeWithSelector(Initializable.InvalidInitialization.selector));
         authorizer.initialize(
             abi.encode(
                 OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config({

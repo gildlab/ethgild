@@ -32,7 +32,7 @@ contract ERC20PriceOracleReceiptVaultMaxRedeemTest is ERC20PriceOracleReceiptVau
         minShareRatio = bound(minShareRatio, 0, oraclePrice);
 
         {
-            uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Down);
+            uint256 expectedShares = assets.fixedPointMul(oraclePrice, Math.Rounding.Floor);
             vm.assume(expectedShares > 0);
         }
         vm.startPrank(alice);
