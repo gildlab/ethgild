@@ -32,6 +32,12 @@ import {ERC165Upgradeable as ERC165} from
     "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
 import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+/// @dev String ID for the ReceiptVault storage location v1.
+string constant RECEIPT_VAULT_V1_STORAGE_ID = "rain.storage.receipt-vault.1";
+
+/// @dev "rain.storage.receipt-vault.1" with the erc7201 formula.
+bytes32 constant RECEIPT_VAULT_V1_STORAGE_LOCATION = 0x04485615b1da6633eec3daf54aadca2a89ef8b155744e223a046f4a6e38be700;
+
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
 enum ShareAction {
@@ -108,11 +114,11 @@ struct ReceiptVaultConfig {
 /// free market layer.
 abstract contract ReceiptVault is
     IReceiptManagerV2,
+    IReceiptVaultV3,
+    ICloneableV2,
     Multicall,
     ReentrancyGuard,
     ERC20,
-    IReceiptVaultV3,
-    ICloneableV2,
     ERC165
 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
@@ -123,11 +129,21 @@ abstract contract ReceiptVault is
     //slither-disable-next-line naming-convention
     IReceiptV3 internal immutable I_RECEIPT_IMPLEMENTATION;
 
-    /// Underlying ERC4626 asset.
-    IERC20 internal sAsset;
-    /// ERC1155 Receipt owned by this receipt vault for the purpose of tracking
-    /// mints and enforcing integrity of subsequent burns.
-    IReceiptV3 internal sReceipt;
+    /// @param asset Underlying ERC4626 asset.
+    /// @param receipt ERC1155 Receipt owned by this receipt vault for the
+    /// purpose of tracking mints and enforcing integrity of subsequent burns.
+    /// @custom:storage-location erc7201:rain.storage.receipt-vault.1
+    struct ReceiptVaultV17201Storage {
+        IERC20 asset;
+        IReceiptV3 receipt;
+    }
+
+    /// @dev Accessor to the receipt vault storage.
+    function getStorageReceiptVault() private pure returns (ReceiptVaultV17201Storage storage s) {
+        assembly ("memory-safe") {
+            s.slot := RECEIPT_VAULT_V1_STORAGE_LOCATION
+        }
+    }
 
     /// `ReceiptVault` is intended to be cloned and initialized by a
     /// `ReceiptVaultFactory` so is an implementation contract that can't itself
@@ -153,14 +169,16 @@ abstract contract ReceiptVault is
     function __ReceiptVault_init(VaultConfig memory config) internal virtual {
         __Multicall_init();
         __ERC20_init(config.name, config.symbol);
-        sAsset = IERC20(config.asset);
 
         // Slither false positive here due to it being impossible to set the
         // receipt before it has been deployed.
         // slither-disable-next-line reentrancy-benign
         IReceiptV3 managedReceipt =
             IReceiptV3(I_FACTORY.clone(address(I_RECEIPT_IMPLEMENTATION), abi.encode(address(this))));
-        sReceipt = managedReceipt;
+
+        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
+        s.asset = IERC20(config.asset);
+        s.receipt = managedReceipt;
 
         // Sanity check here. Should always be true as we cloned the receipt
         // from the factory ourselves just above.
@@ -179,12 +197,14 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV1
     function asset() public view virtual returns (address) {
-        return address(sAsset);
+        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
+        return address(s.asset);
     }
 
     /// @inheritdoc IERC20Metadata
     function decimals() public view virtual override returns (uint8) {
-        address lAsset = address(sAsset);
+        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
+        address lAsset = address(s.asset);
         uint256 lAssetCodeSize;
         assembly ("memory-safe") {
             lAssetCodeSize := extcodesize(lAsset)
@@ -365,7 +385,8 @@ abstract contract ReceiptVault is
 
     /// @inheritdoc IReceiptVaultV3
     function receipt() public view virtual returns (IReceiptV3) {
-        return sReceipt;
+        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
+        return s.receipt;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
