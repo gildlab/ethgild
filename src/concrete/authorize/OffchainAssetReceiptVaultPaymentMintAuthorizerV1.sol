@@ -26,7 +26,7 @@ string constant OFFCHAIN_ASSET_RECEIPT_VAULT_PAYMENT_MINT_AUTHORIZER_V1_STORAGE_
 
 /// @dev "rain.storage.offchain-asset-receipt-vault-payment-mint-authorizer.1"
 bytes32 constant OFFCHAIN_ASSET_RECEIPT_VAULT_PAYMENT_MINT_AUTHORIZER_V1_STORAGE_LOCATION =
-    0x8d198d032a58038629cc32dfaad5ea74a8e78fabf390f3089701523102432600;
+    0x8fe11d932915502a5df2182ac99faeb149787a3fda1afc79ff772fdaf26b3200;
 
 /// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 /// initialized with a zero address for the receipt vault.
