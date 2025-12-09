@@ -37,6 +37,7 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
     /// @param sender The sender for the duration of the function call.
+    /// @custom:storage-location erc7201:rain.storage.receipt.1
     struct Receipt7201Storage {
         IReceiptManagerV2 manager;
         address sender;
