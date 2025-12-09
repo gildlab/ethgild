@@ -237,7 +237,7 @@ bytes32 constant WITHDRAW = keccak256("WITHDRAW");
 /// - `ERC20` shares in the vault that can be traded minted/burned to track a peg
 /// - `ERC4626` inspired vault interface (inherited from `ReceiptVault`)
 /// - Fine grained standard Open Zeppelin access control for all system roles
-contract OffchainAssetReceiptVault is ReceiptVault, IAuthorizeV1, OwnerFreezable {
+contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable {
     using Math for uint256;
 
     /// Contract has initialized.

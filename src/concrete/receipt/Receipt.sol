@@ -26,7 +26,7 @@ string constant RECEIPT_SYMBOL_SUFFIX = " RCPT";
 /// @notice The `IReceiptV3` for a `ReceiptVault`. Standard implementation allows
 /// receipt information to be emitted and mints/burns according to manager
 /// authorization.
-contract Receipt is IReceiptV3, ERC1155Upgradeable, ICloneableV2 {
+contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
     /// The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
