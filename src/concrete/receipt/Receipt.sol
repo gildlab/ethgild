@@ -17,7 +17,7 @@ import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 string constant RECEIPT_STORAGE_ID = "rain.storage.receipt.1";
 
 /// @dev "rain.storage.receipt.1"
-bytes32 constant RECEIPT_STORAGE_LOCATION = 0x6f2f4d3A9b1c8e4e4f3b2c6d5a78e9f0a1b2c3d4e5f60718293ab4c5d6e7f800;
+bytes32 constant RECEIPT_STORAGE_LOCATION = 0xe5444a702a2f437387f4eb075af275e349f1dba9a68923d27352f035d01dc200;
 
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
