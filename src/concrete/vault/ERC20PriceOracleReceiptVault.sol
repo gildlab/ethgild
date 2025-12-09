@@ -12,6 +12,13 @@ import {
 } from "../../abstract/ReceiptVault.sol";
 import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 
+/// @dev String ID for the ERC20PriceOracleReceiptVault storage location v1.
+string constant ERC20_PRICE_ORACLE_RECEIPT_VAULT_STORAGE_ID = "rain.storage.erc20-price-oracle-receipt-vault.1";
+
+/// @dev "rain.storage.erc20-price-oracle-receipt-vault.1"
+bytes32 constant ERC20_PRICE_ORACLE_RECEIPT_VAULT_STORAGE_LOCATION =
+    0x2c9a4f39bd2ddc349dc9f5c9e14a1013643d88625d35a2c983590afa580ee000;
+
 /// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
 /// receipt. Typically the receipt will be deployed and manager set atomically
 /// by a factory to build the full config.
@@ -87,15 +94,33 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// @param config All construction config.
     event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
 
-    /// The price oracle used for all minting calculations.
-    IPriceOracleV2 public priceOracle;
+    /// @param priceOracle The price oracle used for all minting calculations.
+    /// @custom:storage-location erc7201:rain.storage.erc20-price-oracle-receipt-vault.1
+    //forge-lint: disable-next-line(pascal-case-struct)
+    struct ERC20PriceOracleReceiptVault7201Storage {
+        IPriceOracleV2 priceOracle;
+    }
+
+    /// @dev Accessor for ERC20PriceOracleReceiptVault storage.
+    function getStorageERC20PriceOracleReceiptVault()
+        private
+        pure
+        returns (ERC20PriceOracleReceiptVault7201Storage storage s)
+    {
+        assembly ("memory-safe") {
+            s.slot := ERC20_PRICE_ORACLE_RECEIPT_VAULT_STORAGE_LOCATION
+        }
+    }
 
     constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
 
     /// Initialization of the underlying receipt vault and price oracle.
     function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
         ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
-        priceOracle = IPriceOracleV2(config.priceOracle);
+
+        ERC20PriceOracleReceiptVault7201Storage storage s = getStorageERC20PriceOracleReceiptVault();
+
+        s.priceOracle = IPriceOracleV2(config.priceOracle);
 
         __ReceiptVault_init(config.vaultConfig);
 
@@ -118,13 +143,15 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// holders of receipts with amounts of the same ID.
     /// @inheritdoc ReceiptVault
     function _nextId() internal virtual override returns (uint256) {
+        ERC20PriceOracleReceiptVault7201Storage storage s = getStorageERC20PriceOracleReceiptVault();
+
         // The oracle CAN error so we wrap in a try block to meet spec
         // requirement that calls MUST NOT revert.
         // This contract is never intended to hold gas, it's only here to pay the
         // oracles that might need to be paid. The contract's assets are always
         // ERC20 tokens. This means the slither detector here is a false positive.
         //slither-disable-next-line arbitrary-send-eth
-        try priceOracle.price{value: address(this).balance}()
+        try s.priceOracle.price{value: address(this).balance}()
         // slither puts false positives on `try/catch/returns`.
         // https://github.com/crytic/slither/issues/511
         //slither-disable-next-line
