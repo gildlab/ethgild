@@ -201,6 +201,12 @@ abstract contract ReceiptVault is
         return address(s.asset);
     }
 
+    /// @inheritdoc IReceiptVaultV3
+    function receipt() public view virtual returns (IReceiptV3) {
+        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
+        return s.receipt;
+    }
+
     /// @inheritdoc IERC20Metadata
     function decimals() public view virtual override returns (uint8) {
         ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
@@ -381,12 +387,6 @@ abstract contract ReceiptVault is
             // Assume that owner and receiver are the sender for a preview
             _shareRatio(_msgSender(), _msgSender(), id, ShareAction.Burn)
         );
-    }
-
-    /// @inheritdoc IReceiptVaultV3
-    function receipt() public view virtual returns (IReceiptV3) {
-        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
-        return s.receipt;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
