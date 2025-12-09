@@ -140,6 +140,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
     /// in total globally.
     /// @param verify The verify contract used to KYC the owner of the payment
     /// token that is buying the tokens.
+    /// @custom:storage-location erc7201:rain.storage.offchain-asset-receipt-vault-payment-mint-authorizer.1
     struct OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage {
         address receiptVault;
         address paymentToken;

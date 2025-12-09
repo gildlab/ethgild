@@ -13,6 +13,12 @@ import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/exten
 import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
 import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
 
+/// @dev String ID for the Receipt storage location v1.
+string constant RECEIPT_STORAGE_ID = "rain.storage.receipt.1";
+
+/// @dev "rain.storage.receipt.1"
+bytes32 constant RECEIPT_STORAGE_LOCATION = 0x6f2f4d3A9b1c8e4e4f3b2c6d5a78e9f0a1b2c3d4e5f60718293ab4c5d6e7f800;
+
 /// @dev The prefix for data URIs as base64 encoded JSON.
 string constant DATA_URI_BASE64_PREFIX = "data:application/json;base64,";
 
@@ -27,12 +33,21 @@ string constant RECEIPT_SYMBOL_SUFFIX = " RCPT";
 /// receipt information to be emitted and mints/burns according to manager
 /// authorization.
 contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
-    /// The manager of the `Receipt` contract.
+    /// @param manager The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
-    IReceiptManagerV2 internal sManager;
+    /// @param sender The sender for the duration of the function call.
+    struct Receipt7201Storage {
+        IReceiptManagerV2 manager;
+        address sender;
+    }
 
-    address private sSender = address(0);
+    /// @dev Accessor for receipt storage.
+    function getStorageReceipt() private pure returns (Receipt7201Storage storage s) {
+        assembly {
+            s.slot := RECEIPT_STORAGE_LOCATION
+        }
+    }
 
     /// Disables initializers so that the clonable implementation cannot be
     /// initialized and used directly outside a factory deployment.
@@ -49,7 +64,8 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
     /// Dedicated function to avoid code bloat from using a modifier directly.
 
     function _onlyManager() internal view {
-        if (_msgSender() != address(sManager)) {
+        Receipt7201Storage storage s = getStorageReceipt();
+        if (_msgSender() != address(s.manager)) {
             revert OnlyManager();
         }
     }
@@ -68,18 +84,21 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
     /// using a modifier directly.
     /// @param sender The address to set as the sender.
     function _withSenderBefore(address sender) internal {
-        sSender = sender;
+        Receipt7201Storage storage s = getStorageReceipt();
+        s.sender = sender;
     }
     /// Resets the sender to address(0). Dedicated function to avoid code bloat
     /// from using a modifier directly.
 
     function _withSenderAfter() internal {
-        sSender = address(0);
+        Receipt7201Storage storage s = getStorageReceipt();
+        s.sender = address(0);
     }
 
     /// Overrides `_msgSender` to allow `withSender` modifier to set the sender.
     function _msgSender() internal view virtual override returns (address) {
-        address sender = sSender;
+        Receipt7201Storage storage s = getStorageReceipt();
+        address sender = s.sender;
         return sender == address(0) ? msg.sender : sender;
     }
 
@@ -91,8 +110,10 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
         // `ERC1155` with an empty string.
         __ERC1155_init("");
 
+        Receipt7201Storage storage s = getStorageReceipt();
+
         address receiptManager = abi.decode(data, (address));
-        sManager = IReceiptManagerV2(receiptManager);
+        s.manager = IReceiptManagerV2(receiptManager);
 
         return ICLONEABLE_V2_SUCCESS;
     }
@@ -131,24 +152,28 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
     /// this `Receipt`. Can be overridden if the manager is not going to be
     /// a `ReceiptVault`.
     function _vaultShareSymbol() internal view virtual returns (string memory) {
-        return IERC20Metadata(payable(address(sManager))).symbol();
+        Receipt7201Storage storage s = getStorageReceipt();
+        return IERC20Metadata(payable(address(s.manager))).symbol();
     }
 
     /// Provides the symbol of the ERC20 asset token that the `ReceiptVault`
     /// managing this `Receipt` is accepting for mints. Can be overridden if the
     /// manager is not going to be a `ReceiptVault`.
     function _vaultAssetSymbol() internal view virtual returns (string memory) {
-        return IERC20Metadata(IReceiptVaultV3(payable(address(sManager))).asset()).symbol();
+        Receipt7201Storage storage s = getStorageReceipt();
+        return IERC20Metadata(IReceiptVaultV3(payable(address(s.manager))).asset()).symbol();
     }
 
     //slither-disable-next-line dead-code
     function _vaultDecimals() internal view virtual returns (uint8) {
-        return IERC20Metadata(payable(address(sManager))).decimals();
+        Receipt7201Storage storage s = getStorageReceipt();
+        return IERC20Metadata(payable(address(s.manager))).decimals();
     }
 
     /// @inheritdoc IReceiptV3
     function manager() external view virtual returns (address) {
-        return address(sManager);
+        Receipt7201Storage storage s = getStorageReceipt();
+        return address(s.manager);
     }
 
     /// @inheritdoc IReceiptV3
@@ -193,8 +218,9 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
         virtual
         override
     {
+        Receipt7201Storage storage s = getStorageReceipt();
         // _msgSender = operator in OZ 5.
-        sManager.authorizeReceiptTransfer3(_msgSender(), from, to, ids, amounts);
+        s.manager.authorizeReceiptTransfer3(_msgSender(), from, to, ids, amounts);
         super._update(from, to, ids, amounts);
     }
 
