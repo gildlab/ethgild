@@ -8,8 +8,7 @@ import {IReceiptManagerV2} from "../../interface/IReceiptManagerV2.sol";
 import {IReceiptV3} from "../../interface/IReceiptV3.sol";
 import {IReceiptVaultV3} from "../../interface/IReceiptVaultV3.sol";
 import {OnlyManager} from "../../error/ErrReceipt.sol";
-import {ERC1155Upgradeable as ERC1155} from
-    "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
+import {ERC1155Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC1155/ERC1155Upgradeable.sol";
 import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Base64} from "openzeppelin-contracts/contracts/utils/Base64.sol";
 import {Strings} from "openzeppelin-contracts/contracts/utils/Strings.sol";
@@ -27,7 +26,7 @@ string constant RECEIPT_SYMBOL_SUFFIX = " RCPT";
 /// @notice The `IReceiptV3` for a `ReceiptVault`. Standard implementation allows
 /// receipt information to be emitted and mints/burns according to manager
 /// authorization.
-contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
+contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
     /// The manager of the `Receipt` contract.
     /// Set during `initialize` and cannot be changed.
     /// Intended to be a `ReceiptVault` contract.
@@ -98,7 +97,7 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
         return ICLONEABLE_V2_SUCCESS;
     }
 
-    /// @inheritdoc ERC1155
+    /// @inheritdoc ERC1155Upgradeable
     function uri(uint256) public view virtual override returns (string memory) {
         bytes memory json = bytes(
             string.concat(
@@ -188,7 +187,7 @@ contract Receipt is IReceiptV3, ERC1155, ICloneableV2 {
 
     /// Checks with the manager before authorizing transfer IN ADDITION to
     /// `super` inherited checks.
-    /// @inheritdoc ERC1155
+    /// @inheritdoc ERC1155Upgradeable
     function _update(address from, address to, uint256[] memory ids, uint256[] memory amounts)
         internal
         virtual

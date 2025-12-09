@@ -8,7 +8,7 @@ import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/IClone
 import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {DEPOSIT, DepositStateChange} from "../vault/OffchainAssetReceiptVault.sol";
-import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
@@ -95,7 +95,10 @@ struct OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config {
 ///
 /// At any time anon can call `sendPaymentToOwner` to transfer all the payment
 /// tokens held by this contract to the owner of the authorizer.
-contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is OffchainAssetReceiptVaultAuthorizerV1, Ownable {
+contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
+    OffchainAssetReceiptVaultAuthorizerV1,
+    OwnableUpgradeable
+{
     using SafeERC20 for IERC20;
 
     /// @dev The address of the receipt vault that this authorizer is for.

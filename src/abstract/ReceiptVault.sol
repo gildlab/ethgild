@@ -2,12 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {ERC20Upgradeable as ERC20} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
+import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 import {ReentrancyGuard} from "openzeppelin-contracts/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
-import {MulticallUpgradeable as Multicall} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
+import {MulticallUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/MulticallUpgradeable.sol";
 import {IReceiptVaultV3, IReceiptVaultV1, IReceiptV3} from "../interface/IReceiptVaultV3.sol";
 import {IReceiptManagerV2} from "../interface/IReceiptManagerV2.sol";
 import {
@@ -28,8 +27,7 @@ import {
     WrongManager
 } from "../error/ErrReceiptVault.sol";
 import {UnmanagedReceiptTransfer} from "../interface/IReceiptManagerV2.sol";
-import {ERC165Upgradeable as ERC165} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
+import {ERC165Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/utils/introspection/ERC165Upgradeable.sol";
 import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @dev String ID for the ReceiptVault storage location v1.
@@ -116,10 +114,10 @@ abstract contract ReceiptVault is
     IReceiptManagerV2,
     IReceiptVaultV3,
     ICloneableV2,
-    Multicall,
+    MulticallUpgradeable,
     ReentrancyGuard,
-    ERC20,
-    ERC165
+    ERC20Upgradeable,
+    ERC165Upgradeable
 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
@@ -189,7 +187,7 @@ abstract contract ReceiptVault is
     }
     //slither-disable-end naming-convention
 
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IReceiptManagerV2).interfaceId || interfaceId == type(ICloneableV2).interfaceId
             || interfaceId == type(IReceiptVaultV3).interfaceId || super.supportsInterface(interfaceId);
@@ -199,6 +197,12 @@ abstract contract ReceiptVault is
     function asset() public view virtual returns (address) {
         ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
         return address(s.asset);
+    }
+
+    /// @inheritdoc IReceiptVaultV3
+    function receipt() public view virtual returns (IReceiptV3) {
+        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
+        return s.receipt;
     }
 
     /// @inheritdoc IERC20Metadata
@@ -381,12 +385,6 @@ abstract contract ReceiptVault is
             // Assume that owner and receiver are the sender for a preview
             _shareRatio(_msgSender(), _msgSender(), id, ShareAction.Burn)
         );
-    }
-
-    /// @inheritdoc IReceiptVaultV3
-    function receipt() public view virtual returns (IReceiptV3) {
-        ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
-        return s.receipt;
     }
 
     /// Similar to `receiptInformation` on the underlying receipt but for this
@@ -732,7 +730,7 @@ abstract contract ReceiptVault is
         _afterWithdraw(assets, receiver, owner, shares, id, receiptInformation);
     }
 
-    /// @inheritdoc ERC20
+    /// @inheritdoc ERC20Upgradeable
     function _update(address from, address to, uint256 amount) internal virtual override {
         super._update(from, to, amount);
     }

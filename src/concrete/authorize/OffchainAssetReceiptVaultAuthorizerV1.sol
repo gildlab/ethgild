@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
 
-import {AccessControlUpgradeable as AccessControl} from
+import {AccessControlUpgradeable} from
     "openzeppelin-contracts-upgradeable/contracts/access/AccessControlUpgradeable.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
@@ -50,7 +50,7 @@ struct OffchainAssetReceiptVaultAuthorizerV1Config {
 /// @title OffchainAssetReceiptVaultAuthorizorV1
 /// Implements the IAuthorizeV1 interface and provides a simple role based
 /// access control for the OffchainAssetReceiptVault.
-contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, AccessControl {
+contract OffchainAssetReceiptVaultAuthorizerV1 is IAuthorizeV1, ICloneableV2, AccessControlUpgradeable {
     constructor() {
         _disableInitializers();
     }
