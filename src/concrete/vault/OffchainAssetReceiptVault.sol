@@ -30,6 +30,13 @@ error ZeroConfiscateAmount();
 /// Thrown when the authorizer is incompatible according to `IERC165` when set.
 error IncompatibleAuthorizer();
 
+/// @dev String ID for the OffchainAssetReceiptVault storage location v1.
+string constant OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_ID = "rain.storage.offchain-asset-receipt-vault.1";
+
+/// @dev "rain.storage.offchain-asset-receipt-vault.1"
+bytes32 constant OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_LOCATION =
+    0xba9f160a0257aef2aa878e698d5363429ea67cc3c427f23f7cb9c3069b67bd00;
+
 /// All data required to configure an offchain asset vault except the receipt.
 /// Typically the factory should build a receipt contract and set management
 /// to the vault atomically during initialization so there is no opportunity for
@@ -276,16 +283,30 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         address sender, address confiscatee, uint256 id, uint256 targetAmount, uint256 confiscated, bytes justification
     );
 
-    /// The authorizer contract that is used to authorize actions in the vault.
-    IAuthorizeV1 internal sAuthorizer;
+    /// @param authorizer The authorizer contract that is used to authorize
+    /// actions in the vault.
+    /// @param highwaterId The largest issued id. The next id issued will be
+    /// larger than this.
+    /// @param certifiedUntil The system is certified until this timestamp. If
+    /// this is in the past then general transfers of shares and receipts will
+    /// fail until the system can be certified to a future time.
+    /// @custom:storage-location erc7201:rain.storage.offchain-asset-receipt-vault.1
+    struct OffchainAssetReceiptVault7201Storage {
+        IAuthorizeV1 authorizer;
+        uint256 highwaterId;
+        uint256 certifiedUntil;
+    }
 
-    /// The largest issued id. The next id issued will be larger than this.
-    uint256 internal sHighwaterId;
-
-    /// The system is certified until this timestamp. If this is in the past then
-    /// general transfers of shares and receipts will fail until the system can
-    /// be certified to a future time.
-    uint256 internal sCertifiedUntil;
+    /// @dev Accessor for OffchainAssetReceiptVault storage.
+    function getStorageOffchainAssetReceiptVault()
+        private
+        pure
+        returns (OffchainAssetReceiptVault7201Storage storage s)
+    {
+        assembly ("memory-safe") {
+            s.slot := OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_LOCATION
+        }
+    }
 
     constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
 
@@ -325,7 +346,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
 
     /// Returns the current highwater id.
     function highwaterId() external view returns (uint256) {
-        return sHighwaterId;
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        return s.highwaterId;
     }
 
     /// @inheritdoc IERC165
@@ -335,7 +357,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
 
     /// Returns the current authorizer contract.
     function authorizer() external view returns (IAuthorizeV1) {
-        return sAuthorizer;
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        return s.authorizer;
     }
 
     /// The vault initializes with the authorizer as itself. Every permission
@@ -355,7 +378,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         if (!IERC165(address(newAuthorizer)).supportsInterface(type(IAuthorizeV1).interfaceId)) {
             revert IncompatibleAuthorizer();
         }
-        sAuthorizer = newAuthorizer;
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer = newAuthorizer;
         emit AuthorizerSet(msg.sender, newAuthorizer);
     }
 
@@ -377,7 +401,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
     ) public virtual override {
         super.authorizeReceiptTransfer3(operator, from, to, ids, amounts);
         ownerFreezeCheckTransaction(from, to);
-        sAuthorizer.authorize(
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer.authorize(
             operator,
             TRANSFER_RECEIPT,
             abi.encode(
@@ -403,7 +428,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         bytes memory receiptInformation
     ) internal virtual override {
         (assets, receiver, shares, receiptInformation);
-        sHighwaterId = sHighwaterId.max(id);
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.highwaterId = s.highwaterId.max(id);
     }
 
     /// Authorize the deposit after the minting so that the authorizer can handle
@@ -418,7 +444,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         uint256 id,
         bytes memory receiptInformation
     ) internal virtual override {
-        sAuthorizer.authorize(
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer.authorize(
             _msgSender(),
             DEPOSIT,
             abi.encode(
@@ -444,7 +471,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         uint256 id,
         bytes memory receiptInformation
     ) internal virtual override {
-        sAuthorizer.authorize(
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer.authorize(
             _msgSender(),
             WITHDRAW,
             abi.encode(
@@ -473,7 +501,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
     /// the associated receipt information.
     /// @inheritdoc ReceiptVault
     function _nextId() internal view virtual override returns (uint256) {
-        return sHighwaterId + 1;
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        return s.highwaterId + 1;
     }
 
     /// Depositors can increase the deposited assets for the existing id of this
@@ -505,8 +534,9 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         external
         returns (uint256)
     {
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
         // Only allow redepositing for IDs that exist.
-        if (id > sHighwaterId) {
+        if (id > s.highwaterId) {
             revert InvalidId(id);
         }
 
@@ -570,9 +600,11 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         if (certifyUntil == 0) {
             revert ZeroCertifyUntil();
         }
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+
         CertifyStateChange memory certifyStateChange = CertifyStateChange({
-            oldCertifiedUntil: sCertifiedUntil,
-            newCertifiedUntil: sCertifiedUntil,
+            oldCertifiedUntil: s.certifiedUntil,
+            newCertifiedUntil: s.certifiedUntil,
             userCertifyUntil: certifyUntil,
             forceUntil: forceUntil,
             data: data
@@ -581,24 +613,27 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         // A certifier can set `forceUntil` to true to force a _decrease_ in
         // the `certifiedUntil` time, which is unusual but MAY need to be done
         // in the case of rectifying a prior mistake.
-        if (forceUntil || certifyUntil > sCertifiedUntil) {
-            sCertifiedUntil = certifyUntil;
+        if (forceUntil || certifyUntil > s.certifiedUntil) {
+            s.certifiedUntil = certifyUntil;
             certifyStateChange.newCertifiedUntil = certifyUntil;
         }
         emit Certify(_msgSender(), certifyUntil, forceUntil, data);
 
-        sAuthorizer.authorize(_msgSender(), CERTIFY, abi.encode(certifyStateChange));
+        s.authorizer.authorize(_msgSender(), CERTIFY, abi.encode(certifyStateChange));
     }
 
     function isCertificationExpired() public view returns (bool) {
-        return block.timestamp > sCertifiedUntil;
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        return block.timestamp > s.certifiedUntil;
     }
 
     /// Apply standard transfer restrictions to share transfers.
     /// @inheritdoc ReceiptVault
     function _update(address from, address to, uint256 amount) internal virtual override {
         ownerFreezeCheckTransaction(from, to);
-        sAuthorizer.authorize(
+
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer.authorize(
             _msgSender(),
             TRANSFER_SHARES,
             abi.encode(
@@ -660,7 +695,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
             _transfer(confiscatee, _msgSender(), actualAmount);
         }
 
-        sAuthorizer.authorize(
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer.authorize(
             _msgSender(),
             CONFISCATE_SHARES,
             abi.encode(
@@ -711,7 +747,8 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
             receipt().managerTransferFrom(_msgSender(), confiscatee, _msgSender(), id, actualAmount, "");
         }
 
-        sAuthorizer.authorize(
+        OffchainAssetReceiptVault7201Storage storage s = getStorageOffchainAssetReceiptVault();
+        s.authorizer.authorize(
             _msgSender(),
             CONFISCATE_RECEIPT,
             abi.encode(
