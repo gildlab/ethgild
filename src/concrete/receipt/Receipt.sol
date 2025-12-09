@@ -45,7 +45,7 @@ contract Receipt is IReceiptV3, ICloneableV2, ERC1155Upgradeable {
 
     /// @dev Accessor for receipt storage.
     function getStorageReceipt() private pure returns (Receipt7201Storage storage s) {
-        assembly {
+        assembly ("memory-safe") {
             s.slot := RECEIPT_STORAGE_LOCATION
         }
     }
