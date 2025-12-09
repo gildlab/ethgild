@@ -19,6 +19,15 @@ import {
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
 import {VerifyStatus, IVerifyV1, VERIFY_STATUS_APPROVED} from "rain.verify.interface/interface/IVerifyV1.sol";
 
+/// @dev String ID for the OffchainAssetReceiptVaultPaymentMintAuthorizerV1
+/// storage location v1.
+string constant OFFCHAIN_ASSET_RECEIPT_VAULT_PAYMENT_MINT_AUTHORIZER_V1_STORAGE_ID =
+    "rain.storage.offchain-asset-receipt-vault-payment-mint-authorizer.1";
+
+/// @dev "rain.storage.offchain-asset-receipt-vault-payment-mint-authorizer.1"
+bytes32 constant OFFCHAIN_ASSET_RECEIPT_VAULT_PAYMENT_MINT_AUTHORIZER_V1_STORAGE_LOCATION =
+    0x8d198d032a58038629cc32dfaad5ea74a8e78fabf390f3089701523102432600;
+
 /// @dev Thrown when the OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 /// initialized with a zero address for the receipt vault.
 error ZeroReceiptVault();
@@ -101,24 +110,6 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 {
     using SafeERC20 for IERC20;
 
-    /// @dev The address of the receipt vault that this authorizer is for.
-    /// Immutable after initialization.
-    address internal sReceiptVault;
-    /// @dev The address of the payment token that is used to pay for minting.
-    /// Immutable after initialization.
-    address internal sPaymentToken;
-    /// @dev The decimals of the payment token that is used to pay for minting.
-    /// Immutable after initialization.
-    /// If the payment token contract ever reports a different decimals value
-    /// than this value, the authorizer will revert all deposits.
-    uint8 internal sPaymentTokenDecimals;
-    /// @dev The maximum number of shares that can be minted in total globally.
-    /// Immutable after initialization.
-    uint256 internal sMaxSharesSupply;
-    /// @dev The verify contract used to KYC the owner of the payment token that
-    /// is buying the tokens.
-    IVerifyV1 internal sVerify;
-
     /// @dev Emitted when the authorizer is initialized.
     /// @param receiptVault The address of the receipt vault.
     /// @param verify The address of the verify contract used to KYC the owner of
@@ -138,6 +129,36 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
         uint8 paymentTokenDecimals,
         uint256 maxSharesSupply
     );
+
+    /// @param receiptVault The address of the receipt vault that this authorizer
+    /// is for.
+    /// @param paymentToken The address of the payment token that is used to pay
+    /// for minting.
+    /// @param paymentTokenDecimals The decimals of the payment token that is
+    /// used to pay for minting.
+    /// @param maxSharesSupply The maximum number of shares that can be minted
+    /// in total globally.
+    /// @param verify The verify contract used to KYC the owner of the payment
+    /// token that is buying the tokens.
+    struct OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage {
+        address receiptVault;
+        address paymentToken;
+        uint8 paymentTokenDecimals;
+        uint256 maxSharesSupply;
+        IVerifyV1 verify;
+    }
+
+    /// @dev Accessor for the offchain asset receipt vault payment mint
+    /// authorizer v1 storage.
+    function getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1()
+        private
+        pure
+        returns (OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s)
+    {
+        assembly ("memory-safe") {
+            s.slot := OFFCHAIN_ASSET_RECEIPT_VAULT_PAYMENT_MINT_AUTHORIZER_V1_STORAGE_LOCATION
+        }
+    }
 
     /// Constructor is used to disable initializers in the base contract
     /// so that this contract can only be initialized through the `initialize`
@@ -172,14 +193,17 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
             revert ZeroMaxSharesSupply();
         }
 
-        sReceiptVault = config.receiptVault;
-        sVerify = IVerifyV1(config.verify);
-        sPaymentToken = config.paymentToken;
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+
+        s.receiptVault = config.receiptVault;
+        s.verify = IVerifyV1(config.verify);
+        s.paymentToken = config.paymentToken;
         // TOFU pattern to snapshot token decimals at initialization, then
         // enforce they are always the same for all deposits.
         uint8 lPaymentTokenDecimals = IERC20Metadata(config.paymentToken).decimals();
-        sPaymentTokenDecimals = lPaymentTokenDecimals;
-        sMaxSharesSupply = config.maxSharesSupply;
+        s.paymentTokenDecimals = lPaymentTokenDecimals;
+        s.maxSharesSupply = config.maxSharesSupply;
 
         __Ownable_init(config.owner);
 
@@ -207,7 +231,9 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
 
     /// @inheritdoc IAuthorizeV1
     function authorize(address user, bytes32 permission, bytes memory data) public virtual override {
-        address lReceiptVault = sReceiptVault;
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        address lReceiptVault = s.receiptVault;
         // Ensure that the caller is the receipt vault to prevent any possible
         // malicious calls from untrusted sources.
         if (msg.sender != lReceiptVault) {
@@ -215,8 +241,8 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
         }
         if (permission == DEPOSIT) {
             DepositStateChange memory stateChange = abi.decode(data, (DepositStateChange));
-            address lPaymentToken = sPaymentToken;
-            uint256 lPaymentTokenDecimals = sPaymentTokenDecimals;
+            address lPaymentToken = s.paymentToken;
+            uint256 lPaymentTokenDecimals = s.paymentTokenDecimals;
             uint256 paymentAmount =
                 LibFixedPointDecimalScale.scaleN(stateChange.sharesMinted, lPaymentTokenDecimals, FLAG_ROUND_UP);
 
@@ -229,8 +255,8 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
             // Authorization happens after deposit so supply includes the newly
             // minted shares.
             uint256 newSharesSupply = IERC20(lReceiptVault).totalSupply();
-            if (newSharesSupply > sMaxSharesSupply) {
-                revert MaxSharesSupplyExceeded(sMaxSharesSupply, newSharesSupply);
+            if (newSharesSupply > s.maxSharesSupply) {
+                revert MaxSharesSupplyExceeded(s.maxSharesSupply, newSharesSupply);
             }
 
             // We check the payment amount being non-zero rather than the shares
@@ -256,7 +282,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
             // there is no KYC on transfers, there's nothing stopping the owner
             // from minting to themselves then transferring the shares to an
             // arbitrary address.
-            VerifyStatus verifyStatus = sVerify.accountStatusAtTime(stateChange.owner, block.timestamp);
+            VerifyStatus verifyStatus = s.verify.accountStatusAtTime(stateChange.owner, block.timestamp);
             if (VerifyStatus.unwrap(verifyStatus) != VerifyStatus.unwrap(VERIFY_STATUS_APPROVED)) {
                 revert Unauthorized(stateChange.owner, DEPOSIT, data);
             }
@@ -272,26 +298,36 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1 is
     /// Anon can call this function at any time to transfer all the payment
     /// tokens held by this contract to the owner of the authorizer.
     function sendPaymentToOwner() external {
-        IERC20(sPaymentToken).safeTransfer(owner(), IERC20(sPaymentToken).balanceOf(address(this)));
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        IERC20(s.paymentToken).safeTransfer(owner(), IERC20(s.paymentToken).balanceOf(address(this)));
     }
 
     /// Returns the address of the receipt vault that this authorizer is for.
     function receiptVault() external view returns (address) {
-        return sReceiptVault;
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        return s.receiptVault;
     }
 
     /// Returns the address of the payment token that is used to pay for minting.
     function paymentToken() external view returns (address) {
-        return sPaymentToken;
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        return s.paymentToken;
     }
 
     /// Returns the decimals of the payment token that is used to pay for minting.
     function paymentTokenDecimals() external view returns (uint8) {
-        return sPaymentTokenDecimals;
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        return s.paymentTokenDecimals;
     }
 
     /// Returns the maximum number of shares that can be minted in total.
     function maxSharesSupply() external view returns (uint256) {
-        return sMaxSharesSupply;
+        OffchainAssetReceiptVaultPaymentMintAuthorizerV17201Storage storage s =
+            getStorageOffchainAssetReceiptVaultPaymentMintAuthorizerV1();
+        return s.maxSharesSupply;
     }
 }
