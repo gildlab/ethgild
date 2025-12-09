@@ -36,7 +36,7 @@ import {IERC20Metadata} from "openzeppelin-contracts/contracts/token/ERC20/exten
 string constant RECEIPT_VAULT_V1_STORAGE_ID = "rain.storage.receipt-vault.1";
 
 /// @dev "rain.storage.receipt-vault.1" with the erc7201 formula.
-bytes32 constant RECEIPT_VAULT_V1_STORAGE_LOCATION = 0x04485615b1da6633eec3daf54aadca2a89ef8b155744e223a046f4a6e38be700;
+bytes32 constant RECEIPT_VAULT_V1_STORAGE_LOCATION = 0x8d198d032a58038629cc32dfaad5ea74a8e78fabf390f3089701523102432600;
 
 /// Represents the action being taken on shares, ostensibly for calculating a
 /// ratio.
