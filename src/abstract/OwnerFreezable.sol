@@ -5,7 +5,7 @@ pragma solidity ^0.8.25;
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {IOwnerFreezableV1, IERC5313} from "../interface/IOwnerFreezableV1.sol";
 
-/// @dev String ID for the OwnerFreezableV1 storage location.
+/// @dev String ID for the OwnerFreezableV1 storage location v1.
 string constant OWNER_FREEZABLE_V1_STORAGE_ID = "rain.storage.owner-freezable.1";
 
 /// @dev "rain.storage.owner-freezable.1" with the erc7201 formula.
@@ -65,8 +65,9 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
         mapping(address to => uint256 protectedUntil) alwaysAllowedTos;
     }
 
-    function getStorage() private pure returns (OwnerFreezableV17201Storage storage s) {
-        assembly {
+    /// @dev Accessor for the owner freezable storage.
+    function getStorageOwnerFreezable() private pure returns (OwnerFreezableV17201Storage storage s) {
+        assembly ("memory-safe") {
             s.slot := OWNER_FREEZABLE_V1_STORAGE_LOCATION
         }
     }
@@ -78,25 +79,25 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFrozenUntil() external view returns (uint256) {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
         return s.ownerFrozenUntil;
     }
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeAlwaysAllowedFrom(address from) external view returns (uint256) {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
         return s.alwaysAllowedFroms[from];
     }
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeAlwaysAllowedTo(address to) external view returns (uint256) {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
         return s.alwaysAllowedTos[to];
     }
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeUntil(uint256 freezeUntil) external onlyOwner {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
         // Freezing is additive so we can only increase the freeze time.
         // It is a no-op on the state if the new freeze time is less than the
         // current one.
@@ -118,7 +119,7 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
             revert OwnerFreezeAlwaysAllowedFromZero(from);
         }
 
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
 
         // Adding a `from` is additive so we can only increase the protected
         // time. It is a no-op on the state if the new protected time is less
@@ -134,7 +135,7 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeStopAlwaysAllowingFrom(address from) external onlyOwner {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
 
         // If the current time is after the protection for this `from` then
         // we can remove it. Otherwise we revert to respect the protection.
@@ -154,7 +155,7 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
             revert IOwnerFreezableV1.OwnerFreezeAlwaysAllowedToZero(to);
         }
 
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
 
         // Adding a `to` is additive so we can only increase the protected time.
         // It is a no-op on the state if the new protected time is less than the
@@ -170,7 +171,7 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
 
     /// @inheritdoc IOwnerFreezableV1
     function ownerFreezeStopAlwaysAllowingTo(address to) external onlyOwner {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
 
         // If the current time is after the protection for this `to` then
         // we can remove it. Otherwise we revert to respect the protection.
@@ -187,7 +188,7 @@ abstract contract OwnerFreezable is IOwnerFreezableV1, OwnableUpgradeable {
     /// @param from The address that tokens are being sent from.
     /// @param to The address that tokens are being sent to.
     function ownerFreezeCheckTransaction(address from, address to) internal view {
-        OwnerFreezableV17201Storage storage s = getStorage();
+        OwnerFreezableV17201Storage storage s = getStorageOwnerFreezable();
 
         // We either simply revert or no-op for this check.
         // Revert if the contract is frozen and neither the `from` nor `to` are
