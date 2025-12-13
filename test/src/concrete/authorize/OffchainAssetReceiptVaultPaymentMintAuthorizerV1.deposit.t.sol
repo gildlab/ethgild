@@ -18,8 +18,8 @@ import {Receipt as ReceiptContract} from "../../../../src/concrete/receipt/Recei
 import {OffchainAssetReceiptVault} from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {
     ReceiptVaultConstructionConfigV2,
-    OffchainAssetVaultConfigV2,
-    VaultConfig
+    ReceiptVaultConfigV2,
+    OffchainAssetReceiptVaultConfigV2
 } from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
@@ -85,9 +85,9 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
                 (new CloneFactory()).clone(
                     address(receiptVaultImplementation),
                     abi.encode(
-                        OffchainAssetVaultConfigV2({
+                        OffchainAssetReceiptVaultConfigV2({
                             initialAdmin: alice,
-                            vaultConfig: VaultConfig({asset: address(0), name: "Test Vault", symbol: "TVLT"})
+                            receiptVaultConfig: ReceiptVaultConfigV2({asset: address(0), name: "Test Vault", symbol: "TVLT"})
                         })
                     )
                 )
@@ -408,9 +408,9 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         vm.assume(alice.code.length == 0);
         vm.assume(uint160(alice) > type(uint160).max / 2);
 
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
+        OffchainAssetReceiptVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetReceiptVaultConfigV2({
             initialAdmin: bob,
-            vaultConfig: VaultConfig({asset: address(0), name: "foo", symbol: "bar"})
+            receiptVaultConfig: ReceiptVaultConfigV2({asset: address(0), name: "foo", symbol: "bar"})
         });
         // Use the factory to create the child contract
         OffchainAssetReceiptVault receiptVault = OffchainAssetReceiptVault(

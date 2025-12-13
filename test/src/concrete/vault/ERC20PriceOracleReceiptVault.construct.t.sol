@@ -4,7 +4,7 @@ pragma solidity =0.8.25;
 
 import {
     ERC20PriceOracleReceiptVault,
-    ERC20PriceOracleReceiptVaultConfig
+    ERC20PriceOracleReceiptVaultConfigV2
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
@@ -30,7 +30,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Find the OffchainAssetReceiptVaultInitialized event log
         address msgSender;
 
-        ERC20PriceOracleReceiptVaultConfig memory config;
+        ERC20PriceOracleReceiptVaultConfigV2 memory config;
 
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
@@ -41,7 +41,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
                     )
             ) {
                 // Decode the event data
-                (msgSender, config) = abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
+                (msgSender, config) = abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfigV2));
                 eventFound = true; // Set the flag to true since event log was found
                 break;
             }
@@ -52,13 +52,13 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assertEq(msgSender, address(I_FACTORY));
         assert(address(vault) != address(0));
 
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.name)));
-        assertEq(config.receiptVaultConfig.vaultConfig.name, shareName);
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.name)));
+        assertEq(config.receiptVaultConfig.name, shareName);
 
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.symbol)));
-        assertEq(config.receiptVaultConfig.vaultConfig.symbol, shareSymbol);
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(config.receiptVaultConfig.symbol)));
+        assertEq(config.receiptVaultConfig.symbol, shareSymbol);
 
-        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), address(I_ASSET));
+        assertEq(address(config.receiptVaultConfig.asset), address(I_ASSET));
 
         assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
         assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));

@@ -8,9 +8,8 @@ import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ReceiptVaultConstructionConfigV2,
-    ERC20PriceOracleReceiptVaultConfig
+    ERC20PriceOracleReceiptVaultConfigV2
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracleV2} from "../../src/interface/IPriceOracleV2.sol";
@@ -42,10 +41,18 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         internal
         returns (ERC20PriceOracleReceiptVault)
     {
-        ERC20PriceOracleReceiptVault vault = LibERC20PriceOracleReceiptVaultCreator.createVault(
-            I_FACTORY, I_IMPLEMENTATION, priceOracle, address(I_ASSET), name, symbol
+        return I_DEPLOYER.newERC20PriceOracleReceiptVault(
+            ERC20PriceOracleReceiptVaultConfigV2({
+                initialAdmin: address(this),
+                receiptVaultConfig: ReceiptVaultConfigV2({
+                    asset: address(I_ASSET),
+                    name: name,
+                    symbol: symbol,
+                    receipt: address(0)
+                }),
+                vaultPriceOracle: priceOracle
+            })
         );
-        return vault;
     }
 
     /// Get Receipt from event
@@ -56,10 +63,10 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         address receiptAddress = address(0);
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
-            if (logs[i].topics[0] == ERC20PriceOracleReceiptVault.ERC20PriceOracleReceiptVaultInitialized.selector) {
+            if (logs[i].topics[0] == ERC20PriceOracleReceiptVault.ERC20PriceOracleReceiptVaultInitializedV2.selector) {
                 // Decode the event data
-                (, ERC20PriceOracleReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
+                (, ERC20PriceOracleReceiptVaultConfigV2 memory config) =
+                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfigV2));
                 receiptAddress = config.receiptVaultConfig.receipt;
                 eventFound = true; // Set the flag to true since event log was found
                 break;
