@@ -294,8 +294,6 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         }
     }
 
-    constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
-
     /// Initializes the initial admin and the underlying `ReceiptVault`.
     /// The admin provided will be admin of all roles and can reassign and revoke
     /// this as appropriate according to standard Open Zeppelin access control

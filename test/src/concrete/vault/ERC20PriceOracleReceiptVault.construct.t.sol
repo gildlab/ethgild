@@ -52,13 +52,13 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         assertEq(msgSender, address(I_FACTORY));
         assert(address(vault) != address(0));
 
-        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.name)));
-        assertEq(config.receiptVaultConfig.vaultConfig.name, shareName);
+        assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.name)));
+        assertEq(config.receiptVaultConfig.name, shareName);
 
-        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(config.receiptVaultConfig.vaultConfig.symbol)));
-        assertEq(config.receiptVaultConfig.vaultConfig.symbol, shareSymbol);
+        assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(config.receiptVaultConfig.symbol)));
+        assertEq(config.receiptVaultConfig.symbol, shareSymbol);
 
-        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), address(I_ASSET));
+        assertEq(address(config.receiptVaultConfig.asset), address(I_ASSET));
 
         assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
         assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));

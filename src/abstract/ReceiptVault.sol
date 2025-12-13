@@ -113,11 +113,6 @@ abstract contract ReceiptVault is
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
 
-    //slither-disable-next-line naming-convention
-    ICloneableFactoryV2 internal immutable I_FACTORY;
-    //slither-disable-next-line naming-convention
-    IReceiptV3 internal immutable I_RECEIPT_IMPLEMENTATION;
-
     /// @param asset Underlying ERC4626 asset.
     /// @param receipt ERC1155 Receipt owned by this receipt vault for the
     /// purpose of tracking mints and enforcing integrity of subsequent burns.
@@ -134,14 +129,8 @@ abstract contract ReceiptVault is
         }
     }
 
-    /// `ReceiptVault` is intended to be cloned and initialized by a
-    /// `ReceiptVaultFactory` so is an implementation contract that can't itself
-    /// be initialized.
-    constructor(ReceiptVaultConstructionConfigV2 memory config) {
+    constructor() {
         _disableInitializers();
-
-        I_FACTORY = config.factory;
-        I_RECEIPT_IMPLEMENTATION = config.receiptImplementation;
     }
 
     /// Deposits are payable so this allows refunds.
