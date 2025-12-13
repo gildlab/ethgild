@@ -4,8 +4,8 @@ pragma solidity =0.8.25;
 
 import {
     ReceiptVault,
-    VaultConfig,
     ReceiptVaultConstructionConfigV2,
+    ReceiptVaultConfigV2,
     ICloneableFactoryV2
 } from "../../src/abstract/ReceiptVault.sol";
 import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
@@ -18,7 +18,7 @@ contract ConcreteReceiptVault is ReceiptVault {
     {}
 
     function initialize(bytes calldata data) external virtual override initializer returns (bytes32) {
-        VaultConfig memory config = abi.decode(data, (VaultConfig));
+        ReceiptVaultConfigV2 memory config = abi.decode(data, (ReceiptVaultConfigV2));
         __ReceiptVault_init(config);
         return ICLONEABLE_V2_SUCCESS;
     }

@@ -2,11 +2,11 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {ReceiptVaultConfigV2} from "src/abstract/ReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetVaultConfigV2,
+    OffchainAssetReceiptVaultConfigV2,
     OffchainAssetReceiptVaultConfigV2,
     ZeroInitialAdmin,
     NonZeroAsset
@@ -16,12 +16,12 @@ import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenera
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
     function testZeroInitialAdmin(string memory shareName, string memory shareSymbol) external {
-        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: shareName, symbol: shareSymbol});
+        ReceiptVaultConfigV2 memory vaultConfig = ReceiptVaultConfigV2({asset: address(0), name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
         I_FACTORY.clone(
             address(I_IMPLEMENTATION),
-            abi.encode(OffchainAssetVaultConfigV2({initialAdmin: address(0), vaultConfig: vaultConfig}))
+            abi.encode(OffchainAssetReceiptVaultConfigV2({initialAdmin: address(0), receiptVaultConfig: vaultConfig}))
         );
     }
 
@@ -32,12 +32,12 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         vm.assume(asset != address(0));
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
+        ReceiptVaultConfigV2 memory vaultConfig = ReceiptVaultConfigV2({asset: asset, name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
         I_FACTORY.clone(
             address(I_IMPLEMENTATION),
-            abi.encode(OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig}))
+            abi.encode(OffchainAssetReceiptVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig}))
         );
     }
 
@@ -47,12 +47,12 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         address asset = address(0);
 
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
+        ReceiptVaultConfigV2 memory vaultConfig = ReceiptVaultConfigV2({asset: asset, name: shareName, symbol: shareSymbol});
 
         // Simulate transaction from alice
         vm.prank(alice);
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig});
+        OffchainAssetReceiptVaultConfigV2 memory offchainAssetVaultConfig =
+            OffchainAssetReceiptVaultConfigV2({initialAdmin: alice, receiptVaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();

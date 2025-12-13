@@ -4,8 +4,8 @@ pragma solidity ^0.8.25;
 
 import {Vm} from "forge-std/Test.sol";
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {OffchainAssetReceiptVault, OffchainAssetVaultConfigV2} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {OffchainAssetReceiptVault, OffchainAssetReceiptVaultConfigV2} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {ReceiptVaultConfigV2} from "src/abstract/ReceiptVault.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
     OffchainAssetReceiptVaultAuthorizerV1Config
@@ -22,9 +22,9 @@ library LibOffchainAssetVaultCreator {
         string memory name,
         string memory symbol
     ) internal returns (OffchainAssetReceiptVault) {
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetVaultConfigV2({
+        OffchainAssetReceiptVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetReceiptVaultConfigV2({
             initialAdmin: initialAdmin,
-            vaultConfig: VaultConfig({asset: address(0), name: name, symbol: symbol})
+            receiptVaultConfig: ReceiptVaultConfigV2({asset: address(0), name: name, symbol: symbol})
         });
 
         // Use the factory to create the child contract

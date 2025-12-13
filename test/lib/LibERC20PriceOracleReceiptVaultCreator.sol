@@ -5,9 +5,9 @@ pragma solidity ^0.8.25;
 import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {
     ERC20PriceOracleReceiptVault,
-    ERC20PriceOracleVaultConfig
+    ERC20PriceOracleReceiptVaultConfigV2
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
-import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {ReceiptVaultConfigV2} from "src/abstract/ReceiptVault.sol";
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 
 library LibERC20PriceOracleReceiptVaultCreator {
@@ -20,9 +20,9 @@ library LibERC20PriceOracleReceiptVaultCreator {
         string memory name,
         string memory symbol
     ) internal returns (ERC20PriceOracleReceiptVault) {
-        ERC20PriceOracleVaultConfig memory erc20PriceOracleVault = ERC20PriceOracleVaultConfig({
+        ERC20PriceOracleReceiptVaultConfigV2 memory erc20PriceOracleVault = ERC20PriceOracleReceiptVaultConfigV2({
             priceOracle: priceOracle,
-            vaultConfig: VaultConfig({asset: asset, name: name, symbol: symbol})
+            receiptVaultConfig: ReceiptVaultConfigV2({asset: asset, name: name, symbol: symbol})
         });
 
         // Use the factory to create the child contract

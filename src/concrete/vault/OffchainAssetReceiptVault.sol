@@ -3,8 +3,7 @@
 pragma solidity =0.8.25;
 
 import {
-    ReceiptVaultConfig,
-    VaultConfig,
+    ReceiptVaultConfigV2,
     ReceiptVault,
     ShareAction,
     InvalidId,
@@ -37,19 +36,6 @@ string constant OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_ID = "rain.storage.offchain
 bytes32 constant OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_LOCATION =
     0xba9f160a0257aef2aa878e698d5363429ea67cc3c427f23f7cb9c3069b67bd00;
 
-/// All data required to configure an offchain asset vault except the receipt.
-/// Typically the factory should build a receipt contract and set management
-/// to the vault atomically during initialization so there is no opportunity for
-/// an attacker to corrupt the initialzation process.
-/// @param initialAdmin as per `OffchainAssetReceiptVaultConfig`.
-/// @param vaultConfig MUST be used by the factory to build a
-/// `ReceiptVaultConfig` once the receipt address is known and management has
-/// been set to the vault contract.
-struct OffchainAssetVaultConfigV2 {
-    address initialAdmin;
-    VaultConfig vaultConfig;
-}
-
 /// All data required to construct `OffchainAssetReceiptVault`.
 /// @param initialAdmin The initial admin has ALL ROLES. It is up to the admin to
 /// appropriately delegate and renounce roles or to be a smart contract with
@@ -59,7 +45,7 @@ struct OffchainAssetVaultConfigV2 {
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
-    ReceiptVaultConfig receiptVaultConfig;
+    ReceiptVaultConfigV2 receiptVaultConfig;
 }
 
 /// Represents a change in the certification state of the system.
@@ -316,12 +302,12 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
     /// logic.
     /// @param data All config required to initialize abi encoded.
     function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
-        OffchainAssetVaultConfigV2 memory config = abi.decode(data, (OffchainAssetVaultConfigV2));
+        OffchainAssetReceiptVaultConfigV2 memory config = abi.decode(data, (OffchainAssetReceiptVaultConfigV2));
 
-        __ReceiptVault_init(config.vaultConfig);
+        __ReceiptVault_init(config.receiptVaultConfig);
 
         // There is no asset, the asset is offchain.
-        if (config.vaultConfig.asset != address(0)) {
+        if (config.receiptVaultConfig.asset != address(0)) {
             revert NonZeroAsset();
         }
         // The config admin MUST be set.
@@ -337,7 +323,7 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
             _msgSender(),
             OffchainAssetReceiptVaultConfigV2({
                 initialAdmin: config.initialAdmin,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: config.receiptVaultConfig
             })
         );
 

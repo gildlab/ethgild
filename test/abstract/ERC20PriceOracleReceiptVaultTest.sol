@@ -8,7 +8,7 @@ import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ReceiptVaultConstructionConfigV2,
-    ERC20PriceOracleReceiptVaultConfig
+    ERC20PriceOracleReceiptVaultConfigV2
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {LibERC20PriceOracleReceiptVaultCreator} from "../lib/LibERC20PriceOracleReceiptVaultCreator.sol";
 import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
@@ -58,8 +58,8 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
         for (uint256 i = 0; i < logs.length; i++) {
             if (logs[i].topics[0] == ERC20PriceOracleReceiptVault.ERC20PriceOracleReceiptVaultInitialized.selector) {
                 // Decode the event data
-                (, ERC20PriceOracleReceiptVaultConfig memory config) =
-                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfig));
+                (, ERC20PriceOracleReceiptVaultConfigV2 memory config) =
+                    abi.decode(logs[i].data, (address, ERC20PriceOracleReceiptVaultConfigV2));
                 receiptAddress = config.receiptVaultConfig.receipt;
                 eventFound = true; // Set the flag to true since event log was found
                 break;

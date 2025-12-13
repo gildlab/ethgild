@@ -52,26 +52,17 @@ struct ReceiptVaultConstructionConfigV2 {
     IReceiptV3 receiptImplementation;
 }
 
-/// All config required to initialize `ReceiptVault` except the receipt address.
-/// Included as a field on `ReceiptVaultConfig` which is the full initialization
-/// config struct. This is used by the `ReceiptVaultFactory` which will create a
-/// new receipt in the same transaction and build the full `ReceiptVaultConfig`.
-/// @param asset As per ERC4626.
-/// @param name As per ERC20.
-/// @param symbol As per ERC20.
-struct VaultConfig {
-    address asset;
-    string name;
-    string symbol;
-}
-
 /// All config required to initialize `ReceiptVault`.
 /// @param receipt The `Receipt` e.g. built by `ReceiptVaultFactory` that is
 /// owned by the `ReceiptVault` as an `IReceiptOwnerV1`.
-/// @param vaultConfig all the vault configuration as `VaultConfig`.
-struct ReceiptVaultConfig {
+/// @param asset As per ERC4626.
+/// @param name As per ERC20.
+/// @param symbol As per ERC20.
+struct ReceiptVaultConfigV2 {
+    address asset;
+    string name;
+    string symbol;
     address receipt;
-    VaultConfig vaultConfig;
 }
 
 /// @title ReceiptVault
@@ -164,23 +155,15 @@ abstract contract ReceiptVault is
     // solhint-disable-next-line func-name-mixedcase
     // slither-disable-start naming-convention
     // forge-lint: disable-next-line(mixed-case-function)
-    function __ReceiptVault_init(VaultConfig memory config) internal virtual {
+    function __ReceiptVault_init(ReceiptVaultConfigV2 memory config) internal virtual {
         __Multicall_init();
         __ERC20_init(config.name, config.symbol);
 
-        // Slither false positive here due to it being impossible to set the
-        // receipt before it has been deployed.
-        // slither-disable-next-line reentrancy-benign
-        IReceiptV3 managedReceipt =
-            IReceiptV3(I_FACTORY.clone(address(I_RECEIPT_IMPLEMENTATION), abi.encode(address(this))));
-
         ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
         s.asset = IERC20(config.asset);
-        s.receipt = managedReceipt;
+        s.receipt = IReceiptV3(config.receipt);
 
-        // Sanity check here. Should always be true as we cloned the receipt
-        // from the factory ourselves just above.
-        address receiptManager = managedReceipt.manager();
+        address receiptManager = IReceiptV3(config.receipt).manager();
         if (receiptManager != address(this)) {
             revert WrongManager(address(this), receiptManager);
         }
