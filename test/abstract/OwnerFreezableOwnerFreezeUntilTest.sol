@@ -2,12 +2,12 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
 import {IOwnerFreezableV1} from "src/abstract/OwnerFreezable.sol";
 import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {OwnableUpgradeable as Ownable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
+import {OffchainAssetReceiptVaultTest} from "./OffchainAssetReceiptVaultTest.sol";
 
-abstract contract OwnerFreezableOwnerFreezeUntilTest is Test {
+abstract contract OwnerFreezableOwnerFreezeUntilTest is OffchainAssetReceiptVaultTest {
     using Math for uint256;
 
     IOwnerFreezableV1 internal sOwnerFreezable;

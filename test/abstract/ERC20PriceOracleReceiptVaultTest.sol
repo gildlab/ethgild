@@ -8,27 +8,35 @@ import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     ERC20PriceOracleReceiptVault,
     ReceiptVaultConstructionConfigV2,
-    ERC20PriceOracleReceiptVaultConfigV2
+    ERC20PriceOracleReceiptVaultConfigV2,
+    ReceiptVaultConfigV2
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPriceOracleV2} from "../../src/interface/IPriceOracleV2.sol";
+import {
+    ERC20PriceOracleReceiptVaultCloneDeployer,
+    ERC20PriceOracleReceiptVaultCloneDeployerConfig
+} from "../../src/concrete/deploy/ERC20PriceOracleReceiptVaultCloneDeployer.sol";
 
 contract ERC20PriceOracleReceiptVaultTest is Test {
-    ICloneableFactoryV2 internal immutable I_FACTORY;
     ERC20PriceOracleReceiptVault internal immutable I_IMPLEMENTATION;
     ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
     IERC20 immutable I_ASSET;
     IPriceOracleV2 immutable I_VAULT_ORACLE;
+    ERC20PriceOracleReceiptVaultCloneDeployer internal immutable I_DEPLOYER;
 
     constructor() {
-        I_FACTORY = new CloneFactory();
         I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
-        I_IMPLEMENTATION = new ERC20PriceOracleReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
-        );
+        I_IMPLEMENTATION = new ERC20PriceOracleReceiptVault(ReceiptVaultConstructionConfigV2());
         I_ASSET = IERC20(address(uint160(uint256(keccak256("asset.test")))));
         I_VAULT_ORACLE = IPriceOracleV2(payable(address(uint160(uint256(keccak256("vault.oracle"))))));
+        I_DEPLOYER = new ERC20PriceOracleReceiptVaultCloneDeployer(
+            ERC20PriceOracleReceiptVaultCloneDeployerConfig({
+                receiptImplementation: address(I_RECEIPT_IMPLEMENTATION),
+                erc20PriceOracleReceiptVaultImplementation: address(I_IMPLEMENTATION)
+            })
+        );
     }
 
     function setVaultOraclePrice(uint256 oraclePrice) internal {

@@ -40,11 +40,7 @@ contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFre
         sAlice = address(123456);
         sBob = address(949330);
 
-        sOwnerFreezable = IOwnerFreezableV1(
-            LibOffchainAssetVaultCreator.createVault(
-                vm, I_FACTORY, I_IMPLEMENTATION, I_AUTHORIZER_IMPLEMENTATION, sAlice, "vault", "VLT"
-            )
-        );
+        sOwnerFreezable = IOwnerFreezableV1(createVault(sAlice, "vault", "VLT"));
     }
 
     function setupTokenTransferTest() internal returns (OffchainAssetReceiptVault) {

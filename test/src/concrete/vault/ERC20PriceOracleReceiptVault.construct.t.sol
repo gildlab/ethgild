@@ -49,7 +49,7 @@ contract ERC20PriceOracleReceiptVaultConstructionTest is ERC20PriceOracleReceipt
         // Assert that the event log was found
         assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
 
-        assertEq(msgSender, address(I_FACTORY));
+        assertEq(msgSender, address(0));
         assert(address(vault) != address(0));
 
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(config.receiptVaultConfig.name)));
