@@ -13,13 +13,33 @@ import {
     ZeroInitialAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {BeaconProxy} from "openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
 contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
     function testZeroInitialAdmin(string memory shareName, string memory shareSymbol) external {
+        ReceiptContract receipt = ReceiptContract(address(new BeaconProxy(address(I_DEPLOYER.I_RECEIPT_BEACON()), "")));
+        OffchainAssetReceiptVault offchainAssetReceiptVault = OffchainAssetReceiptVault(
+            payable(address(new BeaconProxy(address(I_DEPLOYER.I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON()), "")))
+        );
+        receipt.initialize(abi.encode(offchainAssetReceiptVault));
+
         vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
-        createVault(address(0), shareName, shareSymbol);
+        offchainAssetReceiptVault.initialize(
+            abi.encode(
+                OffchainAssetReceiptVaultConfigV2({
+                    initialAdmin: address(0),
+                    receiptVaultConfig: ReceiptVaultConfigV2({
+                        asset: address(0),
+                        name: shareName,
+                        symbol: shareSymbol,
+                        receipt: address(receipt)
+                    })
+                })
+            )
+        );
     }
 
     /// Test that asset is address zero

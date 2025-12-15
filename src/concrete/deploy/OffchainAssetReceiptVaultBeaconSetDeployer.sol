@@ -14,8 +14,8 @@ struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
 }
 
 contract OffchainAssetReceiptVaultBeaconSetDeployer {
-    IBeacon immutable I_RECEIPT_BEACON;
-    IBeacon immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
+    IBeacon public immutable I_RECEIPT_BEACON;
+    IBeacon public immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
 
     constructor(OffchainAssetReceiptVaultBeaconSetDeployerConfig memory config) {
         I_RECEIPT_BEACON = new UpgradeableBeacon(address(config.initialReceiptImplementation), config.initialOwner);
