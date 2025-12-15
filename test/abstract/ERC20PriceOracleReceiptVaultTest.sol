@@ -63,7 +63,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
     function getReceipt() internal view returns (ReceiptContract) {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
-        // Find the ERC20PriceOracleReceiptVaultInitialized event log
+        // Find the event log
         address receiptAddress = address(0);
         bool eventFound = false; // Flag to indicate whether the event log was found
         for (uint256 i = 0; i < logs.length; i++) {
@@ -77,7 +77,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
             }
         }
         // Assert that the event log was found
-        assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitialized event log not found");
+        assertTrue(eventFound, "ERC20PriceOracleReceiptVaultInitializedV2 event log not found");
         // Return an receipt contract
         return ReceiptContract(receiptAddress);
     }
