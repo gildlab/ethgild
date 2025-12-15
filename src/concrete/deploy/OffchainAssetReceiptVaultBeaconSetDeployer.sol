@@ -22,6 +22,8 @@ struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
 }
 
 contract OffchainAssetReceiptVaultBeaconSetDeployer {
+    event Deployment(address sender, address receiptBeacon, address offchainAssetReceiptVaultBeacon);
+
     IBeacon public immutable I_RECEIPT_BEACON;
     IBeacon public immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
 
@@ -59,6 +61,8 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
         if (offchainAssetReceiptVault.initialize(abi.encode(config)) != ICLONEABLE_V2_SUCCESS) {
             revert InitializeVaultFailed();
         }
+
+        emit Deployment(msg.sender, address(receipt), address(offchainAssetReceiptVault));
 
         return offchainAssetReceiptVault;
     }

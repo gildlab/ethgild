@@ -23,6 +23,8 @@ struct ERC20PriceOracleReceiptVaultCloneDeployerConfig {
 }
 
 contract ERC20PriceOracleReceiptVaultCloneDeployer {
+    event Deployment(address sender, address receipt, address erc20PriceOracleReceiptVault);
+
     address public immutable I_RECEIPT_IMPLEMENTATION;
     address public immutable I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION;
 
@@ -53,6 +55,8 @@ contract ERC20PriceOracleReceiptVaultCloneDeployer {
         if (erc20PriceOracleReceiptVault.initialize(abi.encode(config)) != ICLONEABLE_V2_SUCCESS) {
             revert InitializeVaultFailed();
         }
+
+        emit Deployment(msg.sender, address(receipt), address(erc20PriceOracleReceiptVault));
 
         return erc20PriceOracleReceiptVault;
     }
