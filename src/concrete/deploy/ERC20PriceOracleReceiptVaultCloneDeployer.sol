@@ -20,6 +20,8 @@ contract ERC20PriceOracleReceiptVaultCloneDeployer {
     address immutable I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION;
 
     constructor(ERC20PriceOracleReceiptVaultCloneDeployerConfig memory config) {
+        require(config.receiptImplementation != address(0), "Zero receipt implementation");
+        require(config.erc20PriceOracleReceiptVaultImplementation != address(0), "Zero vault implementation");
         I_RECEIPT_IMPLEMENTATION = config.receiptImplementation;
         I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION = config.erc20PriceOracleReceiptVaultImplementation;
     }
