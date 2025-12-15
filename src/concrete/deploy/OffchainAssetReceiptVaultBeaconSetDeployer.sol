@@ -11,6 +11,7 @@ import {
     ZeroReceiptImplementation,
     ZeroVaultImplementation,
     ZeroBeaconOwner,
+    ZeroInitialAdmin,
     InitializeNonZeroReceipt,
     InitializeReceiptFailed,
     InitializeVaultFailed
@@ -35,6 +36,9 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
         if (address(config.initialOffchainAssetReceiptVaultImplementation) == address(0)) {
             revert ZeroVaultImplementation();
         }
+        if (config.initialOwner == address(0)) {
+            revert ZeroBeaconOwner();
+        }
 
         I_RECEIPT_BEACON = new UpgradeableBeacon(address(config.initialReceiptImplementation), config.initialOwner);
         I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON =
@@ -49,7 +53,7 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
             revert InitializeNonZeroReceipt(config.receiptVaultConfig.receipt);
         }
 
-        if (config.initialAdmin == address(0)) revert ZeroBeaconOwner();
+        if (config.initialAdmin == address(0)) revert ZeroInitialAdmin();
 
         Receipt receipt = Receipt(address(new BeaconProxy(address(I_RECEIPT_BEACON), "")));
         OffchainAssetReceiptVault offchainAssetReceiptVault = OffchainAssetReceiptVault(
