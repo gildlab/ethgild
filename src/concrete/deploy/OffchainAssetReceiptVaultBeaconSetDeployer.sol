@@ -10,6 +10,7 @@ import {BeaconProxy} from "openzeppelin-contracts/contracts/proxy/beacon/BeaconP
 import {
     ZeroReceiptImplementation,
     ZeroVaultImplementation,
+    ZeroBeaconOwner,
     InitializeNonZeroReceipt,
     InitializeReceiptFailed,
     InitializeVaultFailed
@@ -47,6 +48,8 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
         if (config.receiptVaultConfig.receipt != address(0)) {
             revert InitializeNonZeroReceipt(config.receiptVaultConfig.receipt);
         }
+
+        if (config.initialAdmin == address(0)) revert ZeroBeaconOwner();
 
         Receipt receipt = Receipt(address(new BeaconProxy(address(I_RECEIPT_BEACON), "")));
         OffchainAssetReceiptVault offchainAssetReceiptVault = OffchainAssetReceiptVault(

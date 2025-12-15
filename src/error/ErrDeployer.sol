@@ -9,6 +9,9 @@ error ZeroReceiptImplementation();
 /// Thrown when constructing a deployer with a zero vault implementation address.
 error ZeroVaultImplementation();
 
+/// Thrown when the beacon owner is set to the zero address.
+error ZeroBeaconOwner();
+
 /// Thrown when attempting to initialize with a non-zero receipt address.
 /// @param receipt The receipt address that is not zero in the initialization
 /// config.
