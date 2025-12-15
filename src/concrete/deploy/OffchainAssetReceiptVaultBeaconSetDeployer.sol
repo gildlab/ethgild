@@ -23,7 +23,7 @@ struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
 }
 
 contract OffchainAssetReceiptVaultBeaconSetDeployer {
-    event Deployment(address sender, address receiptBeacon, address offchainAssetReceiptVaultBeacon);
+    event Deployment(address sender, address receipt, address offchainAssetReceiptVault);
 
     IBeacon public immutable I_RECEIPT_BEACON;
     IBeacon public immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
