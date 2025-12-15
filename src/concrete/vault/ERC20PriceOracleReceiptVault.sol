@@ -2,13 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ReceiptVaultConfigV2,
-    ReceiptVault,
-    ShareAction,
-    ICLONEABLE_V2_SUCCESS,
-    ReceiptVaultConstructionConfigV2
-} from "../../abstract/ReceiptVault.sol";
+import {ReceiptVaultConfigV2, ReceiptVault, ShareAction, ICLONEABLE_V2_SUCCESS} from "../../abstract/ReceiptVault.sol";
 import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 
 /// @dev String ID for the ERC20PriceOracleReceiptVault storage location v1.

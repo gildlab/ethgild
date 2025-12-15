@@ -2,14 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ReceiptVaultConstructionConfigV2,
-    IReceiptV3,
-    ICloneableFactoryV2,
-    IReceiptManagerV2,
-    IReceiptVaultV3,
-    ICloneableV2
-} from "src/abstract/ReceiptVault.sol";
+import {IReceiptManagerV2, IReceiptVaultV3, ICloneableV2} from "src/abstract/ReceiptVault.sol";
 import {Test} from "forge-std/Test.sol";
 import {OffchainAssetReceiptVault, IAuthorizeV1} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
@@ -17,12 +10,7 @@ import {IERC165} from "openzeppelin-contracts/contracts/utils/introspection/IERC
 
 contract OffchainAssetReceiptVaultIERC165Test is Test {
     function testOffchainAssetReceiptVaultIERC165(bytes4 badInterfaceId) external {
-        OffchainAssetReceiptVault receiptVault = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({
-                factory: ICloneableFactoryV2(address(0)),
-                receiptImplementation: IReceiptV3(address(0))
-            })
-        );
+        OffchainAssetReceiptVault receiptVault = new OffchainAssetReceiptVault();
         vm.assume(badInterfaceId != type(IERC165).interfaceId);
         vm.assume(badInterfaceId != type(IReceiptManagerV2).interfaceId);
         vm.assume(badInterfaceId != type(IReceiptVaultV3).interfaceId);

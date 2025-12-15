@@ -3,8 +3,6 @@
 pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std/Test.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     OffchainAssetReceiptVaultConfigV2,
     OffchainAssetReceiptVault,

@@ -7,8 +7,7 @@ import {
     ReceiptVault,
     ShareAction,
     InvalidId,
-    ICLONEABLE_V2_SUCCESS,
-    ReceiptVaultConstructionConfigV2
+    ICLONEABLE_V2_SUCCESS
 } from "../../abstract/ReceiptVault.sol";
 import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";

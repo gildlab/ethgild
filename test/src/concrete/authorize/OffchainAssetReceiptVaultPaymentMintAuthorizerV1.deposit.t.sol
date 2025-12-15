@@ -14,33 +14,14 @@ import {OffchainAssetReceiptVaultPaymentMintAuthorizerV1Config} from
     "src/concrete/authorize/OffchainAssetReceiptVaultPaymentMintAuthorizerV1.sol";
 import {DepositStateChange, DEPOSIT, CERTIFY} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
-import {Receipt as ReceiptContract} from "../../../../src/concrete/receipt/Receipt.sol";
 import {OffchainAssetReceiptVault} from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {
-    ReceiptVaultConstructionConfigV2,
-    ReceiptVaultConfigV2,
-    OffchainAssetReceiptVaultConfigV2
-} from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {VerifyAlwaysApproved} from "rain.verify.interface/concrete/VerifyAlwaysApproved.sol";
 import {LibFixedPointDecimalScale, FLAG_ROUND_UP} from "rain.math.fixedpoint/lib/LibFixedPointDecimalScale.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
 import {IERC20Errors} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 
 import {TestErc20} from "test/concrete/TestErc20.sol";
 
 contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is OffchainAssetReceiptVaultAuthorizerV1Test {
-    ICloneableFactoryV2 internal immutable I_FACTORY;
-    ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
-    OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
-
-    constructor() {
-        I_FACTORY = new CloneFactory();
-        I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
-        I_IMPLEMENTATION = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
-        );
-    }
-
     function newAuthorizer(address receiptVault, address owner, address paymentToken, uint256 maxSharesSupply)
         internal
         returns (OffchainAssetReceiptVaultPaymentMintAuthorizerV1)
@@ -77,22 +58,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
         uint256 paymentAmount = firstShares;
 
-        OffchainAssetReceiptVault receiptVaultImplementation = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: new CloneFactory(), receiptImplementation: new ReceiptContract()})
-        );
-        OffchainAssetReceiptVault receiptVault = OffchainAssetReceiptVault(
-            payable(
-                (new CloneFactory()).clone(
-                    address(receiptVaultImplementation),
-                    abi.encode(
-                        OffchainAssetReceiptVaultConfigV2({
-                            initialAdmin: alice,
-                            receiptVaultConfig: ReceiptVaultConfigV2({asset: address(0), name: "Test Vault", symbol: "TVLT"})
-                        })
-                    )
-                )
-            )
-        );
+        OffchainAssetReceiptVault receiptVault = createVault(bob, "foo", "bar");
 
         vm.mockCall(address(receiptVault), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
 
@@ -408,14 +374,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         vm.assume(alice.code.length == 0);
         vm.assume(uint160(alice) > type(uint160).max / 2);
 
-        OffchainAssetReceiptVaultConfigV2 memory offchainAssetVaultConfig = OffchainAssetReceiptVaultConfigV2({
-            initialAdmin: bob,
-            receiptVaultConfig: ReceiptVaultConfigV2({asset: address(0), name: "foo", symbol: "bar"})
-        });
-        // Use the factory to create the child contract
-        OffchainAssetReceiptVault receiptVault = OffchainAssetReceiptVault(
-            payable(I_FACTORY.clone(address(I_IMPLEMENTATION), abi.encode(offchainAssetVaultConfig)))
-        );
+        OffchainAssetReceiptVault receiptVault = createVault(bob, "foo", "bar");
 
         vm.prank(alice);
         TestErc20 paymentToken = new TestErc20();

@@ -13,8 +13,8 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-//forge-lint: disable-next-line(unused-import)
+// Export ICLONEABLE_V2_SUCCESS for concrete implementations.
+// forge-lint: disable-next-line(unused-import)
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 import {
@@ -41,15 +41,6 @@ bytes32 constant RECEIPT_VAULT_V1_STORAGE_LOCATION = 0x8d198d032a58038629cc32dfa
 enum ShareAction {
     Mint,
     Burn
-}
-
-/// Config for the _implementation_ of the `ReceiptVault` contract.
-/// @param factory The factory that will be used to clone the receipt vault.
-/// @param receiptImplementation The receipt implementation that will be cloned
-/// by the factory.
-struct ReceiptVaultConstructionConfigV2 {
-    ICloneableFactoryV2 factory;
-    IReceiptV3 receiptImplementation;
 }
 
 /// All config required to initialize `ReceiptVault`.

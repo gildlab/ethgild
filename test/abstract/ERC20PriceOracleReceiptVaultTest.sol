@@ -3,11 +3,8 @@
 pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std/Test.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     ERC20PriceOracleReceiptVault,
-    ReceiptVaultConstructionConfigV2,
     ERC20PriceOracleReceiptVaultConfigV2,
     ReceiptVaultConfigV2
 } from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
@@ -28,7 +25,7 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
 
     constructor() {
         I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
-        I_IMPLEMENTATION = new ERC20PriceOracleReceiptVault(ReceiptVaultConstructionConfigV2());
+        I_IMPLEMENTATION = new ERC20PriceOracleReceiptVault();
         I_ASSET = IERC20(address(uint160(uint256(keccak256("asset.test")))));
         I_VAULT_ORACLE = IPriceOracleV2(payable(address(uint160(uint256(keccak256("vault.oracle"))))));
         I_DEPLOYER = new ERC20PriceOracleReceiptVaultCloneDeployer(
@@ -51,14 +48,13 @@ contract ERC20PriceOracleReceiptVaultTest is Test {
     {
         return I_DEPLOYER.newERC20PriceOracleReceiptVault(
             ERC20PriceOracleReceiptVaultConfigV2({
-                initialAdmin: address(this),
                 receiptVaultConfig: ReceiptVaultConfigV2({
                     asset: address(I_ASSET),
                     name: name,
                     symbol: symbol,
                     receipt: address(0)
                 }),
-                vaultPriceOracle: priceOracle
+                priceOracle: priceOracle
             })
         );
     }

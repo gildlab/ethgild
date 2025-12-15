@@ -14,27 +14,25 @@ struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
 }
 
 contract OffchainAssetReceiptVaultBeaconSetDeployer {
-    address immutable I_RECEIPT_BEACON;
-    address immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
+    IBeacon immutable I_RECEIPT_BEACON;
+    IBeacon immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
 
     constructor(OffchainAssetReceiptVaultBeaconSetDeployerConfig memory config) {
-        I_RECEIPT_BEACON =
-            address(new UpgradeableBeacon(address(config.initialReceiptImplementation), config.initialOwner));
-        I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON = address(
-            new UpgradeableBeacon(address(config.initialOffchainAssetReceiptVaultImplementation), config.initialOwner)
-        );
+        I_RECEIPT_BEACON = new UpgradeableBeacon(address(config.initialReceiptImplementation), config.initialOwner);
+        I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON =
+            new UpgradeableBeacon(address(config.initialOffchainAssetReceiptVaultImplementation), config.initialOwner);
     }
 
     function newOffchainAssetReceiptVault(OffchainAssetReceiptVaultConfigV2 memory config)
         external
-        view
         returns (OffchainAssetReceiptVault)
     {
         require(config.receiptVaultConfig.receipt == address(0), "Receipt address must be zero");
 
-        Receipt receipt = Receipt(address(new BeaconProxy(I_RECEIPT_BEACON, "")));
-        OffchainAssetReceiptVault offchainAssetReceiptVault =
-            OffchainAssetReceiptVault(payable(address(new BeaconProxy(I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON, ""))));
+        Receipt receipt = Receipt(address(new BeaconProxy(address(I_RECEIPT_BEACON), "")));
+        OffchainAssetReceiptVault offchainAssetReceiptVault = OffchainAssetReceiptVault(
+            payable(address(new BeaconProxy(address(I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON), "")))
+        );
 
         require(
             receipt.initialize(abi.encode(offchainAssetReceiptVault)) == ICLONEABLE_V2_SUCCESS, "Failed to init receipt"
@@ -45,5 +43,7 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
             offchainAssetReceiptVault.initialize(abi.encode(config)) == ICLONEABLE_V2_SUCCESS,
             "Failed to init offchain asset receipt vault"
         );
+
+        return offchainAssetReceiptVault;
     }
 }

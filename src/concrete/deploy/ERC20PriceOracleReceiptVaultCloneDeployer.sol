@@ -9,6 +9,7 @@ import {
     ERC20PriceOracleReceiptVaultConfigV2
 } from "../vault/ERC20PriceOracleReceiptVault.sol";
 
+//forge-lint: disable-next-line(pascal-case-struct)
 struct ERC20PriceOracleReceiptVaultCloneDeployerConfig {
     address receiptImplementation;
     address erc20PriceOracleReceiptVaultImplementation;
@@ -25,14 +26,13 @@ contract ERC20PriceOracleReceiptVaultCloneDeployer {
 
     function newERC20PriceOracleReceiptVault(ERC20PriceOracleReceiptVaultConfigV2 memory config)
         external
-        view
-        returns (address)
+        returns (ERC20PriceOracleReceiptVault)
     {
         require(config.receiptVaultConfig.receipt == address(0), "Receipt address must be zero");
 
         Receipt receipt = Receipt(Clones.clone(I_RECEIPT_IMPLEMENTATION));
         ERC20PriceOracleReceiptVault erc20PriceOracleReceiptVault =
-            ERC20PriceOracleReceiptVault(Clones.clone(I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION));
+            ERC20PriceOracleReceiptVault(payable(Clones.clone(I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION)));
 
         require(
             receipt.initialize(abi.encode(erc20PriceOracleReceiptVault)) == ICLONEABLE_V2_SUCCESS,
@@ -44,5 +44,7 @@ contract ERC20PriceOracleReceiptVaultCloneDeployer {
             erc20PriceOracleReceiptVault.initialize(abi.encode(config)) == ICLONEABLE_V2_SUCCESS,
             "Failed to init erc20 price oracle receipt vault"
         );
+
+        return erc20PriceOracleReceiptVault;
     }
 }

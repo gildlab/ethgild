@@ -2,14 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ReceiptVault,
-    ReceiptVaultConstructionConfigV2,
-    ReceiptVaultConfigV2,
-    ICloneableFactoryV2
-} from "../../src/abstract/ReceiptVault.sol";
-import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
-import {Receipt} from "../../src/concrete/receipt/Receipt.sol";
+import {ReceiptVault, ReceiptVaultConfigV2} from "../../src/abstract/ReceiptVault.sol";
 import {ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 
 contract ConcreteReceiptVault is ReceiptVault {
