@@ -23,8 +23,8 @@ struct ERC20PriceOracleReceiptVaultCloneDeployerConfig {
 }
 
 contract ERC20PriceOracleReceiptVaultCloneDeployer {
-    address immutable I_RECEIPT_IMPLEMENTATION;
-    address immutable I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION;
+    address public immutable I_RECEIPT_IMPLEMENTATION;
+    address public immutable I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION;
 
     constructor(ERC20PriceOracleReceiptVaultCloneDeployerConfig memory config) {
         if (config.receiptImplementation == address(0)) revert ZeroReceiptImplementation();
