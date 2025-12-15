@@ -9,12 +9,15 @@ import {
     ReceiptVaultConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
-import {OffchainAssetReceiptVaultAuthorizerV1} from
-    "../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {
+    OffchainAssetReceiptVaultAuthorizerV1,
+    OffchainAssetReceiptVaultAuthorizerV1Config
+} from "../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {
     OffchainAssetReceiptVaultBeaconSetDeployer,
     OffchainAssetReceiptVaultBeaconSetDeployerConfig
 } from "../../src/concrete/deploy/OffchainAssetReceiptVaultBeaconSetDeployer.sol";
+import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
     OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
@@ -39,7 +42,7 @@ contract OffchainAssetReceiptVaultTest is Test {
         internal
         returns (OffchainAssetReceiptVault)
     {
-        return I_DEPLOYER.newOffchainAssetReceiptVault(
+        OffchainAssetReceiptVault vault = I_DEPLOYER.newOffchainAssetReceiptVault(
             OffchainAssetReceiptVaultConfigV2({
                 initialAdmin: admin,
                 receiptVaultConfig: ReceiptVaultConfigV2({
@@ -50,6 +53,12 @@ contract OffchainAssetReceiptVaultTest is Test {
                 })
             })
         );
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(Clones.clone(address(I_AUTHORIZER_IMPLEMENTATION)));
+        authorizer.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: admin})));
+        vm.prank(admin);
+        vault.setAuthorizer(authorizer);
+        return vault;
     }
 
     function getReceipt(Vm.Log[] memory logs) internal pure returns (ReceiptContract) {
