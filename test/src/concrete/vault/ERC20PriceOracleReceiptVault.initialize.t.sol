@@ -10,8 +10,6 @@ import {ERC20PriceOracleReceiptVaultTest, Vm} from "test/abstract/ERC20PriceOrac
 import {IPriceOracleV2} from "src/interface/IPriceOracleV2.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
-import {console2} from "forge-std/console2.sol";
-
 contract ERC20PriceOracleReceiptVaultInitializeTest is ERC20PriceOracleReceiptVaultTest {
     /// Test ERC20PriceOracleReceiptVault is initialized
     function testERC20PriceOracleReceiptVaultInitializedV2Event(
