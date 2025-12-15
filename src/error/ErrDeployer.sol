@@ -14,6 +14,8 @@ error ZeroVaultImplementation();
 /// config.
 error InitializeNonZeroReceipt(address receipt);
 
+/// Thrown when receipt initialization fails.
 error InitializeReceiptFailed();
 
+/// Thrown when vault initialization fails.
 error InitializeVaultFailed();
