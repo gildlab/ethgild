@@ -8,7 +8,6 @@ import {
 import {
     OffchainAssetReceiptVault,
     OffchainAssetReceiptVaultConfigV2,
-    OffchainAssetReceiptVaultConfigV2,
     ZeroInitialAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
