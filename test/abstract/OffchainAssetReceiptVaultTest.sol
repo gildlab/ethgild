@@ -55,9 +55,10 @@ contract OffchainAssetReceiptVaultTest is Test {
         );
         OffchainAssetReceiptVaultAuthorizerV1 authorizer =
             OffchainAssetReceiptVaultAuthorizerV1(Clones.clone(address(I_AUTHORIZER_IMPLEMENTATION)));
+        vm.startPrank(admin);
         authorizer.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: admin})));
-        vm.prank(admin);
         vault.setAuthorizer(authorizer);
+        vm.stopPrank();
         return vault;
     }
 

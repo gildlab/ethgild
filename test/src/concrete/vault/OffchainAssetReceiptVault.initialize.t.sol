@@ -17,7 +17,7 @@ import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {BeaconProxy} from "openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
-contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
+contract OffChainAssetReceiptVaultInitializeTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
     function testZeroInitialAdmin(string memory shareName, string memory shareSymbol) external {
         ReceiptContract receipt = ReceiptContract(address(new BeaconProxy(address(I_DEPLOYER.I_RECEIPT_BEACON()), "")));
@@ -64,8 +64,13 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         );
     }
 
-    /// Test that offchainAssetReceiptVault initializes well
-    function testInitializationEvent(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
+    /// Test that OffchainAssetReceiptVaultInitializedV2 event is emitted upon
+    /// initialization
+    function testOffchainAssetReceiptVaultInitializedV2Event(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         address asset = address(0);
@@ -93,7 +98,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitializedV2(address,(address,(address,(address,string,string))))"
+                        "OffchainAssetReceiptVaultInitializedV2(address,(address,(address,string,string,address)))"
                     )
             ) {
                 // Decode the event data
@@ -107,9 +112,9 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         }
 
         // Assert that the event log was found
-        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
+        assertTrue(eventFound, "OffchainAssetReceiptVaultInitializedV2 event log not found");
 
-        assertEq(msgSender, address(0));
+        assertEq(msgSender, address(I_DEPLOYER));
         assertEq(config.initialAdmin, alice);
         assert(address(vault) != address(0));
 
@@ -126,8 +131,8 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
 
         /// Check the authorizer set event
         assertTrue(authorizeSetEventFound, "AuthorizerSet event log not found");
-        assertEq(authorizeSetMsgSender, address(0));
-        assertEq(authorizeSetTo, address(vault));
+        assertEq(authorizeSetMsgSender, address(alice));
+        assertEq(authorizeSetTo, address(vault.authorizer()));
         assertTrue(address(vault) != address(0));
 
         // Check the receipt manager is the vault.

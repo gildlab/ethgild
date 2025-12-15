@@ -58,7 +58,7 @@ contract OffchainAssetReceiptVaultPaymentMintAuthorizerV1DepositTest is Offchain
         firstShares = bound(firstShares, 1, maxShares - totalSupply - 1);
         uint256 paymentAmount = firstShares;
 
-        OffchainAssetReceiptVault receiptVault = createVault(bob, "foo", "bar");
+        OffchainAssetReceiptVault receiptVault = createVault(alice, "foo", "bar");
 
         vm.mockCall(address(receiptVault), abi.encodeWithSelector(IERC20.totalSupply.selector), abi.encode(totalSupply));
 
