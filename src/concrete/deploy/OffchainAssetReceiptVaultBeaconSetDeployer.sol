@@ -19,8 +19,8 @@ import {
 
 struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
     address initialOwner;
-    Receipt initialReceiptImplementation;
-    OffchainAssetReceiptVault initialOffchainAssetReceiptVaultImplementation;
+    address initialReceiptImplementation;
+    address initialOffchainAssetReceiptVaultImplementation;
 }
 
 contract OffchainAssetReceiptVaultBeaconSetDeployer {

@@ -32,8 +32,8 @@ contract OffchainAssetReceiptVaultTest is Test {
         I_DEPLOYER = new OffchainAssetReceiptVaultBeaconSetDeployer(
             OffchainAssetReceiptVaultBeaconSetDeployerConfig({
                 initialOwner: address(this),
-                initialReceiptImplementation: I_RECEIPT_IMPLEMENTATION,
-                initialOffchainAssetReceiptVaultImplementation: I_IMPLEMENTATION
+                initialReceiptImplementation: address(I_RECEIPT_IMPLEMENTATION),
+                initialOffchainAssetReceiptVaultImplementation: address(I_IMPLEMENTATION)
             })
         );
     }
