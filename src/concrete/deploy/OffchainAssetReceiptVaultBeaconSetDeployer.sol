@@ -24,7 +24,7 @@ struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
 }
 
 contract OffchainAssetReceiptVaultBeaconSetDeployer {
-    event Deployment(address sender, address receipt, address offchainAssetReceiptVault);
+    event Deployment(address sender, address offchainAssetReceiptVault, address receipt);
 
     IBeacon public immutable I_RECEIPT_BEACON;
     IBeacon public immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
@@ -69,7 +69,7 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
             revert InitializeVaultFailed();
         }
 
-        emit Deployment(msg.sender, address(receipt), address(offchainAssetReceiptVault));
+        emit Deployment(msg.sender, address(offchainAssetReceiptVault), address(receipt));
 
         return offchainAssetReceiptVault;
     }
