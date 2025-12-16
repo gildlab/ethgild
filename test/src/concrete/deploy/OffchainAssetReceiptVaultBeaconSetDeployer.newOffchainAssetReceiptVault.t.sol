@@ -13,7 +13,7 @@ import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {OffchainAssetReceiptVault, ReceiptVaultConfigV2} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {InitializeNonZeroReceipt, ZeroInitialAdmin} from "src/error/ErrDeployer.sol";
 
-contract OffchainAssetReceiptVaultBeaconSetDeployerNewERC20PriceOracleReceiptVaultTest is Test {
+contract OffchainAssetReceiptVaultBeaconSetDeployerNewOffchainAssetReceiptVaultTest is Test {
     function testNewOffchainAssetReceiptVaultNonZeroReceipt(OffchainAssetReceiptVaultConfigV2 memory config) external {
         vm.assume(config.receiptVaultConfig.receipt != address(0));
         vm.assume(config.initialAdmin != address(0));
