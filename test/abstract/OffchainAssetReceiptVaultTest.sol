@@ -3,40 +3,63 @@
 pragma solidity =0.8.25;
 
 import {Test, Vm} from "forge-std/Test.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
 import {
     OffchainAssetReceiptVaultConfigV2,
     OffchainAssetReceiptVault,
-    ReceiptVaultConstructionConfigV2
+    ReceiptVaultConfigV2
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {LibOffchainAssetVaultCreator} from "../lib/LibOffchainAssetVaultCreator.sol";
 import {Receipt as ReceiptContract} from "../../src/concrete/receipt/Receipt.sol";
-import {OffchainAssetReceiptVaultAuthorizerV1} from
-    "../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {
+    OffchainAssetReceiptVaultAuthorizerV1,
+    OffchainAssetReceiptVaultAuthorizerV1Config
+} from "../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+import {
+    OffchainAssetReceiptVaultBeaconSetDeployer,
+    OffchainAssetReceiptVaultBeaconSetDeployerConfig
+} from "../../src/concrete/deploy/OffchainAssetReceiptVaultBeaconSetDeployer.sol";
+import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
 
 contract OffchainAssetReceiptVaultTest is Test {
-    ICloneableFactoryV2 internal immutable I_FACTORY;
     OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
     OffchainAssetReceiptVaultAuthorizerV1 internal immutable I_AUTHORIZER_IMPLEMENTATION;
     ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
+    OffchainAssetReceiptVaultBeaconSetDeployer internal immutable I_DEPLOYER;
 
     constructor() {
-        I_FACTORY = new CloneFactory();
         I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
-        I_IMPLEMENTATION = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
-        );
+        I_IMPLEMENTATION = new OffchainAssetReceiptVault();
         I_AUTHORIZER_IMPLEMENTATION = new OffchainAssetReceiptVaultAuthorizerV1();
+        I_DEPLOYER = new OffchainAssetReceiptVaultBeaconSetDeployer(
+            OffchainAssetReceiptVaultBeaconSetDeployerConfig({
+                initialOwner: address(this),
+                initialReceiptImplementation: address(I_RECEIPT_IMPLEMENTATION),
+                initialOffchainAssetReceiptVaultImplementation: address(I_IMPLEMENTATION)
+            })
+        );
     }
 
     function createVault(address admin, string memory shareName, string memory shareSymbol)
         internal
         returns (OffchainAssetReceiptVault)
     {
-        return LibOffchainAssetVaultCreator.createVault(
-            vm, I_FACTORY, I_IMPLEMENTATION, I_AUTHORIZER_IMPLEMENTATION, admin, shareName, shareSymbol
+        OffchainAssetReceiptVault vault = I_DEPLOYER.newOffchainAssetReceiptVault(
+            OffchainAssetReceiptVaultConfigV2({
+                initialAdmin: admin,
+                receiptVaultConfig: ReceiptVaultConfigV2({
+                    asset: address(0),
+                    name: shareName,
+                    symbol: shareSymbol,
+                    receipt: address(0)
+                })
+            })
         );
+        OffchainAssetReceiptVaultAuthorizerV1 authorizer =
+            OffchainAssetReceiptVaultAuthorizerV1(Clones.clone(address(I_AUTHORIZER_IMPLEMENTATION)));
+        vm.startPrank(admin);
+        authorizer.initialize(abi.encode(OffchainAssetReceiptVaultAuthorizerV1Config({initialAdmin: admin})));
+        vault.setAuthorizer(authorizer);
+        vm.stopPrank();
+        return vault;
     }
 
     function getReceipt(Vm.Log[] memory logs) internal pure returns (ReceiptContract) {

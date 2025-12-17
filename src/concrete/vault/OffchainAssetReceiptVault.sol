@@ -3,13 +3,11 @@
 pragma solidity =0.8.25;
 
 import {
-    ReceiptVaultConfig,
-    VaultConfig,
+    ReceiptVaultConfigV2,
     ReceiptVault,
     ShareAction,
     InvalidId,
-    ICLONEABLE_V2_SUCCESS,
-    ReceiptVaultConstructionConfigV2
+    ICLONEABLE_V2_SUCCESS
 } from "../../abstract/ReceiptVault.sol";
 import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {IAuthorizeV1, Unauthorized} from "../../interface/IAuthorizeV1.sol";
@@ -37,19 +35,6 @@ string constant OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_ID = "rain.storage.offchain
 bytes32 constant OFFCHAIN_ASSET_RECEIPT_VAULT_STORAGE_LOCATION =
     0xba9f160a0257aef2aa878e698d5363429ea67cc3c427f23f7cb9c3069b67bd00;
 
-/// All data required to configure an offchain asset vault except the receipt.
-/// Typically the factory should build a receipt contract and set management
-/// to the vault atomically during initialization so there is no opportunity for
-/// an attacker to corrupt the initialzation process.
-/// @param initialAdmin as per `OffchainAssetReceiptVaultConfig`.
-/// @param vaultConfig MUST be used by the factory to build a
-/// `ReceiptVaultConfig` once the receipt address is known and management has
-/// been set to the vault contract.
-struct OffchainAssetVaultConfigV2 {
-    address initialAdmin;
-    VaultConfig vaultConfig;
-}
-
 /// All data required to construct `OffchainAssetReceiptVault`.
 /// @param initialAdmin The initial admin has ALL ROLES. It is up to the admin to
 /// appropriately delegate and renounce roles or to be a smart contract with
@@ -59,7 +44,7 @@ struct OffchainAssetVaultConfigV2 {
 /// @param receiptVaultConfig Forwarded to ReceiptVault.
 struct OffchainAssetReceiptVaultConfigV2 {
     address initialAdmin;
-    ReceiptVaultConfig receiptVaultConfig;
+    ReceiptVaultConfigV2 receiptVaultConfig;
 }
 
 /// Represents a change in the certification state of the system.
@@ -308,20 +293,18 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
         }
     }
 
-    constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
-
     /// Initializes the initial admin and the underlying `ReceiptVault`.
     /// The admin provided will be admin of all roles and can reassign and revoke
     /// this as appropriate according to standard Open Zeppelin access control
     /// logic.
     /// @param data All config required to initialize abi encoded.
     function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
-        OffchainAssetVaultConfigV2 memory config = abi.decode(data, (OffchainAssetVaultConfigV2));
+        OffchainAssetReceiptVaultConfigV2 memory config = abi.decode(data, (OffchainAssetReceiptVaultConfigV2));
 
-        __ReceiptVault_init(config.vaultConfig);
+        __ReceiptVault_init(config.receiptVaultConfig);
 
         // There is no asset, the asset is offchain.
-        if (config.vaultConfig.asset != address(0)) {
+        if (config.receiptVaultConfig.asset != address(0)) {
             revert NonZeroAsset();
         }
         // The config admin MUST be set.
@@ -337,7 +320,7 @@ contract OffchainAssetReceiptVault is IAuthorizeV1, ReceiptVault, OwnerFreezable
             _msgSender(),
             OffchainAssetReceiptVaultConfigV2({
                 initialAdmin: config.initialAdmin,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: config.receiptVaultConfig
             })
         );
 

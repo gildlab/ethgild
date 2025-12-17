@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: LicenseRef-DCL-1.0
+// SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
+pragma solidity =0.8.25;
+
+import {Test} from "forge-std/Test.sol";
+
+import {
+    ERC20PriceOracleReceiptVaultCloneDeployer,
+    ERC20PriceOracleReceiptVaultCloneDeployerConfig
+} from "src/concrete/deploy/ERC20PriceOracleReceiptVaultCloneDeployer.sol";
+import {ZeroReceiptImplementation, ZeroVaultImplementation} from "src/error/ErrDeployer.sol";
+
+contract ERC20PriceOracleReceiptVaultCloneDeployerConstructTest is Test {
+    function testERC20PriceOracleReceiptVaultCloneDeployerConstructZeroReceiptImplementation(
+        address erc20PriceOracleReceiptVaultImplementation
+    ) external {
+        vm.assume(erc20PriceOracleReceiptVaultImplementation != address(0));
+        vm.expectRevert(abi.encodeWithSelector(ZeroReceiptImplementation.selector));
+        new ERC20PriceOracleReceiptVaultCloneDeployer(
+            ERC20PriceOracleReceiptVaultCloneDeployerConfig({
+                receiptImplementation: address(0),
+                erc20PriceOracleReceiptVaultImplementation: erc20PriceOracleReceiptVaultImplementation
+            })
+        );
+    }
+
+    function testERC20PriceOracleReceiptVaultCloneDeployerConstructZeroVaultImplementation(
+        address receiptImplementation
+    ) external {
+        vm.assume(receiptImplementation != address(0));
+        vm.expectRevert(abi.encodeWithSelector(ZeroVaultImplementation.selector));
+        new ERC20PriceOracleReceiptVaultCloneDeployer(
+            ERC20PriceOracleReceiptVaultCloneDeployerConfig({
+                receiptImplementation: receiptImplementation,
+                erc20PriceOracleReceiptVaultImplementation: address(0)
+            })
+        );
+    }
+
+    function testERC20PriceOracleReceiptVaultCloneDeployerConstruct(
+        ERC20PriceOracleReceiptVaultCloneDeployerConfig memory config
+    ) external {
+        vm.assume(config.receiptImplementation != address(0));
+        vm.assume(config.erc20PriceOracleReceiptVaultImplementation != address(0));
+
+        ERC20PriceOracleReceiptVaultCloneDeployer deployer = new ERC20PriceOracleReceiptVaultCloneDeployer(config);
+
+        vm.assertEq(deployer.I_RECEIPT_IMPLEMENTATION(), config.receiptImplementation);
+        vm.assertEq(
+            deployer.I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION(),
+            config.erc20PriceOracleReceiptVaultImplementation
+        );
+    }
+}

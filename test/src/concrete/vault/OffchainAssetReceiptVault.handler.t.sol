@@ -7,13 +7,13 @@ import {
     DEPOSIT,
     CERTIFY,
     CONFISCATE_RECEIPT
-} from "../../../../src/concrete/vault/OffchainAssetReceiptVault.sol";
+} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
-import {Receipt as ReceiptContract} from "../../../../src/concrete/receipt/Receipt.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 import {
     OffchainAssetReceiptVaultAuthorizerV1,
     CertificationExpired
-} from "../../../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 import {IERC1155Errors} from "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 

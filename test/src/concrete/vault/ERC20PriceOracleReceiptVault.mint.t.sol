@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {MinShareRatio, ZeroAssetsAmount} from "../../../../src/abstract/ReceiptVault.sol";
-import {ERC20PriceOracleReceiptVault} from "../../../../src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
+import {MinShareRatio, ZeroAssetsAmount} from "src/abstract/ReceiptVault.sol";
+import {ERC20PriceOracleReceiptVault} from "src/concrete/vault/ERC20PriceOracleReceiptVault.sol";
 import {ERC20PriceOracleReceiptVaultTest} from "test/abstract/ERC20PriceOracleReceiptVaultTest.sol";
 import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
@@ -11,8 +11,8 @@ import {
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
-import {IReceiptV3} from "../../../../src/concrete/receipt/Receipt.sol";
-import {IReceiptVaultV1} from "../../../../src/interface/IReceiptVaultV3.sol";
+import {IReceiptV3} from "src/concrete/receipt/Receipt.sol";
+import {IReceiptVaultV1} from "src/interface/IReceiptVaultV3.sol";
 
 contract ERC20PriceOracleReceiptVaultMintTest is ERC20PriceOracleReceiptVaultTest {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;

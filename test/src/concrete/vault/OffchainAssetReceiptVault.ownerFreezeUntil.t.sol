@@ -6,46 +6,23 @@ import {console2} from "forge-std/Test.sol";
 import {
     OwnerFreezableOwnerFreezeUntilTest, IOwnerFreezableV1
 } from "test/abstract/OwnerFreezableOwnerFreezeUntilTest.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
+import {OffchainAssetReceiptVault} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {IReceiptV3} from "src/concrete/receipt/Receipt.sol";
 import {
-    OffchainAssetReceiptVault,
-    ReceiptVaultConstructionConfigV2
-} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
-import {Receipt as ReceiptContract, IReceiptV3} from "../../../../src/concrete/receipt/Receipt.sol";
-import {CloneFactory} from "rain.factory/concrete/CloneFactory.sol";
-import {
-    OffchainAssetReceiptVaultAuthorizerV1,
     CERTIFY,
     DEPOSIT,
     WITHDRAW,
     CONFISCATE_SHARES,
     CONFISCATE_RECEIPT
-} from "../../../../src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
-import {LibOffchainAssetVaultCreator} from "../../../lib/LibOffchainAssetVaultCreator.sol";
+} from "src/concrete/authorize/OffchainAssetReceiptVaultAuthorizerV1.sol";
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 
 contract OffchainAssetReceiptVaultOwnerFreezeUntilTest is OwnerFreezableOwnerFreezeUntilTest {
-    ICloneableFactoryV2 internal immutable I_FACTORY;
-    OffchainAssetReceiptVault internal immutable I_IMPLEMENTATION;
-    ReceiptContract internal immutable I_RECEIPT_IMPLEMENTATION;
-    OffchainAssetReceiptVaultAuthorizerV1 internal immutable I_AUTHORIZER_IMPLEMENTATION;
-
     constructor() {
-        I_FACTORY = new CloneFactory();
-        I_RECEIPT_IMPLEMENTATION = new ReceiptContract();
-        I_IMPLEMENTATION = new OffchainAssetReceiptVault(
-            ReceiptVaultConstructionConfigV2({factory: I_FACTORY, receiptImplementation: I_RECEIPT_IMPLEMENTATION})
-        );
-        I_AUTHORIZER_IMPLEMENTATION = new OffchainAssetReceiptVaultAuthorizerV1();
-
         sAlice = address(123456);
         sBob = address(949330);
 
-        sOwnerFreezable = IOwnerFreezableV1(
-            LibOffchainAssetVaultCreator.createVault(
-                vm, I_FACTORY, I_IMPLEMENTATION, I_AUTHORIZER_IMPLEMENTATION, sAlice, "vault", "VLT"
-            )
-        );
+        sOwnerFreezable = IOwnerFreezableV1(createVault(sAlice, "vault", "VLT"));
     }
 
     function setupTokenTransferTest() internal returns (OffchainAssetReceiptVault) {

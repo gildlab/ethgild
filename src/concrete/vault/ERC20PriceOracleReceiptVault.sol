@@ -2,14 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {
-    ReceiptVaultConfig,
-    VaultConfig,
-    ReceiptVault,
-    ShareAction,
-    ICLONEABLE_V2_SUCCESS,
-    ReceiptVaultConstructionConfigV2
-} from "../../abstract/ReceiptVault.sol";
+import {ReceiptVaultConfigV2, ReceiptVault, ShareAction, ICLONEABLE_V2_SUCCESS} from "../../abstract/ReceiptVault.sol";
 import {IPriceOracleV2} from "../../interface/IPriceOracleV2.sol";
 
 /// @dev String ID for the ERC20PriceOracleReceiptVault storage location v1.
@@ -19,24 +12,13 @@ string constant ERC20_PRICE_ORACLE_RECEIPT_VAULT_STORAGE_ID = "rain.storage.erc2
 bytes32 constant ERC20_PRICE_ORACLE_RECEIPT_VAULT_STORAGE_LOCATION =
     0x2c9a4f39bd2ddc349dc9f5c9e14a1013643d88625d35a2c983590afa580ee000;
 
-/// All the same config as `ERC20PriceOracleReceiptVaultConfig` but without the
-/// receipt. Typically the receipt will be deployed and manager set atomically
-/// by a factory to build the full config.
-/// @param priceOracle as per `ERC20PriceOracleReceiptVaultConfig`.
-/// @param vaultConfig config for the underlying `ReceiptVault`.
-//forge-lint: disable-next-line(pascal-case-struct)
-struct ERC20PriceOracleVaultConfig {
-    IPriceOracleV2 priceOracle;
-    VaultConfig vaultConfig;
-}
-
 /// @param priceOracle The price oracle that will be permanently bound to the
 /// `ERC20PriceOracleVault` upon initialization.
 /// @param receiptVaultConfig All config for the underlying receipt vault.
 //forge-lint: disable-next-line(pascal-case-struct)
-struct ERC20PriceOracleReceiptVaultConfig {
+struct ERC20PriceOracleReceiptVaultConfigV2 {
     IPriceOracleV2 priceOracle;
-    ReceiptVaultConfig receiptVaultConfig;
+    ReceiptVaultConfigV2 receiptVaultConfig;
 }
 
 /// @title ERC20PriceOracleVault
@@ -92,7 +74,7 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
     /// Emitted when deployed and constructed.
     /// @param sender msg sender that deployed the contract.
     /// @param config All construction config.
-    event ERC20PriceOracleReceiptVaultInitialized(address sender, ERC20PriceOracleReceiptVaultConfig config);
+    event ERC20PriceOracleReceiptVaultInitializedV2(address sender, ERC20PriceOracleReceiptVaultConfigV2 config);
 
     /// @param priceOracle The price oracle used for all minting calculations.
     /// @custom:storage-location erc7201:rain.storage.erc20-price-oracle-receipt-vault.1
@@ -112,26 +94,24 @@ contract ERC20PriceOracleReceiptVault is ReceiptVault {
         }
     }
 
-    constructor(ReceiptVaultConstructionConfigV2 memory config) ReceiptVault(config) {}
-
     /// Initialization of the underlying receipt vault and price oracle.
     function initialize(bytes memory data) public virtual override initializer returns (bytes32) {
-        ERC20PriceOracleVaultConfig memory config = abi.decode(data, (ERC20PriceOracleVaultConfig));
+        ERC20PriceOracleReceiptVaultConfigV2 memory config = abi.decode(data, (ERC20PriceOracleReceiptVaultConfigV2));
 
         ERC20PriceOracleReceiptVault7201Storage storage s = getStorageERC20PriceOracleReceiptVault();
 
         s.priceOracle = IPriceOracleV2(config.priceOracle);
 
-        __ReceiptVault_init(config.vaultConfig);
+        __ReceiptVault_init(config.receiptVaultConfig);
 
         // Slither false positive due to needing receipt to be set so that the
         // event can be emitted with the correct data.
         // slither-disable-next-line reentrancy-events
-        emit ERC20PriceOracleReceiptVaultInitialized(
+        emit ERC20PriceOracleReceiptVaultInitializedV2(
             _msgSender(),
-            ERC20PriceOracleReceiptVaultConfig({
+            ERC20PriceOracleReceiptVaultConfigV2({
                 priceOracle: config.priceOracle,
-                receiptVaultConfig: ReceiptVaultConfig({receipt: address(receipt()), vaultConfig: config.vaultConfig})
+                receiptVaultConfig: config.receiptVaultConfig
             })
         );
 

@@ -2,26 +2,41 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {VaultConfig} from "src/abstract/ReceiptVault.sol";
-import {OffchainAssetReceiptVaultTest, Vm} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
+import {
+    OffchainAssetReceiptVaultTest, ReceiptVaultConfigV2, Vm
+} from "test/abstract/OffchainAssetReceiptVaultTest.sol";
 import {
     OffchainAssetReceiptVault,
-    OffchainAssetVaultConfigV2,
     OffchainAssetReceiptVaultConfigV2,
     ZeroInitialAdmin,
     NonZeroAsset
 } from "src/concrete/vault/OffchainAssetReceiptVault.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
+import {BeaconProxy} from "openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
 import {LibUniqueAddressesGenerator} from "../../../lib/LibUniqueAddressesGenerator.sol";
 
-contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
+contract OffChainAssetReceiptVaultInitializeTest is OffchainAssetReceiptVaultTest {
     /// Test that admin is not address zero
     function testZeroInitialAdmin(string memory shareName, string memory shareSymbol) external {
-        VaultConfig memory vaultConfig = VaultConfig({asset: address(0), name: shareName, symbol: shareSymbol});
+        ReceiptContract receipt = ReceiptContract(address(new BeaconProxy(address(I_DEPLOYER.I_RECEIPT_BEACON()), "")));
+        OffchainAssetReceiptVault offchainAssetReceiptVault = OffchainAssetReceiptVault(
+            payable(address(new BeaconProxy(address(I_DEPLOYER.I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON()), "")))
+        );
+        receipt.initialize(abi.encode(offchainAssetReceiptVault));
 
         vm.expectRevert(abi.encodeWithSelector(ZeroInitialAdmin.selector));
-        I_FACTORY.clone(
-            address(I_IMPLEMENTATION),
-            abi.encode(OffchainAssetVaultConfigV2({initialAdmin: address(0), vaultConfig: vaultConfig}))
+        offchainAssetReceiptVault.initialize(
+            abi.encode(
+                OffchainAssetReceiptVaultConfigV2({
+                    initialAdmin: address(0),
+                    receiptVaultConfig: ReceiptVaultConfigV2({
+                        asset: address(0),
+                        name: shareName,
+                        symbol: shareSymbol,
+                        receipt: address(receipt)
+                    })
+                })
+            )
         );
     }
 
@@ -32,33 +47,38 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         vm.assume(asset != address(0));
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
 
         vm.expectRevert(abi.encodeWithSelector(NonZeroAsset.selector));
-        I_FACTORY.clone(
-            address(I_IMPLEMENTATION),
-            abi.encode(OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig}))
+        I_DEPLOYER.newOffchainAssetReceiptVault(
+            OffchainAssetReceiptVaultConfigV2({
+                initialAdmin: alice,
+                receiptVaultConfig: ReceiptVaultConfigV2({
+                    asset: asset,
+                    name: shareName,
+                    symbol: shareSymbol,
+                    receipt: address(0)
+                })
+            })
         );
     }
 
-    /// Test that offchainAssetReceiptVault constructs well
-    function testConstructionEvent(uint256 aliceSeed, string memory shareName, string memory shareSymbol) external {
+    /// Test that OffchainAssetReceiptVaultInitializedV2 event is emitted upon
+    /// initialization
+    function testOffchainAssetReceiptVaultInitializedV2Event(
+        uint256 aliceSeed,
+        string memory shareName,
+        string memory shareSymbol
+    ) external {
         address alice = LibUniqueAddressesGenerator.generateUniqueAddresses(vm, aliceSeed);
 
         address asset = address(0);
 
-        VaultConfig memory vaultConfig = VaultConfig({asset: asset, name: shareName, symbol: shareSymbol});
-
         // Simulate transaction from alice
         vm.prank(alice);
-        OffchainAssetVaultConfigV2 memory offchainAssetVaultConfig =
-            OffchainAssetVaultConfigV2({initialAdmin: alice, vaultConfig: vaultConfig});
 
         // Start recording logs
         vm.recordLogs();
-        OffchainAssetReceiptVault vault = OffchainAssetReceiptVault(
-            payable(I_FACTORY.clone(address(I_IMPLEMENTATION), abi.encode(offchainAssetVaultConfig)))
-        );
+        OffchainAssetReceiptVault vault = createVault(alice, shareName, shareSymbol);
 
         // Get the logs
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -76,7 +96,7 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
             if (
                 logs[i].topics[0]
                     == keccak256(
-                        "OffchainAssetReceiptVaultInitializedV2(address,(address,(address,(address,string,string))))"
+                        "OffchainAssetReceiptVaultInitializedV2(address,(address,(address,string,string,address)))"
                     )
             ) {
                 // Decode the event data
@@ -90,27 +110,27 @@ contract OffChainAssetReceiptVaultTest is OffchainAssetReceiptVaultTest {
         }
 
         // Assert that the event log was found
-        assertTrue(eventFound, "OffchainAssetReceiptVaultInitialized event log not found");
+        assertTrue(eventFound, "OffchainAssetReceiptVaultInitializedV2 event log not found");
 
-        assertEq(msgSender, address(I_FACTORY));
+        assertEq(msgSender, address(I_DEPLOYER));
         assertEq(config.initialAdmin, alice);
         assert(address(vault) != address(0));
 
-        assertEq(config.receiptVaultConfig.vaultConfig.name, shareName);
+        assertEq(config.receiptVaultConfig.name, shareName);
         assertEq(keccak256(bytes(vault.name())), keccak256(bytes(shareName)));
 
-        assertEq(config.receiptVaultConfig.vaultConfig.symbol, shareSymbol);
+        assertEq(config.receiptVaultConfig.symbol, shareSymbol);
         assertEq(keccak256(bytes(vault.symbol())), keccak256(bytes(shareSymbol)));
 
-        assertEq(address(config.receiptVaultConfig.vaultConfig.asset), asset);
+        assertEq(address(config.receiptVaultConfig.asset), asset);
 
         assertTrue(address(config.receiptVaultConfig.receipt) != address(0));
         assertEq(address(config.receiptVaultConfig.receipt), address(vault.receipt()));
 
         /// Check the authorizer set event
         assertTrue(authorizeSetEventFound, "AuthorizerSet event log not found");
-        assertEq(authorizeSetMsgSender, address(I_FACTORY));
-        assertEq(authorizeSetTo, address(vault));
+        assertEq(authorizeSetMsgSender, address(alice));
+        assertEq(authorizeSetTo, address(vault.authorizer()));
         assertTrue(address(vault) != address(0));
 
         // Check the receipt manager is the vault.

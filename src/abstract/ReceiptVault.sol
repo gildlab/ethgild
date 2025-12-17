@@ -13,8 +13,8 @@ import {
     LibFixedPointDecimalArithmeticOpenZeppelin,
     Math
 } from "rain.math.fixedpoint/lib/LibFixedPointDecimalArithmeticOpenZeppelin.sol";
-import {ICloneableFactoryV2} from "rain.factory/interface/ICloneableFactoryV2.sol";
-//forge-lint: disable-next-line(unused-import)
+// Export ICLONEABLE_V2_SUCCESS for concrete implementations.
+// forge-lint: disable-next-line(unused-import)
 import {ICloneableV2, ICLONEABLE_V2_SUCCESS} from "rain.factory/interface/ICloneableV2.sol";
 import {Address} from "openzeppelin-contracts/contracts/utils/Address.sol";
 import {
@@ -43,35 +43,17 @@ enum ShareAction {
     Burn
 }
 
-/// Config for the _implementation_ of the `ReceiptVault` contract.
-/// @param factory The factory that will be used to clone the receipt vault.
-/// @param receiptImplementation The receipt implementation that will be cloned
-/// by the factory.
-struct ReceiptVaultConstructionConfigV2 {
-    ICloneableFactoryV2 factory;
-    IReceiptV3 receiptImplementation;
-}
-
-/// All config required to initialize `ReceiptVault` except the receipt address.
-/// Included as a field on `ReceiptVaultConfig` which is the full initialization
-/// config struct. This is used by the `ReceiptVaultFactory` which will create a
-/// new receipt in the same transaction and build the full `ReceiptVaultConfig`.
-/// @param asset As per ERC4626.
-/// @param name As per ERC20.
-/// @param symbol As per ERC20.
-struct VaultConfig {
-    address asset;
-    string name;
-    string symbol;
-}
-
 /// All config required to initialize `ReceiptVault`.
 /// @param receipt The `Receipt` e.g. built by `ReceiptVaultFactory` that is
 /// owned by the `ReceiptVault` as an `IReceiptOwnerV1`.
-/// @param vaultConfig all the vault configuration as `VaultConfig`.
-struct ReceiptVaultConfig {
+/// @param asset As per ERC4626.
+/// @param name As per ERC20.
+/// @param symbol As per ERC20.
+struct ReceiptVaultConfigV2 {
+    address asset;
+    string name;
+    string symbol;
     address receipt;
-    VaultConfig vaultConfig;
 }
 
 /// @title ReceiptVault
@@ -104,12 +86,13 @@ struct ReceiptVaultConfig {
 /// with the shares' mint event DO NOT MOVE (whatever that means) until/unless
 /// those shares are burned.
 ///
-/// Each vault is deployed from a factory as a clone from a reference
-/// implementation, allowing for the model to cheaply and freedomly scale
-/// horizontally. This allows for some trust/permissioned concessions to be made
-/// per-vault as new competing vaults can always be deployed and traded against
-/// each other in parallel, allowing trust to be "policed" at the liquidity and
-/// free market layer.
+/// Each vault is designed to be an implementation for proxies, either clones,
+/// beacons or transparent proxies, allowing for the model to cheaply and freely
+/// scale horizontally. The deployer is responsible for correctly initializing
+/// the proxies either way. This allows for some trust/permissioned concessions
+/// to be made per-vault as new competing vaults can always be deployed and
+/// traded against each other in parallel, allowing trust to be "policed" at the
+/// liquidity and free market layer.
 abstract contract ReceiptVault is
     IReceiptManagerV2,
     IReceiptVaultV3,
@@ -121,11 +104,6 @@ abstract contract ReceiptVault is
 {
     using LibFixedPointDecimalArithmeticOpenZeppelin for uint256;
     using SafeERC20 for IERC20;
-
-    //slither-disable-next-line naming-convention
-    ICloneableFactoryV2 internal immutable I_FACTORY;
-    //slither-disable-next-line naming-convention
-    IReceiptV3 internal immutable I_RECEIPT_IMPLEMENTATION;
 
     /// @param asset Underlying ERC4626 asset.
     /// @param receipt ERC1155 Receipt owned by this receipt vault for the
@@ -143,14 +121,8 @@ abstract contract ReceiptVault is
         }
     }
 
-    /// `ReceiptVault` is intended to be cloned and initialized by a
-    /// `ReceiptVaultFactory` so is an implementation contract that can't itself
-    /// be initialized.
-    constructor(ReceiptVaultConstructionConfigV2 memory config) {
+    constructor() {
         _disableInitializers();
-
-        I_FACTORY = config.factory;
-        I_RECEIPT_IMPLEMENTATION = config.receiptImplementation;
     }
 
     /// Deposits are payable so this allows refunds.
@@ -164,23 +136,15 @@ abstract contract ReceiptVault is
     // solhint-disable-next-line func-name-mixedcase
     // slither-disable-start naming-convention
     // forge-lint: disable-next-line(mixed-case-function)
-    function __ReceiptVault_init(VaultConfig memory config) internal virtual {
+    function __ReceiptVault_init(ReceiptVaultConfigV2 memory config) internal virtual {
         __Multicall_init();
         __ERC20_init(config.name, config.symbol);
 
-        // Slither false positive here due to it being impossible to set the
-        // receipt before it has been deployed.
-        // slither-disable-next-line reentrancy-benign
-        IReceiptV3 managedReceipt =
-            IReceiptV3(I_FACTORY.clone(address(I_RECEIPT_IMPLEMENTATION), abi.encode(address(this))));
-
         ReceiptVaultV17201Storage storage s = getStorageReceiptVault();
         s.asset = IERC20(config.asset);
-        s.receipt = managedReceipt;
+        s.receipt = IReceiptV3(config.receipt);
 
-        // Sanity check here. Should always be true as we cloned the receipt
-        // from the factory ourselves just above.
-        address receiptManager = managedReceipt.manager();
+        address receiptManager = IReceiptV3(config.receipt).manager();
         if (receiptManager != address(this)) {
             revert WrongManager(address(this), receiptManager);
         }

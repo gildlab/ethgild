@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-
+import {OffchainAssetReceiptVaultTest} from "./OffchainAssetReceiptVaultTest.sol";
 import {IAuthorizeV1, Unauthorized} from "src/interface/IAuthorizeV1.sol";
 import {
     TRANSFER_SHARES,
@@ -13,7 +12,7 @@ import {
 import {IAccessControl} from "openzeppelin-contracts/contracts/access/IAccessControl.sol";
 import {TransferSharesStateChange, TransferReceiptStateChange} from "src/concrete/vault/OffchainAssetReceiptVault.sol";
 
-contract OffchainAssetReceiptVaultAuthorizerV1Test is Test {
+contract OffchainAssetReceiptVaultAuthorizerV1Test is OffchainAssetReceiptVaultTest {
     function checkDefaultOffchainAssetReceiptVaultAuthorizerV1AuthorizeUnauthorized(
         IAuthorizeV1 authorizer,
         address sender,

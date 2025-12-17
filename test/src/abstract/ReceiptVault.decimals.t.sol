@@ -4,7 +4,9 @@ pragma solidity =0.8.25;
 
 import {ConcreteReceiptVault} from "test/concrete/ConcreteReceiptVault.sol";
 import {TestErc20} from "test/concrete/TestErc20.sol";
-import {VaultConfig} from "src/abstract/ReceiptVault.sol";
+import {ReceiptVaultConfigV2} from "src/abstract/ReceiptVault.sol";
+import {Clones} from "openzeppelin-contracts/contracts/proxy/Clones.sol";
+import {Receipt as ReceiptContract} from "src/concrete/receipt/Receipt.sol";
 
 import {Test} from "forge-std/Test.sol";
 
@@ -16,17 +18,25 @@ contract ReceiptVaultDecimalsTest is Test {
     }
 
     function testDecimalsWithNonZeroAsset(uint8 assetDecimals) external {
+        ReceiptContract receiptImplementation = new ReceiptContract();
         ConcreteReceiptVault receiptVaultImplementation = new ConcreteReceiptVault();
         TestErc20 asset = new TestErc20();
 
-        ConcreteReceiptVault receiptVault = ConcreteReceiptVault(
-            payable(
-                receiptVaultImplementation.factory().clone(
-                    address(receiptVaultImplementation),
-                    abi.encode(VaultConfig({asset: address(asset), name: "Test Vault", symbol: "TVLT"}))
-                )
+        ReceiptContract receipt = ReceiptContract(Clones.clone(address(receiptImplementation)));
+        ConcreteReceiptVault receiptVault =
+            ConcreteReceiptVault(payable(Clones.clone(address(receiptVaultImplementation))));
+        receipt.initialize(abi.encode(address(receiptVault)));
+        receiptVault.initialize(
+            abi.encode(
+                ReceiptVaultConfigV2({
+                    asset: address(asset),
+                    name: "Test Vault",
+                    symbol: "TVLT",
+                    receipt: address(receipt)
+                })
             )
         );
+
         asset.setDecimals(assetDecimals);
 
         assertEq(receiptVault.asset(), address(asset));
