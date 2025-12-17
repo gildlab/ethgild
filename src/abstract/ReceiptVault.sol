@@ -86,12 +86,13 @@ struct ReceiptVaultConfigV2 {
 /// with the shares' mint event DO NOT MOVE (whatever that means) until/unless
 /// those shares are burned.
 ///
-/// Each vault is deployed from a factory as a clone from a reference
-/// implementation, allowing for the model to cheaply and freedomly scale
-/// horizontally. This allows for some trust/permissioned concessions to be made
-/// per-vault as new competing vaults can always be deployed and traded against
-/// each other in parallel, allowing trust to be "policed" at the liquidity and
-/// free market layer.
+/// Each vault is designed to be an implementation for proxies, either clones,
+/// beacons or transparent proxies, allowing for the model to cheaply and freely
+/// scale horizontally. The deployer is responsible for correctly initializing
+/// the proxies either way. This allows for some trust/permissioned concessions
+/// to be made per-vault as new competing vaults can always be deployed and
+/// traded against each other in parallel, allowing trust to be "policed" at the
+/// liquidity and free market layer.
 abstract contract ReceiptVault is
     IReceiptManagerV2,
     IReceiptVaultV3,
