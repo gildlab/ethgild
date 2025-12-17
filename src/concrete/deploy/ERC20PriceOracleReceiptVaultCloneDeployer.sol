@@ -16,20 +16,38 @@ import {
     ERC20PriceOracleReceiptVaultConfigV2
 } from "../vault/ERC20PriceOracleReceiptVault.sol";
 
+/// Configuration for the ERC20PriceOracleReceiptVaultCloneDeployer construction.
+/// @param receiptImplementation The address of the Receipt implementation
+/// contract to clone from.
+/// @param erc20PriceOracleReceiptVaultImplementation The address of the
+/// ERC20PriceOracleReceiptVault implementation contract to clone from.
 //forge-lint: disable-next-line(pascal-case-struct)
 struct ERC20PriceOracleReceiptVaultCloneDeployerConfig {
     address receiptImplementation;
     address erc20PriceOracleReceiptVaultImplementation;
 }
 
+/// @title ERC20PriceOracleReceiptVaultCloneDeployer
+/// Deploys ERC20PriceOracleReceiptVault contracts as minimal proxy contracts
+/// and handles the necessary initialization atomically.
 contract ERC20PriceOracleReceiptVaultCloneDeployer {
+    /// Emitted when a new deployment is successfully initialized.
+    /// @param sender The address that initiated the deployment.
+    /// @param erc20PriceOracleReceiptVault The address of the deployed
+    /// ERC20PriceOracleReceiptVault contract.
+    /// @param receipt The address of the deployed Receipt contract.
     event ERC20PriceOracleReceiptVaultCloneDeployerDeployment(
         address sender, address erc20PriceOracleReceiptVault, address receipt
     );
 
+    /// The address of the Receipt implementation contract to clone from.
     address public immutable I_RECEIPT_IMPLEMENTATION;
+
+    /// The address of the ERC20PriceOracleReceiptVault implementation contract
+    /// to clone from.
     address public immutable I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION;
 
+    /// @param config The configuration for the deployer.
     constructor(ERC20PriceOracleReceiptVaultCloneDeployerConfig memory config) {
         if (config.receiptImplementation == address(0)) revert ZeroReceiptImplementation();
         if (config.erc20PriceOracleReceiptVaultImplementation == address(0)) revert ZeroVaultImplementation();
@@ -37,6 +55,11 @@ contract ERC20PriceOracleReceiptVaultCloneDeployer {
         I_ERC20_PRICE_ORACLE_RECEIPT_VAULT_IMPLEMENTATION = config.erc20PriceOracleReceiptVaultImplementation;
     }
 
+    /// Deploys and initializes a new ERC20PriceOracleReceiptVault contract
+    /// along with its associated Receipt contract.
+    /// @param config The configuration for the ERC20PriceOracleReceiptVault.
+    /// @return The address of the newly deployed ERC20PriceOracleReceiptVault
+    /// contract.
     function newERC20PriceOracleReceiptVault(ERC20PriceOracleReceiptVaultConfigV2 memory config)
         external
         returns (ERC20PriceOracleReceiptVault)

@@ -17,18 +17,37 @@ import {
     InitializeVaultFailed
 } from "../../error/ErrDeployer.sol";
 
+/// Configuration for the OffchainAssetReceiptVaultBeaconSetDeployer
+/// construction.
+/// @param initialOwner The initial owner of the beacons.
+/// @param initialReceiptImplementation The address of the initial Receipt
+/// implementation contract.
+/// @param initialOffchainAssetReceiptVaultImplementation The address of the
+/// initial OffchainAssetReceiptVault implementation contract.
 struct OffchainAssetReceiptVaultBeaconSetDeployerConfig {
     address initialOwner;
     address initialReceiptImplementation;
     address initialOffchainAssetReceiptVaultImplementation;
 }
 
+/// @title OffchainAssetReceiptVaultBeaconSetDeployer
+/// Deploys OffchainAssetReceiptVault contracts using beacon proxies and
+/// handles the necessary initialization atomically.
 contract OffchainAssetReceiptVaultBeaconSetDeployer {
+    /// Emitted when a new deployment is successfully initialized.
+    /// @param sender The address that initiated the deployment.
+    /// @param offchainAssetReceiptVault The address of the deployed
+    /// OffchainAssetReceiptVault contract.
+    /// @param receipt The address of the deployed Receipt contract.
     event Deployment(address sender, address offchainAssetReceiptVault, address receipt);
 
+    /// The beacon for the Receipt implementation contracts.
     IBeacon public immutable I_RECEIPT_BEACON;
+
+    /// The beacon for the OffchainAssetReceiptVault implementation contracts.
     IBeacon public immutable I_OFFCHAIN_ASSET_RECEIPT_VAULT_BEACON;
 
+    /// @param config The configuration for the deployer.
     constructor(OffchainAssetReceiptVaultBeaconSetDeployerConfig memory config) {
         if (address(config.initialReceiptImplementation) == address(0)) {
             revert ZeroReceiptImplementation();
@@ -45,6 +64,12 @@ contract OffchainAssetReceiptVaultBeaconSetDeployer {
             new UpgradeableBeacon(address(config.initialOffchainAssetReceiptVaultImplementation), config.initialOwner);
     }
 
+    /// Deploys and initializes a new OffchainAssetReceiptVault contract along
+    /// with its associated Receipt contract. Both are beacon proxies pointing
+    /// to the respective immutable beacons.
+    /// @param config The configuration for the OffchainAssetReceiptVault.
+    /// @return The address of the newly deployed OffchainAssetReceiptVault
+    /// contract.
     function newOffchainAssetReceiptVault(OffchainAssetReceiptVaultConfigV2 memory config)
         external
         returns (OffchainAssetReceiptVault)
