@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, Vm} from "forge-std/Test.sol";
 
 import {
     ERC20PriceOracleReceiptVaultCloneDeployer,
@@ -34,7 +34,11 @@ contract ERC20PriceOracleReceiptVaultCloneDeployerNewERC20PriceOracleReceiptVaul
         deployer.newERC20PriceOracleReceiptVault(config);
     }
 
-    function testNewERC20PriceOracleReceiptVaultSuccess(ERC20PriceOracleReceiptVaultConfigV2 memory config) external {
+    function testNewERC20PriceOracleReceiptVaultSuccess(
+        address alice,
+        ERC20PriceOracleReceiptVaultConfigV2 memory config
+    ) external {
+        vm.assume(alice.code.length == 0);
         vm.assume(config.receiptVaultConfig.receipt == address(0));
         ReceiptContract receiptImplementation = new ReceiptContract();
         ERC20PriceOracleReceiptVault erc20PriceOracleReceiptVaultImplementation = new ERC20PriceOracleReceiptVault();
@@ -44,7 +48,29 @@ contract ERC20PriceOracleReceiptVaultCloneDeployerNewERC20PriceOracleReceiptVaul
                 erc20PriceOracleReceiptVaultImplementation: address(erc20PriceOracleReceiptVaultImplementation)
             })
         );
+        vm.startPrank(alice);
+        vm.recordLogs();
         ERC20PriceOracleReceiptVault vault = deployer.newERC20PriceOracleReceiptVault(config);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        vm.stopPrank();
+
+        bool eventFound = false;
+        bytes32 eventTopic = keccak256("ERC20PriceOracleReceiptVaultCloneDeployerDeployment(address,address,address)");
+        address eventSender;
+        address eventVault;
+        address eventReceipt;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == eventTopic) {
+                (eventSender, eventVault, eventReceipt) = abi.decode(logs[i].data, (address, address, address));
+                eventFound = true;
+                break;
+            }
+        }
+        assertTrue(eventFound, "ERC20PriceOracleReceiptVaultCloneDeployerDeployment event log not found");
+        assertEq(eventSender, alice);
+        assertEq(eventVault, address(vault));
+        assertEq(eventReceipt, address(vault.receipt()));
+
         assert(address(vault) != address(0));
         assert(vault.asset() == config.receiptVaultConfig.asset);
     }

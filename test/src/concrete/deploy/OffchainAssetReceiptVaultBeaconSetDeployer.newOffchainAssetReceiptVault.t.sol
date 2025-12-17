@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2020 Rain Open Source Software Ltd
 pragma solidity =0.8.25;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, Vm} from "forge-std/Test.sol";
 
 import {
     OffchainAssetReceiptVaultBeaconSetDeployer,
@@ -50,7 +50,10 @@ contract OffchainAssetReceiptVaultBeaconSetDeployerNewOffchainAssetReceiptVaultT
         deployer.newOffchainAssetReceiptVault(config);
     }
 
-    function testNewOffchainAssetReceiptVault(OffchainAssetReceiptVaultConfigV2 memory config) external {
+    function testNewOffchainAssetReceiptVault(address alice, OffchainAssetReceiptVaultConfigV2 memory config)
+        external
+    {
+        vm.assume(alice.code.length == 0);
         vm.assume(config.receiptVaultConfig.receipt == address(0));
         vm.assume(config.initialAdmin != address(0));
         vm.assume(config.receiptVaultConfig.asset == address(0));
@@ -65,8 +68,28 @@ contract OffchainAssetReceiptVaultBeaconSetDeployerNewOffchainAssetReceiptVaultT
             })
         );
 
-        // expectEmit
+        vm.startPrank(alice);
+        vm.recordLogs();
         OffchainAssetReceiptVault offchainAssetReceiptVault = deployer.newOffchainAssetReceiptVault(config);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        vm.stopPrank();
+
+        bool eventFound = false;
+        bytes32 eventTopic = keccak256("OffchainAssetReceiptVaultBeaconSetDeployerDeployment(address,address,address)");
+        address eventSender;
+        address eventVault;
+        address eventReceipt;
+        for (uint256 i = 0; i < logs.length; i++) {
+            if (logs[i].topics[0] == eventTopic) {
+                (eventSender, eventVault, eventReceipt) = abi.decode(logs[i].data, (address, address, address));
+                eventFound = true;
+                break;
+            }
+        }
+        assertTrue(eventFound, "OffchainAssetReceiptVaultBeaconSetDeployerDeployment event log not found");
+        assertEq(eventSender, alice);
+        assertEq(eventVault, address(offchainAssetReceiptVault));
+        assertEq(eventReceipt, address(offchainAssetReceiptVault.receipt()));
 
         assertEq(
             address(OffchainAssetReceiptVault(payable(offchainAssetReceiptVault)).receipt().manager()),
